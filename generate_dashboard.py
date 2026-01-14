@@ -387,22 +387,16 @@ def get_product_info_from_master(sku):
     if not result:
         return None
 
-    # Ambil Tier dari Master Produk - prioritas by article name, lalu by kode_kecil
-    nama_upper = result.get('nama', '').upper().strip()
+    # Prioritas tier: Master Produk by kode_kecil > Master Data
+    kode_kecil = result.get('kode_kecil', '') or extract_kode_kecil(sku)
 
-    # 1. Coba lookup tier by article name (paling akurat)
-    if nama_upper and nama_upper in MASTER_PRODUK_BY_ARTICLE:
-        result['tier'] = MASTER_PRODUK_BY_ARTICLE[nama_upper]
-    else:
-        # 2. Coba lookup by kode_kecil
-        kode_kecil = result.get('kode_kecil', '') or extract_kode_kecil(sku)
-        if kode_kecil and kode_kecil.upper() in MASTER_PRODUK:
-            produk_info = MASTER_PRODUK[kode_kecil.upper()]
-            if produk_info.get('tier'):
-                result['tier'] = produk_info.get('tier', '')
-            # Jika nama dari Master Produk lebih bagus, gunakan itu
-            if produk_info.get('article'):
-                result['nama'] = produk_info['article']
+    # 1. Coba lookup dari MASTER_PRODUK by kode_kecil (paling akurat)
+    if kode_kecil and kode_kecil.upper() in MASTER_PRODUK:
+        produk_info = MASTER_PRODUK[kode_kecil.upper()]
+        if produk_info.get('tier'):
+            result['tier'] = produk_info.get('tier', '')
+    # 2. Kalau tidak ada di MASTER_PRODUK, gunakan tier dari Master Data (sudah ada di result)
+    # Tidak perlu action karena result['tier'] sudah ada dari Master Data
 
     return result
 
