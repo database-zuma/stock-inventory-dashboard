@@ -876,6 +876,13 @@ def generate_html(all_data, all_stores):
         .stat-card .value { font-size: 1.6rem; font-weight: 700; color: #1f2937; }
         .stat-card .sub-value { font-size: 0.75rem; color: #9ca3af; margin-top: 3px; }
 
+        /* Compact Stats for table sections */
+        .stats-grid.compact { gap: 10px; margin-bottom: 15px; }
+        .stats-grid.compact .stat-card { padding: 12px 15px; border-radius: 10px; }
+        .stats-grid.compact .stat-card .value { font-size: 1.1rem; }
+        .stats-grid.compact .stat-card .sub-value { font-size: 0.65rem; margin-top: 2px; }
+        .stats-grid.compact .stat-card h3 { font-size: 0.6rem; margin-bottom: 4px; }
+
         /* Charts */
         .charts-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1312,7 +1319,7 @@ def generate_html(all_data, all_stores):
                     <button class="btn btn-secondary" onclick="exportData('retail')">📥 Export</button>
                 </div>
                 <!-- Retail Stats Cards -->
-                <div class="stats-grid" style="margin-bottom: 15px;">
+                <div class="stats-grid compact">
                     <div class="stat-card primary">
                         <h3>Total SKU</h3>
                         <div class="value" id="rtTotalSku">0</div>
@@ -1429,7 +1436,7 @@ def generate_html(all_data, all_stores):
                     <button class="btn btn-secondary" onclick="exportData('warehouse')">📥 Export</button>
                 </div>
                 <!-- Warehouse Stats Cards -->
-                <div class="stats-grid" style="margin-bottom: 15px;">
+                <div class="stats-grid compact">
                     <div class="stat-card primary">
                         <h3>Total SKU</h3>
                         <div class="value" id="whTotalSku">0</div>
