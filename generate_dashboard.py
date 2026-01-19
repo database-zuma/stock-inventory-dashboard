@@ -4130,7 +4130,10 @@ def generate_html(all_data, all_stores):
         function buildSkuItems() {
             const skuMap = {};
             const retailData = allData.DDD?.retail || [];
-            const whData = allData.DDD?.warehouse || [];
+            // Warehouse data dari DDD dan LJBB saja
+            const whDataDDD = allData.DDD?.warehouse || [];
+            const whDataLJBB = allData.LJBB?.warehouse || [];
+            const whData = [...whDataDDD, ...whDataLJBB];
 
             // Process retail data
             retailData.forEach(item => {
