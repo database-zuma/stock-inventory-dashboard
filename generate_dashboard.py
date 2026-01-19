@@ -975,7 +975,6 @@ def generate_html(all_data, all_stores):
     sales_json = json.dumps(SALES_DATA, ensure_ascii=False)
     sales_detail_json = json.dumps(SALES_DETAIL, ensure_ascii=False)
     target_json = json.dumps(TARGET_DATA, ensure_ascii=False)
-    master_produk_json = json.dumps(MASTER_PRODUK, ensure_ascii=False)
 
     html = '''<!DOCTYPE html>
 <html lang="id">
@@ -2343,7 +2342,21 @@ def generate_html(all_data, all_stores):
         const salesMap = ''' + sales_json + ''';  // Sales per SKU per bulan (nov, des, jan)
         const salesDetailData = ''' + sales_detail_json + ''';  // Sales detail transactions
         const targetData = ''' + target_json + ''';  // Target per toko
-        const masterProduk = ''' + master_produk_json + ''';  // Master Produk (gender, series, tipe, tier)
+
+        // Build SKU to tier mapping from stock data
+        const skuTierMap = {};
+        Object.values(allData).forEach(entityData => {
+            (entityData.warehouse || []).forEach(item => {
+                if (item.sku && item.tier && item.tier !== '-') {
+                    skuTierMap[item.sku.toUpperCase()] = item.tier;
+                }
+            });
+            (entityData.retail || []).forEach(item => {
+                if (item.sku && item.tier && item.tier !== '-') {
+                    skuTierMap[item.sku.toUpperCase()] = item.tier;
+                }
+            });
+        });
 
         let currentEntity = 'DDD';
         let currentType = 'warehouse';
@@ -5444,17 +5457,21 @@ def generate_html(all_data, all_stores):
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance - by Gender, Series, Tipe (from Master Produk)
+            // Category Performance - by Gender with Series and Tipe
             const byGenderCat = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                const kodeKecil = sku.replace(/Z\\d{2,3}$/, '').toUpperCase();
-                const produkInfo = masterProduk[kodeKecil] || {};
+                const gender = getGenderFromSKU(sku);
 
-                // Get from Master Produk, fallback to derivation
-                const gender = produkInfo.gender || getGenderFromSKU(sku);
-                const series = produkInfo.series || '-';
-                const tipe = produkInfo.tipe || '-';  // Jepit atau Fashion
+                // Extract series from collection (format: "SERIES NAME|...")
+                const collectionRaw = (item.collection || '').split('|')[0].trim();
+                const series = (collectionRaw && collectionRaw !== 'Umum' && collectionRaw !== 'All Item') ? collectionRaw : '-';
+
+                // Derive tipe from SKU pattern (Fashion vs Jepit)
+                // Fashion: starts with patterns like BB1, SJ1, etc. with letters after numbers
+                // Jepit: starts with Z2, L2, M1, K1, G1, etc. (simpler pattern)
+                const isFashion = /^[A-Z]{2}\d[A-Z]/.test(sku);
+                const tipe = isFashion ? 'Fashion' : 'Jepit';
 
                 // Group by Gender
                 if (!byGenderCat[gender]) byGenderCat[gender] = { sales: 0, qty: 0, trx: new Set(), seriesList: {}, tipeList: {} };
@@ -5469,7 +5486,7 @@ def generate_html(all_data, all_stores):
                 }
 
                 // Track tipe breakdown
-                if (tipe && tipe !== '-') {
+                if (tipe) {
                     if (!byGenderCat[gender].tipeList[tipe]) byGenderCat[gender].tipeList[tipe] = 0;
                     byGenderCat[gender].tipeList[tipe] += item.total || 0;
                 }
@@ -5548,14 +5565,12 @@ def generate_html(all_data, all_stores):
             catHtml += '</tbody></table>';
             document.getElementById('salesCategoryPerf').innerHTML = catHtml;
 
-            // Tier Performance with chart
+            // Tier Performance with chart - using skuTierMap (built from stock data)
             const byTier = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                const kodeKecil = sku.replace(/Z\\d{2,3}$/, '');
-                const masterInfo = masterData[sku.toUpperCase()] || {};
-                const produkInfo = masterProduk[kodeKecil.toUpperCase()] || {};
-                const tier = masterInfo.tier || produkInfo.tier || '-';
+                // Get tier from skuTierMap (built from allData stock)
+                const tier = skuTierMap[sku.toUpperCase()] || '-';
                 if (!byTier[tier]) byTier[tier] = { sales: 0, qty: 0, trx: new Set() };
                 byTier[tier].sales += item.total || 0;
                 byTier[tier].qty += item.qty || 0;
