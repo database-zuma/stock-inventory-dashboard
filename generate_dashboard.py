@@ -1665,6 +1665,13 @@ def generate_html(all_data, all_stores):
                 <div class="chart-card">
                     <h3>📊 Fill Rate per Store/WH</h3>
                     <div class="chart-container"><canvas id="fillRateChart"></canvas></div>
+                    <!-- Fill Rate Legend -->
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#dc2626;border-radius:2px;"></span><span><b>Overflow</b> (&gt;100%): Stock melebihi max</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#10b981;border-radius:2px;"></span><span><b>High</b> (80-100%): Optimal</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#f59e0b;border-radius:2px;"></span><span><b>Medium</b> (50-80%): Sedang</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#ef4444;border-radius:2px;"></span><span><b>Low</b> (&lt;50%): Perlu restock</span></div>
+                    </div>
                 </div>
                 <div class="chart-card">
                     <h3>🎯 Tier Distribution</h3>
