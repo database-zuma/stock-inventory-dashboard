@@ -959,12 +959,20 @@ def generate_html(all_data, all_stores):
         .table-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; }
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; padding: 12px 14px; text-align: left; font-size: 0.75rem;
             font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
             position: sticky; top: 0; z-index: 10; cursor: pointer;
         }
-        th:hover { background: linear-gradient(135deg, #5a5fcf 0%, #6a4190 100%); }
+        /* Retail table header - Blue */
+        .retail-section th {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        .retail-section th:hover { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+        /* Warehouse table header - Teal/Green */
+        .warehouse-section th {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        }
+        .warehouse-section th:hover { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
         td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; font-size: 0.82rem; }
         tr:hover { background: #f8fafc; }
         tr:nth-child(even) { background: #fafbfc; }
@@ -1310,9 +1318,9 @@ def generate_html(all_data, all_stores):
                     <div class="value" id="rtTotalSku" style="color: #1d4ed8;">0</div>
                     <div class="sub-value">Artikel terdaftar</div>
                 </div>
-                <div class="stat-card" style="border-left: 4px solid #22c55e; background: white;">
-                    <h3 style="color: #166534;">Stock Tersedia</h3>
-                    <div class="value" id="rtTotalStock" style="color: #16a34a;">0</div>
+                <div class="stat-card" style="border-left: 4px solid #3b82f6; background: white;">
+                    <h3 style="color: #1e40af;">Total Stock</h3>
+                    <div class="value" id="rtTotalStock" style="color: #2563eb;">0</div>
                     <div class="sub-value">Total unit positif</div>
                 </div>
                 <div class="stat-card clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer; border-left: 4px solid #ef4444; background: white;">
@@ -1447,9 +1455,9 @@ def generate_html(all_data, all_stores):
                     <div class="value" id="whTotalSku" style="color: #0d9488;">0</div>
                     <div class="sub-value">Artikel terdaftar</div>
                 </div>
-                <div class="stat-card" style="border-left: 4px solid #22c55e; background: white;">
-                    <h3 style="color: #166534;">Stock Tersedia</h3>
-                    <div class="value" id="whTotalStock" style="color: #16a34a;">0</div>
+                <div class="stat-card" style="border-left: 4px solid #14b8a6; background: white;">
+                    <h3 style="color: #0f766e;">Total Stock</h3>
+                    <div class="value" id="whTotalStock" style="color: #0d9488;">0</div>
                     <div class="sub-value">Total unit positif</div>
                 </div>
                 <div class="stat-card clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer; border-left: 4px solid #ef4444; background: white;">
@@ -2713,7 +2721,7 @@ def generate_html(all_data, all_stores):
             Object.entries(whStock)
                 .sort((a, b) => a[0].localeCompare(b[0]))
                 .forEach(([name, stock]) => {
-                    whSelect.innerHTML += `<option value="${name}">${name} (${stock.toLocaleString('id-ID')})</option>`;
+                    whSelect.innerHTML += `<option value="${name}">${name}</option>`;
                 });
 
             if (whStock[currentValue]) {
@@ -2820,7 +2828,7 @@ def generate_html(all_data, all_stores):
 
             storeSelect.innerHTML = '<option value="">Semua Store</option>';
             stores.forEach(s => {
-                storeSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.stock.toLocaleString('id-ID')})</option>`;
+                storeSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`;
             });
 
             if (stores.some(s => s.name === currentValue)) {
