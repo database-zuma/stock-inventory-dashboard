@@ -1815,9 +1815,11 @@ def generate_html(all_data, all_stores):
                             <option value="5">Tier 5</option>
                         </select>
                     </div>
-                    <div style="flex:1;min-width:150px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
-                        <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari kode/artikel..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Series:</label>
+                        <select id="scFilterSeries" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                        </select>
                     </div>
                     <div style="min-width:100px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">TW Status:</label>
@@ -1837,6 +1839,10 @@ def generate_html(all_data, all_stores):
                             <option value="zero">Zero</option>
                             <option value="positive">Positif</option>
                         </select>
+                    </div>
+                    <div style="min-width:120px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
+                        <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                     </div>
                 </div>
             </div>
@@ -1876,6 +1882,39 @@ def generate_html(all_data, all_stores):
                 <div style="padding:12px 15px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
                     <div id="scPageInfo" style="color:#6b7280;font-size:0.8rem;"></div>
                     <div id="scPagination" style="display:flex;gap:5px;"></div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-top:15px;border:1px solid #e2e8f0;">
+                <h4 style="margin:0 0 10px 0;color:#334155;font-size:0.9rem;">Keterangan Perhitungan & Warna:</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Rumus Perhitungan:</div>
+                        <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
+                            <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
+                            <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
+                            <li><b>TW+TO</b> = Total Stock / Avg Sales 3 Bulan</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW/TO:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;1</b> Critical</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>1-2</b> Low</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>2-4</b> Normal</span>
+                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;4</b> High</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW+TO:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;2</b> Critical</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>2-4</b> Low</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>4-8</b> Normal</span>
+                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;8</b> High</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div> <!-- End stockControlView -->
@@ -4245,6 +4284,7 @@ def generate_html(all_data, all_stores):
             const area = document.getElementById('scFilterArea')?.value || '';
             const gender = document.getElementById('scFilterGender')?.value || '';
             const tier = document.getElementById('scFilterTier')?.value || '';
+            const series = document.getElementById('scFilterSeries')?.value || '';
             const twFilter = document.getElementById('scFilterTW')?.value || '';
             const toFilter = document.getElementById('scFilterTO')?.value || '';
             const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
@@ -4264,6 +4304,7 @@ def generate_html(all_data, all_stores):
             scFilteredItems = scItems.filter(item => {
                 if (gender && item.gender !== gender) return false;
                 if (tier && String(item.tier) !== tier) return false;
+                if (series && item.series !== series) return false;
                 if (search && !item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
 
                 // Area filter for stock
