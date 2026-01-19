@@ -1293,32 +1293,42 @@ def generate_html(all_data, all_stores):
             </div>
         </div>
 
-        <!-- Retail Stats Cards -->
-        <div class="stats-grid" id="rtStatsGrid" style="margin-bottom: 15px;">
-            <div class="stat-card primary">
-                <h3>Total SKU</h3>
-                <div class="value" id="rtTotalSku">0</div>
-                <div class="sub-value">Artikel terdaftar</div>
-            </div>
-            <div class="stat-card success">
-                <h3>Stock Tersedia</h3>
-                <div class="value" id="rtTotalStock">0</div>
-                <div class="sub-value">Total unit positif</div>
-            </div>
-            <div class="stat-card info clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer;">
-                <h3>Minus on Hand</h3>
-                <div class="value" id="rtNegativeStock">0</div>
-                <div class="sub-value" id="rtNegativeSubValue">0 artikel | 0 pairs</div>
-            </div>
-        </div>
-
-        <!-- Retail Stock Data Table -->
-        <div class="table-section" id="retailTableSection">
-            <div class="table-header" style="flex-direction: column; align-items: stretch;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0;">🏪 Retail Stock Data</h3>
-                    <button class="btn btn-secondary" onclick="exportData('retail')">📥 Export</button>
+        <!-- ==================== RETAIL SECTION ==================== -->
+        <div class="section-wrapper retail-section" id="retailSectionWrapper" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
+            <!-- Retail Section Header -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3b82f6;">
+                <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
+                    🏪 RETAIL STORE
                 </div>
+                <span style="color: #1e40af; font-size: 0.9rem;">Data stock di toko retail</span>
+            </div>
+
+            <!-- Retail Stats Cards -->
+            <div class="stats-grid" id="rtStatsGrid" style="margin-bottom: 15px;">
+                <div class="stat-card" style="border-left: 4px solid #3b82f6; background: white;">
+                    <h3 style="color: #1e40af;">Total SKU</h3>
+                    <div class="value" id="rtTotalSku" style="color: #1d4ed8;">0</div>
+                    <div class="sub-value">Artikel terdaftar</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #22c55e; background: white;">
+                    <h3 style="color: #166534;">Stock Tersedia</h3>
+                    <div class="value" id="rtTotalStock" style="color: #16a34a;">0</div>
+                    <div class="sub-value">Total unit positif</div>
+                </div>
+                <div class="stat-card clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer; border-left: 4px solid #ef4444; background: white;">
+                    <h3 style="color: #b91c1c;">Minus on Hand</h3>
+                    <div class="value" id="rtNegativeStock" style="color: #dc2626;">0</div>
+                    <div class="sub-value" id="rtNegativeSubValue">0 artikel | 0 pairs</div>
+                </div>
+            </div>
+
+            <!-- Retail Stock Data Table -->
+            <div class="table-section" id="retailTableSection" style="background: white; border-radius: 12px; padding: 15px;">
+                <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #1e40af;">📋 Data Stock Retail</h3>
+                        <button class="btn btn-secondary" onclick="exportData('retail')" style="background: #3b82f6; color: white; border: none;">📥 Export</button>
+                    </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div class="filter-group" style="flex: 0 0 auto;">
@@ -1396,47 +1406,65 @@ def generate_html(all_data, all_stores):
             </div>
             <!-- Retail Charts -->
             <div class="charts-grid" style="margin-top: 20px;">
-                <div class="chart-card">
-                    <h3>📊 Stock per Gender</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #1e40af;">📊 Stock per Gender</h3>
                     <div class="chart-container"><canvas id="rtCategoryChart"></canvas></div>
                 </div>
-                <div class="chart-card">
-                    <h3>📈 Stock per Area</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #1e40af;">📈 Stock per Area</h3>
                     <div class="chart-container"><canvas id="rtAreaChart"></canvas></div>
                 </div>
-                <div class="chart-card">
-                    <h3>🎯 Stock per Series</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #1e40af;">🎯 Stock per Series</h3>
                     <div class="chart-container"><canvas id="rtSeriesChart"></canvas></div>
                 </div>
             </div>
-        </div>
-
-        <!-- Warehouse Stock Data Table -->
-        <!-- Warehouse Stats Cards -->
-        <div class="stats-grid" id="whStatsGrid" style="margin-top: 30px; margin-bottom: 15px;">
-            <div class="stat-card primary">
-                <h3>Total SKU</h3>
-                <div class="value" id="whTotalSku">0</div>
-                <div class="sub-value">Artikel terdaftar</div>
-            </div>
-            <div class="stat-card success">
-                <h3>Stock Tersedia</h3>
-                <div class="value" id="whTotalStock">0</div>
-                <div class="sub-value">Total unit positif</div>
-            </div>
-            <div class="stat-card info clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer;">
-                <h3>Minus on Hand</h3>
-                <div class="value" id="whNegativeStock">0</div>
-                <div class="sub-value" id="whNegativeSubValue">0 artikel | 0 pairs</div>
             </div>
         </div>
+        <!-- END RETAIL SECTION -->
 
-        <div class="table-section" id="warehouseTableSection">
-            <div class="table-header" style="flex-direction: column; align-items: stretch;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0;">📦 Warehouse Stock Data</h3>
-                    <button class="btn btn-secondary" onclick="exportData('warehouse')">📥 Export</button>
+        <!-- ==================== SEPARATOR ==================== -->
+        <div style="display: flex; align-items: center; gap: 20px; margin: 40px 0;">
+            <div style="flex: 1; height: 3px; background: linear-gradient(90deg, transparent, #94a3b8, transparent);"></div>
+            <div style="background: #f1f5f9; padding: 8px 20px; border-radius: 20px; color: #64748b; font-weight: 600; font-size: 0.85rem;">⬇️ WAREHOUSE DATA ⬇️</div>
+            <div style="flex: 1; height: 3px; background: linear-gradient(90deg, transparent, #94a3b8, transparent);"></div>
+        </div>
+
+        <!-- ==================== WAREHOUSE SECTION ==================== -->
+        <div class="section-wrapper warehouse-section" id="warehouseSectionWrapper" style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border: 2px solid #14b8a6; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
+            <!-- Warehouse Section Header -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #14b8a6;">
+                <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.3);">
+                    📦 WAREHOUSE
                 </div>
+                <span style="color: #0f766e; font-size: 0.9rem;">Data stock di gudang</span>
+            </div>
+
+            <!-- Warehouse Stats Cards -->
+            <div class="stats-grid" id="whStatsGrid" style="margin-bottom: 15px;">
+                <div class="stat-card" style="border-left: 4px solid #14b8a6; background: white;">
+                    <h3 style="color: #0f766e;">Total SKU</h3>
+                    <div class="value" id="whTotalSku" style="color: #0d9488;">0</div>
+                    <div class="sub-value">Artikel terdaftar</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #22c55e; background: white;">
+                    <h3 style="color: #166534;">Stock Tersedia</h3>
+                    <div class="value" id="whTotalStock" style="color: #16a34a;">0</div>
+                    <div class="sub-value">Total unit positif</div>
+                </div>
+                <div class="stat-card clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer; border-left: 4px solid #ef4444; background: white;">
+                    <h3 style="color: #b91c1c;">Minus on Hand</h3>
+                    <div class="value" id="whNegativeStock" style="color: #dc2626;">0</div>
+                    <div class="sub-value" id="whNegativeSubValue">0 artikel | 0 pairs</div>
+                </div>
+            </div>
+
+            <div class="table-section" id="warehouseTableSection" style="background: white; border-radius: 12px; padding: 15px;">
+                <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #0f766e;">📋 Data Stock Warehouse</h3>
+                        <button class="btn btn-secondary" onclick="exportData('warehouse')" style="background: #14b8a6; color: white; border: none;">📥 Export</button>
+                    </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div class="filter-group" style="flex: 0 0 auto;">
@@ -1514,20 +1542,22 @@ def generate_html(all_data, all_stores):
             </div>
             <!-- Warehouse Charts -->
             <div class="charts-grid" style="margin-top: 20px;">
-                <div class="chart-card">
-                    <h3>📊 Stock per Gender</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #0f766e;">📊 Stock per Gender</h3>
                     <div class="chart-container"><canvas id="whCategoryChart"></canvas></div>
                 </div>
-                <div class="chart-card">
-                    <h3>📈 Stock per Area</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #0f766e;">📈 Stock per Area</h3>
                     <div class="chart-container"><canvas id="whAreaChart"></canvas></div>
                 </div>
-                <div class="chart-card">
-                    <h3>🎯 Stock per Series</h3>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #0f766e;">🎯 Stock per Series</h3>
                     <div class="chart-container"><canvas id="whSeriesChart"></canvas></div>
                 </div>
             </div>
+            </div>
         </div>
+        <!-- END WAREHOUSE SECTION -->
 
         </div> <!-- End inventoryView -->
 
@@ -1863,8 +1893,7 @@ def generate_html(all_data, all_stores):
             // Show/hide tables and stats based on entity
             // DDD has both retail and warehouse, others only warehouse
             const hasRetail = (entity === 'DDD');
-            document.getElementById('retailTableSection').style.display = hasRetail ? 'block' : 'none';
-            document.getElementById('rtStatsGrid').style.display = hasRetail ? 'grid' : 'none';
+            document.getElementById('retailSectionWrapper').style.display = hasRetail ? 'block' : 'none';
 
             updateDisplay();
 
