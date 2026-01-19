@@ -79,6 +79,7 @@ SHEET_GID = {
     'master_data': 0,            # Sheet Master Data (Kolom A: Kode SKU, B: Kode Kecil, D: Nama, H: Gender, J: Series)
     'master_store': 1803569317,  # Sheet Master Store/Warehouse (mapping area)
     'max_stock': 382740121,      # Sheet Max Stock per store/warehouse
+    'master_assortment': 1063661008,  # Sheet Master Assortment (Kolom B: Kode Kecil, C: Assorment)
 }
 
 # File Master Produk (backup jika online gagal)
@@ -90,6 +91,7 @@ MASTER_PRODUK = {}    # {kode_kecil: {nama, series, gender, tipe, tier}} - dari 
 MASTER_PRODUK_BY_ARTICLE = {}  # {article_upper: tier} - untuk lookup tier by nama artikel
 STORE_AREA_MAP = {}   # {store_name_lower: area} - dari Master Store/Warehouse
 MAX_STOCK_MAP = {}    # {store_name_lower: max_stock} - dari sheet Max Stock
+MASTER_ASSORTMENT = {}  # {kode_kecil_upper: assortment} - dari sheet Master Assortment
 
 # Filter: Exclude produk non-sandal
 EXCLUDE_KEYWORDS = ['HANGER', 'GANTUNGAN', 'DISPLAY', 'AKSESORIS', 'AKSESORI',
@@ -401,6 +403,44 @@ def load_max_stock():
                 count += 1
 
     print(f"    -> {count} max stock entries loaded")
+    return count > 0
+
+def load_master_assortment():
+    """Load Master Assortment dari Google Sheets - assortment per kode kecil"""
+    global MASTER_ASSORTMENT
+    MASTER_ASSORTMENT = {}
+
+    gid = SHEET_GID.get('master_assortment', 1063661008)
+    print(f"  🌐 Fetching Master Assortment dari Google Sheets (gid={gid})...")
+    csv_content = fetch_google_sheet(gid)
+
+    if not csv_content or len(csv_content) < 50:
+        print(f"    ⚠ Gagal fetch Master Assortment")
+        return False
+
+    print(f"    ✓ Berhasil fetch dari Google Sheets")
+
+    # Parse CSV
+    reader = csv.reader(io.StringIO(csv_content))
+    rows = list(reader)
+
+    if not rows:
+        return False
+
+    # Struktur: Kolom A=Kode Sku, B=Kode Kecil, C=Assorment, D=Count
+    count = 0
+    for row in rows[1:]:  # Skip header
+        if len(row) >= 3:
+            kode_kecil = str(row[1]).strip().upper()
+            assortment = str(row[2]).strip()
+
+            if kode_kecil and assortment:
+                # Simpan assortment per kode kecil (hanya perlu 1 karena sama untuk semua size)
+                if kode_kecil not in MASTER_ASSORTMENT:
+                    MASTER_ASSORTMENT[kode_kecil] = assortment
+                    count += 1
+
+    print(f"    -> {count} assortment entries loaded")
     return count > 0
 
 def get_product_info_from_master(sku):
@@ -743,6 +783,7 @@ def generate_html(all_data, all_stores):
     stores_json = json.dumps(all_stores, ensure_ascii=False)
     store_area_json = json.dumps(STORE_AREA_MAP, ensure_ascii=False)
     max_stock_json = json.dumps(MAX_STOCK_MAP, ensure_ascii=False)
+    assortment_json = json.dumps(MASTER_ASSORTMENT, ensure_ascii=False)
 
     html = '''<!DOCTYPE html>
 <html lang="id">
@@ -1716,6 +1757,7 @@ def generate_html(all_data, all_stores):
         const allStores = ''' + stores_json + ''';
         const storeAreaMap = ''' + store_area_json + ''';  // Mapping dari Master Store/Warehouse
         const maxStockMap = ''' + max_stock_json + ''';    // Max Stock per store/WH
+        const assortmentMap = ''' + assortment_json + ''';  // Assortment per kode kecil
 
         let currentEntity = 'DDD';
         let currentType = 'warehouse';
@@ -3371,9 +3413,13 @@ def generate_html(all_data, all_stores):
                 return;
             }
 
+            // Get assortment from assortmentMap
+            const assortment = assortmentMap[kodeKecil.toUpperCase()] || '-';
+
             // Build modal content
             let html = `<div style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px;">
                 <strong>Kode Kecil:</strong> ${kodeKecil} |
+                <strong>Assortment:</strong> ${assortment} |
                 <strong>Total SKU:</strong> ${skuItems.length}
                 ${tableStore ? ' | <strong>Store:</strong> ' + tableStore : ''}
             </div>`;
@@ -3806,6 +3852,7 @@ def main():
     load_master_produk()    # Master Produk (gid=813944059) - Tier
     load_master_store()     # Master Store/Warehouse (gid=1803569317) - Area mapping
     load_max_stock()        # Max Stock (gid=382740121) - Max stock per store/WH
+    load_master_assortment()  # Master Assortment (gid=1063661008) - Assortment per kode kecil
     print()
 
     all_data = {}
