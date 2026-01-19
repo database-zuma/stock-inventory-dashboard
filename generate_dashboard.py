@@ -827,11 +827,11 @@ def generate_html(all_data, all_stores):
             font-weight: 600; cursor: pointer; transition: all 0.3s ease;
             border: 2px solid transparent; display: flex; align-items: center; gap: 8px;
         }
-        .entity-pill.ddd { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-        .entity-pill.ljbb { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
-        .entity-pill.mbb { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-        .entity-pill.ubb { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
-        .entity-pill.active { transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .entity-pill.ddd { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: 2px solid #b91c1c; }
+        .entity-pill.ljbb { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: 2px solid #1d4ed8; }
+        .entity-pill.mbb { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: 2px solid #6d28d9; }
+        .entity-pill.ubb { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 2px solid #b45309; }
+        .entity-pill.active { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
         .entity-pill .count {
             background: rgba(255,255,255,0.5); padding: 2px 8px;
             border-radius: 10px; font-size: 0.75rem;
