@@ -2043,17 +2043,24 @@ def generate_html(all_data, all_stores):
                 let hasStockInFilter = false;
                 let stockValue = 0;
 
-                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                    hasStockInFilter = true;
-                    stockValue = item.store_stock[locationFilter];
-                } else if (areaFilter && item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
-                        if (getAreaFromStore(loc) === areaFilter) {
-                            hasStockInFilter = true;
-                            stockValue += stock;
-                        }
-                    });
+                if (locationFilter) {
+                    // Store filter - only count if item has this store
+                    if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                        hasStockInFilter = true;
+                        stockValue = item.store_stock[locationFilter];
+                    }
+                } else if (areaFilter) {
+                    // Area filter - only count if item has any store in this area
+                    if (item.store_stock) {
+                        Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                            if (getAreaFromStore(loc) === areaFilter) {
+                                hasStockInFilter = true;
+                                stockValue += stock;
+                            }
+                        });
+                    }
                 } else {
+                    // No filter - count all
                     hasStockInFilter = true;
                     stockValue = item.total || 0;
                 }
@@ -2069,15 +2076,19 @@ def generate_html(all_data, all_stores):
                 if (stockValue > 0) totalStock += stockValue;
 
                 // Area calculation
-                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                    const area = getAreaFromStore(locationFilter);
-                    areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
-                } else if (areaFilter && item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
-                        if (getAreaFromStore(loc) === areaFilter) {
-                            areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
-                        }
-                    });
+                if (locationFilter) {
+                    if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                        const area = getAreaFromStore(locationFilter);
+                        areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
+                    }
+                } else if (areaFilter) {
+                    if (item.store_stock) {
+                        Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                            if (getAreaFromStore(loc) === areaFilter) {
+                                areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                            }
+                        });
+                    }
                 } else if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         const area = getAreaFromStore(store);
@@ -2159,17 +2170,24 @@ def generate_html(all_data, all_stores):
                 let hasStockInFilter = false;
                 let stockValue = 0;
 
-                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                    hasStockInFilter = true;
-                    stockValue = item.store_stock[locationFilter];
-                } else if (areaFilter && item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
-                        if (getAreaFromStore(loc) === areaFilter) {
-                            hasStockInFilter = true;
-                            stockValue += stock;
-                        }
-                    });
+                if (locationFilter) {
+                    // Warehouse filter - only count if item has this warehouse
+                    if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                        hasStockInFilter = true;
+                        stockValue = item.store_stock[locationFilter];
+                    }
+                } else if (areaFilter) {
+                    // Area filter - only count if item has any warehouse in this area
+                    if (item.store_stock) {
+                        Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                            if (getAreaFromStore(loc) === areaFilter) {
+                                hasStockInFilter = true;
+                                stockValue += stock;
+                            }
+                        });
+                    }
                 } else {
+                    // No filter - count all
                     hasStockInFilter = true;
                     stockValue = item.total || 0;
                 }
@@ -2185,15 +2203,19 @@ def generate_html(all_data, all_stores):
                 if (stockValue > 0) totalStock += stockValue;
 
                 // Area calculation
-                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                    const area = getAreaFromStore(locationFilter);
-                    areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
-                } else if (areaFilter && item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
-                        if (getAreaFromStore(loc) === areaFilter) {
-                            areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
-                        }
-                    });
+                if (locationFilter) {
+                    if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                        const area = getAreaFromStore(locationFilter);
+                        areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
+                    }
+                } else if (areaFilter) {
+                    if (item.store_stock) {
+                        Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                            if (getAreaFromStore(loc) === areaFilter) {
+                                areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                            }
+                        });
+                    }
                 } else if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         const area = getAreaFromStore(store);
