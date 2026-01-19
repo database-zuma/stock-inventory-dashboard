@@ -1339,102 +1339,30 @@ def generate_html(all_data, all_stores):
             </div>
         </div>
 
-        <!-- Area Filter Tags -->
-        <div class="store-summary" id="storeSection">
-            <h3>🗺️ Filter by Area / Lokasi</h3>
-            <div class="area-tags" id="areaTags"></div>
-            <div class="store-grid" id="storeGrid"></div>
-        </div>
-
-        <!-- Filter Section -->
-        <div class="filter-section">
-            <div class="filter-group">
-                <label>Gender</label>
-                <select id="filterGender" onchange="applyFilters()">
-                    <option value="">Semua</option>
-                    <option value="BABY">Baby</option>
-                    <option value="BOYS">Boys</option>
-                    <option value="GIRLS">Girls</option>
-                    <option value="JUNIOR">Junior</option>
-                    <option value="LADIES">Ladies</option>
-                    <option value="MEN">Men</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Series</label>
-                <select id="filterSeries" onchange="applyFilters()">
-                    <option value="">Semua</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Tier</label>
-                <select id="filterTier" onchange="applyFilters()">
-                    <option value="">Semua</option>
-                    <option value="0">Tier 0</option>
-                    <option value="1">Tier 1</option>
-                    <option value="2">Tier 2</option>
-                    <option value="3">Tier 3</option>
-                    <option value="4">Tier 4</option>
-                    <option value="5">Tier 5</option>
-                    <option value="8">Tier 8</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Status Stock</label>
-                <select id="filterStatus" onchange="applyFilters()">
-                    <option value="">Semua</option>
-                    <option value="high">High (&gt;100)</option>
-                    <option value="medium">Normal (10-100)</option>
-                    <option value="low">Low (1-9)</option>
-                    <option value="zero">Out of Stock</option>
-                    <option value="negative">Minus on Hand</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Size</label>
-                <select id="filterSize" onchange="applyFilters()">
-                    <option value="">Semua</option>
-                    <option value="21">21-22</option>
-                    <option value="23">23-24</option>
-                    <option value="25">25-26</option>
-                    <option value="27">27-28</option>
-                    <option value="29">29-30</option>
-                    <option value="31">31-32</option>
-                    <option value="33">33-34</option>
-                    <option value="35">35-38</option>
-                    <option value="39">39-44</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>&nbsp;</label>
-                <button class="btn btn-secondary" onclick="resetFilters()">↺ Reset Filter</button>
-            </div>
-        </div>
-
-        <!-- Data Table -->
-        <div class="table-section">
+        <!-- Retail Stock Data Table -->
+        <div class="table-section" id="retailTableSection">
             <div class="table-header" style="flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 id="tableTitle" style="margin: 0;">🏪 Retail Stock Data</h3>
-                    <button class="btn btn-secondary" onclick="exportData()">📥 Export</button>
+                    <h3 style="margin: 0;">🏪 Retail Stock Data</h3>
+                    <button class="btn btn-secondary" onclick="exportData('retail')">📥 Export</button>
                 </div>
                 <!-- Filter Row -->
-                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
-                        <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 140px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">Semua Area</option>
                         </select>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Store</label>
-                        <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 200px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <select id="tableFilterStore" onchange="applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">Semua Store</option>
                         </select>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Tier</label>
-                        <select id="tableFilterTier" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <select id="tableFilterTier" onchange="applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 90px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">Semua</option>
                             <option value="0">Tier 0</option>
                             <option value="1">Tier 1</option>
@@ -1446,12 +1374,30 @@ def generate_html(all_data, all_stores):
                         </select>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Gender</label>
+                        <select id="rtFilterGender" onchange="applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="BABY">Baby</option>
+                            <option value="BOYS">Boys</option>
+                            <option value="GIRLS">Girls</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="LADIES">Ladies</option>
+                            <option value="MEN">Men</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Series</label>
+                        <select id="rtFilterSeries" onchange="applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
-                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <input type="text" id="rtSearchInput" placeholder="Cari..." oninput="applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; width: 140px; border-radius: 6px; border: 1px solid #cbd5e1;">
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
-                        <button class="btn btn-secondary" onclick="resetTableFilters()" style="font-size: 0.85rem; padding: 8px 14px; border-radius: 6px;">↺ Reset</button>
+                        <button class="btn btn-secondary" onclick="resetRetailFilters()" style="font-size: 0.85rem; padding: 8px 14px; border-radius: 6px;">↺ Reset</button>
                     </div>
                 </div>
             </div>
@@ -1459,21 +1405,105 @@ def generate_html(all_data, all_stores):
                 <table>
                     <thead>
                         <tr>
-                            <th onclick="sortData('kode_kecil')">Kode Kecil ↕</th>
-                            <th onclick="sortData('gender')">Gender ↕</th>
-                            <th onclick="sortData('series')">Series ↕</th>
-                            <th onclick="sortData('tipe')">Tipe ↕</th>
-                            <th onclick="sortData('name')">Nama Barang ↕</th>
-                            <th onclick="sortData('tier')">Tier ↕</th>
-                            <th onclick="sortData('total')">Total Qty ↕</th>
+                            <th onclick="sortRetailData('kode_kecil')">Kode Kecil ↕</th>
+                            <th onclick="sortRetailData('gender')">Gender ↕</th>
+                            <th onclick="sortRetailData('series')">Series ↕</th>
+                            <th onclick="sortRetailData('tipe')">Tipe ↕</th>
+                            <th onclick="sortRetailData('name')">Nama Barang ↕</th>
+                            <th onclick="sortRetailData('tier')">Tier ↕</th>
+                            <th onclick="sortRetailData('total')">Total Qty ↕</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody"></tbody>
+                    <tbody id="rtTableBody"></tbody>
                 </table>
             </div>
             <div class="pagination">
-                <div class="page-info" id="pageInfo">Showing 0 items</div>
-                <div class="page-buttons" id="pageButtons"></div>
+                <div class="page-info" id="rtPageInfo">Showing 0 items</div>
+                <div class="page-buttons" id="rtPageButtons"></div>
+            </div>
+        </div>
+
+        <!-- Warehouse Stock Data Table -->
+        <div class="table-section" id="warehouseTableSection" style="margin-top: 30px;">
+            <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">📦 Warehouse Stock Data</h3>
+                    <button class="btn btn-secondary" onclick="exportData('warehouse')">📥 Export</button>
+                </div>
+                <!-- Filter Row -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
+                        <select id="whFilterArea" onchange="updateWhWarehouseDropdown(); applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Area</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Warehouse</label>
+                        <select id="whFilterWarehouse" onchange="applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Warehouse</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Tier</label>
+                        <select id="whFilterTier" onchange="applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 90px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="0">Tier 0</option>
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                            <option value="4">Tier 4</option>
+                            <option value="5">Tier 5</option>
+                            <option value="8">Tier 8</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Gender</label>
+                        <select id="whFilterGender" onchange="applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="BABY">Baby</option>
+                            <option value="BOYS">Boys</option>
+                            <option value="GIRLS">Girls</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="LADIES">Ladies</option>
+                            <option value="MEN">Men</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Series</label>
+                        <select id="whFilterSeries" onchange="applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
+                        <input type="text" id="whSearchInput" placeholder="Cari..." oninput="applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; width: 140px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
+                        <button class="btn btn-secondary" onclick="resetWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 14px; border-radius: 6px;">↺ Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper" style="margin-top: 15px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortWarehouseData('kode_kecil')">Kode Kecil ↕</th>
+                            <th onclick="sortWarehouseData('gender')">Gender ↕</th>
+                            <th onclick="sortWarehouseData('series')">Series ↕</th>
+                            <th onclick="sortWarehouseData('tipe')">Tipe ↕</th>
+                            <th onclick="sortWarehouseData('name')">Nama Barang ↕</th>
+                            <th onclick="sortWarehouseData('tier')">Tier ↕</th>
+                            <th onclick="sortWarehouseData('total')">Total Qty ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="whTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="page-info" id="whPageInfo">Showing 0 items</div>
+                <div class="page-buttons" id="whPageButtons"></div>
             </div>
         </div>
 
@@ -1763,12 +1793,21 @@ def generate_html(all_data, all_stores):
         let currentType = 'warehouse';
         let currentArea = '';
         let currentStore = '';
-        let filteredData = [];
-        let currentPage = 1;
-        const itemsPerPage = 50;
-        let sortField = 'total';
-        let sortDir = 'desc';
         let categoryChart, areaChart, seriesChart;
+
+        // Retail table state
+        let rtFilteredData = [];
+        let rtCurrentPage = 1;
+        let rtSortField = 'total';
+        let rtSortDir = 'desc';
+
+        // Warehouse table state
+        let whFilteredData = [];
+        let whCurrentPage = 1;
+        let whSortField = 'total';
+        let whSortDir = 'desc';
+
+        const itemsPerPage = 50;
 
         // Max Stock Analysis state
         let currentView = 'inventory';
@@ -1798,9 +1837,16 @@ def generate_html(all_data, all_stores):
             document.querySelectorAll('.entity-pill').forEach(pill => {
                 pill.classList.toggle('active', pill.dataset.entity === entity);
             });
-            currentPage = 1;
+            rtCurrentPage = 1;
+            whCurrentPage = 1;
             currentArea = '';
             currentStore = '';
+
+            // Show/hide tables based on entity
+            // DDD has both retail and warehouse, others only warehouse
+            const hasRetail = (entity === 'DDD');
+            document.getElementById('retailTableSection').style.display = hasRetail ? 'block' : 'none';
+
             updateDisplay();
 
             // Update Max Stock Analysis jika view aktif
@@ -1859,18 +1905,67 @@ def generate_html(all_data, all_stores):
 
         function updateDisplay() {
             const data = getData();
-            filteredData = [...data];
             updateStats(data);
             updateCharts(data);
-            updateSeriesFilter(data);
-            renderAreaTags();
-            renderStoreGrid();
-            updateTableAreaDropdown();
-            applyFilters();
+
+            // Update series filters for both tables
+            updateSeriesDropdowns();
+
+            // Update retail table (only if DDD)
+            if (currentEntity === 'DDD') {
+                updateTableAreaDropdown();
+                updateTableStoreDropdown();
+                applyRetailFilters();
+            }
+
+            // Update warehouse table
+            updateWhAreaDropdown();
+            updateWhWarehouseDropdown();
+            applyWarehouseFilters();
+        }
+
+        function updateSeriesDropdowns() {
+            var entityData = allData[currentEntity] || {};
+            var rtData = entityData.retail || [];
+            var whData = entityData.warehouse || [];
+
+            // Get unique series from retail
+            const rtSeriesSet = new Set();
+            rtData.forEach(item => {
+                if (item.series && item.series !== '-' && item.series !== '') {
+                    rtSeriesSet.add(item.series);
+                }
+            });
+            const rtSeriesList = Array.from(rtSeriesSet).sort();
+
+            const rtSelect = document.getElementById('rtFilterSeries');
+            if (rtSelect) {
+                rtSelect.innerHTML = '<option value="">Semua</option>';
+                rtSeriesList.forEach(s => {
+                    rtSelect.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            }
+
+            // Get unique series from warehouse
+            const whSeriesSet = new Set();
+            whData.forEach(item => {
+                if (item.series && item.series !== '-' && item.series !== '') {
+                    whSeriesSet.add(item.series);
+                }
+            });
+            const whSeriesList = Array.from(whSeriesSet).sort();
+
+            const whSelect = document.getElementById('whFilterSeries');
+            if (whSelect) {
+                whSelect.innerHTML = '<option value="">Semua</option>';
+                whSeriesList.forEach(s => {
+                    whSelect.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            }
         }
 
         function updateSeriesFilter(data) {
-            // Get unique series dari data, exclude "-" dan kosong
+            // Legacy - keep for compatibility
             const seriesSet = new Set();
             data.forEach(item => {
                 if (item.series && item.series !== '-' && item.series !== '') {
@@ -1880,6 +1975,7 @@ def generate_html(all_data, all_stores):
             const seriesList = Array.from(seriesSet).sort();
 
             const select = document.getElementById('filterSeries');
+            if (!select) return;
             const currentValue = select.value;
 
             // Keep first option (Semua)
@@ -2086,16 +2182,14 @@ def generate_html(all_data, all_stores):
             document.getElementById('storeGrid').innerHTML = storeHtml || '<div style="color:#9ca3af;padding:20px;">Tidak ada store untuk area ini</div>';
         }
 
-        function applyFilters() {
-            // Use ALL data (warehouse + retail) for table filtering
-            let data = getAllStoresAndWarehouses();
+        // ==================== RETAIL TABLE FUNCTIONS ====================
+        function applyRetailFilters() {
+            var entityData = allData[currentEntity] || {};
+            let data = entityData.retail || [];
 
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const gender = document.getElementById('filterGender').value;
-            const series = document.getElementById('filterSeries').value;
-            const size = document.getElementById('filterSize').value;
-
-            // Table-specific filters (separate from chart filters)
+            const search = document.getElementById('rtSearchInput').value.toLowerCase();
+            const gender = document.getElementById('rtFilterGender').value;
+            const series = document.getElementById('rtFilterSeries').value;
             const tableArea = document.getElementById('tableFilterArea').value;
             const tableStore = document.getElementById('tableFilterStore').value;
             const tableTier = document.getElementById('tableFilterTier').value;
@@ -2112,11 +2206,6 @@ def generate_html(all_data, all_stores):
             if (series) {
                 data = data.filter(item => (item.series || '').includes(series) || (item.name || '').toUpperCase().includes(series));
             }
-            if (size) {
-                data = data.filter(item => (item.size || '').startsWith(size));
-            }
-
-            // Filter by Store (or Area if no store selected)
             if (tableStore) {
                 data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined);
             } else if (tableArea) {
@@ -2126,83 +2215,330 @@ def generate_html(all_data, all_stores):
                 });
             }
 
-            // Group by kode_kecil and sum quantities
+            // Group by kode_kecil
             const groupedMap = {};
             data.forEach(item => {
                 const kk = (item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
-
                 if (!groupedMap[kk]) {
-                    // Clone the first item as base
-                    groupedMap[kk] = {
-                        ...item,
-                        total: 0,
-                        store_stock: {}
-                    };
+                    groupedMap[kk] = { ...item, total: 0, store_stock: {} };
                 }
-
-                // Sum total
                 groupedMap[kk].total += item.total || 0;
-
-                // Sum store_stock
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, qty]) => {
                         groupedMap[kk].store_stock[store] = (groupedMap[kk].store_stock[store] || 0) + qty;
                     });
                 }
             });
-
-            // Convert back to array
             data = Object.values(groupedMap);
 
             // Sort
-            if (sortField) {
-                data.sort((a, b) => {
-                    let aVal, bVal;
-                    // If sorting by total and a store is selected, use store-specific stock
-                    if (sortField === 'total' && tableStore) {
-                        aVal = (a.store_stock && a.store_stock[tableStore]) || 0;
-                        bVal = (b.store_stock && b.store_stock[tableStore]) || 0;
-                    } else {
-                        aVal = a[sortField];
-                        bVal = b[sortField];
+            data.sort((a, b) => {
+                let aVal, bVal;
+                if (rtSortField === 'total' && tableStore) {
+                    aVal = (a.store_stock && a.store_stock[tableStore]) || 0;
+                    bVal = (b.store_stock && b.store_stock[tableStore]) || 0;
+                } else {
+                    aVal = a[rtSortField];
+                    bVal = b[rtSortField];
+                }
+                if (typeof aVal === 'string') aVal = (aVal || '').toLowerCase();
+                if (typeof bVal === 'string') bVal = (bVal || '').toLowerCase();
+                if (aVal < bVal) return rtSortDir === 'asc' ? -1 : 1;
+                if (aVal > bVal) return rtSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            rtFilteredData = data;
+            rtCurrentPage = 1;
+            renderRetailTable();
+        }
+
+        function sortRetailData(field) {
+            rtSortDir = rtSortField === field && rtSortDir === 'desc' ? 'asc' : 'desc';
+            rtSortField = field;
+            applyRetailFilters();
+        }
+
+        function resetRetailFilters() {
+            document.getElementById('rtSearchInput').value = '';
+            document.getElementById('rtFilterGender').value = '';
+            document.getElementById('rtFilterSeries').value = '';
+            document.getElementById('tableFilterArea').value = '';
+            document.getElementById('tableFilterStore').value = '';
+            document.getElementById('tableFilterTier').value = '';
+            rtSortField = 'total';
+            rtSortDir = 'desc';
+            updateTableStoreDropdown();
+            applyRetailFilters();
+        }
+
+        function renderRetailTable() {
+            const start = (rtCurrentPage - 1) * itemsPerPage;
+            const pageData = rtFilteredData.slice(start, start + itemsPerPage);
+            const tbody = document.getElementById('rtTableBody');
+            const tableStore = document.getElementById('tableFilterStore').value;
+
+            if (!pageData.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
+            } else {
+                tbody.innerHTML = pageData.map(item => {
+                    let displayStock = item.total;
+                    if (tableStore && item.store_stock) {
+                        displayStock = item.store_stock[tableStore] || 0;
                     }
-                    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-                    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-                    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-                    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-                    return 0;
+                    const kodeKecil = item.kode_kecil || '-';
+                    return `<tr>
+                        <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'retail'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer;">${kodeKecil}</a></td>
+                        <td>${item.gender || '-'}</td>
+                        <td>${item.series || '-'}</td>
+                        <td>${item.tipe || '-'}</td>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.tier || '-'}</td>
+                        <td><strong>${displayStock.toLocaleString('id-ID')}</strong></td>
+                    </tr>`;
+                }).join('');
+            }
+            renderRetailPagination();
+        }
+
+        function renderRetailPagination() {
+            const totalPages = Math.ceil(rtFilteredData.length / itemsPerPage);
+            const pageInfo = document.getElementById('rtPageInfo');
+            const pageButtons = document.getElementById('rtPageButtons');
+
+            const start = (rtCurrentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(rtCurrentPage * itemsPerPage, rtFilteredData.length);
+            pageInfo.textContent = rtFilteredData.length ? `Showing ${start}-${end} of ${rtFilteredData.length} items` : 'Showing 0 items';
+
+            let btns = '';
+            if (totalPages > 1) {
+                if (rtCurrentPage > 1) btns += `<button onclick="rtGoToPage(${rtCurrentPage - 1})">‹</button>`;
+                for (let i = Math.max(1, rtCurrentPage - 2); i <= Math.min(totalPages, rtCurrentPage + 2); i++) {
+                    btns += `<button class="${i === rtCurrentPage ? 'active' : ''}" onclick="rtGoToPage(${i})">${i}</button>`;
+                }
+                if (rtCurrentPage < totalPages) btns += `<button onclick="rtGoToPage(${rtCurrentPage + 1})">›</button>`;
+            }
+            pageButtons.innerHTML = btns;
+        }
+
+        function rtGoToPage(page) {
+            rtCurrentPage = page;
+            renderRetailTable();
+        }
+
+        // ==================== WAREHOUSE TABLE FUNCTIONS ====================
+        function applyWarehouseFilters() {
+            var entityData = allData[currentEntity] || {};
+            let data = entityData.warehouse || [];
+
+            const search = document.getElementById('whSearchInput').value.toLowerCase();
+            const gender = document.getElementById('whFilterGender').value;
+            const series = document.getElementById('whFilterSeries').value;
+            const whArea = document.getElementById('whFilterArea').value;
+            const whWarehouse = document.getElementById('whFilterWarehouse').value;
+            const whTier = document.getElementById('whFilterTier').value;
+
+            if (search) {
+                data = data.filter(item => item.sku.toLowerCase().includes(search) || (item.name || '').toLowerCase().includes(search) || (item.kode_kecil || '').toLowerCase().includes(search));
+            }
+            if (gender) {
+                data = data.filter(item => (item.gender || '').toUpperCase().includes(gender.toUpperCase()));
+            }
+            if (whTier) {
+                data = data.filter(item => (item.tier || '') === whTier);
+            }
+            if (series) {
+                data = data.filter(item => (item.series || '').includes(series) || (item.name || '').toUpperCase().includes(series));
+            }
+            if (whWarehouse) {
+                data = data.filter(item => item.store_stock && item.store_stock[whWarehouse] !== undefined);
+            } else if (whArea) {
+                data = data.filter(item => {
+                    if (!item.store_stock) return false;
+                    return Object.keys(item.store_stock).some(wh => getAreaFromStore(wh) === whArea);
                 });
             }
 
-            filteredData = data;
-            currentPage = 1;
-            renderTable();
+            // Group by kode_kecil
+            const groupedMap = {};
+            data.forEach(item => {
+                const kk = (item.kode_kecil || '').toUpperCase();
+                if (!kk) return;
+                if (!groupedMap[kk]) {
+                    groupedMap[kk] = { ...item, total: 0, store_stock: {} };
+                }
+                groupedMap[kk].total += item.total || 0;
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([wh, qty]) => {
+                        groupedMap[kk].store_stock[wh] = (groupedMap[kk].store_stock[wh] || 0) + qty;
+                    });
+                }
+            });
+            data = Object.values(groupedMap);
+
+            // Sort
+            data.sort((a, b) => {
+                let aVal, bVal;
+                if (whSortField === 'total' && whWarehouse) {
+                    aVal = (a.store_stock && a.store_stock[whWarehouse]) || 0;
+                    bVal = (b.store_stock && b.store_stock[whWarehouse]) || 0;
+                } else {
+                    aVal = a[whSortField];
+                    bVal = b[whSortField];
+                }
+                if (typeof aVal === 'string') aVal = (aVal || '').toLowerCase();
+                if (typeof bVal === 'string') bVal = (bVal || '').toLowerCase();
+                if (aVal < bVal) return whSortDir === 'asc' ? -1 : 1;
+                if (aVal > bVal) return whSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            whFilteredData = data;
+            whCurrentPage = 1;
+            renderWarehouseTable();
+        }
+
+        function sortWarehouseData(field) {
+            whSortDir = whSortField === field && whSortDir === 'desc' ? 'asc' : 'desc';
+            whSortField = field;
+            applyWarehouseFilters();
+        }
+
+        function resetWarehouseFilters() {
+            document.getElementById('whSearchInput').value = '';
+            document.getElementById('whFilterGender').value = '';
+            document.getElementById('whFilterSeries').value = '';
+            document.getElementById('whFilterArea').value = '';
+            document.getElementById('whFilterWarehouse').value = '';
+            document.getElementById('whFilterTier').value = '';
+            whSortField = 'total';
+            whSortDir = 'desc';
+            updateWhWarehouseDropdown();
+            applyWarehouseFilters();
+        }
+
+        function renderWarehouseTable() {
+            const start = (whCurrentPage - 1) * itemsPerPage;
+            const pageData = whFilteredData.slice(start, start + itemsPerPage);
+            const tbody = document.getElementById('whTableBody');
+            const whWarehouse = document.getElementById('whFilterWarehouse').value;
+
+            if (!pageData.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
+            } else {
+                tbody.innerHTML = pageData.map(item => {
+                    let displayStock = item.total;
+                    if (whWarehouse && item.store_stock) {
+                        displayStock = item.store_stock[whWarehouse] || 0;
+                    }
+                    const kodeKecil = item.kode_kecil || '-';
+                    return `<tr>
+                        <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'warehouse'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer;">${kodeKecil}</a></td>
+                        <td>${item.gender || '-'}</td>
+                        <td>${item.series || '-'}</td>
+                        <td>${item.tipe || '-'}</td>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.tier || '-'}</td>
+                        <td><strong>${displayStock.toLocaleString('id-ID')}</strong></td>
+                    </tr>`;
+                }).join('');
+            }
+            renderWarehousePagination();
+        }
+
+        function renderWarehousePagination() {
+            const totalPages = Math.ceil(whFilteredData.length / itemsPerPage);
+            const pageInfo = document.getElementById('whPageInfo');
+            const pageButtons = document.getElementById('whPageButtons');
+
+            const start = (whCurrentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(whCurrentPage * itemsPerPage, whFilteredData.length);
+            pageInfo.textContent = whFilteredData.length ? `Showing ${start}-${end} of ${whFilteredData.length} items` : 'Showing 0 items';
+
+            let btns = '';
+            if (totalPages > 1) {
+                if (whCurrentPage > 1) btns += `<button onclick="whGoToPage(${whCurrentPage - 1})">‹</button>`;
+                for (let i = Math.max(1, whCurrentPage - 2); i <= Math.min(totalPages, whCurrentPage + 2); i++) {
+                    btns += `<button class="${i === whCurrentPage ? 'active' : ''}" onclick="whGoToPage(${i})">${i}</button>`;
+                }
+                if (whCurrentPage < totalPages) btns += `<button onclick="whGoToPage(${whCurrentPage + 1})">›</button>`;
+            }
+            pageButtons.innerHTML = btns;
+        }
+
+        function whGoToPage(page) {
+            whCurrentPage = page;
+            renderWarehouseTable();
+        }
+
+        function updateWhAreaDropdown() {
+            var entityData = allData[currentEntity] || {};
+            var whData = entityData.warehouse || [];
+            const areas = new Set();
+
+            whData.forEach(item => {
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(wh => {
+                        areas.add(getAreaFromStore(wh));
+                    });
+                }
+            });
+
+            const areaSelect = document.getElementById('whFilterArea');
+            areaSelect.innerHTML = '<option value="">Semua Area</option>';
+            Array.from(areas).sort().forEach(area => {
+                areaSelect.innerHTML += `<option value="${area}">${area}</option>`;
+            });
+        }
+
+        function updateWhWarehouseDropdown() {
+            var entityData = allData[currentEntity] || {};
+            var whData = entityData.warehouse || [];
+            const whArea = document.getElementById('whFilterArea').value;
+
+            const whStock = {};
+            whData.forEach(item => {
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([wh, stock]) => {
+                        if (!whArea || getAreaFromStore(wh) === whArea) {
+                            if (!whStock[wh]) whStock[wh] = 0;
+                            whStock[wh] += stock || 0;
+                        }
+                    });
+                }
+            });
+
+            const whSelect = document.getElementById('whFilterWarehouse');
+            const currentValue = whSelect.value;
+            whSelect.innerHTML = '<option value="">Semua Warehouse</option>';
+
+            Object.entries(whStock)
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .forEach(([name, stock]) => {
+                    whSelect.innerHTML += `<option value="${name}">${name} (${stock.toLocaleString('id-ID')})</option>`;
+                });
+
+            if (whStock[currentValue]) {
+                whSelect.value = currentValue;
+            }
+        }
+
+        // Legacy functions - keep for compatibility
+        function applyFilters() {
+            applyRetailFilters();
         }
 
         function sortData(field) {
-            sortDir = sortField === field && sortDir === 'desc' ? 'asc' : 'desc';
-            sortField = field;
-            applyFilters();
+            sortRetailData(field);
         }
 
         function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filterGender').value = '';
-            document.getElementById('filterTier').value = '';
-            document.getElementById('filterSeries').value = '';
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterSize').value = '';
-            currentArea = '';
-            currentStore = '';
-            sortField = 'total';
-            sortDir = 'desc';
-            document.querySelectorAll('.area-tag, .store-item').forEach(el => el.classList.remove('active'));
-            applyFilters();
+            resetRetailFilters();
         }
 
         function resetTableFilters() {
-            document.getElementById('searchInput').value = '';
+            document.getElementById('rtSearchInput').value = '';
             document.getElementById('tableFilterArea').value = '';
             document.getElementById('tableFilterStore').value = '';
             document.getElementById('tableFilterTier').value = '';
@@ -2295,51 +2631,13 @@ def generate_html(all_data, all_stores):
             }
         }
 
+        // Legacy renderTable - redirect to renderRetailTable
         function renderTable() {
-            const start = (currentPage - 1) * itemsPerPage;
-            const pageData = filteredData.slice(start, start + itemsPerPage);
-            const tbody = document.getElementById('tableBody');
-            const tableStore = document.getElementById('tableFilterStore').value;
-
-            if (!pageData.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
-            } else {
-                tbody.innerHTML = pageData.map(item => {
-                    let displayStock = item.total;
-                    if (tableStore && item.store_stock) {
-                        displayStock = item.store_stock[tableStore] || 0;
-                    }
-                    const kodeKecil = item.kode_kecil || '-';
-                    return `<tr>
-                        <td><a href="#" onclick="showSkuDetail('${kodeKecil}'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer;">${kodeKecil}</a></td>
-                        <td>${item.gender || '-'}</td>
-                        <td>${item.series || '-'}</td>
-                        <td>${item.tipe || '-'}</td>
-                        <td>${item.name || '-'}</td>
-                        <td>${item.tier || '-'}</td>
-                        <td><strong>${displayStock.toLocaleString('id-ID')}</strong></td>
-                    </tr>`;
-                }).join('');
-            }
-
-            // Pagination
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            document.getElementById('pageInfo').textContent =
-                `Showing ${start + 1}-${Math.min(start + itemsPerPage, filteredData.length)} of ${filteredData.length} items`;
-
-            let btns = `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
-            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-                btns += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-            }
-            btns += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>›</button>`;
-            document.getElementById('pageButtons').innerHTML = btns;
+            renderRetailTable();
         }
 
         function goToPage(page) {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            renderTable();
+            rtGoToPage(page);
         }
 
         function getStockBadge(stock) {
@@ -3437,21 +3735,30 @@ def generate_html(all_data, all_stores):
         }
 
         // SKU Detail Modal Functions
-        function showSkuDetail(kodeKecil) {
-            // Use retail data only to avoid duplicates
+        function showSkuDetail(kodeKecil, dataType) {
             var entityData = allData[currentEntity] || {};
-            var rtData = entityData.retail || [];
-            const tableStore = document.getElementById('tableFilterStore').value;
+            var data = dataType === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+
+            // Get location filter based on type
+            let locationFilter = '';
+            let locationLabel = '';
+            if (dataType === 'warehouse') {
+                locationFilter = document.getElementById('whFilterWarehouse').value;
+                locationLabel = 'Warehouse';
+            } else {
+                locationFilter = document.getElementById('tableFilterStore').value;
+                locationLabel = 'Store';
+            }
 
             // Find all unique SKUs with this kode_kecil
             const skuMap = {};
-            rtData.forEach(item => {
+            data.forEach(item => {
                 if ((item.kode_kecil || '').toUpperCase() === kodeKecil.toUpperCase()) {
                     const sku = item.sku;
                     if (!skuMap[sku]) {
                         let qty = item.total;
-                        if (tableStore && item.store_stock && item.store_stock[tableStore] !== undefined) {
-                            qty = item.store_stock[tableStore];
+                        if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                            qty = item.store_stock[locationFilter];
                         }
                         skuMap[sku] = {
                             sku: sku,
@@ -3478,7 +3785,7 @@ def generate_html(all_data, all_stores):
                 <strong>Kode Kecil:</strong> ${kodeKecil} |
                 <strong>Assortment:</strong> ${assortment} |
                 <strong>Total SKU:</strong> ${skuItems.length}
-                ${tableStore ? ' | <strong>Store:</strong> ' + tableStore : ''}
+                ${locationFilter ? ' | <strong>' + locationLabel + ':</strong> ' + locationFilter : ''}
             </div>`;
 
             html += `<div style="max-height: 400px; overflow-y: auto;">
