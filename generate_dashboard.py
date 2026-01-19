@@ -803,7 +803,7 @@ def generate_html(all_data, all_stores):
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff 0%, #fce7f3 50%, #dbeafe 100%);
+            background: #ffffff;
             min-height: 100vh; color: #1f2937;
         }
         .header {
@@ -1432,10 +1432,10 @@ def generate_html(all_data, all_stores):
         <!-- END RETAIL SECTION -->
 
         <!-- ==================== SEPARATOR ==================== -->
-        <div style="display: flex; align-items: center; gap: 20px; margin: 40px 0;">
-            <div style="flex: 1; height: 3px; background: linear-gradient(90deg, transparent, #94a3b8, transparent);"></div>
-            <div style="background: #f1f5f9; padding: 8px 20px; border-radius: 20px; color: #64748b; font-weight: 600; font-size: 0.85rem;">⬇️ WAREHOUSE DATA ⬇️</div>
-            <div style="flex: 1; height: 3px; background: linear-gradient(90deg, transparent, #94a3b8, transparent);"></div>
+        <div style="display: flex; align-items: center; gap: 20px; margin: 50px 0;">
+            <div style="flex: 1; height: 4px; background: linear-gradient(90deg, transparent, #64748b, #64748b, transparent);"></div>
+            <div style="background: linear-gradient(135deg, #1f2937, #374151); padding: 12px 30px; border-radius: 25px; color: white; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">📦 WAREHOUSE DATA 📦</div>
+            <div style="flex: 1; height: 4px; background: linear-gradient(90deg, transparent, #64748b, #64748b, transparent);"></div>
         </div>
 
         <!-- ==================== WAREHOUSE SECTION ==================== -->
