@@ -807,8 +807,8 @@ def generate_html(all_data, all_stores):
             min-height: 100vh; color: #1f2937;
         }
         .header {
-            background: var(--bg-gradient); padding: 20px 40px; color: white;
-            box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); padding: 20px 40px; color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
         }
         .header h1 { font-size: 1.6rem; font-weight: 700; }
