@@ -1258,7 +1258,23 @@ def generate_html(all_data, all_stores):
     </div>
 
     <div class="container">
-        <!-- Entity Section -->
+        <!-- Toggle View Dashboard -->
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
+                📊 Stock Inventory
+            </button>
+            <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
+                📈 Max Stock Analysis
+            </button>
+            <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
+                📋 Stock Control
+            </button>
+        </div>
+
+        <!-- ==================== INVENTORY VIEW ==================== -->
+        <div class="view-container active" id="inventoryView">
+
+        <!-- Entity Section (only for Stock Inventory) -->
         <div class="entity-section">
             <span style="font-weight:600; color:#374151; font-size:0.85rem;">ENTITAS:</span>
             <div class="entity-pills">
@@ -1279,29 +1295,6 @@ def generate_html(all_data, all_stores):
                     <span class="count" id="countUBB">0</span>
                 </div>
             </div>
-        </div>
-
-        <!-- Toggle View Dashboard -->
-        <div class="view-toggle">
-            <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
-                📊 Stock Inventory
-            </button>
-            <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
-                📈 Max Stock Analysis
-            </button>
-            <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
-                📋 Stock Control
-            </button>
-        </div>
-
-        <!-- ==================== INVENTORY VIEW ==================== -->
-        <div class="view-container active" id="inventoryView">
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" data-type="warehouse" onclick="switchTab('warehouse')">📦 Warehouse</button>
-            <button class="tab" data-type="retail" onclick="switchTab('retail')">🏪 Retail Store</button>
-            <button class="tab" data-type="all" onclick="switchTab('all')">📋 Semua Data</button>
         </div>
 
         <!-- Retail Stats Cards -->
