@@ -876,13 +876,6 @@ def generate_html(all_data, all_stores):
         .stat-card .value { font-size: 1.6rem; font-weight: 700; color: #1f2937; }
         .stat-card .sub-value { font-size: 0.75rem; color: #9ca3af; margin-top: 3px; }
 
-        /* Compact Stats for table sections */
-        .stats-grid.compact { gap: 10px; margin-bottom: 15px; }
-        .stats-grid.compact .stat-card { padding: 12px 15px; border-radius: 10px; }
-        .stats-grid.compact .stat-card .value { font-size: 1.1rem; }
-        .stats-grid.compact .stat-card .sub-value { font-size: 0.65rem; margin-top: 2px; }
-        .stats-grid.compact .stat-card h3 { font-size: 0.6rem; margin-bottom: 4px; }
-
         /* Charts */
         .charts-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1311,30 +1304,31 @@ def generate_html(all_data, all_stores):
             <button class="tab" data-type="all" onclick="switchTab('all')">📋 Semua Data</button>
         </div>
 
+        <!-- Retail Stats Cards -->
+        <div class="stats-grid" id="rtStatsGrid" style="margin-bottom: 15px;">
+            <div class="stat-card primary">
+                <h3>Total SKU</h3>
+                <div class="value" id="rtTotalSku">0</div>
+                <div class="sub-value">Artikel terdaftar</div>
+            </div>
+            <div class="stat-card success">
+                <h3>Stock Tersedia</h3>
+                <div class="value" id="rtTotalStock">0</div>
+                <div class="sub-value">Total unit positif</div>
+            </div>
+            <div class="stat-card info clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer;">
+                <h3>Minus on Hand</h3>
+                <div class="value" id="rtNegativeStock">0</div>
+                <div class="sub-value" id="rtNegativeSubValue">0 artikel | 0 pairs</div>
+            </div>
+        </div>
+
         <!-- Retail Stock Data Table -->
         <div class="table-section" id="retailTableSection">
             <div class="table-header" style="flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">🏪 Retail Stock Data</h3>
                     <button class="btn btn-secondary" onclick="exportData('retail')">📥 Export</button>
-                </div>
-                <!-- Retail Stats Cards -->
-                <div class="stats-grid compact">
-                    <div class="stat-card primary">
-                        <h3>Total SKU</h3>
-                        <div class="value" id="rtTotalSku">0</div>
-                        <div class="sub-value">Artikel terdaftar</div>
-                    </div>
-                    <div class="stat-card success">
-                        <h3>Stock Tersedia</h3>
-                        <div class="value" id="rtTotalStock">0</div>
-                        <div class="sub-value">Total unit positif</div>
-                    </div>
-                    <div class="stat-card info clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer;">
-                        <h3>Minus on Hand</h3>
-                        <div class="value" id="rtNegativeStock">0</div>
-                        <div class="sub-value" id="rtNegativeSubValue">0 artikel | 0 pairs</div>
-                    </div>
                 </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -1429,29 +1423,30 @@ def generate_html(all_data, all_stores):
         </div>
 
         <!-- Warehouse Stock Data Table -->
-        <div class="table-section" id="warehouseTableSection" style="margin-top: 30px;">
+        <!-- Warehouse Stats Cards -->
+        <div class="stats-grid" id="whStatsGrid" style="margin-top: 30px; margin-bottom: 15px;">
+            <div class="stat-card primary">
+                <h3>Total SKU</h3>
+                <div class="value" id="whTotalSku">0</div>
+                <div class="sub-value">Artikel terdaftar</div>
+            </div>
+            <div class="stat-card success">
+                <h3>Stock Tersedia</h3>
+                <div class="value" id="whTotalStock">0</div>
+                <div class="sub-value">Total unit positif</div>
+            </div>
+            <div class="stat-card info clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer;">
+                <h3>Minus on Hand</h3>
+                <div class="value" id="whNegativeStock">0</div>
+                <div class="sub-value" id="whNegativeSubValue">0 artikel | 0 pairs</div>
+            </div>
+        </div>
+
+        <div class="table-section" id="warehouseTableSection">
             <div class="table-header" style="flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">📦 Warehouse Stock Data</h3>
                     <button class="btn btn-secondary" onclick="exportData('warehouse')">📥 Export</button>
-                </div>
-                <!-- Warehouse Stats Cards -->
-                <div class="stats-grid compact">
-                    <div class="stat-card primary">
-                        <h3>Total SKU</h3>
-                        <div class="value" id="whTotalSku">0</div>
-                        <div class="sub-value">Artikel terdaftar</div>
-                    </div>
-                    <div class="stat-card success">
-                        <h3>Stock Tersedia</h3>
-                        <div class="value" id="whTotalStock">0</div>
-                        <div class="sub-value">Total unit positif</div>
-                    </div>
-                    <div class="stat-card info clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer;">
-                        <h3>Minus on Hand</h3>
-                        <div class="value" id="whNegativeStock">0</div>
-                        <div class="sub-value" id="whNegativeSubValue">0 artikel | 0 pairs</div>
-                    </div>
                 </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -1883,10 +1878,11 @@ def generate_html(all_data, all_stores):
             currentArea = '';
             currentStore = '';
 
-            // Show/hide tables based on entity
+            // Show/hide tables and stats based on entity
             // DDD has both retail and warehouse, others only warehouse
             const hasRetail = (entity === 'DDD');
             document.getElementById('retailTableSection').style.display = hasRetail ? 'block' : 'none';
+            document.getElementById('rtStatsGrid').style.display = hasRetail ? 'grid' : 'none';
 
             updateDisplay();
 
