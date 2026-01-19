@@ -1424,7 +1424,7 @@ def generate_html(all_data, all_stores):
                             <th onclick="sortData('tipe')">Tipe ↕</th>
                             <th onclick="sortData('name')">Nama Barang ↕</th>
                             <th onclick="sortData('tier')">Tier ↕</th>
-                            <th onclick="sortData('total')">Total ↕</th>
+                            <th onclick="sortData('total')">Total Qty ↕</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
