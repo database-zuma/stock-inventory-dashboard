@@ -2087,7 +2087,15 @@ def generate_html(all_data, all_stores):
             // Sort
             if (sortField) {
                 data.sort((a, b) => {
-                    let aVal = a[sortField], bVal = b[sortField];
+                    let aVal, bVal;
+                    // If sorting by total and a store is selected, use store-specific stock
+                    if (sortField === 'total' && tableStore) {
+                        aVal = (a.store_stock && a.store_stock[tableStore]) || 0;
+                        bVal = (b.store_stock && b.store_stock[tableStore]) || 0;
+                    } else {
+                        aVal = a[sortField];
+                        bVal = b[sortField];
+                    }
                     if (typeof aVal === 'string') aVal = aVal.toLowerCase();
                     if (typeof bVal === 'string') bVal = bVal.toLowerCase();
                     if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
