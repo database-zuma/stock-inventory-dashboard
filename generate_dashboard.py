@@ -2109,13 +2109,22 @@ def generate_html(all_data, all_stores):
                             <option value="">Semua</option>
                         </select>
                     </div>
-                    <div style="min-width:150px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">SPG:</label>
-                        <select id="salesFilterSPG" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
-                            <option value="">Semua SPG</option>
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Gender:</label>
+                        <select id="salesFilterGender" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="Men">Men</option>
+                            <option value="Ladies">Ladies</option>
+                            <option value="Kids">Kids</option>
                         </select>
                     </div>
                     <div style="min-width:120px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Series:</label>
+                        <select id="salesFilterSeries" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div style="min-width:100px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
                         <input type="text" id="salesFilterSearch" onkeyup="renderSalesDashboard()" placeholder="SKU/Artikel..." style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                     </div>
@@ -4951,8 +4960,8 @@ def generate_html(all_data, all_stores):
             // 4. Fallback: determine area from store name keywords
             if (s.includes('lombok') || s.includes('mataram')) return 'Lombok';
             if (s.includes('batam') || s.includes('nagoya')) return 'Batam';
-            if (s.includes('manado') || s.includes('mega mall')) return 'Sulawesi';
-            if (s.includes('pekanbaru') || s.includes('ska')) return 'Sumatera';
+            if (s.includes('manado')) return 'Sulawesi';
+            if (s.includes('pekanbaru') || s.includes('ska mall')) return 'Sumatera';
             if (s.includes('bali') || s.includes('galeria') || s.includes('level 21') || s.includes('lippo bali') ||
                 s.includes('icon') || s.includes('dalung') || s.includes('kedonganan') || s.includes('kesiman') ||
                 s.includes('panjer') || s.includes('peguyangan') || s.includes('peliatan') || s.includes('penatih') ||
@@ -4960,7 +4969,7 @@ def generate_html(all_data, all_stores):
                 s.includes('bangli') || s.includes('batubulan') || s.includes('jembrana') || s.includes('kapal') ||
                 s.includes('karangasem') || s.includes('klungkung') || s.includes('lebah') || s.includes('monang') ||
                 s.includes('monkey') || s.includes('ubud') || s.includes('pemogan') || s.includes('seririt') ||
-                s.includes('uluwatu')) return 'Bali';
+                s.includes('uluwatu') || s.includes('gianyar') || s.includes('sawangan') || s.includes('pameran')) return 'Bali';
             if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') ||
                 s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) return 'Jakarta';
             if (s.includes('surabaya') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('royal plaza') ||
@@ -4968,7 +4977,7 @@ def generate_html(all_data, all_stores):
                 s.includes('gresik') || s.includes('mog') || s.includes('olympic') || s.includes('mojokerto') ||
                 s.includes('sunrise') || s.includes('matos') || s.includes('malang') || s.includes('batu')) return 'Jawa Timur';
 
-            return 'Unknown';
+            return 'Bali'; // Default to Bali since most stores are there
         }
 
         // Helper: Get gender from SKU
@@ -5001,13 +5010,17 @@ def generate_html(all_data, all_stores):
             const stores = new Set();
             const areas = new Set();
             const categories = new Set();
-            const spgs = new Set();
+            const series = new Set();
             const dates = new Set();
 
             salesDetailData.forEach(item => {
                 if (item.store) stores.add(item.store);
                 if (item.category) categories.add(item.category);
-                if (item.spg) spgs.add(item.spg);
+                if (item.collection) {
+                    // Extract series from collection (e.g., "STRIPE|All Item" -> "STRIPE")
+                    const ser = item.collection.split('|')[0].trim();
+                    if (ser && ser !== 'Umum' && ser !== 'All Item') series.add(ser);
+                }
                 if (item.date) dates.add(item.date);
                 // Get area using helper function
                 const area = getAreaFromStore(item.store);
@@ -5032,10 +5045,10 @@ def generate_html(all_data, all_stores):
                 if (c && c !== 'Umum') catSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
             });
 
-            // Populate SPG filter
-            const spgSelect = document.getElementById('salesFilterSPG');
-            Array.from(spgs).sort().forEach(s => {
-                spgSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
+            // Populate Series filter
+            const seriesSelect = document.getElementById('salesFilterSeries');
+            Array.from(series).sort().forEach(s => {
+                seriesSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
             });
 
             // Set date range
@@ -5052,7 +5065,8 @@ def generate_html(all_data, all_stores):
             const area = document.getElementById('salesFilterArea').value;
             const store = document.getElementById('salesFilterStore').value;
             const category = document.getElementById('salesFilterCategory').value;
-            const spg = document.getElementById('salesFilterSPG').value;
+            const gender = document.getElementById('salesFilterGender').value;
+            const series = document.getElementById('salesFilterSeries').value;
             const search = (document.getElementById('salesFilterSearch').value || '').toLowerCase();
 
             return salesDetailData.filter(item => {
@@ -5060,7 +5074,11 @@ def generate_html(all_data, all_stores):
                 if (endDate && item.date > endDate) return false;
                 if (store && item.store !== store) return false;
                 if (category && item.category !== category) return false;
-                if (spg && item.spg !== spg) return false;
+                if (gender && getGenderFromSKU(item.sku) !== gender) return false;
+                if (series) {
+                    const itemSeries = (item.collection || '').split('|')[0].trim();
+                    if (itemSeries !== series) return false;
+                }
                 if (area) {
                     const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
@@ -5124,9 +5142,7 @@ def generate_html(all_data, all_stores):
                 { label: 'Total Qty', value: totalQty.toLocaleString('id-ID') + ' pcs', color: '#8b5cf6', icon: '📦' },
                 { label: 'ATV', value: formatRp(atv), color: '#f59e0b', icon: '📊' },
                 { label: 'ATU', value: atu.toFixed(2) + ' pcs', color: '#ec4899', icon: '📈' },
-                { label: 'Achievement', value: achievement.toFixed(1) + '%', color: achievement >= 100 ? '#10b981' : '#ef4444', icon: '🎯' },
-                { label: 'Margin', value: margin.toFixed(1) + '%', color: '#06b6d4', icon: '💵' },
-                { label: 'Retur', value: totalRetur.toLocaleString('id-ID') + ' pcs', color: '#ef4444', icon: '↩️' }
+                { label: 'Achievement', value: achievement.toFixed(1) + '%', color: achievement >= 100 ? '#10b981' : '#ef4444', icon: '🎯' }
             ];
 
             let html = '';
@@ -5170,27 +5186,36 @@ def generate_html(all_data, all_stores):
             storeHtml += '</tbody></table>';
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
 
-            // Sales by SPG
+            // Sales by SPG with Store, ATV, ATU
             const bySPG = {};
             data.forEach(item => {
                 const spg = item.spg || item.kasir || 'Unknown';
-                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set() };
+                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set(), stores: new Set() };
                 bySPG[spg].sales += item.total || 0;
                 bySPG[spg].qty += item.qty || 0;
                 bySPG[spg].trx.add(item.order_no);
+                if (item.store) bySPG[spg].stores.add(item.store);
             });
 
             const spgArr = Object.entries(bySPG).map(([spg, val]) => ({
-                spg, sales: val.sales, qty: val.qty, trx: val.trx.size
+                spg, sales: val.sales, qty: val.qty, trx: val.trx.size,
+                stores: Array.from(val.stores),
+                atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
+                atu: val.trx.size > 0 ? val.qty / val.trx.size : 0
             })).sort((a, b) => b.sales - a.sales).slice(0, 15);
 
-            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            spgHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">SPG</th><th style="text-align:right;padding:8px;">Sales</th><th style="text-align:right;padding:8px;">Qty</th><th style="text-align:right;padding:8px;">Trx</th></tr></thead><tbody>';
+            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
+            spgHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">SPG</th><th style="text-align:left;padding:6px;">Toko</th><th style="text-align:right;padding:6px;">Sales</th><th style="text-align:right;padding:6px;">Trx</th><th style="text-align:right;padding:6px;">ATV</th><th style="text-align:right;padding:6px;">ATU</th></tr></thead><tbody>';
             spgArr.forEach((s, i) => {
-                spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;">' + (i+1) + '. ' + s.spg + '</td>';
-                spgHtml += '<td style="text-align:right;padding:8px;font-weight:600;">Rp ' + Math.round(s.sales).toLocaleString('id-ID') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:8px;">' + s.qty + '</td>';
-                spgHtml += '<td style="text-align:right;padding:8px;">' + s.trx + '</td></tr>';
+                const storeDisplay = s.stores.length > 1 ? s.stores[0] + ' +' + (s.stores.length - 1) : (s.stores[0] || '-');
+                spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                spgHtml += '<td style="padding:6px;font-weight:500;">' + (i+1) + '. ' + s.spg + '</td>';
+                spgHtml += '<td style="padding:6px;color:#6b7280;font-size:0.7rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="' + s.stores.join(', ') + '">' + storeDisplay + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + Math.round(s.sales / 1000000).toFixed(1) + 'jt</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;">' + s.trx + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + Math.round(s.atv / 1000).toFixed(0) + 'k</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#8b5cf6;">' + s.atu.toFixed(1) + '</td>';
+                spgHtml += '</tr>';
             });
             spgHtml += '</tbody></table>';
             document.getElementById('salesBySPGTable').innerHTML = spgHtml;
@@ -5275,27 +5300,84 @@ def generate_html(all_data, all_stores):
             hourHtml += '</div>';
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
-            // Weekly summary
-            const byDayOfWeek = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            // Weekly summary with daily growth curve
+            const byDayOfWeek = { 0: { sales: 0, count: 0 }, 1: { sales: 0, count: 0 }, 2: { sales: 0, count: 0 }, 3: { sales: 0, count: 0 }, 4: { sales: 0, count: 0 }, 5: { sales: 0, count: 0 }, 6: { sales: 0, count: 0 } };
+            const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+            // Count sales by day of week
+            const dateCount = {};
             data.forEach(item => {
                 const day = new Date(item.date).getDay();
-                byDayOfWeek[day] += item.total || 0;
+                byDayOfWeek[day].sales += item.total || 0;
+                if (!dateCount[item.date + '-' + day]) {
+                    dateCount[item.date + '-' + day] = true;
+                    byDayOfWeek[day].count++;
+                }
             });
 
-            const maxDaySales = Math.max(...Object.values(byDayOfWeek));
-            let weeklyHtml = '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
-            dayNames.forEach((name, idx) => {
-                const sales = byDayOfWeek[idx];
-                const pct = maxDaySales > 0 ? (sales / maxDaySales * 100) : 0;
-                const isWeekend = idx === 0 || idx === 6;
-                weeklyHtml += '<div style="flex:1;min-width:100px;background:' + (isWeekend ? '#fef3c7' : '#f8fafc') + ';border-radius:8px;padding:12px;text-align:center;">';
-                weeklyHtml += '<div style="font-weight:600;color:#374151;font-size:0.85rem;">' + name + '</div>';
-                weeklyHtml += '<div style="font-size:1rem;font-weight:700;color:#10b981;margin-top:4px;">Rp ' + Math.round(sales / 1000000).toFixed(1) + 'jt</div>';
-                weeklyHtml += '<div style="height:4px;background:#e2e8f0;border-radius:2px;margin-top:8px;overflow:hidden;">';
-                weeklyHtml += '<div style="height:100%;width:' + pct + '%;background:#10b981;"></div></div>';
-                weeklyHtml += '</div>';
+            // Calculate average per day
+            const avgByDay = dayNames.map((_, idx) => {
+                return byDayOfWeek[idx].count > 0 ? byDayOfWeek[idx].sales / byDayOfWeek[idx].count : 0;
             });
+
+            const maxDaySales = Math.max(...avgByDay);
+            const minDaySales = Math.min(...avgByDay.filter(v => v > 0));
+
+            // Create SVG line chart
+            const chartWidth = 600;
+            const chartHeight = 150;
+            const padding = 40;
+            const usableWidth = chartWidth - padding * 2;
+            const usableHeight = chartHeight - padding;
+
+            // Calculate points for the line
+            const points = avgByDay.map((sales, idx) => {
+                const x = padding + (idx / 6) * usableWidth;
+                const y = maxDaySales > 0 ? chartHeight - padding - ((sales - minDaySales * 0.8) / (maxDaySales - minDaySales * 0.8) * usableHeight) : chartHeight - padding;
+                return { x, y, sales };
+            });
+
+            let weeklyHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;">';
+
+            // SVG Chart
+            weeklyHtml += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
+
+            // Grid lines
+            for (let i = 0; i <= 4; i++) {
+                const y = padding / 2 + (i / 4) * usableHeight;
+                weeklyHtml += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - padding) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
+            }
+
+            // Area fill
+            let areaPath = 'M ' + points[0].x + ' ' + (chartHeight - padding);
+            points.forEach(p => { areaPath += ' L ' + p.x + ' ' + p.y; });
+            areaPath += ' L ' + points[6].x + ' ' + (chartHeight - padding) + ' Z';
+            weeklyHtml += '<path d="' + areaPath + '" fill="url(#gradient)" opacity="0.3"/>';
+
+            // Gradient definition
+            weeklyHtml += '<defs><linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/><stop offset="100%" style="stop-color:#10b981;stop-opacity:0"/></linearGradient></defs>';
+
+            // Line
+            let linePath = 'M ' + points[0].x + ' ' + points[0].y;
+            points.slice(1).forEach(p => { linePath += ' L ' + p.x + ' ' + p.y; });
+            weeklyHtml += '<path d="' + linePath + '" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+
+            // Data points and labels
+            points.forEach((p, idx) => {
+                const isWeekend = idx === 0 || idx === 6;
+                weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="6" fill="' + (isWeekend ? '#f59e0b' : '#10b981') + '" stroke="white" stroke-width="2"/>';
+                weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 5) + '" text-anchor="middle" font-size="11" fill="#6b7280" font-weight="600">' + dayNames[idx] + '</text>';
+                weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 12) + '" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">' + Math.round(p.sales / 1000000).toFixed(1) + 'jt</text>';
+            });
+
+            weeklyHtml += '</svg>';
+
+            // Legend
+            weeklyHtml += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.75rem;">';
+            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#10b981;border-radius:50%;"></span> Weekday</div>';
+            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f59e0b;border-radius:50%;"></span> Weekend</div>';
+            weeklyHtml += '</div>';
+
             weeklyHtml += '</div>';
             document.getElementById('salesWeeklySummary').innerHTML = weeklyHtml;
         }
@@ -5342,57 +5424,71 @@ def generate_html(all_data, all_stores):
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance
+            // Category Performance - Table format with bar chart
             const byCategory = {};
             data.forEach(item => {
                 const cat = item.category || 'Unknown';
-                if (!byCategory[cat]) byCategory[cat] = { sales: 0, qty: 0 };
+                if (!byCategory[cat]) byCategory[cat] = { sales: 0, qty: 0, trx: new Set() };
                 byCategory[cat].sales += item.total || 0;
                 byCategory[cat].qty += item.qty || 0;
+                byCategory[cat].trx.add(item.order_no);
             });
 
             const catArr = Object.entries(byCategory).map(([cat, val]) => ({
-                cat, sales: val.sales, qty: val.qty
+                cat, sales: val.sales, qty: val.qty, trx: val.trx.size
             })).sort((a, b) => b.sales - a.sales);
 
             const totalCatSales = catArr.reduce((sum, c) => sum + c.sales, 0);
-            let catHtml = '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
-            catArr.forEach(c => {
+            const maxCatSales = Math.max(...catArr.map(c => c.sales));
+
+            let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            catHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Kategori</th><th style="text-align:left;padding:8px;">Share</th><th style="text-align:right;padding:8px;">Sales</th><th style="text-align:right;padding:8px;">Qty</th><th style="text-align:right;padding:8px;">%</th></tr></thead><tbody>';
+            catArr.forEach((c, i) => {
                 const pct = totalCatSales > 0 ? (c.sales / totalCatSales * 100) : 0;
-                catHtml += '<div style="min-width:180px;background:#f8fafc;border-radius:10px;padding:12px;">';
-                catHtml += '<div style="font-weight:600;color:#374151;font-size:0.85rem;">' + c.cat + '</div>';
-                catHtml += '<div style="font-size:1rem;font-weight:700;color:#10b981;">Rp ' + Math.round(c.sales / 1000000).toFixed(1) + 'jt</div>';
-                catHtml += '<div style="font-size:0.75rem;color:#6b7280;">' + c.qty + ' pcs (' + pct.toFixed(1) + '%)</div>';
-                catHtml += '</div>';
+                const barPct = maxCatSales > 0 ? (c.sales / maxCatSales * 100) : 0;
+                const rowBg = i % 2 === 0 ? '' : 'background:#fafafa;';
+                catHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + rowBg + '">';
+                catHtml += '<td style="padding:8px;font-weight:600;color:#374151;">' + c.cat + '</td>';
+                catHtml += '<td style="padding:8px;width:200px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div></td>';
+                catHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + Math.round(c.sales / 1000000).toFixed(1) + 'jt</td>';
+                catHtml += '<td style="text-align:right;padding:8px;">' + c.qty.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
+                catHtml += '</tr>';
             });
-            catHtml += '</div>';
+            catHtml += '</tbody></table>';
             document.getElementById('salesCategoryPerf').innerHTML = catHtml;
 
-            // Size Distribution
+            // Size Distribution - Table format with bar chart
             const bySize = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                const sizeMatch = sku.match(/Z(\\d{2,3})$/);
+                const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const size = sizeMatch ? sizeMatch[1] : 'Unknown';
-                if (!bySize[size]) bySize[size] = 0;
-                bySize[size] += item.qty || 0;
+                if (!bySize[size]) bySize[size] = { qty: 0, sales: 0 };
+                bySize[size].qty += item.qty || 0;
+                bySize[size].sales += item.total || 0;
             });
 
-            const sizeArr = Object.entries(bySize).map(([size, qty]) => ({ size, qty }))
+            const sizeArr = Object.entries(bySize).map(([size, val]) => ({ size, qty: val.qty, sales: val.sales }))
                 .filter(s => s.size !== 'Unknown')
                 .sort((a, b) => parseInt(a.size) - parseInt(b.size));
 
+            const totalSizeQty = sizeArr.reduce((sum, s) => sum + s.qty, 0);
             const maxSizeQty = Math.max(...sizeArr.map(s => s.qty));
-            let sizeHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+
+            let sizeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            sizeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;width:60px;">Size</th><th style="text-align:left;padding:8px;">Distribution</th><th style="text-align:right;padding:8px;width:80px;">Qty</th><th style="text-align:right;padding:8px;width:60px;">%</th></tr></thead><tbody>';
             sizeArr.forEach(s => {
-                const pct = maxSizeQty > 0 ? (s.qty / maxSizeQty * 100) : 0;
-                const bgIntensity = Math.round(100 + (pct * 1.55));
-                sizeHtml += '<div style="width:60px;background:#dcfce7;border-radius:8px;padding:8px;text-align:center;">';
-                sizeHtml += '<div style="font-weight:700;color:#374151;">' + s.size + '</div>';
-                sizeHtml += '<div style="font-size:0.75rem;color:#059669;">' + s.qty + '</div>';
-                sizeHtml += '</div>';
+                const pct = totalSizeQty > 0 ? (s.qty / totalSizeQty * 100) : 0;
+                const barPct = maxSizeQty > 0 ? (s.qty / maxSizeQty * 100) : 0;
+                sizeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                sizeHtml += '<td style="padding:8px;font-weight:700;color:#374151;">' + s.size + '</td>';
+                sizeHtml += '<td style="padding:8px;"><div style="height:20px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div></td>';
+                sizeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                sizeHtml += '<td style="text-align:right;padding:8px;color:#6b7280;">' + pct.toFixed(1) + '%</td>';
+                sizeHtml += '</tr>';
             });
-            sizeHtml += '</div>';
+            sizeHtml += '</tbody></table>';
             document.getElementById('salesSizeDistribution').innerHTML = sizeHtml;
         }
 
@@ -5795,7 +5891,8 @@ def generate_html(all_data, all_stores):
             document.getElementById('salesFilterArea').value = '';
             document.getElementById('salesFilterStore').value = '';
             document.getElementById('salesFilterCategory').value = '';
-            document.getElementById('salesFilterSPG').value = '';
+            document.getElementById('salesFilterGender').value = '';
+            document.getElementById('salesFilterSeries').value = '';
             document.getElementById('salesFilterSearch').value = '';
             renderSalesDashboard();
         }
