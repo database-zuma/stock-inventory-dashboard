@@ -2032,7 +2032,8 @@ def generate_html(all_data, all_stores):
         }
 
         function applyFilters() {
-            let data = getData();
+            // Use ALL data (warehouse + retail) for table filtering
+            let data = getAllStoresAndWarehouses();
 
             const search = document.getElementById('searchInput').value.toLowerCase();
             const gender = document.getElementById('filterGender').value;
@@ -2045,7 +2046,7 @@ def generate_html(all_data, all_stores):
             const tableTier = document.getElementById('tableFilterTier').value;
 
             if (search) {
-                data = data.filter(item => item.sku.toLowerCase().includes(search) || (item.name || '').toLowerCase().includes(search));
+                data = data.filter(item => item.sku.toLowerCase().includes(search) || (item.name || '').toLowerCase().includes(search) || (item.kode_kecil || '').toLowerCase().includes(search));
             }
             if (gender) {
                 data = data.filter(item => (item.gender || '').toUpperCase().includes(gender.toUpperCase()));
@@ -2118,8 +2119,16 @@ def generate_html(all_data, all_stores):
             applyFilters();
         }
 
+        function getAllStoresAndWarehouses() {
+            // Get ALL data (warehouse + retail) regardless of current tab
+            var entityData = allData[currentEntity] || {};
+            var wh = entityData.warehouse || [];
+            var rt = entityData.retail || [];
+            return wh.concat(rt);
+        }
+
         function updateTableAreaDropdown() {
-            const data = getData();
+            const data = getAllStoresAndWarehouses();
             const areas = new Set();
 
             // Collect unique areas from store_stock
@@ -2150,7 +2159,7 @@ def generate_html(all_data, all_stores):
         }
 
         function updateTableStoreDropdown() {
-            const data = getData();
+            const data = getAllStoresAndWarehouses();
             const selectedArea = document.getElementById('tableFilterArea').value;
             const storeSelect = document.getElementById('tableFilterStore');
             const currentValue = storeSelect.value;
