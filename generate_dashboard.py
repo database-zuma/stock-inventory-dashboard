@@ -1278,21 +1278,17 @@ def generate_html(all_data, all_stores):
         <div class="entity-section">
             <span style="font-weight:600; color:#374151; font-size:0.85rem;">ENTITAS:</span>
             <div class="entity-pills">
-                <div class="entity-pill ddd active" data-entity="DDD" onclick="selectEntity('DDD')" style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_DDD + '''" alt="DDD" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
-                    <span class="count" id="countDDD">0</span>
+                <div class="entity-pill ddd active" data-entity="DDD" onclick="selectEntity('DDD')">
+                    <img src="''' + LOGO_DDD + '''" alt="DDD" style="height:22px;object-fit:contain;">
                 </div>
-                <div class="entity-pill ljbb" data-entity="LJBB" onclick="selectEntity('LJBB')" style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_LJBB + '''" alt="LJBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
-                    <span class="count" id="countLJBB">0</span>
+                <div class="entity-pill ljbb" data-entity="LJBB" onclick="selectEntity('LJBB')">
+                    <img src="''' + LOGO_LJBB + '''" alt="LJBB" style="height:22px;object-fit:contain;">
                 </div>
-                <div class="entity-pill mbb" data-entity="MBB" onclick="selectEntity('MBB')" style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_MBB + '''" alt="MBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
-                    <span class="count" id="countMBB">0</span>
+                <div class="entity-pill mbb" data-entity="MBB" onclick="selectEntity('MBB')">
+                    <img src="''' + LOGO_MBB + '''" alt="MBB" style="height:22px;object-fit:contain;">
                 </div>
-                <div class="entity-pill ubb" data-entity="UBB" onclick="selectEntity('UBB')" style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_UBB + '''" alt="UBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
-                    <span class="count" id="countUBB">0</span>
+                <div class="entity-pill ubb" data-entity="UBB" onclick="selectEntity('UBB')">
+                    <img src="''' + LOGO_UBB + '''" alt="UBB" style="height:22px;object-fit:contain;">
                 </div>
             </div>
         </div>
