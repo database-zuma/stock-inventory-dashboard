@@ -2365,11 +2365,13 @@ def generate_html(all_data, all_stores):
                 data = data.filter(item => (item.series || '').includes(series) || (item.name || '').toUpperCase().includes(series));
             }
             if (tableStore) {
-                data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined);
+                // Filter: hanya item yang punya stock di store ini (stock !== 0)
+                data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined && item.store_stock[tableStore] !== 0);
             } else if (tableArea) {
+                // Filter: hanya item yang punya stock di area ini (stock !== 0)
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.keys(item.store_stock).some(store => !isWarehouseLocation(store) && getAreaFromStore(store) === tableArea);
+                    return Object.entries(item.store_stock).some(([store, stock]) => !isWarehouseLocation(store) && getAreaFromStore(store) === tableArea && stock !== 0);
                 });
             }
 
@@ -2513,11 +2515,13 @@ def generate_html(all_data, all_stores):
                 data = data.filter(item => (item.series || '').includes(series) || (item.name || '').toUpperCase().includes(series));
             }
             if (whWarehouse) {
-                data = data.filter(item => item.store_stock && item.store_stock[whWarehouse] !== undefined);
+                // Filter: hanya item yang punya stock di warehouse ini (stock !== 0)
+                data = data.filter(item => item.store_stock && item.store_stock[whWarehouse] !== undefined && item.store_stock[whWarehouse] !== 0);
             } else if (whArea) {
+                // Filter: hanya item yang punya stock di area ini (stock !== 0)
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.keys(item.store_stock).some(wh => getAreaFromStore(wh) === whArea);
+                    return Object.entries(item.store_stock).some(([wh, stock]) => getAreaFromStore(wh) === whArea && stock !== 0);
                 });
             }
 
