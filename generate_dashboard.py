@@ -1323,22 +1323,6 @@ def generate_html(all_data, all_stores):
             </div>
         </div>
 
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>📊 Stock per Gender</h3>
-                <div class="chart-container"><canvas id="categoryChart"></canvas></div>
-            </div>
-            <div class="chart-card">
-                <h3>📈 Stock per Area</h3>
-                <div class="chart-container"><canvas id="areaChart"></canvas></div>
-            </div>
-            <div class="chart-card">
-                <h3>🎯 Stock per Series</h3>
-                <div class="chart-container"><canvas id="seriesChart"></canvas></div>
-            </div>
-        </div>
-
         <!-- Retail Stock Data Table -->
         <div class="table-section" id="retailTableSection">
             <div class="table-header" style="flex-direction: column; align-items: stretch;">
@@ -1420,6 +1404,21 @@ def generate_html(all_data, all_stores):
             <div class="pagination">
                 <div class="page-info" id="rtPageInfo">Showing 0 items</div>
                 <div class="page-buttons" id="rtPageButtons"></div>
+            </div>
+            <!-- Retail Charts -->
+            <div class="charts-grid" style="margin-top: 20px;">
+                <div class="chart-card">
+                    <h3>📊 Stock per Gender</h3>
+                    <div class="chart-container"><canvas id="rtCategoryChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>📈 Stock per Area</h3>
+                    <div class="chart-container"><canvas id="rtAreaChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>🎯 Stock per Series</h3>
+                    <div class="chart-container"><canvas id="rtSeriesChart"></canvas></div>
+                </div>
             </div>
         </div>
 
@@ -1504,6 +1503,21 @@ def generate_html(all_data, all_stores):
             <div class="pagination">
                 <div class="page-info" id="whPageInfo">Showing 0 items</div>
                 <div class="page-buttons" id="whPageButtons"></div>
+            </div>
+            <!-- Warehouse Charts -->
+            <div class="charts-grid" style="margin-top: 20px;">
+                <div class="chart-card">
+                    <h3>📊 Stock per Gender</h3>
+                    <div class="chart-container"><canvas id="whCategoryChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>📈 Stock per Area</h3>
+                    <div class="chart-container"><canvas id="whAreaChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>🎯 Stock per Series</h3>
+                    <div class="chart-container"><canvas id="whSeriesChart"></canvas></div>
+                </div>
             </div>
         </div>
 
@@ -1793,7 +1807,10 @@ def generate_html(all_data, all_stores):
         let currentType = 'warehouse';
         let currentArea = '';
         let currentStore = '';
-        let categoryChart, areaChart, seriesChart;
+        // Retail charts
+        let rtCategoryChart, rtAreaChart, rtSeriesChart;
+        // Warehouse charts
+        let whCategoryChart, whAreaChart, whSeriesChart;
 
         // Retail table state
         let rtFilteredData = [];
@@ -1906,7 +1923,6 @@ def generate_html(all_data, all_stores):
         function updateDisplay() {
             const data = getData();
             updateStats(data);
-            updateCharts(data);
 
             // Update series filters for both tables
             updateSeriesDropdowns();
@@ -2040,66 +2056,8 @@ def generate_html(all_data, all_stores):
             document.getElementById('negativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
         }
 
-        function updateCharts(data) {
-            const catData = {}, areaData = {}, seriesData = {};
-
-            data.forEach(item => {
-                const gender = item.gender || 'BABY';
-                const series = item.series || '-';
-                catData[gender] = (catData[gender] || 0) + Math.max(0, item.total);
-                // Hanya masukkan series yang valid (bukan "-" atau kosong)
-                if (series && series !== '-' && series !== '') {
-                    seriesData[series] = (seriesData[series] || 0) + Math.max(0, item.total);
-                }
-
-                // Area from store_stock
-                if (item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([store, stock]) => {
-                        const area = getAreaFromStore(store);
-                        areaData[area] = (areaData[area] || 0) + Math.max(0, stock);
-                    });
-                }
-            });
-
-            const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
-
-            // Category Chart
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(catData),
-                    datasets: [{ data: Object.values(catData), backgroundColor: colors, borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Poppins', size: 11 } } } } }
-            });
-
-            // Area Chart
-            if (areaChart) areaChart.destroy();
-            areaChart = new Chart(document.getElementById('areaChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(areaData),
-                    datasets: [{ label: 'Stock', data: Object.values(areaData), backgroundColor: colors, borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
-
-            // Series Chart
-            if (seriesChart) seriesChart.destroy();
-            const topSeries = Object.entries(seriesData).sort((a,b) => b[1] - a[1]).slice(0, 8);
-            seriesChart = new Chart(document.getElementById('seriesChart'), {
-                type: 'bar',
-                data: {
-                    labels: topSeries.map(s => s[0]),
-                    datasets: [{ label: 'Stock', data: topSeries.map(s => s[1]), backgroundColor: colors, borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
-            });
-        }
-
-        // Update charts with filtered data (respects store/warehouse selection)
-        function updateChartsFiltered(data, locationFilter, areaFilter) {
+        // Update Retail charts
+        function updateRetailCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
             let totalSku = data.length;
             let totalStock = 0;
@@ -2110,13 +2068,13 @@ def generate_html(all_data, all_stores):
             data.forEach(item => {
                 const gender = item.gender || 'BABY';
                 const series = item.series || '-';
+                const seriesGender = (series && series !== '-' && series !== '') ? series + ' - ' + gender : '';
 
                 // Calculate stock based on filter
                 let stockValue = 0;
                 if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
                     stockValue = item.store_stock[locationFilter];
                 } else if (areaFilter && item.store_stock) {
-                    // Sum stock for all locations in the area
                     Object.entries(item.store_stock).forEach(([loc, stock]) => {
                         if (getAreaFromStore(loc) === areaFilter) {
                             stockValue += stock;
@@ -2127,8 +2085,8 @@ def generate_html(all_data, all_stores):
                 }
 
                 catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
-                if (series && series !== '-' && series !== '') {
-                    seriesData[series] = (seriesData[series] || 0) + Math.max(0, stockValue);
+                if (seriesGender) {
+                    seriesData[seriesGender] = (seriesData[seriesGender] || 0) + Math.max(0, stockValue);
                 }
 
                 if (stockValue > 0) totalStock += stockValue;
@@ -2164,18 +2122,18 @@ def generate_html(all_data, all_stores):
                 }
             });
 
-            // Update stats
+            // Update stats (from retail data)
             document.getElementById('totalSku').textContent = totalSku.toLocaleString('id-ID');
             document.getElementById('totalStock').textContent = totalStock.toLocaleString('id-ID');
             const locCount = minusLocations.size;
             document.getElementById('negativeStock').textContent = locCount.toLocaleString('id-ID') + ' lokasi';
             document.getElementById('negativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
 
-            // Update charts
+            // Update retail charts
             const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
 
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryChart'), {
+            if (rtCategoryChart) rtCategoryChart.destroy();
+            rtCategoryChart = new Chart(document.getElementById('rtCategoryChart'), {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(catData),
@@ -2184,8 +2142,8 @@ def generate_html(all_data, all_stores):
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Poppins', size: 11 } } } } }
             });
 
-            if (areaChart) areaChart.destroy();
-            areaChart = new Chart(document.getElementById('areaChart'), {
+            if (rtAreaChart) rtAreaChart.destroy();
+            rtAreaChart = new Chart(document.getElementById('rtAreaChart'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(areaData),
@@ -2194,9 +2152,110 @@ def generate_html(all_data, all_stores):
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
 
-            if (seriesChart) seriesChart.destroy();
+            if (rtSeriesChart) rtSeriesChart.destroy();
             const topSeries = Object.entries(seriesData).sort((a,b) => b[1] - a[1]).slice(0, 8);
-            seriesChart = new Chart(document.getElementById('seriesChart'), {
+            rtSeriesChart = new Chart(document.getElementById('rtSeriesChart'), {
+                type: 'bar',
+                data: {
+                    labels: topSeries.map(s => s[0]),
+                    datasets: [{ label: 'Stock', data: topSeries.map(s => s[1]), backgroundColor: colors, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Update Warehouse charts
+        function updateWarehouseCharts(data, locationFilter, areaFilter) {
+            const catData = {}, areaData = {}, seriesData = {};
+            let totalSku = data.length;
+            let totalStock = 0;
+            let minusArticles = 0;
+            let minusPairs = 0;
+            let minusLocations = new Set();
+
+            data.forEach(item => {
+                const gender = item.gender || 'BABY';
+                const series = item.series || '-';
+                const seriesGender = (series && series !== '-' && series !== '') ? series + ' - ' + gender : '';
+
+                // Calculate stock based on filter
+                let stockValue = 0;
+                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                    stockValue = item.store_stock[locationFilter];
+                } else if (areaFilter && item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                        if (getAreaFromStore(loc) === areaFilter) {
+                            stockValue += stock;
+                        }
+                    });
+                } else {
+                    stockValue = item.total || 0;
+                }
+
+                catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
+                if (seriesGender) {
+                    seriesData[seriesGender] = (seriesData[seriesGender] || 0) + Math.max(0, stockValue);
+                }
+
+                if (stockValue > 0) totalStock += stockValue;
+
+                // Area calculation
+                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                    const area = getAreaFromStore(locationFilter);
+                    areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
+                } else if (areaFilter && item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                        if (getAreaFromStore(loc) === areaFilter) {
+                            areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                        }
+                    });
+                } else if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        const area = getAreaFromStore(store);
+                        areaData[area] = (areaData[area] || 0) + Math.max(0, stock);
+                    });
+                }
+
+                // Minus calculation
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([storeName, stock]) => {
+                        if (locationFilter && storeName !== locationFilter) return;
+                        if (areaFilter && getAreaFromStore(storeName) !== areaFilter) return;
+                        if (stock < 0) {
+                            minusArticles++;
+                            minusPairs += Math.abs(stock);
+                            minusLocations.add(storeName);
+                        }
+                    });
+                }
+            });
+
+            // Update warehouse charts
+            const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+
+            if (whCategoryChart) whCategoryChart.destroy();
+            whCategoryChart = new Chart(document.getElementById('whCategoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catData),
+                    datasets: [{ data: Object.values(catData), backgroundColor: colors, borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Poppins', size: 11 } } } } }
+            });
+
+            if (whAreaChart) whAreaChart.destroy();
+            whAreaChart = new Chart(document.getElementById('whAreaChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(areaData),
+                    datasets: [{ label: 'Stock', data: Object.values(areaData), backgroundColor: colors, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            if (whSeriesChart) whSeriesChart.destroy();
+            const topSeries = Object.entries(seriesData).sort((a,b) => b[1] - a[1]).slice(0, 8);
+            whSeriesChart = new Chart(document.getElementById('whSeriesChart'), {
                 type: 'bar',
                 data: {
                     labels: topSeries.map(s => s[0]),
@@ -2361,8 +2420,8 @@ def generate_html(all_data, all_stores):
             rtCurrentPage = 1;
             renderRetailTable();
 
-            // Update charts and stats with filtered data
-            updateChartsFiltered(data, tableStore, tableArea);
+            // Update retail charts with filtered data
+            updateRetailCharts(data, tableStore, tableArea);
         }
 
         function sortRetailData(field) {
@@ -2509,10 +2568,8 @@ def generate_html(all_data, all_stores):
             whCurrentPage = 1;
             renderWarehouseTable();
 
-            // Update charts and stats with filtered data (only if Retail table hidden or this is active)
-            if (currentEntity !== 'DDD') {
-                updateChartsFiltered(data, whWarehouse, whArea);
-            }
+            // Update warehouse charts with filtered data
+            updateWarehouseCharts(data, whWarehouse, whArea);
         }
 
         function sortWarehouseData(field) {
