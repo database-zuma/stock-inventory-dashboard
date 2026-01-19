@@ -1327,7 +1327,7 @@ def generate_html(all_data, all_stores):
                 📈 Max Stock Analysis
             </button>
             <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
-                📋 Stock Control
+                📋 Control Stock
             </button>
         </div>
 
@@ -1752,7 +1752,7 @@ def generate_html(all_data, all_stores):
         <div class="view-container" id="stockcontrolView">
             <!-- Header -->
             <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:16px;padding:20px;margin-bottom:20px;">
-                <h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">📊 Stock Control - Turnover Analysis</h2>
+                <h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">📊 Control Stock - Turnover Analysis</h2>
                 <p style="margin:0;color:#6b7280;font-size:0.85rem;">Data sales: November, Desember, Januari (3 bulan terakhir)</p>
             </div>
 
@@ -1847,7 +1847,7 @@ def generate_html(all_data, all_stores):
                 </div>
             </div>
 
-            <!-- Stock Control Table -->
+            <!-- Control Stock Table -->
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                 <div style="overflow-x:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">

@@ -19,7 +19,7 @@ Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 - **Overstock Detection**: Identifikasi item yang melebihi kapasitas
 - **Area-based View**: Breakdown per area (Bali, Jakarta, Jawa Timur)
 
-### 3. Stock Control - Turnover Analysis
+### 3. Control Stock - Turnover Analysis
 - **Summary Cards**: WH Pusat (Jatim), WH Bali, WH Jakarta, Total Stok Toko
 - **Sales Data**: NOV, DES, JAN (3 bulan terakhir dari salesss.csv)
 - **TW (Turnover Weeks)**: WH Stock / Avg Sales
