@@ -1304,31 +1304,30 @@ def generate_html(all_data, all_stores):
             <button class="tab" data-type="all" onclick="switchTab('all')">📋 Semua Data</button>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card primary">
-                <h3>Total SKU</h3>
-                <div class="value" id="totalSku">0</div>
-                <div class="sub-value">Artikel terdaftar</div>
-            </div>
-            <div class="stat-card success">
-                <h3>Stock Tersedia</h3>
-                <div class="value" id="totalStock">0</div>
-                <div class="sub-value">Total unit positif</div>
-            </div>
-            <div class="stat-card info clickable" onclick="showNegativeDetails()" style="cursor:pointer;">
-                <h3>Minus on Hand</h3>
-                <div class="value" id="negativeStock">0</div>
-                <div class="sub-value" id="negativeSubValue">0 artikel | 0 pairs</div>
-            </div>
-        </div>
-
         <!-- Retail Stock Data Table -->
         <div class="table-section" id="retailTableSection">
             <div class="table-header" style="flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">🏪 Retail Stock Data</h3>
                     <button class="btn btn-secondary" onclick="exportData('retail')">📥 Export</button>
+                </div>
+                <!-- Retail Stats Cards -->
+                <div class="stats-grid" style="margin-bottom: 15px;">
+                    <div class="stat-card primary">
+                        <h3>Total SKU</h3>
+                        <div class="value" id="rtTotalSku">0</div>
+                        <div class="sub-value">Artikel terdaftar</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Stock Tersedia</h3>
+                        <div class="value" id="rtTotalStock">0</div>
+                        <div class="sub-value">Total unit positif</div>
+                    </div>
+                    <div class="stat-card info clickable" onclick="showNegativeDetails('retail')" style="cursor:pointer;">
+                        <h3>Minus on Hand</h3>
+                        <div class="value" id="rtNegativeStock">0</div>
+                        <div class="sub-value" id="rtNegativeSubValue">0 artikel | 0 pairs</div>
+                    </div>
                 </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -1428,6 +1427,24 @@ def generate_html(all_data, all_stores):
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">📦 Warehouse Stock Data</h3>
                     <button class="btn btn-secondary" onclick="exportData('warehouse')">📥 Export</button>
+                </div>
+                <!-- Warehouse Stats Cards -->
+                <div class="stats-grid" style="margin-bottom: 15px;">
+                    <div class="stat-card primary">
+                        <h3>Total SKU</h3>
+                        <div class="value" id="whTotalSku">0</div>
+                        <div class="sub-value">Artikel terdaftar</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Stock Tersedia</h3>
+                        <div class="value" id="whTotalStock">0</div>
+                        <div class="sub-value">Total unit positif</div>
+                    </div>
+                    <div class="stat-card info clickable" onclick="showNegativeDetails('warehouse')" style="cursor:pointer;">
+                        <h3>Minus on Hand</h3>
+                        <div class="value" id="whNegativeStock">0</div>
+                        <div class="sub-value" id="whNegativeSubValue">0 artikel | 0 pairs</div>
+                    </div>
                 </div>
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -1922,7 +1939,6 @@ def generate_html(all_data, all_stores):
 
         function updateDisplay() {
             const data = getData();
-            updateStats(data);
 
             // Update series filters for both tables
             updateSeriesDropdowns();
@@ -2006,56 +2022,6 @@ def generate_html(all_data, all_stores):
             }
         }
 
-        function updateStats(data) {
-            let stats = { totalSku: data.length, totalStock: 0, lowStock: 0, outOfStock: 0, negativeStock: 0, highStock: 0 };
-
-            // Hitung minus on hand per store (konsisten dengan modal)
-            let minusArticles = 0;
-            let minusPairs = 0;
-            let minusLocations = new Set();
-
-            data.forEach(item => {
-                // Gunakan stok per store jika store dipilih, otherwise total
-                let stockValue;
-                if (currentStore && item.store_stock && item.store_stock[currentStore] !== undefined) {
-                    stockValue = Number(item.store_stock[currentStore]) || 0;
-                } else {
-                    stockValue = Number(item.total) || 0;
-                }
-
-                if (stockValue > 0) stats.totalStock += stockValue;
-                if (stockValue < 0) {
-                    stats.negativeStock++;
-                } else if (stockValue === 0) {
-                    stats.outOfStock++;
-                } else if (stockValue < 10) {
-                    stats.lowStock++;
-                } else if (stockValue > 100) {
-                    stats.highStock++;
-                }
-
-                // Hitung minus per store
-                if (item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([storeName, stock]) => {
-                        if (stock < 0) {
-                            minusArticles++;
-                            minusPairs += Math.abs(stock);
-                            minusLocations.add(storeName);
-                        }
-                    });
-                }
-            });
-
-            document.getElementById('totalSku').textContent = stats.totalSku.toLocaleString('id-ID');
-            document.getElementById('totalStock').textContent = stats.totalStock.toLocaleString('id-ID');
-
-            // Update minus on hand dengan data per store
-            const locCount = minusLocations.size;
-            const locLabel = currentType === 'warehouse' ? 'WH' : (currentType === 'retail' ? 'store' : 'lokasi');
-            document.getElementById('negativeStock').textContent = locCount.toLocaleString('id-ID') + ' ' + locLabel;
-            document.getElementById('negativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
-        }
-
         // Update Retail charts
         function updateRetailCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
@@ -2122,12 +2088,12 @@ def generate_html(all_data, all_stores):
                 }
             });
 
-            // Update stats (from retail data)
-            document.getElementById('totalSku').textContent = totalSku.toLocaleString('id-ID');
-            document.getElementById('totalStock').textContent = totalStock.toLocaleString('id-ID');
+            // Update retail stats
+            document.getElementById('rtTotalSku').textContent = totalSku.toLocaleString('id-ID');
+            document.getElementById('rtTotalStock').textContent = totalStock.toLocaleString('id-ID');
             const locCount = minusLocations.size;
-            document.getElementById('negativeStock').textContent = locCount.toLocaleString('id-ID') + ' lokasi';
-            document.getElementById('negativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
+            document.getElementById('rtNegativeStock').textContent = locCount.toLocaleString('id-ID') + ' lokasi';
+            document.getElementById('rtNegativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
 
             // Update retail charts
             const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
@@ -2229,6 +2195,13 @@ def generate_html(all_data, all_stores):
                     });
                 }
             });
+
+            // Update warehouse stats
+            document.getElementById('whTotalSku').textContent = totalSku.toLocaleString('id-ID');
+            document.getElementById('whTotalStock').textContent = totalStock.toLocaleString('id-ID');
+            const whLocCount = minusLocations.size;
+            document.getElementById('whNegativeStock').textContent = whLocCount.toLocaleString('id-ID') + ' lokasi';
+            document.getElementById('whNegativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
 
             // Update warehouse charts
             const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
@@ -2837,8 +2810,16 @@ def generate_html(all_data, all_stores):
         }
 
         // ============ MINUS ON HAND DETAIL FUNCTIONS ============
-        function showNegativeDetails() {
-            const data = getData();
+        function showNegativeDetails(dataType) {
+            // Get data based on dataType (retail or warehouse)
+            let data;
+            if (dataType === 'retail') {
+                data = rtFilteredData || [];
+            } else if (dataType === 'warehouse') {
+                data = whFilteredData || [];
+            } else {
+                data = getData();
+            }
 
             // Kumpulkan data minus per store/warehouse
             const minusByLocation = {};
