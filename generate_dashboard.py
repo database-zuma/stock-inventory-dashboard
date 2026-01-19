@@ -975,6 +975,7 @@ def generate_html(all_data, all_stores):
     sales_json = json.dumps(SALES_DATA, ensure_ascii=False)
     sales_detail_json = json.dumps(SALES_DETAIL, ensure_ascii=False)
     target_json = json.dumps(TARGET_DATA, ensure_ascii=False)
+    master_produk_json = json.dumps(MASTER_PRODUK, ensure_ascii=False)
 
     html = '''<!DOCTYPE html>
 <html lang="id">
@@ -2158,12 +2159,12 @@ def generate_html(all_data, all_stores):
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;">
                         <!-- By Store -->
                         <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store (Top 15)</h4>
+                            <h4 id="salesByStoreTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
                             <div id="salesByStoreTable" style="max-height:400px;overflow-y:auto;"></div>
                         </div>
                         <!-- By SPG -->
                         <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Sales by SPG (Top 15)</h4>
+                            <h4 id="salesBySPGTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Sales by SPG</h4>
                             <div id="salesBySPGTable" style="max-height:400px;overflow-y:auto;"></div>
                         </div>
                     </div>
@@ -2342,6 +2343,7 @@ def generate_html(all_data, all_stores):
         const salesMap = ''' + sales_json + ''';  // Sales per SKU per bulan (nov, des, jan)
         const salesDetailData = ''' + sales_detail_json + ''';  // Sales detail transactions
         const targetData = ''' + target_json + ''';  // Target per toko
+        const masterProduk = ''' + master_produk_json + ''';  // Master Produk (gender, series, tipe, tier)
 
         let currentEntity = 'DDD';
         let currentType = 'warehouse';
@@ -5164,7 +5166,11 @@ def generate_html(all_data, all_stores):
         function renderSalesPerformance() {
             const data = filteredSalesData;
 
-            // Sales by Store
+            // Sales by Store - dynamic limit based on filter
+            const salesArea = document.getElementById('salesFilterArea').value;
+            const salesStore = document.getElementById('salesFilterStore').value;
+            const storeLimit = salesArea ? 5 : 10;  // 5 if area filtered, 10 for all
+
             const byStore = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
@@ -5176,10 +5182,10 @@ def generate_html(all_data, all_stores):
 
             const storeArr = Object.entries(byStore).map(([store, val]) => ({
                 store, sales: val.sales, qty: val.qty, trx: val.trx.size
-            })).sort((a, b) => b.sales - a.sales).slice(0, 15);
+            })).sort((a, b) => b.sales - a.sales).slice(0, storeLimit);
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th></tr></thead><tbody>';
+            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Trx</th></tr></thead><tbody>';
             storeArr.forEach((s, i) => {
                 storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;">' + (i+1) + '. ' + s.store + '</td>';
                 storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
@@ -5188,8 +5194,12 @@ def generate_html(all_data, all_stores):
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
+            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store (Top ' + storeLimit + ')';
 
-            // Sales by SPG with Store, ATV, ATU
+            // Sales by SPG with Store, ATV, ATU - dynamic limit
+            // SPG limit: 5 if area filter, ALL if store filter, 10 for all
+            const spgLimit = salesStore ? 999 : (salesArea ? 5 : 10);
+
             const bySPG = {};
             data.forEach(item => {
                 const spg = item.spg || item.kasir || 'Unknown';
@@ -5200,15 +5210,16 @@ def generate_html(all_data, all_stores):
                 if (item.store) bySPG[spg].stores.add(item.store);
             });
 
-            const spgArr = Object.entries(bySPG).map(([spg, val]) => ({
+            const spgArrFull = Object.entries(bySPG).map(([spg, val]) => ({
                 spg, sales: val.sales, qty: val.qty, trx: val.trx.size,
                 stores: Array.from(val.stores),
                 atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
                 atu: val.trx.size > 0 ? val.qty / val.trx.size : 0
-            })).sort((a, b) => b.sales - a.sales).slice(0, 15);
+            })).sort((a, b) => b.sales - a.sales);
+            const spgArr = spgArrFull.slice(0, spgLimit);
 
             let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            spgHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">SPG</th><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th><th style="text-align:right;padding:6px;color:#374151;">Trx</th><th style="text-align:right;padding:6px;color:#374151;">ATV</th><th style="text-align:right;padding:6px;color:#374151;">ATU</th></tr></thead><tbody>';
+            spgHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SPG</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">ATV</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">ATU</th></tr></thead><tbody>';
             spgArr.forEach((s, i) => {
                 const storeDisplay = s.stores.length > 1 ? s.stores[0] + ' +' + (s.stores.length - 1) : (s.stores[0] || '-');
                 spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -5222,6 +5233,8 @@ def generate_html(all_data, all_stores):
             });
             spgHtml += '</tbody></table>';
             document.getElementById('salesBySPGTable').innerHTML = spgHtml;
+            const spgTitleText = salesStore ? '👤 Sales by SPG (' + salesStore.replace('Zuma ', '').replace('ZUMA ', '') + ' - All ' + spgArr.length + ')' : '👤 Sales by SPG (Top ' + spgArr.length + ')';
+            document.getElementById('salesBySPGTitle').textContent = spgTitleText;
 
             // Sales by Area
             const byArea = {};
@@ -5409,7 +5422,7 @@ def generate_html(all_data, all_stores):
 
             // Top 20
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;">Kategori</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th></tr></thead><tbody>';
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Kategori</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 20).forEach((a, i) => {
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
                 topHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
@@ -5421,7 +5434,7 @@ def generate_html(all_data, all_stores):
 
             // Bottom 20 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;">Kategori</th><th style="text-align:right;padding:6px;color:#991b1b;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;">Sales</th></tr></thead><tbody>';
+            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Kategori</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-20).reverse().forEach((a, i) => {
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
                 slowHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
@@ -5431,40 +5444,47 @@ def generate_html(all_data, all_stores):
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance - Table format with Gender and Series
-            const byCategory = {};
+            // Category Performance - by Gender, Series, Tipe (from Master Produk)
+            const byGenderCat = {};
             data.forEach(item => {
-                const cat = item.category || 'Unknown';
-                const gender = getGenderFromSKU(item.sku);
-                const seriesRaw = (item.collection || '').split('|')[0].trim();
-                const series = (seriesRaw && seriesRaw !== 'Umum' && seriesRaw !== 'All Item') ? seriesRaw : '-';
+                const sku = item.sku || '';
+                const kodeKecil = sku.replace(/Z\\d{2,3}$/, '').toUpperCase();
+                const produkInfo = masterProduk[kodeKecil] || {};
 
-                if (!byCategory[cat]) byCategory[cat] = { sales: 0, qty: 0, trx: new Set(), genders: {}, seriesList: {} };
-                byCategory[cat].sales += item.total || 0;
-                byCategory[cat].qty += item.qty || 0;
-                byCategory[cat].trx.add(item.order_no);
+                // Get from Master Produk, fallback to derivation
+                const gender = produkInfo.gender || getGenderFromSKU(sku);
+                const series = produkInfo.series || '-';
+                const tipe = produkInfo.tipe || '-';  // Jepit atau Fashion
 
-                // Track gender breakdown
-                if (!byCategory[cat].genders[gender]) byCategory[cat].genders[gender] = 0;
-                byCategory[cat].genders[gender] += item.total || 0;
+                // Group by Gender
+                if (!byGenderCat[gender]) byGenderCat[gender] = { sales: 0, qty: 0, trx: new Set(), seriesList: {}, tipeList: {} };
+                byGenderCat[gender].sales += item.total || 0;
+                byGenderCat[gender].qty += item.qty || 0;
+                byGenderCat[gender].trx.add(item.order_no);
 
                 // Track series breakdown
-                if (series !== '-') {
-                    if (!byCategory[cat].seriesList[series]) byCategory[cat].seriesList[series] = 0;
-                    byCategory[cat].seriesList[series] += item.total || 0;
+                if (series && series !== '-') {
+                    if (!byGenderCat[gender].seriesList[series]) byGenderCat[gender].seriesList[series] = 0;
+                    byGenderCat[gender].seriesList[series] += item.total || 0;
+                }
+
+                // Track tipe breakdown
+                if (tipe && tipe !== '-') {
+                    if (!byGenderCat[gender].tipeList[tipe]) byGenderCat[gender].tipeList[tipe] = 0;
+                    byGenderCat[gender].tipeList[tipe] += item.total || 0;
                 }
             });
 
-            const catArr = Object.entries(byCategory).map(([cat, val]) => {
-                // Get top 2 genders
-                const topGenders = Object.entries(val.genders).sort((a, b) => b[1] - a[1]).slice(0, 2);
-                // Get top 2 series
-                const topSeries = Object.entries(val.seriesList).sort((a, b) => b[1] - a[1]).slice(0, 2);
+            const catArr = Object.entries(byGenderCat).map(([gender, val]) => {
+                // Get top 3 series
+                const topSeries = Object.entries(val.seriesList).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                // Get tipe breakdown
+                const tipeBreakdown = Object.entries(val.tipeList).sort((a, b) => b[1] - a[1]);
 
                 return {
-                    cat, sales: val.sales, qty: val.qty, trx: val.trx.size,
-                    genders: topGenders,
-                    seriesList: topSeries
+                    cat: gender, sales: val.sales, qty: val.qty, trx: val.trx.size,
+                    seriesList: topSeries,
+                    tipeList: tipeBreakdown
                 };
             }).sort((a, b) => b.sales - a.sales);
 
@@ -5477,8 +5497,8 @@ def generate_html(all_data, all_stores):
 
             let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             catHtml += '<thead><tr style="background:#f8fafc;">';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Kategori</th>';
             catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Gender</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Tipe</th>';
             catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Series</th>';
             catHtml += '<th style="text-align:left;padding:8px;width:150px;color:#374151;">Share</th>';
             catHtml += '<th style="text-align:right;padding:8px;color:#374151;">Sales</th>';
@@ -5490,17 +5510,19 @@ def generate_html(all_data, all_stores):
                 const pct = totalCatSales > 0 ? (c.sales / totalCatSales * 100) : 0;
                 const barPct = maxCatSales > 0 ? (c.sales / maxCatSales * 100) : 0;
                 const rowBg = i % 2 === 0 ? '' : 'background:#fafafa;';
+                const icon = genderIcons[c.cat] || '❓';
+                const color = genderColors[c.cat] || '#6b7280';
 
-                // Format gender display
-                let genderDisplay = '';
-                if (c.genders && c.genders.length > 0) {
-                    genderDisplay = c.genders.map(g => {
-                        const icon = genderIcons[g[0]] || '';
-                        const color = genderColors[g[0]] || '#6b7280';
-                        return '<span style="display:inline-block;padding:2px 6px;background:' + color + '20;color:' + color + ';border-radius:4px;font-size:0.7rem;margin-right:4px;">' + icon + ' ' + g[0] + '</span>';
+                // Format tipe display (Jepit/Fashion)
+                let tipeDisplay = '';
+                if (c.tipeList && c.tipeList.length > 0) {
+                    tipeDisplay = c.tipeList.map(t => {
+                        const tipeIcon = t[0] === 'Jepit' ? '🩴' : '👟';
+                        const tipeColor = t[0] === 'Jepit' ? '#f59e0b' : '#8b5cf6';
+                        return '<span style="display:inline-block;padding:2px 6px;background:' + tipeColor + '20;color:' + tipeColor + ';border-radius:4px;font-size:0.7rem;margin-right:4px;">' + tipeIcon + ' ' + t[0] + '</span>';
                     }).join('');
                 } else {
-                    genderDisplay = '<span style="color:#9ca3af;">-</span>';
+                    tipeDisplay = '<span style="color:#9ca3af;">-</span>';
                 }
 
                 // Format series display
@@ -5514,10 +5536,10 @@ def generate_html(all_data, all_stores):
                 }
 
                 catHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + rowBg + '">';
-                catHtml += '<td style="padding:8px;font-weight:600;color:#374151;">' + c.cat + '</td>';
-                catHtml += '<td style="padding:8px;">' + genderDisplay + '</td>';
+                catHtml += '<td style="padding:8px;font-weight:600;"><span style="display:inline-block;padding:4px 10px;background:' + color + '20;color:' + color + ';border-radius:6px;">' + icon + ' ' + c.cat + '</span></td>';
+                catHtml += '<td style="padding:8px;">' + tipeDisplay + '</td>';
                 catHtml += '<td style="padding:8px;">' + seriesDisplay + '</td>';
-                catHtml += '<td style="padding:8px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div></td>';
+                catHtml += '<td style="padding:8px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,' + color + ',' + color + '80);"></div></div></td>';
                 catHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
@@ -5725,7 +5747,7 @@ def generate_html(all_data, all_stores):
 
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            html += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Rank</th><th style="text-align:left;padding:8px;color:#374151;">SPG</th><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th><th style="text-align:right;padding:8px;color:#374151;">ATV</th><th style="text-align:right;padding:8px;color:#374151;">ATU</th></tr></thead><tbody>';
+            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Rank</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">SPG</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Trx</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">ATV</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">ATU</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
                 html += '<tr><td colspan="8" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
@@ -5859,7 +5881,7 @@ def generate_html(all_data, all_stores):
             }).slice(0, 50);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            recentHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Tanggal</th><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:left;padding:6px;color:#374151;">Order</th><th style="text-align:left;padding:6px;color:#374151;">SKU</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Total</th></tr></thead><tbody>';
+            recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Order</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th></tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 recentHtml += '<td style="padding:6px;">' + item.date + '</td>';
