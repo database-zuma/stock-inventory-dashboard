@@ -1,5 +1,6 @@
 # Large order detail CSV files (50MB+)
 order-detail-*.csv
+sales_2026.csv
 
 # Large JSON files (generated data)
 sales_summary.json
