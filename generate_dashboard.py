@@ -2251,10 +2251,17 @@ def generate_html(all_data, all_stores):
             });
 
             if (whAreaChart) whAreaChart.destroy();
+            // Convert area names to warehouse codes for warehouse chart
+            const whAreaLabels = Object.keys(areaData).map(area => {
+                if (area === 'Jakarta') return 'WHJ';
+                if (area === 'Bali') return 'WHB';
+                if (area === 'Jawa Timur') return 'WHS';
+                return area;
+            });
             whAreaChart = new Chart(document.getElementById('whAreaChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(areaData),
+                    labels: whAreaLabels,
                     datasets: [{ label: 'Stock', data: Object.values(areaData), backgroundColor: colors, borderRadius: 6 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
