@@ -3923,27 +3923,40 @@ def generate_html(all_data, all_stores):
         function getAssortmentForSize(sku, assortmentStr) {
             if (!assortmentStr || assortmentStr === '-') return '-';
 
-            // Extract size suffix from SKU (e.g., Z22 from Z2LS01Z22)
+            // Extract size suffix from SKU (e.g., Z22 from Z2LS01Z22, Z40 from M1SLV115Z40)
             const sizeMatch = sku.match(/Z(\d+)$/i);
             if (!sizeMatch) return '-';
 
             const sizeNum = parseInt(sizeMatch[1]);
             const parts = assortmentStr.split('-').map(p => parseInt(p));
 
-            if (parts.length === 3) {
-                // 3-part assortment: Z21/Z22=first, Z23/Z24=second, Z25/Z26=third
-                if (sizeNum <= 22) return parts[0] || '-';
-                if (sizeNum <= 24) return parts[1] || '-';
-                return parts[2] || '-';
-            } else if (parts.length === 5) {
-                // 5-part assortment: Z21=first, Z22=second, Z23=third, Z24=fourth, Z25=fifth
-                const idx = sizeNum - 21;
-                return (idx >= 0 && idx < parts.length) ? parts[idx] : '-';
-            } else if (parts.length === 4) {
-                // 4-part assortment: Z21=first, Z22=second, Z23=third, Z24=fourth
-                const idx = sizeNum - 21;
-                return (idx >= 0 && idx < parts.length) ? parts[idx] : '-';
+            // Detect size range and calculate index
+            let idx = -1;
+
+            if (sizeNum >= 19 && sizeNum <= 26) {
+                // Kids sizes: 19-26 (biasanya mulai dari 19, 21, atau 22)
+                if (sizeNum >= 21) {
+                    idx = sizeNum - 21;  // Z21=0, Z22=1, Z23=2, Z24=3, Z25=4, Z26=5
+                } else {
+                    idx = sizeNum - 19;  // Z19=0, Z20=1
+                }
+            } else if (sizeNum >= 28 && sizeNum <= 34) {
+                // Baby sizes: 28-34
+                idx = sizeNum - 28;  // Z28=0, Z29=1, Z30=2, Z31=3, Z32=4, Z33=5, Z34=6
+            } else if (sizeNum >= 35 && sizeNum <= 44) {
+                // Adult sizes: 35-44
+                idx = sizeNum - 35;  // Z35=0, Z36=1, Z37=2, Z38=3, Z39=4, Z40=5, Z41=6, Z42=7, Z43=8, Z44=9
+                // Biasanya adult hanya 5 size (40-44), jadi adjust
+                if (sizeNum >= 40) {
+                    idx = sizeNum - 40;  // Z40=0, Z41=1, Z42=2, Z43=3, Z44=4
+                }
             }
+
+            // Return assortment value if index is valid
+            if (idx >= 0 && idx < parts.length) {
+                return parts[idx] || '-';
+            }
+
             return '-';
         }
 
