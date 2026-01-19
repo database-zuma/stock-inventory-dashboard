@@ -2098,6 +2098,114 @@ def generate_html(all_data, all_stores):
             });
         }
 
+        // Update charts with filtered data (respects store/warehouse selection)
+        function updateChartsFiltered(data, locationFilter, areaFilter) {
+            const catData = {}, areaData = {}, seriesData = {};
+            let totalSku = data.length;
+            let totalStock = 0;
+            let minusArticles = 0;
+            let minusPairs = 0;
+            let minusLocations = new Set();
+
+            data.forEach(item => {
+                const gender = item.gender || 'BABY';
+                const series = item.series || '-';
+
+                // Calculate stock based on filter
+                let stockValue = 0;
+                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                    stockValue = item.store_stock[locationFilter];
+                } else if (areaFilter && item.store_stock) {
+                    // Sum stock for all locations in the area
+                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                        if (getAreaFromStore(loc) === areaFilter) {
+                            stockValue += stock;
+                        }
+                    });
+                } else {
+                    stockValue = item.total || 0;
+                }
+
+                catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
+                if (series && series !== '-' && series !== '') {
+                    seriesData[series] = (seriesData[series] || 0) + Math.max(0, stockValue);
+                }
+
+                if (stockValue > 0) totalStock += stockValue;
+
+                // Area calculation
+                if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                    const area = getAreaFromStore(locationFilter);
+                    areaData[area] = (areaData[area] || 0) + Math.max(0, item.store_stock[locationFilter]);
+                } else if (areaFilter && item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                        if (getAreaFromStore(loc) === areaFilter) {
+                            areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                        }
+                    });
+                } else if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        const area = getAreaFromStore(store);
+                        areaData[area] = (areaData[area] || 0) + Math.max(0, stock);
+                    });
+                }
+
+                // Minus calculation
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([storeName, stock]) => {
+                        if (locationFilter && storeName !== locationFilter) return;
+                        if (areaFilter && getAreaFromStore(storeName) !== areaFilter) return;
+                        if (stock < 0) {
+                            minusArticles++;
+                            minusPairs += Math.abs(stock);
+                            minusLocations.add(storeName);
+                        }
+                    });
+                }
+            });
+
+            // Update stats
+            document.getElementById('totalSku').textContent = totalSku.toLocaleString('id-ID');
+            document.getElementById('totalStock').textContent = totalStock.toLocaleString('id-ID');
+            const locCount = minusLocations.size;
+            document.getElementById('negativeStock').textContent = locCount.toLocaleString('id-ID') + ' lokasi';
+            document.getElementById('negativeSubValue').textContent = minusArticles.toLocaleString('id-ID') + ' artikel | -' + minusPairs.toLocaleString('id-ID') + ' pairs';
+
+            // Update charts
+            const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catData),
+                    datasets: [{ data: Object.values(catData), backgroundColor: colors, borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Poppins', size: 11 } } } } }
+            });
+
+            if (areaChart) areaChart.destroy();
+            areaChart = new Chart(document.getElementById('areaChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(areaData),
+                    datasets: [{ label: 'Stock', data: Object.values(areaData), backgroundColor: colors, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            if (seriesChart) seriesChart.destroy();
+            const topSeries = Object.entries(seriesData).sort((a,b) => b[1] - a[1]).slice(0, 8);
+            seriesChart = new Chart(document.getElementById('seriesChart'), {
+                type: 'bar',
+                data: {
+                    labels: topSeries.map(s => s[0]),
+                    datasets: [{ label: 'Stock', data: topSeries.map(s => s[1]), backgroundColor: colors, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+        }
+
         function getAreaFromStore(storeName) {
             const s = storeName.toLowerCase().trim();
 
@@ -2252,6 +2360,9 @@ def generate_html(all_data, all_stores):
             rtFilteredData = data;
             rtCurrentPage = 1;
             renderRetailTable();
+
+            // Update charts and stats with filtered data
+            updateChartsFiltered(data, tableStore, tableArea);
         }
 
         function sortRetailData(field) {
@@ -2397,6 +2508,11 @@ def generate_html(all_data, all_stores):
             whFilteredData = data;
             whCurrentPage = 1;
             renderWarehouseTable();
+
+            // Update charts and stats with filtered data (only if Retail table hidden or this is active)
+            if (currentEntity !== 'DDD') {
+                updateChartsFiltered(data, whWarehouse, whArea);
+            }
         }
 
         function sortWarehouseData(field) {
