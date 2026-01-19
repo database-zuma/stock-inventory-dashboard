@@ -1267,25 +1267,10 @@ def generate_html(all_data, all_stores):
                 <div class="value" id="totalStock">0</div>
                 <div class="sub-value">Total unit positif</div>
             </div>
-            <div class="stat-card warning">
-                <h3>Low Stock</h3>
-                <div class="value" id="lowStock">0</div>
-                <div class="sub-value">1-9 unit</div>
-            </div>
-            <div class="stat-card danger">
-                <h3>Out of Stock</h3>
-                <div class="value" id="outOfStock">0</div>
-                <div class="sub-value">Stok = 0</div>
-            </div>
             <div class="stat-card info clickable" onclick="showNegativeDetails()" style="cursor:pointer;">
                 <h3>Minus on Hand</h3>
                 <div class="value" id="negativeStock">0</div>
                 <div class="sub-value" id="negativeSubValue">0 artikel | 0 pairs</div>
-            </div>
-            <div class="stat-card secondary">
-                <h3>High Stock</h3>
-                <div class="value" id="highStock">0</div>
-                <div class="sub-value">&gt; 100 unit</div>
             </div>
         </div>
 
@@ -1377,10 +1362,60 @@ def generate_html(all_data, all_stores):
             </div>
         </div>
 
+        <!-- Table Filter Section (Separate from chart filters) -->
+        <div class="table-filter-section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #bae6fd;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <span style="font-size: 1.1rem;">📦</span>
+                <h4 style="margin: 0; color: #0369a1; font-size: 0.95rem;">Filter Data Stock Warehouse-Store</h4>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: end;">
+                <div class="filter-group" style="min-width: 140px;">
+                    <label style="font-size: 0.75rem; color: #64748b;">Area</label>
+                    <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
+                        <option value="">Semua Area</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="min-width: 160px;">
+                    <label style="font-size: 0.75rem; color: #64748b;">Store / Warehouse</label>
+                    <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
+                        <option value="">Semua</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="min-width: 100px;">
+                    <label style="font-size: 0.75rem; color: #64748b;">Tier</label>
+                    <select id="tableFilterTier" onchange="applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
+                        <option value="">Semua</option>
+                        <option value="0">Tier 0</option>
+                        <option value="1">Tier 1</option>
+                        <option value="2">Tier 2</option>
+                        <option value="3">Tier 3</option>
+                        <option value="4">Tier 4</option>
+                        <option value="5">Tier 5</option>
+                        <option value="8">Tier 8</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="min-width: 110px;">
+                    <label style="font-size: 0.75rem; color: #64748b;">Status Stock</label>
+                    <select id="tableFilterStatus" onchange="applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
+                        <option value="">Semua</option>
+                        <option value="high">High (&gt;100)</option>
+                        <option value="medium">Normal (10-100)</option>
+                        <option value="low">Low (1-9)</option>
+                        <option value="zero">Out of Stock</option>
+                        <option value="negative">Minus</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label style="font-size: 0.75rem; color: #64748b;">&nbsp;</label>
+                    <button class="btn btn-secondary" onclick="resetTableFilters()" style="font-size: 0.8rem; padding: 6px 12px;">↺ Reset</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Data Table -->
         <div class="table-section">
             <div class="table-header">
-                <h3 id="tableTitle">📦 Data Stock Warehouse</h3>
+                <h3 id="tableTitle">📦 Data Stock Warehouse-Store</h3>
                 <div class="table-actions">
                     <div class="search-box">
                         <input type="text" id="searchInput" placeholder="Cari SKU / Nama..." oninput="applyFilters()">
@@ -1736,7 +1771,7 @@ def generate_html(all_data, all_stores):
                 tab.classList.toggle('active', tab.dataset.type === type);
             });
             const titles = {
-                warehouse: '📦 Data Stock Warehouse',
+                warehouse: '📦 Data Stock Warehouse-Store',
                 retail: '🏪 Data Stock Retail Store',
                 all: '📋 Semua Data (Warehouse + Retail)'
             };
@@ -1786,6 +1821,7 @@ def generate_html(all_data, all_stores):
             updateSeriesFilter(data);
             renderAreaTags();
             renderStoreGrid();
+            updateTableAreaDropdown();
             applyFilters();
         }
 
@@ -1856,9 +1892,6 @@ def generate_html(all_data, all_stores):
 
             document.getElementById('totalSku').textContent = stats.totalSku.toLocaleString('id-ID');
             document.getElementById('totalStock').textContent = stats.totalStock.toLocaleString('id-ID');
-            document.getElementById('lowStock').textContent = stats.lowStock.toLocaleString('id-ID');
-            document.getElementById('outOfStock').textContent = stats.outOfStock.toLocaleString('id-ID');
-            document.getElementById('highStock').textContent = stats.highStock.toLocaleString('id-ID');
 
             // Update minus on hand dengan data per store
             const locCount = minusLocations.size;
@@ -2014,10 +2047,14 @@ def generate_html(all_data, all_stores):
 
             const search = document.getElementById('searchInput').value.toLowerCase();
             const gender = document.getElementById('filterGender').value;
-            const tier = document.getElementById('filterTier').value;
             const series = document.getElementById('filterSeries').value;
-            const status = document.getElementById('filterStatus').value;
             const size = document.getElementById('filterSize').value;
+
+            // Table-specific filters (separate from chart filters)
+            const tableArea = document.getElementById('tableFilterArea').value;
+            const tableStore = document.getElementById('tableFilterStore').value;
+            const tableTier = document.getElementById('tableFilterTier').value;
+            const tableStatus = document.getElementById('tableFilterStatus').value;
 
             if (search) {
                 data = data.filter(item => item.sku.toLowerCase().includes(search) || (item.name || '').toLowerCase().includes(search));
@@ -2025,8 +2062,8 @@ def generate_html(all_data, all_stores):
             if (gender) {
                 data = data.filter(item => (item.gender || '').toUpperCase().includes(gender.toUpperCase()));
             }
-            if (tier) {
-                data = data.filter(item => (item.tier || '') === tier);
+            if (tableTier) {
+                data = data.filter(item => (item.tier || '') === tableTier);
             }
             if (series) {
                 data = data.filter(item => (item.series || '').includes(series) || (item.name || '').toUpperCase().includes(series));
@@ -2034,26 +2071,27 @@ def generate_html(all_data, all_stores):
             if (size) {
                 data = data.filter(item => (item.size || '').startsWith(size));
             }
-            // Filter by area/store DULU (sebelum filter status)
-            if (currentStore) {
+
+            // Filter by table area/store (from dedicated table filter section)
+            if (tableStore) {
                 // Gunakan !== undefined agar stok 0 tetap muncul
-                data = data.filter(item => item.store_stock && item.store_stock[currentStore] !== undefined);
-            } else if (currentArea) {
+                data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined);
+            } else if (tableArea) {
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.keys(item.store_stock).some(store => getAreaFromStore(store) === currentArea);
+                    return Object.keys(item.store_stock).some(store => getAreaFromStore(store) === tableArea);
                 });
             }
 
-            // Filter by status - gunakan stok per store jika store dipilih
-            if (status) {
+            // Filter by table status - gunakan stok per store jika store dipilih
+            if (tableStatus) {
                 const getStockValue = (item) => {
-                    if (currentStore && item.store_stock) {
-                        return Number(item.store_stock[currentStore]) || 0;
+                    if (tableStore && item.store_stock) {
+                        return Number(item.store_stock[tableStore]) || 0;
                     }
                     return Number(item.total) || 0;
                 };
-                switch(status) {
+                switch(tableStatus) {
                     case 'high': data = data.filter(i => getStockValue(i) > 100); break;
                     case 'medium': data = data.filter(i => getStockValue(i) >= 10 && getStockValue(i) <= 100); break;
                     case 'low': data = data.filter(i => getStockValue(i) > 0 && getStockValue(i) < 10); break;
@@ -2098,6 +2136,84 @@ def generate_html(all_data, all_stores):
             sortDir = 'desc';
             document.querySelectorAll('.area-tag, .store-item').forEach(el => el.classList.remove('active'));
             applyFilters();
+        }
+
+        function resetTableFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('tableFilterArea').value = '';
+            document.getElementById('tableFilterStore').value = '';
+            document.getElementById('tableFilterTier').value = '';
+            document.getElementById('tableFilterStatus').value = '';
+            updateTableStoreDropdown();
+            applyFilters();
+        }
+
+        function updateTableAreaDropdown() {
+            const data = getData();
+            const areas = new Set();
+
+            // Collect unique areas from store_stock
+            data.forEach(item => {
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(store => {
+                        const area = getAreaFromStore(store);
+                        if (area) areas.add(area);
+                    });
+                }
+            });
+
+            const areaSelect = document.getElementById('tableFilterArea');
+            const currentValue = areaSelect.value;
+            areaSelect.innerHTML = '<option value="">Semua Area</option>';
+
+            // Sort areas alphabetically
+            Array.from(areas).sort().forEach(area => {
+                areaSelect.innerHTML += `<option value="${area}">${area}</option>`;
+            });
+
+            // Restore selection if still valid
+            if (areas.has(currentValue)) {
+                areaSelect.value = currentValue;
+            }
+
+            updateTableStoreDropdown();
+        }
+
+        function updateTableStoreDropdown() {
+            const data = getData();
+            const selectedArea = document.getElementById('tableFilterArea').value;
+            const storeSelect = document.getElementById('tableFilterStore');
+            const currentValue = storeSelect.value;
+
+            // Collect stores with stock
+            const storeStock = {};
+            data.forEach(item => {
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        if (!storeStock[store]) storeStock[store] = 0;
+                        storeStock[store] += stock || 0;
+                    });
+                }
+            });
+
+            // Filter by area if selected
+            let stores = Object.entries(storeStock)
+                .map(([name, stock]) => ({ name, stock }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            if (selectedArea) {
+                stores = stores.filter(s => getAreaFromStore(s.name) === selectedArea);
+            }
+
+            storeSelect.innerHTML = '<option value="">Semua Store/WH</option>';
+            stores.forEach(s => {
+                storeSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.stock.toLocaleString('id-ID')})</option>`;
+            });
+
+            // Restore selection if still valid
+            if (stores.some(s => s.name === currentValue)) {
+                storeSelect.value = currentValue;
+            }
         }
 
         function renderTable() {
