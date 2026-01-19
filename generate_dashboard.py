@@ -2126,6 +2126,35 @@ def generate_html(all_data, all_stores):
                 });
             }
 
+            // Group by kode_kecil and sum quantities
+            const groupedMap = {};
+            data.forEach(item => {
+                const kk = (item.kode_kecil || '').toUpperCase();
+                if (!kk) return;
+
+                if (!groupedMap[kk]) {
+                    // Clone the first item as base
+                    groupedMap[kk] = {
+                        ...item,
+                        total: 0,
+                        store_stock: {}
+                    };
+                }
+
+                // Sum total
+                groupedMap[kk].total += item.total || 0;
+
+                // Sum store_stock
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, qty]) => {
+                        groupedMap[kk].store_stock[store] = (groupedMap[kk].store_stock[store] || 0) + qty;
+                    });
+                }
+            });
+
+            // Convert back to array
+            data = Object.values(groupedMap);
+
             // Sort
             if (sortField) {
                 data.sort((a, b) => {
