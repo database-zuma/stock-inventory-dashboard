@@ -64,9 +64,7 @@ FILES_CONFIG = {
 
 # Toko dengan data DOUBLED (perlu dibagi 2) - karena export dari sistem punya duplikat kode lama & baru
 DOUBLED_STORES = {
-    'zuma city of tomorrow mall': 0.5,  # Data dobel, kalikan 0.5
-    'zuma tanah lot': 0.5,
-    'zuma lippo bali': 0.5,
+    # Koreksi dihapus - data CSV sudah benar
 }
 
 # Google Sheets Configuration
@@ -550,11 +548,14 @@ def extract_product_info(name, sku):
         # Fallback: extract kode kecil dari SKU
         info['kode_kecil'] = extract_kode_kecil(sku)
 
-    # Get tipe from MASTER_PRODUK by kode_kecil
+    # Get tipe and tier from MASTER_PRODUK by kode_kecil (as fallback)
     kode_kecil_upper = (info['kode_kecil'] or '').upper()
     if kode_kecil_upper and kode_kecil_upper in MASTER_PRODUK:
         produk_info = MASTER_PRODUK[kode_kecil_upper]
         info['tipe'] = produk_info.get('tipe', '')
+        # Tier fallback: jika tier belum ada dari Master Data, ambil dari Master Produk
+        if not info['tier'] and produk_info.get('tier'):
+            info['tier'] = produk_info.get('tier', '')
 
     # Fallback size dari SKU jika Master Data tidak punya
     if not info['size']:
@@ -3273,8 +3274,8 @@ def generate_html(all_data, all_stores):
                         var item = whData[j];
                         var tier = item.tier || '';
 
-                        // Skip item tanpa tier valid (hanya tier 1,2,3,4,5,8)
-                        if (!tier || tier === '-' || !['1','2','3','4','5','8'].includes(tier.toString())) continue;
+                        // Skip item tanpa tier valid (tier 0,1,2,3,4,5,8)
+                        if (!tier || tier === '-' || !['0','1','2','3','4','5','8'].includes(tier.toString())) continue;
 
                         if (item.store_stock) {
                             var whNames = Object.keys(item.store_stock);
@@ -3435,8 +3436,8 @@ def generate_html(all_data, all_stores):
                     var item = retailData[m];
                     var tier = item.tier || '';
 
-                    // Skip item tanpa tier valid (hanya tier 1,2,3,4,5,8)
-                    if (!tier || tier === '-' || !['1','2','3','4','5','8'].includes(tier.toString())) continue;
+                    // Skip item tanpa tier valid (tier 0,1,2,3,4,5,8)
+                    if (!tier || tier === '-' || !['0','1','2','3','4','5','8'].includes(tier.toString())) continue;
 
                     if (item.store_stock) {
                         var storeNames = Object.keys(item.store_stock);
@@ -3447,14 +3448,13 @@ def generate_html(all_data, all_stores):
                             if (storeLower.indexOf('warehouse') >= 0) continue;
 
                             var stock = item.store_stock[store];
-                            var positiveStock = (stock > 0) ? stock : 0;
 
                             if (!storeStock[store]) {
                                 storeStock[store] = 0;
                                 storeTiers[store] = {};
                                 storeArticles[store] = {};
                             }
-                            storeStock[store] = storeStock[store] + positiveStock;
+                            storeStock[store] = storeStock[store] + stock;  // Include all stock (positive & negative)
 
                             if (!storeTiers[store][tier]) {
                                 storeTiers[store][tier] = 0;
