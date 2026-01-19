@@ -1749,7 +1749,7 @@ def generate_html(all_data, all_stores):
         </div> <!-- End maxstockView -->
 
         <!-- ==================== STOCK CONTROL VIEW ==================== -->
-        <div class="view-container" id="stockControlView">
+        <div class="view-container" id="stockcontrolView">
             <!-- Header -->
             <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:16px;padding:20px;margin-bottom:20px;">
                 <h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">📊 Stock Control - Turnover Analysis</h2>
