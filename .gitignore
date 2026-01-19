@@ -1,0 +1,11 @@
+# Large order detail CSV files (50MB+)
+order-detail-*.csv
+
+# Large JSON files (generated data)
+sales_summary.json
+stock_control.json
+inventory_data.json
+
+# Temporary files
+*.tmp
+*.bak

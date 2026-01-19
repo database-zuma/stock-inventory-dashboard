@@ -763,6 +763,9 @@
 
         function parseCSVFile(file) {
             const fileName = file.name.toLowerCase();
+            console.log('=== PARSING FILE ===');
+            console.log('File name:', file.name);
+            console.log('File name lowercase:', fileName);
 
             // Determine entity and type from filename
             let entity = '';
@@ -776,12 +779,16 @@
             if (fileName.includes('retail') || fileName.includes('store')) type = 'retail';
             else if (fileName.includes('wh') || fileName.includes('warehouse')) type = 'warehouse';
 
+            console.log('Detected entity:', entity, 'type:', type);
+
             if (!entity || !type) {
                 alert('File tidak dikenali. Pastikan nama file mengandung nama entitas (DDD/LJBB/MBB/UBB) dan tipe (WH/Retail)');
                 return;
             }
 
             Papa.parse(file, {
+                delimiter: ';',  // CSV menggunakan semicolon separator
+                skipEmptyLines: true,
                 complete: (results) => {
                     const data = processCSVData(results.data, entity, type);
                     allData[entity][type] = data;
@@ -821,11 +828,15 @@
             let totalColIndex = -1;
 
             headers.forEach((header, idx) => {
-                const h = (header || '').toLowerCase().trim();
+                const h = (header || '').toLowerCase().replace(/\r/g, '').trim();
                 if (h.includes('kode barang') || h === 'kode') skuColIndex = idx;
                 if (h.includes('nama barang')) nameColIndex = idx;
                 if (h.includes('total')) totalColIndex = idx;
             });
+
+            // Debug: log column indices
+            console.log('Headers:', headers);
+            console.log('Total column index:', totalColIndex);
 
             // Process data rows
             for (let i = dataStartRow; i < rawData.length; i++) {
@@ -859,16 +870,29 @@
                     }
                 }
 
-                // Get total stock
+                // Get total stock - cari kolom dengan header "Total"
                 let total = 0;
-                if (totalColIndex >= 0) {
-                    total = parseNumber(row[totalColIndex]);
-                } else {
-                    // Find last numeric column
+                let totalFound = false;
+
+                // Method 1: Gunakan kolom Total yang terdeteksi dari header
+                if (totalColIndex >= 0 && row[totalColIndex] !== undefined) {
+                    const rawTotal = (row[totalColIndex] || '0').toString().replace(/\r/g, '').trim();
+                    if (rawTotal !== '') {
+                        total = parseNumber(rawTotal);
+                        totalFound = true;
+                    }
+                }
+
+                // Method 2: Fallback - cari kolom terakhir yang berisi angka
+                if (!totalFound) {
                     for (let j = row.length - 1; j >= 0; j--) {
-                        const val = parseNumber(row[j]);
-                        if (val !== 0 || (row[j] && row[j].toString().includes('0'))) {
-                            total = val;
+                        const cellValue = (row[j] || '').toString().replace(/\r/g, '').trim();
+                        // Skip kolom kosong
+                        if (cellValue === '') continue;
+                        // Cek apakah ini angka (termasuk 0 dan negatif)
+                        if (/^-?\d+$/.test(cellValue) || /^-?\d+[.,]\d+$/.test(cellValue)) {
+                            total = parseNumber(cellValue);
+                            totalFound = true;
                             break;
                         }
                     }
@@ -890,13 +914,30 @@
                 });
             }
 
+            // Debug: tampilkan jumlah item per status stok
+            const zeroStock = processedData.filter(item => Number(item.total) === 0);
+            const negativeStock = processedData.filter(item => Number(item.total) < 0);
+            const lowStock = processedData.filter(item => Number(item.total) > 0 && Number(item.total) < 10);
+            console.log('=== DEBUG STOCK (' + entity + ' ' + type + ') ===');
+            console.log('Total items parsed:', processedData.length);
+            console.log('Items with stock = 0 (Out of Stock):', zeroStock.length);
+            console.log('Items with stock < 0 (Negative):', negativeStock.length);
+            console.log('Items with stock 1-9 (Low Stock):', lowStock.length);
+            console.log('SKU Col Index:', skuColIndex, 'Name Col Index:', nameColIndex, 'Total Col Index:', totalColIndex);
+            if (zeroStock.length > 0) {
+                console.log('Sample zero stock items:', zeroStock.slice(0, 3));
+            }
+            if (zeroStock.length === 0) {
+                console.log('WARNING: No zero stock found! Sample data:', processedData.slice(0, 3));
+            }
+
             return processedData;
         }
 
         function parseNumber(val) {
-            if (!val) return 0;
+            if (val === null || val === undefined) return 0;
             // Handle European number format (comma as decimal separator)
-            let str = val.toString().replace(/[""]/g, '').trim();
+            let str = val.toString().replace(/[""]/g, '').replace(/\r/g, '').trim();
             // Remove thousand separators (.)
             str = str.replace(/\./g, '');
             // Replace comma with dot for decimal
@@ -1029,11 +1070,12 @@
             };
 
             data.forEach(item => {
-                stats.totalStock += item.total;
-                if (item.total < 0) stats.negativeStock++;
-                else if (item.total === 0) stats.outOfStock++;
-                else if (item.total < 10) stats.lowStock++;
-                else if (item.total > 100) stats.highStock++;
+                const total = Number(item.total) || 0;
+                stats.totalStock += total;
+                if (total < 0) stats.negativeStock++;
+                else if (total === 0) stats.outOfStock++;
+                else if (total < 10) stats.lowStock++;
+                else if (total > 100) stats.highStock++;
             });
 
             document.getElementById('totalSku').textContent = stats.totalSku.toLocaleString();
@@ -1150,10 +1192,11 @@
         }
 
         function getStockBadge(stock) {
-            if (stock < 0) return '<span class="stock-badge stock-negative">Negative</span>';
-            if (stock === 0) return '<span class="stock-badge stock-zero">Out of Stock</span>';
-            if (stock < 10) return '<span class="stock-badge stock-low">Low Stock</span>';
-            if (stock > 100) return '<span class="stock-badge stock-high">High Stock</span>';
+            const s = Number(stock) || 0;
+            if (s < 0) return '<span class="stock-badge stock-negative">Negative</span>';
+            if (s === 0) return '<span class="stock-badge stock-zero">Out of Stock</span>';
+            if (s < 10) return '<span class="stock-badge stock-low">Low Stock</span>';
+            if (s > 100) return '<span class="stock-badge stock-high">High Stock</span>';
             return '<span class="stock-badge stock-medium">Normal</span>';
         }
 
@@ -1181,11 +1224,11 @@
 
             if (statusFilter) {
                 switch(statusFilter) {
-                    case 'high': data = data.filter(item => item.total > 100); break;
-                    case 'medium': data = data.filter(item => item.total >= 10 && item.total <= 100); break;
-                    case 'low': data = data.filter(item => item.total > 0 && item.total < 10); break;
-                    case 'zero': data = data.filter(item => item.total === 0); break;
-                    case 'negative': data = data.filter(item => item.total < 0); break;
+                    case 'high': data = data.filter(item => Number(item.total) > 100); break;
+                    case 'medium': data = data.filter(item => Number(item.total) >= 10 && Number(item.total) <= 100); break;
+                    case 'low': data = data.filter(item => Number(item.total) > 0 && Number(item.total) < 10); break;
+                    case 'zero': data = data.filter(item => Number(item.total) === 0); break;
+                    case 'negative': data = data.filter(item => Number(item.total) < 0); break;
                 }
             }
 

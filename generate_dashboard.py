@@ -10,6 +10,7 @@ import json
 import os
 import re
 import io
+import base64
 from pathlib import Path
 from collections import defaultdict
 
@@ -20,6 +21,26 @@ try:
     HAS_URLLIB = True
 except ImportError:
     HAS_URLLIB = False
+
+# Load logos as base64
+def load_logo_base64(filename):
+    """Load image file and convert to base64 data URI"""
+    try:
+        filepath = Path(__file__).parent / filename
+        if filepath.exists():
+            with open(filepath, 'rb') as f:
+                data = base64.b64encode(f.read()).decode('utf-8')
+                return f"data:image/png;base64,{data}"
+    except Exception as e:
+        print(f"Warning: Could not load logo {filename}: {e}")
+    return ""
+
+# Load all logos
+LOGO_ZUMA = load_logo_base64("ZUMA_FINAL LOGO_UPDATED-07.png")
+LOGO_DDD = load_logo_base64("b.png")
+LOGO_LJBB = load_logo_base64("ljbb.png")
+LOGO_MBB = load_logo_base64("mbb.png")
+LOGO_UBB = load_logo_base64("a.png")
 
 # Konfigurasi file
 FILES_CONFIG = {
@@ -170,6 +191,7 @@ def load_master_data():
     # Kolom 0: Kode Variant (Kode SKU) - Z2CA01Z21
     # Kolom 1: Kode (Kode Kecil) - Z2CA01
     # Kolom 3: Nama Barang
+    # Kolom 5: Size (kolom F)
     # Kolom 6: Tier
     # Kolom 7: Gender
     # Kolom 9: Series
@@ -185,6 +207,7 @@ def load_master_data():
 
         kode_kecil = str(row[1]).strip().upper() if len(row) > 1 else ''
         nama = str(row[3]).strip() if len(row) > 3 else ''
+        size = str(row[5]).strip() if len(row) > 5 else ''  # Kolom F = index 5
         tier = str(row[6]).strip() if len(row) > 6 else ''
         gender = str(row[7]).strip() if len(row) > 7 else ''
         series = str(row[9]).strip() if len(row) > 9 else ''
@@ -192,6 +215,7 @@ def load_master_data():
         MASTER_DATA[kode_sku] = {
             'kode_kecil': kode_kecil,
             'nama': nama,
+            'size': size,
             'tier': tier,
             'gender': gender,
             'series': series
@@ -463,11 +487,6 @@ def extract_product_info(name, sku):
     upper_name = (name or '').upper()
     upper_sku = (sku or '').upper()
 
-    # Extract size from SKU
-    size_match = re.search(r'Z(\d{2,3})$', upper_sku)
-    if size_match:
-        info['size'] = size_match.group(1)
-
     # Coba ambil dari Master Data (by full SKU)
     master_info = get_product_info_from_master(sku)
     if master_info:
@@ -476,9 +495,18 @@ def extract_product_info(name, sku):
         info['series'] = master_info.get('series', '')
         info['gender'] = master_info.get('gender', '')
         info['tier'] = master_info.get('tier', '')
+        # Size dari Master Data (kolom F) - prioritas utama
+        if master_info.get('size'):
+            info['size'] = master_info.get('size', '')
     else:
         # Fallback: extract kode kecil dari SKU
         info['kode_kecil'] = extract_kode_kecil(sku)
+
+    # Fallback size dari SKU jika Master Data tidak punya
+    if not info['size']:
+        size_match = re.search(r'Z(\d{2,3})$', upper_sku)
+        if size_match:
+            info['size'] = size_match.group(1)
 
     # Category dari Gender di Master Data
     gender_upper = (info['gender'] or '').upper()
@@ -609,7 +637,7 @@ def read_csv_detailed(filepath, entity, data_type):
             sku = ''
             for j, cell in enumerate(row):
                 cell_str = str(cell).strip()
-                if cell_str and re.match(r'^[A-Z0-9]{5,}$', cell_str, re.IGNORECASE):
+                if cell_str and re.match(r'^[A-Z0-9\-]{5,}$', cell_str, re.IGNORECASE):
                     if ' ' not in cell_str and 'total' not in cell_str.lower():
                         sku = cell_str
                         break
@@ -647,13 +675,12 @@ def read_csv_detailed(filepath, entity, data_type):
                             total = val
                             break
 
-            # Get per-store stock
+            # Get per-store stock (termasuk stok 0 agar bisa filter Out of Stock per store)
             store_stock = {}
             for col_idx, store_name in store_cols.items():
                 if col_idx < len(row):
                     stock_val = parse_number(row[col_idx])
-                    if stock_val != 0:
-                        store_stock[store_name] = stock_val
+                    store_stock[store_name] = stock_val  # Include semua, termasuk 0
 
             # Extract product info
             info = extract_product_info(name, sku)
@@ -703,7 +730,7 @@ def generate_html(all_data, all_stores):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Inventory - Stock Retail & Warehouse</title>
+    <title>Monitoring Stock Retail & Warehouse - Zuma Indonesia</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1149,13 +1176,24 @@ def generate_html(all_data, all_stores):
 </head>
 <body>
     <div class="header">
-        <div>
-            <h1>📊 Dashboard Inventory</h1>
-            <p>Monitoring Stock Retail & Warehouse</p>
+        <div style="display:flex;align-items:center;gap:20px;">
+            <img src="''' + LOGO_ZUMA + '''" alt="Zuma Logo" style="height:80px;width:auto;filter:brightness(0) invert(1);">
+            <div>
+                <h1 style="font-size:1.4rem;margin:0;">Monitoring Stock Retail & Warehouse</h1>
+                <p style="margin:5px 0 0 0;font-size:1rem;">Zuma Indonesia</p>
+            </div>
         </div>
-        <div class="date">
-            <div>Data per:</div>
-            <div><strong>''' + __import__('datetime').datetime.now().strftime('%d %B %Y') + '''</strong></div>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="entity-logos" style="display:flex;gap:6px;align-items:center;">
+                <div style="width:70px;height:35px;display:flex;align-items:center;justify-content:center;background:white;border-radius:5px;padding:3px;"><img src="''' + LOGO_DDD + '''" alt="DDD" style="max-height:30px;max-width:65px;object-fit:contain;"></div>
+                <div style="width:70px;height:35px;display:flex;align-items:center;justify-content:center;background:white;border-radius:5px;padding:3px;"><img src="''' + LOGO_LJBB + '''" alt="LJBB" style="max-height:30px;max-width:65px;object-fit:contain;"></div>
+                <div style="width:70px;height:35px;display:flex;align-items:center;justify-content:center;background:white;border-radius:5px;padding:3px;"><img src="''' + LOGO_MBB + '''" alt="MBB" style="max-height:30px;max-width:65px;object-fit:contain;"></div>
+                <div style="width:70px;height:35px;display:flex;align-items:center;justify-content:center;background:white;border-radius:5px;padding:3px;"><img src="''' + LOGO_UBB + '''" alt="UBB" style="max-height:30px;max-width:65px;object-fit:contain;"></div>
+            </div>
+            <div class="date">
+                <div>Data per:</div>
+                <div><strong>''' + __import__('datetime').datetime.now().strftime('%d %B %Y, %H:%M WIB') + '''</strong></div>
+            </div>
         </div>
     </div>
 
@@ -1164,17 +1202,21 @@ def generate_html(all_data, all_stores):
         <div class="entity-section">
             <span style="font-weight:600; color:#374151; font-size:0.85rem;">ENTITAS:</span>
             <div class="entity-pills">
-                <div class="entity-pill ddd active" data-entity="DDD" onclick="selectEntity('DDD')">
-                    🏢 DDD <span class="count" id="countDDD">0</span>
+                <div class="entity-pill ddd active" data-entity="DDD" onclick="selectEntity('DDD')" style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_DDD + '''" alt="DDD" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
+                    <span class="count" id="countDDD">0</span>
                 </div>
-                <div class="entity-pill ljbb" data-entity="LJBB" onclick="selectEntity('LJBB')">
-                    🏢 LJBB <span class="count" id="countLJBB">0</span>
+                <div class="entity-pill ljbb" data-entity="LJBB" onclick="selectEntity('LJBB')" style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_LJBB + '''" alt="LJBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
+                    <span class="count" id="countLJBB">0</span>
                 </div>
-                <div class="entity-pill mbb" data-entity="MBB" onclick="selectEntity('MBB')">
-                    🏢 MBB <span class="count" id="countMBB">0</span>
+                <div class="entity-pill mbb" data-entity="MBB" onclick="selectEntity('MBB')" style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_MBB + '''" alt="MBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
+                    <span class="count" id="countMBB">0</span>
                 </div>
-                <div class="entity-pill ubb" data-entity="UBB" onclick="selectEntity('UBB')">
-                    🏢 UBB <span class="count" id="countUBB">0</span>
+                <div class="entity-pill ubb" data-entity="UBB" onclick="selectEntity('UBB')" style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:45px;height:20px;display:flex;align-items:center;justify-content:center;"><img src="''' + LOGO_UBB + '''" alt="UBB" style="max-height:20px;max-width:45px;object-fit:contain;"></div>
+                    <span class="count" id="countUBB">0</span>
                 </div>
             </div>
         </div>
@@ -1186,6 +1228,9 @@ def generate_html(all_data, all_stores):
             </button>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
+            </button>
+            <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
+                📋 Stock Control
             </button>
         </div>
 
@@ -1367,7 +1412,34 @@ def generate_html(all_data, all_stores):
                 <button class="tab" data-mstype="retail" onclick="switchMaxStockTab('retail')">🏪 Retail Store</button>
             </div>
 
-            <!-- Filters for Max Stock (only show for retail) -->
+            <!-- Filters for Warehouse -->
+            <div class="filters" id="msWHFilters" style="display: flex;">
+                <div class="filter-group">
+                    <label>Area</label>
+                    <select id="msWHFilterArea" onchange="updateMaxStockAnalysis()">
+                        <option value="">Semua Area</option>
+                        <option value="Bali">Bali</option>
+                        <option value="Jakarta">Jakarta</option>
+                        <option value="Jawa Timur">Jawa Timur</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Fill Rate</label>
+                    <select id="msWHFilterFillRate" onchange="updateMaxStockAnalysis()">
+                        <option value="">Semua</option>
+                        <option value="over">Overflow (>100%)</option>
+                        <option value="high">High (80-100%)</option>
+                        <option value="medium">Medium (50-80%)</option>
+                        <option value="low">Low (<50%)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-secondary" onclick="resetWHFilters()">↺ Reset</button>
+                </div>
+            </div>
+
+            <!-- Filters for Retail -->
             <div class="filters" id="msFilters" style="display: none;">
                 <div class="filter-group">
                     <label>Area</label>
@@ -1450,6 +1522,117 @@ def generate_html(all_data, all_stores):
             </div>
 
         </div> <!-- End maxstockView -->
+
+        <!-- ==================== STOCK CONTROL VIEW ==================== -->
+        <div class="view-container" id="stockControlView">
+            <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:20px;">
+                <h2 style="margin:0 0 20px 0;color:#1f2937;">📋 Stock Control - Sales & Days of Stock Analysis</h2>
+
+                <!-- Filters Row 1 -->
+                <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
+                    <div style="flex:1;min-width:120px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">Area</label>
+                        <select id="scFilterArea" onchange="renderStockControlTable()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                            <option value="all">Semua Area</option>
+                            <option value="BALI">Bali</option>
+                            <option value="JAKARTA">Jakarta</option>
+                            <option value="JATIM">Jawa Timur</option>
+                            <option value="BATAM">Batam</option>
+                            <option value="SULAWESI">Sulawesi</option>
+                            <option value="SUMATERA">Sumatera</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">Gender</label>
+                        <select id="scFilterGender" onchange="renderStockControlTable()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                            <option value="">Semua</option>
+                            <option value="BABY">Baby</option>
+                            <option value="BOYS">Boys</option>
+                            <option value="GIRLS">Girls</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="LADIES">Ladies</option>
+                            <option value="MEN">Men</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">Series</label>
+                        <select id="scFilterSeries" onchange="renderStockControlTable()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">Tier</label>
+                        <select id="scFilterTier" onchange="renderStockControlTable()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                            <option value="">Semua</option>
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filters Row 2 -->
+                <div style="display:flex;gap:15px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="flex:1;min-width:120px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">TW+TO Filter</label>
+                        <select id="scFilterTWTO" onchange="renderStockControlTable()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                            <option value="">Semua</option>
+                            <option value="critical">&lt; 2 minggu (Critical)</option>
+                            <option value="low">2-4 minggu (Low)</option>
+                            <option value="normal">4-8 minggu (Normal)</option>
+                            <option value="high">&gt; 8 minggu (High)</option>
+                        </select>
+                    </div>
+                    <div style="flex:2;min-width:200px;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:5px;">Search SKU/Article</label>
+                        <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari kode SKU atau nama artikel..." style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;">
+                    </div>
+                    <div>
+                        <button onclick="exportStockControl()" style="padding:8px 16px;background:#10b981;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+                            📥 Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Control Table -->
+            <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                        <thead>
+                            <tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">Kode SKU</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Size</th>
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">Article</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Series</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Gender</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Tier</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">M1</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">M2</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">M3</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;background:#92400e;">Avg</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">WH Pusat</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">WH Bali</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;">WH Jkt</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;background:#1e3a8a;">WH Total</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;background:#166534;">Toko</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;color:white;background:#7c3aed;">Global</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">TW</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">TO</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;background:#dc2626;">TW+TO</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div style="padding:15px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <div id="scPageInfo" style="color:#6b7280;font-size:0.85rem;"></div>
+                    <div id="scPagination" style="display:flex;gap:5px;"></div>
+                </div>
+            </div>
+        </div> <!-- End stockControlView -->
 
     </div>
 
@@ -1629,11 +1812,24 @@ def generate_html(all_data, all_stores):
             let minusLocations = new Set();
 
             data.forEach(item => {
-                if (item.total > 0) stats.totalStock += item.total;
-                if (item.total < 0) stats.negativeStock++;
-                else if (item.total === 0) stats.outOfStock++;
-                else if (item.total < 10) stats.lowStock++;
-                else if (item.total > 100) stats.highStock++;
+                // Gunakan stok per store jika store dipilih, otherwise total
+                let stockValue;
+                if (currentStore && item.store_stock && item.store_stock[currentStore] !== undefined) {
+                    stockValue = Number(item.store_stock[currentStore]) || 0;
+                } else {
+                    stockValue = Number(item.total) || 0;
+                }
+
+                if (stockValue > 0) stats.totalStock += stockValue;
+                if (stockValue < 0) {
+                    stats.negativeStock++;
+                } else if (stockValue === 0) {
+                    stats.outOfStock++;
+                } else if (stockValue < 10) {
+                    stats.lowStock++;
+                } else if (stockValue > 100) {
+                    stats.highStock++;
+                }
 
                 // Hitung minus per store
                 if (item.store_stock) {
@@ -1729,9 +1925,17 @@ def generate_html(all_data, all_stores):
                 if (s.includes(key) || key.includes(s)) return area;
             }
 
-            // 3. Fallback untuk warehouse
+            // 3. Fallback untuk warehouse - detect area from warehouse name
             const upper = storeName.toUpperCase();
-            if (upper.includes('WAREHOUSE') || upper.includes('GUDANG')) return 'Warehouse';
+            if (upper.includes('WAREHOUSE') || upper.includes('GUDANG')) {
+                // WHB - Warehouse Bali
+                if (upper.includes('BALI') || upper.includes('GATSU')) return 'Bali';
+                // WHJ - Warehouse Jakarta
+                if (upper.includes('JAKARTA') || upper.includes('PLUIT')) return 'Jakarta';
+                // WHS - Warehouse Pusat (Jawa Timur)
+                if (upper.includes('PUSAT')) return 'Jawa Timur';
+                return 'Jawa Timur'; // Default warehouse to Jawa Timur
+            }
 
             // 4. Default ke Bali
             return 'Bali';
@@ -1819,24 +2023,32 @@ def generate_html(all_data, all_stores):
             if (size) {
                 data = data.filter(item => (item.size || '').startsWith(size));
             }
-            if (status) {
-                switch(status) {
-                    case 'high': data = data.filter(i => i.total > 100); break;
-                    case 'medium': data = data.filter(i => i.total >= 10 && i.total <= 100); break;
-                    case 'low': data = data.filter(i => i.total > 0 && i.total < 10); break;
-                    case 'zero': data = data.filter(i => i.total === 0); break;
-                    case 'negative': data = data.filter(i => i.total < 0); break;
-                }
-            }
-
-            // Filter by area/store
+            // Filter by area/store DULU (sebelum filter status)
             if (currentStore) {
-                data = data.filter(item => item.store_stock && item.store_stock[currentStore]);
+                // Gunakan !== undefined agar stok 0 tetap muncul
+                data = data.filter(item => item.store_stock && item.store_stock[currentStore] !== undefined);
             } else if (currentArea) {
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
                     return Object.keys(item.store_stock).some(store => getAreaFromStore(store) === currentArea);
                 });
+            }
+
+            // Filter by status - gunakan stok per store jika store dipilih
+            if (status) {
+                const getStockValue = (item) => {
+                    if (currentStore && item.store_stock) {
+                        return Number(item.store_stock[currentStore]) || 0;
+                    }
+                    return Number(item.total) || 0;
+                };
+                switch(status) {
+                    case 'high': data = data.filter(i => getStockValue(i) > 100); break;
+                    case 'medium': data = data.filter(i => getStockValue(i) >= 10 && getStockValue(i) <= 100); break;
+                    case 'low': data = data.filter(i => getStockValue(i) > 0 && getStockValue(i) < 10); break;
+                    case 'zero': data = data.filter(i => getStockValue(i) === 0); break;
+                    case 'negative': data = data.filter(i => getStockValue(i) < 0); break;
+                }
             }
 
             // Sort
@@ -1925,10 +2137,11 @@ def generate_html(all_data, all_stores):
         }
 
         function getStockBadge(stock) {
-            if (stock < 0) return '<span class="stock-badge stock-negative">Minus</span>';
-            if (stock === 0) return '<span class="stock-badge stock-zero">Out of Stock</span>';
-            if (stock < 10) return '<span class="stock-badge stock-low">Low</span>';
-            if (stock > 100) return '<span class="stock-badge stock-high">High</span>';
+            const s = Number(stock) || 0;
+            if (s < 0) return '<span class="stock-badge stock-negative">Minus</span>';
+            if (s === 0) return '<span class="stock-badge stock-zero">Out of Stock</span>';
+            if (s < 10) return '<span class="stock-badge stock-low">Low</span>';
+            if (s > 100) return '<span class="stock-badge stock-high">High</span>';
             return '<span class="stock-badge stock-medium">Normal</span>';
         }
 
@@ -2132,6 +2345,15 @@ def generate_html(all_data, all_stores):
                         alert('Error: ' + e.message);
                     }
                 }, 100);
+            } else if (view === 'stockcontrol') {
+                setTimeout(function() {
+                    try {
+                        initStockControl();
+                    } catch(e) {
+                        console.error('Error initStockControl:', e);
+                        alert('Error: ' + e.message);
+                    }
+                }, 100);
             }
         }
 
@@ -2151,11 +2373,14 @@ def generate_html(all_data, all_stores):
 
             // Show/hide filters based on tab
             var msFilters = document.getElementById('msFilters');
+            var msWHFilters = document.getElementById('msWHFilters');
             if (type === 'retail') {
                 msFilters.style.display = 'flex';
+                msWHFilters.style.display = 'none';
                 populateMSFilters();
             } else {
                 msFilters.style.display = 'none';
+                msWHFilters.style.display = 'flex';
             }
 
             try {
@@ -2252,6 +2477,12 @@ def generate_html(all_data, all_stores):
             updateMaxStockAnalysis();
         }
 
+        function resetWHFilters() {
+            document.getElementById('msWHFilterArea').value = '';
+            document.getElementById('msWHFilterFillRate').value = '';
+            updateMaxStockAnalysis();
+        }
+
         // ============ MAX STOCK ANALYSIS FUNCTIONS ============
         function getMaxStockForStore(storeName) {
             if (!storeName) return 0;
@@ -2287,11 +2518,31 @@ def generate_html(all_data, all_stores):
             filteredTierArticles = {};  // Reset articles
 
             if (isWarehouse) {
-                // WAREHOUSE: Gabungkan semua entitas per area
-                var areaStock = { 'Bali': 0, 'Jawa Timur': 0 };
-                var areaTiers = { 'Bali': {}, 'Jawa Timur': {} };
-                var entityToArea = { 'DDD': 'Bali', 'LJBB': 'Bali', 'MBB': 'Jawa Timur', 'UBB': 'Jawa Timur' };
-                var maxStockWH = { 'Bali': 72000, 'Jawa Timur': 120000 };
+                // WAREHOUSE: Track per individual warehouse AND per area
+                var whStock = {};      // {whName: stock}
+                var whTiers = {};      // {whName: {tier: stock}}
+                var whArticles = {};   // {whName: {tier: [articles]}}
+                var whEntityStock = {};  // {whName: {entity: stock}} - NEW: track per entity
+                var areaStock = { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0 };
+                var areaTiers = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {} };
+                var areaEntityStock = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {} };  // NEW: track per entity per area
+                var maxStockArea = { 'Bali': 72000, 'Jakarta': 48000, 'Jawa Timur': 120000 };
+                var warehousesByArea = { 'Bali': [], 'Jakarta': [], 'Jawa Timur': [] };
+
+                // Get filter values
+                var filterArea = document.getElementById('msWHFilterArea').value;
+                var filterFillRate = document.getElementById('msWHFilterFillRate').value;
+
+                // Helper function to get area from warehouse name
+                function getWarehouseArea(whName) {
+                    if (!whName) return 'Jawa Timur';
+                    var whLower = whName.toLowerCase();
+                    if (storeAreaMap[whLower]) return storeAreaMap[whLower];
+                    if (whLower.indexOf('bali') >= 0 || whLower.indexOf('gatsu') >= 0) return 'Bali';
+                    if (whLower.indexOf('jakarta') >= 0 || whLower.indexOf('pluit') >= 0) return 'Jakarta';
+                    if (whLower.indexOf('pusat') >= 0) return 'Jawa Timur';
+                    return 'Jawa Timur';
+                }
 
                 var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
                 for (var i = 0; i < entities.length; i++) {
@@ -2300,42 +2551,144 @@ def generate_html(all_data, all_stores):
                     if (!entityData || !entityData.warehouse) continue;
 
                     var whData = entityData.warehouse;
-                    var area = entityToArea[entity];
 
                     for (var j = 0; j < whData.length; j++) {
                         var item = whData[j];
-                        var tier = item.tier || '-';
-                        var stock = (item.total > 0) ? item.total : 0;
+                        var tier = item.tier || '';
 
-                        areaStock[area] = areaStock[area] + stock;
+                        // Skip item tanpa tier valid (hanya tier 1,2,3,4,5,8)
+                        if (!tier || tier === '-' || !['1','2','3','4','5','8'].includes(tier.toString())) continue;
 
-                        if (!areaTiers[area][tier]) areaTiers[area][tier] = 0;
-                        areaTiers[area][tier] = areaTiers[area][tier] + stock;
+                        if (item.store_stock) {
+                            var whNames = Object.keys(item.store_stock);
+                            for (var w = 0; w < whNames.length; w++) {
+                                var whName = whNames[w];
+                                var stock = item.store_stock[whName];
 
-                        if (!tierCounts[tier]) tierCounts[tier] = 0;
-                        tierCounts[tier] = tierCounts[tier] + stock;
+                                var area = getWarehouseArea(whName);
+
+                                // Skip if area filter active and doesn't match
+                                if (filterArea && area !== filterArea) continue;
+
+                                // Track per warehouse (include all values, positive and negative)
+                                if (!whStock[whName]) {
+                                    whStock[whName] = 0;
+                                    whTiers[whName] = {};
+                                    whArticles[whName] = {};
+                                    whEntityStock[whName] = {};
+                                }
+                                whStock[whName] = whStock[whName] + stock;
+
+                                // Track per entity per warehouse
+                                if (!whEntityStock[whName][entity]) whEntityStock[whName][entity] = 0;
+                                whEntityStock[whName][entity] = whEntityStock[whName][entity] + stock;
+
+                                if (!whTiers[whName][tier]) whTiers[whName][tier] = 0;
+                                whTiers[whName][tier] = whTiers[whName][tier] + stock;
+
+                                // Track per area
+                                areaStock[area] = areaStock[area] + stock;
+                                if (!areaTiers[area][tier]) areaTiers[area][tier] = 0;
+                                areaTiers[area][tier] = areaTiers[area][tier] + stock;
+
+                                // Track per entity per area
+                                if (!areaEntityStock[area][entity]) areaEntityStock[area][entity] = 0;
+                                areaEntityStock[area][entity] = areaEntityStock[area][entity] + stock;
+
+                                // Track articles (include negatif agar bisa di-investigate)
+                                if (stock !== 0) {
+                                    if (!whArticles[whName][tier]) whArticles[whName][tier] = [];
+                                    whArticles[whName][tier].push({
+                                        sku: item.sku,
+                                        nama: item.name || item.nama || item.sku,
+                                        size: item.size || '-',
+                                        stock: stock,
+                                        store: whName
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
 
-                // Build locationData
-                var areaNames = ['Bali', 'Jawa Timur'];
-                for (var k = 0; k < areaNames.length; k++) {
-                    var areaName = areaNames[k];
-                    var actual = areaStock[areaName];
-                    var max = maxStockWH[areaName];
-                    var fillRate = (max > 0) ? (actual / max * 100) : 0;
+                // Build locationData per individual warehouse grouped by area
+                var whNamesList = Object.keys(whStock).sort();
+                for (var k = 0; k < whNamesList.length; k++) {
+                    var whName = whNamesList[k];
+                    var actual = whStock[whName] || 0;
 
-                    locationData[areaName] = {
-                        name: 'Warehouse ' + areaName,
-                        area: areaName,
+                    // SELALU kumpulkan tier counts dan articles (sebelum skip actual=0)
+                    // Ini memastikan tier bisa diklik meski warehouse total 0
+                    var whTierData = whTiers[whName];
+                    var whArticleData = whArticles[whName];
+                    if (whTierData) {
+                        var tierKeys = Object.keys(whTierData);
+                        for (var t = 0; t < tierKeys.length; t++) {
+                            var tierKey = tierKeys[t];
+                            if (!tierCounts[tierKey]) tierCounts[tierKey] = 0;
+                            tierCounts[tierKey] = tierCounts[tierKey] + whTierData[tierKey];
+
+                            if (whArticleData && whArticleData[tierKey]) {
+                                if (!filteredTierArticles[tierKey]) filteredTierArticles[tierKey] = [];
+                                filteredTierArticles[tierKey] = filteredTierArticles[tierKey].concat(whArticleData[tierKey]);
+                            }
+                        }
+                    }
+
+                    // Skip warehouse dengan total 0 dari locationData (tapi articles sudah dikumpulkan)
+                    if (actual === 0) continue;
+
+                    var area = getWarehouseArea(whName);
+
+                    locationData[whName] = {
+                        name: whName,
+                        area: area,
                         actual: actual,
-                        max: max,
-                        fillRate: fillRate,
-                        tiers: areaTiers[areaName]
+                        max: 0,  // Individual WH doesn't have max
+                        fillRate: 0,
+                        tiers: whTiers[whName],
+                        entityStock: whEntityStock[whName] || {},  // NEW: per entity breakdown
+                        isIndividual: true
                     };
 
-                    totalActual = totalActual + actual;
-                    totalMax = totalMax + max;
+                    // Track warehouses per area
+                    if (warehousesByArea[area].indexOf(whName) < 0) {
+                        warehousesByArea[area].push(whName);
+                    }
+                }
+
+                // Add area totals
+                var areaOrder = ['Bali', 'Jakarta', 'Jawa Timur'];
+                for (var a = 0; a < areaOrder.length; a++) {
+                    var areaName = areaOrder[a];
+                    if (filterArea && areaName !== filterArea) continue;
+
+                    var areaActual = areaStock[areaName] || 0;
+                    var areaMax = maxStockArea[areaName] || 0;
+                    var areaFillRate = areaMax > 0 ? (areaActual / areaMax * 100) : 0;
+
+                    if (areaActual !== 0) {
+                        locationData['__TOTAL_' + areaName] = {
+                            name: 'TOTAL ' + areaName,
+                            area: areaName,
+                            actual: areaActual,
+                            max: areaMax,
+                            fillRate: areaFillRate,
+                            tiers: areaTiers[areaName],
+                            entityStock: areaEntityStock[areaName] || {},  // NEW: per entity breakdown
+                            isAreaTotal: true,
+                            warehouses: warehousesByArea[areaName]
+                        };
+
+                        totalActual = totalActual + areaActual;
+                    }
+                }
+
+                // Calculate total max based on selected area filter
+                if (filterArea) {
+                    totalMax = maxStockArea[filterArea] || 0;
+                } else {
+                    totalMax = maxStockArea['Bali'] + maxStockArea['Jakarta'] + maxStockArea['Jawa Timur'];
                 }
 
             } else {
@@ -2363,7 +2716,10 @@ def generate_html(all_data, all_stores):
 
                 for (var m = 0; m < retailData.length; m++) {
                     var item = retailData[m];
-                    var tier = item.tier || '-';
+                    var tier = item.tier || '';
+
+                    // Skip item tanpa tier valid (hanya tier 1,2,3,4,5,8)
+                    if (!tier || tier === '-' || !['1','2','3','4','5','8'].includes(tier.toString())) continue;
 
                     if (item.store_stock) {
                         var storeNames = Object.keys(item.store_stock);
@@ -2387,14 +2743,15 @@ def generate_html(all_data, all_stores):
                                 storeTiers[store][tier] = 0;
                                 storeArticles[store][tier] = [];
                             }
-                            storeTiers[store][tier] = storeTiers[store][tier] + positiveStock;
+                            storeTiers[store][tier] = storeTiers[store][tier] + stock;  // Include semua untuk tier count
 
-                            // Track article detail
-                            if (positiveStock > 0) {
+                            // Track article detail (include negatif agar bisa di-investigate)
+                            if (stock !== 0) {
                                 storeArticles[store][tier].push({
                                     sku: item.sku,
-                                    nama: item.nama || item.sku,
-                                    stock: positiveStock,
+                                    nama: item.name || item.nama || item.sku,
+                                    size: item.size || '-',
+                                    stock: stock,
                                     store: store
                                 });
                             }
@@ -2600,51 +2957,155 @@ def generate_html(all_data, all_stores):
         }
 
         function renderStoreAnalysisList(locationData) {
-            const sorted = Object.entries(locationData)
-                .sort((a, b) => b[1].fillRate - a[1].fillRate);
+            // Check if this is warehouse data (has isIndividual or isAreaTotal flags)
+            const isWarehouseData = Object.values(locationData).some(loc => loc.isIndividual || loc.isAreaTotal);
 
-            let html = '';
-            sorted.forEach(([key, loc]) => {
-                const fillClass = loc.fillRate > 100 ? 'over' : (loc.fillRate > 80 ? 'high' : (loc.fillRate > 50 ? 'medium' : 'low'));
-                const fillWidth = Math.min(100, loc.fillRate);
+            if (isWarehouseData) {
+                // Warehouse: Group by area with totals
+                const areaOrder = ['Bali', 'Jakarta', 'Jawa Timur'];
+                let html = '';
 
-                // Tier breakdown untuk lokasi ini
-                let tierHtml = '';
-                if (loc.tiers && Object.keys(loc.tiers).length > 0) {
-                    const tiersSorted = Object.entries(loc.tiers)
-                        .filter(([tier, count]) => count > 0 && tier !== '0')  // Skip T0 and tiers with 0 stock
-                        .sort((a, b) => a[0].localeCompare(b[0]));
-                    const totalTier = Object.values(loc.tiers).reduce((a, b) => a + b, 0);
-                    if (tiersSorted.length > 0) {
-                        tierHtml = '<div class="tier-breakdown-mini">';
-                        tiersSorted.forEach(([tier, count]) => {
-                            const pct = totalTier > 0 ? (count / totalTier * 100) : 0;
-                            tierHtml += `<span class="tier-tag">T${tier}: ${pct.toFixed(0)}%</span>`;
-                        });
-                        tierHtml += '</div>';
+                areaOrder.forEach(areaName => {
+                    // Get warehouses for this area
+                    const areaWarehouses = Object.entries(locationData)
+                        .filter(([key, loc]) => loc.area === areaName && loc.isIndividual)
+                        .sort((a, b) => b[1].actual - a[1].actual);
+
+                    // Get area total
+                    const areaTotal = locationData['__TOTAL_' + areaName];
+
+                    if (areaWarehouses.length === 0 && !areaTotal) return;
+
+                    // Area header
+                    html += `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:12px 15px;margin-top:15px;border-radius:10px 10px 0 0;font-weight:600;">
+                        📦 ${areaName}
+                    </div>`;
+
+                    // Individual warehouses
+                    areaWarehouses.forEach(([key, loc]) => {
+                        // Build entity breakdown HTML
+                        let entityHtml = '';
+                        if (loc.entityStock && Object.keys(loc.entityStock).length > 0) {
+                            const entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
+                            let entityParts = [];
+                            entities.forEach(ent => {
+                                if (loc.entityStock[ent] && loc.entityStock[ent] !== 0) {
+                                    const val = loc.entityStock[ent];
+                                    const color = val < 0 ? '#ef4444' : '#10b981';
+                                    entityParts.push(`<span style="color:${color};font-size:0.75rem;">${ent}:${val.toLocaleString('id-ID')}</span>`);
+                                }
+                            });
+                            if (entityParts.length > 0) {
+                                entityHtml = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;">${entityParts.join('')}</div>`;
+                            }
+                        }
+
+                        html += `
+                            <div class="store-analysis-item" style="border-left:3px solid #e5e7eb;margin-left:10px;background:#fafafa;">
+                                <div class="store-info" style="flex:2;">
+                                    <div class="name" style="font-size:0.9rem;">${loc.name}</div>
+                                    ${entityHtml}
+                                </div>
+                                <div class="stock-comparison">
+                                    <div class="actual" style="font-weight:600;">${loc.actual.toLocaleString('id-ID')} prs</div>
+                                </div>
+                                <div style="width:100px;"></div>
+                                <div style="width:60px;"></div>
+                            </div>
+                        `;
+                    });
+
+                    // Area total
+                    if (areaTotal) {
+                        const fillClass = areaTotal.fillRate > 100 ? 'over' : (areaTotal.fillRate > 80 ? 'high' : (areaTotal.fillRate > 50 ? 'medium' : 'low'));
+                        const fillWidth = Math.min(100, Math.abs(areaTotal.fillRate));
+
+                        // Build entity breakdown for area total
+                        let areaTotalEntityHtml = '';
+                        if (areaTotal.entityStock && Object.keys(areaTotal.entityStock).length > 0) {
+                            const entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
+                            let entityParts = [];
+                            entities.forEach(ent => {
+                                if (areaTotal.entityStock[ent] && areaTotal.entityStock[ent] !== 0) {
+                                    const val = areaTotal.entityStock[ent];
+                                    const color = val < 0 ? '#ef4444' : '#059669';
+                                    entityParts.push(`<span style="background:${val < 0 ? '#fee2e2' : '#d1fae5'};color:${color};padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:600;">${ent}: ${val.toLocaleString('id-ID')}</span>`);
+                                }
+                            });
+                            if (entityParts.length > 0) {
+                                areaTotalEntityHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">${entityParts.join('')}</div>`;
+                            }
+                        }
+
+                        html += `
+                            <div class="store-analysis-item" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #6366f1;border-radius:0 0 10px 10px;">
+                                <div class="store-info" style="flex:2;">
+                                    <div class="name" style="font-weight:700;color:#6366f1;">📊 ${areaTotal.name}</div>
+                                    <div class="area" style="font-size:0.75rem;color:#64748b;">${areaWarehouses.length} warehouse</div>
+                                    ${areaTotalEntityHtml}
+                                </div>
+                                <div class="stock-comparison">
+                                    <div class="actual" style="font-weight:700;color:#1f2937;">${areaTotal.actual.toLocaleString('id-ID')} prs</div>
+                                    <div class="max">Max: ${areaTotal.max.toLocaleString('id-ID')}</div>
+                                </div>
+                                <div class="fill-indicator">
+                                    <div class="fill-bar ${fillClass}" style="width: ${fillWidth}%"></div>
+                                </div>
+                                <div class="fill-percent ${fillClass}" style="font-weight:700;">${areaTotal.fillRate.toFixed(1)}%</div>
+                            </div>
+                        `;
                     }
-                }
+                });
 
-                html += `
-                    <div class="store-analysis-item">
-                        <div class="store-info">
-                            <div class="name">${loc.name}</div>
-                            <div class="area">${loc.area}</div>
-                            ${tierHtml}
-                        </div>
-                        <div class="stock-comparison">
-                            <div class="actual">${loc.actual.toLocaleString('id-ID')} prs</div>
-                            <div class="max">Max: ${loc.max > 0 ? loc.max.toLocaleString('id-ID') : '-'}</div>
-                        </div>
-                        <div class="fill-indicator">
-                            <div class="fill-bar ${fillClass}" style="width: ${fillWidth}%"></div>
-                        </div>
-                        <div class="fill-percent ${fillClass}">${loc.fillRate.toFixed(1)}%</div>
-                    </div>
-                `;
-            });
+                document.getElementById('storeAnalysisList').innerHTML = html || '<div style="padding:20px;color:#9ca3af;text-align:center;">Tidak ada data</div>';
+            } else {
+                // Retail: Original sorting by fill rate
+                const sorted = Object.entries(locationData)
+                    .sort((a, b) => b[1].fillRate - a[1].fillRate);
 
-            document.getElementById('storeAnalysisList').innerHTML = html || '<div style="padding:20px;color:#9ca3af;text-align:center;">Tidak ada data</div>';
+                let html = '';
+                sorted.forEach(([key, loc]) => {
+                    const fillClass = loc.fillRate > 100 ? 'over' : (loc.fillRate > 80 ? 'high' : (loc.fillRate > 50 ? 'medium' : 'low'));
+                    const fillWidth = Math.min(100, loc.fillRate);
+
+                    // Tier breakdown untuk lokasi ini
+                    let tierHtml = '';
+                    if (loc.tiers && Object.keys(loc.tiers).length > 0) {
+                        const tiersSorted = Object.entries(loc.tiers)
+                            .filter(([tier, count]) => count > 0 && tier !== '0')
+                            .sort((a, b) => a[0].localeCompare(b[0]));
+                        const totalTier = Object.values(loc.tiers).reduce((a, b) => a + b, 0);
+                        if (tiersSorted.length > 0) {
+                            tierHtml = '<div class="tier-breakdown-mini">';
+                            tiersSorted.forEach(([tier, count]) => {
+                                const pct = totalTier > 0 ? (count / totalTier * 100) : 0;
+                                tierHtml += `<span class="tier-tag">T${tier}: ${pct.toFixed(0)}%</span>`;
+                            });
+                            tierHtml += '</div>';
+                        }
+                    }
+
+                    html += `
+                        <div class="store-analysis-item">
+                            <div class="store-info">
+                                <div class="name">${loc.name}</div>
+                                <div class="area">${loc.area}</div>
+                                ${tierHtml}
+                            </div>
+                            <div class="stock-comparison">
+                                <div class="actual">${loc.actual.toLocaleString('id-ID')} prs</div>
+                                <div class="max">Max: ${loc.max > 0 ? loc.max.toLocaleString('id-ID') : '-'}</div>
+                            </div>
+                            <div class="fill-indicator">
+                                <div class="fill-bar ${fillClass}" style="width: ${fillWidth}%"></div>
+                            </div>
+                            <div class="fill-percent ${fillClass}">${loc.fillRate.toFixed(1)}%</div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('storeAnalysisList').innerHTML = html || '<div style="padding:20px;color:#9ca3af;text-align:center;">Tidak ada data</div>';
+            }
         }
 
         function renderTierBreakdown(tierCounts, tierArticles) {
@@ -2654,8 +3115,7 @@ def generate_html(all_data, all_stores):
             let html = '<div class="tier-distribution">';
             tiers.forEach(tier => {
                 const count = tierCounts[tier];
-                // Skip T0 or tiers with 0 stock
-                if (tier === '0' && count === 0) return;
+                // Skip tiers with stock = 0 only, tampilkan negatif agar bisa di-investigate
                 if (count === 0) return;
                 const percent = total > 0 ? (count / total * 100) : 0;
                 const hasArticles = tierArticles && tierArticles[tier] && tierArticles[tier].length > 0;
@@ -2688,35 +3148,29 @@ def generate_html(all_data, all_stores):
                 return;
             }
 
-            // Group by SKU and sum stock
-            const grouped = {};
-            articles.forEach(art => {
-                if (!grouped[art.sku]) {
-                    grouped[art.sku] = {
-                        sku: art.sku,
-                        nama: art.nama,
-                        totalStock: 0,
-                        stores: []
-                    };
-                }
-                grouped[art.sku].totalStock += art.stock;
-                grouped[art.sku].stores.push({ store: art.store, stock: art.stock });
+            // Sort by store, then by nama, then by size
+            const sorted = [...articles].sort((a, b) => {
+                if (a.store !== b.store) return a.store.localeCompare(b.store);
+                if (a.nama !== b.nama) return a.nama.localeCompare(b.nama);
+                return (a.size || '').localeCompare(b.size || '');
             });
 
-            // Sort by total stock desc
-            const sorted = Object.values(grouped).sort((a, b) => b.totalStock - a.totalStock);
+            const totalStock = articles.reduce((a,b) => a + b.stock, 0);
+            const uniqueStores = [...new Set(articles.map(a => a.store))].length;
 
             let html = `
                 <div style="margin-bottom:15px;padding:10px;background:#f0f9ff;border-radius:8px;">
-                    <strong>Tier ${tier}</strong> - ${sorted.length} artikel, Total: ${articles.reduce((a,b) => a + b.stock, 0).toLocaleString('id-ID')} pairs
+                    <strong>Tier ${tier}</strong> - ${sorted.length} items di ${uniqueStores} store, Total: ${totalStock.toLocaleString('id-ID')} pairs
                 </div>
                 <div style="max-height:400px;overflow-y:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
                         <thead>
                             <tr style="background:#f8fafc;position:sticky;top:0;">
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Store</th>
                                 <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">SKU</th>
                                 <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Nama Artikel</th>
-                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;">Total Stock</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Size</th>
+                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;">Qty</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2725,9 +3179,11 @@ def generate_html(all_data, all_stores):
             sorted.forEach((item, idx) => {
                 html += `
                     <tr style="background:${idx % 2 === 0 ? '#fff' : '#f9fafb'};">
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:500;">${item.store}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.sku}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${item.nama}</td>
-                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">${item.totalStock.toLocaleString('id-ID')}</td>
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${item.size}</td>
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">${item.stock.toLocaleString('id-ID')}</td>
                     </tr>
                 `;
             });
@@ -2750,6 +3206,362 @@ def generate_html(all_data, all_stores):
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeTierModal();
         });
+
+        // ==================== STOCK CONTROL FUNCTIONS ====================
+        let scItems = [];
+        let scFilteredItems = [];
+        let scCurrentPage = 1;
+        const scItemsPerPage = 50;
+
+        function buildSkuItems() {
+            const skuMap = {};
+            const retailData = allData.DDD?.retail || [];
+            const whData = allData.DDD?.warehouse || [];
+
+            // Process retail data
+            retailData.forEach(item => {
+                const sku = item.sku;
+                if (!sku) return;
+                if (!skuMap[sku]) {
+                    skuMap[sku] = {
+                        sku: sku,
+                        kodeKecil: item.kode_kecil,
+                        name: item.name,
+                        size: item.size || '',
+                        series: item.series,
+                        gender: item.gender,
+                        tier: item.tier,
+                        WHS: 0, WHB: 0, WHJ: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0,
+                        globalStock: 0,
+                        whTotal: 0
+                    };
+                }
+                // Sum retail stock by area
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        const area = getAreaFromStore(store);
+                        const s = store.toLowerCase();
+                        skuMap[sku].stokToko += stock;
+                        if (area === 'Bali') skuMap[sku].stokTokoBali += stock;
+                        else if (area === 'Jakarta') skuMap[sku].stokTokoJakarta += stock;
+                        else if (area === 'Jawa Timur') skuMap[sku].stokTokoJatim += stock;
+                        else {
+                            if (s.includes('batam')) skuMap[sku].stokTokoBatam += stock;
+                            else if (s.includes('manado')) skuMap[sku].stokTokoSulawesi += stock;
+                            else if (s.includes('ska')) skuMap[sku].stokTokoSumatera += stock;
+                        }
+                    });
+                }
+            });
+
+            // Process warehouse data
+            whData.forEach(item => {
+                const sku = item.sku;
+                if (!sku) return;
+                if (!skuMap[sku]) {
+                    skuMap[sku] = {
+                        sku: sku,
+                        kodeKecil: item.kode_kecil,
+                        name: item.name,
+                        size: item.size || '',
+                        series: item.series,
+                        gender: item.gender,
+                        tier: item.tier,
+                        WHS: 0, WHB: 0, WHJ: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0,
+                        globalStock: 0,
+                        whTotal: 0
+                    };
+                }
+                // Sum warehouse stock
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([wh, stock]) => {
+                        const w = wh.toLowerCase();
+                        if (w.includes('pusat')) skuMap[sku].WHS += stock;
+                        else if (w.includes('bali') || w.includes('gatsu')) skuMap[sku].WHB += stock;
+                        else if (w.includes('jakarta') || w.includes('pluit')) skuMap[sku].WHJ += stock;
+                    });
+                }
+            });
+
+            // Calculate totals
+            Object.values(skuMap).forEach(item => {
+                item.whTotal = item.WHS + item.WHB + item.WHJ;
+                item.globalStock = item.whTotal + item.stokToko;
+            });
+
+            return Object.values(skuMap);
+        }
+
+        function initStockControl() {
+            scItems = buildSkuItems();
+            // Populate series filter
+            const seriesSet = new Set();
+            scItems.forEach(item => { if (item.series) seriesSet.add(item.series); });
+            const seriesSelect = document.getElementById('scFilterSeries');
+            if (seriesSelect) {
+                seriesSelect.innerHTML = '<option value="">Semua</option>';
+                [...seriesSet].sort().forEach(s => {
+                    seriesSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
+                });
+            }
+            renderStockControlTable();
+        }
+
+        function renderStockControlTable() {
+            const area = document.getElementById('scFilterArea')?.value || 'all';
+            const gender = document.getElementById('scFilterGender')?.value || '';
+            const series = document.getElementById('scFilterSeries')?.value || '';
+            const tier = document.getElementById('scFilterTier')?.value || '';
+            const twtoFilter = document.getElementById('scFilterTWTO')?.value || '';
+            const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
+
+            // Build sales lookup from scItems (article level)
+            const salesLookup = {};
+            (allData.DDD?.retail || []).forEach(item => {
+                if (!item.kode_kecil) return;
+                if (!salesLookup[item.kode_kecil]) {
+                    salesLookup[item.kode_kecil] = {
+                        salesM1: item.sales_m1 || 0,
+                        salesM2: item.sales_m2 || 0,
+                        salesM3: item.sales_m3 || 0,
+                        avgSales: item.avg_sales || 0,
+                        salesBali: item.sales_bali || {m1:0,m2:0,m3:0,avg:0},
+                        salesJakarta: item.sales_jakarta || {m1:0,m2:0,m3:0,avg:0},
+                        salesJatim: item.sales_jatim || {m1:0,m2:0,m3:0,avg:0},
+                        salesOther: item.sales_other || {m1:0,m2:0,m3:0,avg:0}
+                    };
+                }
+            });
+
+            // Count SKUs per article for sales distribution
+            const skuCountPerArticle = {};
+            scItems.forEach(item => {
+                skuCountPerArticle[item.kodeKecil] = (skuCountPerArticle[item.kodeKecil] || 0) + 1;
+            });
+
+            // Filter items
+            scFilteredItems = scItems.filter(item => {
+                if (gender && item.gender !== gender) return false;
+                if (series && item.series !== series) return false;
+                if (tier && String(item.tier) !== tier) return false;
+                if (search && !item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+
+                // Area filter for stock
+                if (area !== 'all') {
+                    let hasStock = false;
+                    if (area === 'BALI') hasStock = (item.WHB + item.stokTokoBali) !== 0;
+                    else if (area === 'JAKARTA') hasStock = (item.WHJ + item.stokTokoJakarta) !== 0;
+                    else if (area === 'JATIM') hasStock = (item.WHS + item.stokTokoJatim) !== 0;
+                    else if (area === 'BATAM') hasStock = item.stokTokoBatam !== 0;
+                    else if (area === 'SULAWESI') hasStock = item.stokTokoSulawesi !== 0;
+                    else if (area === 'SUMATERA') hasStock = item.stokTokoSumatera !== 0;
+                    if (!hasStock) return false;
+                }
+
+                // TW+TO filter
+                if (twtoFilter) {
+                    const sales = salesLookup[item.kodeKecil] || {};
+                    const skuCount = skuCountPerArticle[item.kodeKecil] || 1;
+                    const avgSales = (sales.avgSales || 0) / skuCount;
+                    const twto = avgSales > 0 ? (item.globalStock / avgSales) : 999;
+                    if (twtoFilter === 'critical' && twto >= 2) return false;
+                    if (twtoFilter === 'low' && (twto < 2 || twto >= 4)) return false;
+                    if (twtoFilter === 'normal' && (twto < 4 || twto >= 8)) return false;
+                    if (twtoFilter === 'high' && twto < 8) return false;
+                }
+                return true;
+            });
+
+            // Pagination
+            const totalPages = Math.ceil(scFilteredItems.length / scItemsPerPage);
+            if (scCurrentPage > totalPages) scCurrentPage = 1;
+            const start = (scCurrentPage - 1) * scItemsPerPage;
+            const pageData = scFilteredItems.slice(start, start + scItemsPerPage);
+
+            // Render table
+            const tbody = document.getElementById('scTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = pageData.map(item => {
+                const sales = salesLookup[item.kodeKecil] || {};
+                const skuCount = skuCountPerArticle[item.kodeKecil] || 1;
+                let m1, m2, m3, avgSales, whStock, tokoStock, globalStock;
+
+                if (area === 'all') {
+                    m1 = (sales.salesM1 || 0) / skuCount;
+                    m2 = (sales.salesM2 || 0) / skuCount;
+                    m3 = (sales.salesM3 || 0) / skuCount;
+                    avgSales = (sales.avgSales || 0) / skuCount;
+                    whStock = item.whTotal;
+                    tokoStock = item.stokToko;
+                    globalStock = item.globalStock;
+                } else if (area === 'BALI') {
+                    m1 = (sales.salesBali?.m1 || 0) / skuCount;
+                    m2 = (sales.salesBali?.m2 || 0) / skuCount;
+                    m3 = (sales.salesBali?.m3 || 0) / skuCount;
+                    avgSales = (sales.salesBali?.avg || 0) / skuCount;
+                    whStock = item.WHB || 0;
+                    tokoStock = item.stokTokoBali || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'JAKARTA') {
+                    m1 = (sales.salesJakarta?.m1 || 0) / skuCount;
+                    m2 = (sales.salesJakarta?.m2 || 0) / skuCount;
+                    m3 = (sales.salesJakarta?.m3 || 0) / skuCount;
+                    avgSales = (sales.salesJakarta?.avg || 0) / skuCount;
+                    whStock = item.WHJ || 0;
+                    tokoStock = item.stokTokoJakarta || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'JATIM') {
+                    m1 = (sales.salesJatim?.m1 || 0) / skuCount;
+                    m2 = (sales.salesJatim?.m2 || 0) / skuCount;
+                    m3 = (sales.salesJatim?.m3 || 0) / skuCount;
+                    avgSales = (sales.salesJatim?.avg || 0) / skuCount;
+                    whStock = item.WHS || 0;
+                    tokoStock = item.stokTokoJatim || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'BATAM') {
+                    m1 = (sales.salesOther?.m1 || 0) / skuCount / 3;
+                    m2 = (sales.salesOther?.m2 || 0) / skuCount / 3;
+                    m3 = (sales.salesOther?.m3 || 0) / skuCount / 3;
+                    avgSales = (sales.salesOther?.avg || 0) / skuCount / 3;
+                    whStock = 0;
+                    tokoStock = item.stokTokoBatam || 0;
+                    globalStock = tokoStock;
+                } else if (area === 'SULAWESI') {
+                    m1 = (sales.salesOther?.m1 || 0) / skuCount / 3;
+                    m2 = (sales.salesOther?.m2 || 0) / skuCount / 3;
+                    m3 = (sales.salesOther?.m3 || 0) / skuCount / 3;
+                    avgSales = (sales.salesOther?.avg || 0) / skuCount / 3;
+                    whStock = 0;
+                    tokoStock = item.stokTokoSulawesi || 0;
+                    globalStock = tokoStock;
+                } else if (area === 'SUMATERA') {
+                    m1 = (sales.salesOther?.m1 || 0) / skuCount / 3;
+                    m2 = (sales.salesOther?.m2 || 0) / skuCount / 3;
+                    m3 = (sales.salesOther?.m3 || 0) / skuCount / 3;
+                    avgSales = (sales.salesOther?.avg || 0) / skuCount / 3;
+                    whStock = 0;
+                    tokoStock = item.stokTokoSumatera || 0;
+                    globalStock = tokoStock;
+                }
+
+                const tw = avgSales > 0 ? (whStock / avgSales).toFixed(1) : 0;
+                const to = avgSales > 0 ? (tokoStock / avgSales).toFixed(1) : 0;
+                const twVal = parseFloat(tw) || 0;
+                const toVal = parseFloat(to) || 0;
+                const twtoVal = twVal + toVal;
+                const twto = twtoVal.toFixed(1);
+
+                let twColor = '#6b7280', twBg = 'transparent';
+                let toColor = '#6b7280', toBg = 'transparent';
+                let twtoColor = '#6b7280', twtoBg = 'transparent';
+                if (avgSales > 0) {
+                    if (twVal < 1) { twColor = '#ef4444'; twBg = '#fef2f2'; }
+                    else if (twVal < 2) { twColor = '#f59e0b'; twBg = '#fffbeb'; }
+                    else if (twVal < 4) { twColor = '#10b981'; twBg = '#f0fdf4'; }
+                    else { twColor = '#3b82f6'; twBg = '#eff6ff'; }
+
+                    if (toVal < 1) { toColor = '#ef4444'; toBg = '#fef2f2'; }
+                    else if (toVal < 2) { toColor = '#f59e0b'; toBg = '#fffbeb'; }
+                    else if (toVal < 4) { toColor = '#10b981'; toBg = '#f0fdf4'; }
+                    else { toColor = '#3b82f6'; toBg = '#eff6ff'; }
+
+                    if (twtoVal < 2) { twtoColor = '#ef4444'; twtoBg = '#fef2f2'; }
+                    else if (twtoVal < 4) { twtoColor = '#f59e0b'; twtoBg = '#fffbeb'; }
+                    else if (twtoVal < 8) { twtoColor = '#10b981'; twtoBg = '#f0fdf4'; }
+                    else { twtoColor = '#3b82f6'; twtoBg = '#eff6ff'; }
+                }
+
+                let whPusat = '-', whBali = '-', whJkt = '-';
+                if (area === 'all') {
+                    whPusat = item.WHS.toLocaleString();
+                    whBali = item.WHB.toLocaleString();
+                    whJkt = item.WHJ.toLocaleString();
+                } else if (area === 'BALI') {
+                    whBali = item.WHB.toLocaleString();
+                } else if (area === 'JAKARTA') {
+                    whJkt = item.WHJ.toLocaleString();
+                } else if (area === 'JATIM') {
+                    whPusat = item.WHS.toLocaleString();
+                }
+
+                return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
+                    '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
+                    '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                    '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + m1.toFixed(1) + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + m2.toFixed(1) + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + m3.toFixed(1) + '</td>' +
+                    '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
+                    '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                    '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                    '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
+                    '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
+                '</tr>';
+            }).join('');
+
+            // Page info
+            document.getElementById('scPageInfo').textContent =
+                'Showing ' + (start + 1) + '-' + Math.min(start + scItemsPerPage, scFilteredItems.length) +
+                ' of ' + scFilteredItems.length + ' SKUs';
+
+            // Pagination
+            renderScPagination(totalPages);
+        }
+
+        function renderScPagination(totalPages) {
+            const container = document.getElementById('scPagination');
+            if (!container) return;
+            let html = '';
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+            html += '<button onclick="scGoToPage(1)" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scCurrentPage === 1 ? ' disabled' : '') + '>&laquo;</button>';
+            html += '<button onclick="scGoToPage(' + (scCurrentPage - 1) + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scCurrentPage === 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+
+            let startPage = Math.max(1, scCurrentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += '<button onclick="scGoToPage(' + i + ')" style="padding:5px 10px;border:1px solid ' + (i === scCurrentPage ? '#10b981' : '#d1d5db') + ';background:' + (i === scCurrentPage ? '#10b981' : 'white') + ';color:' + (i === scCurrentPage ? 'white' : '#374151') + ';border-radius:4px;cursor:pointer;">' + i + '</button>';
+            }
+
+            html += '<button onclick="scGoToPage(' + (scCurrentPage + 1) + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scCurrentPage === totalPages ? ' disabled' : '') + '>&rsaquo;</button>';
+            html += '<button onclick="scGoToPage(' + totalPages + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scCurrentPage === totalPages ? ' disabled' : '') + '>&raquo;</button>';
+
+            container.innerHTML = html;
+        }
+
+        function scGoToPage(page) {
+            scCurrentPage = page;
+            renderStockControlTable();
+        }
+
+        function exportStockControl() {
+            alert('Export feature coming soon!');
+        }
     </script>
 </body>
 </html>'''
