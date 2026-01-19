@@ -1380,15 +1380,21 @@ def generate_html(all_data, all_stores):
                 <!-- Filter Row -->
                 <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Warehouse</label>
+                        <select id="tableFilterWarehouse" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Warehouse</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
-                        <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 150px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 130px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">Semua Area</option>
                         </select>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
-                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Store / Warehouse</label>
-                        <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 200px; border-radius: 6px; border: 1px solid #cbd5e1;">
-                            <option value="">Semua Store/WH</option>
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Store</label>
+                        <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Store</option>
                         </select>
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
@@ -1406,7 +1412,7 @@ def generate_html(all_data, all_stores):
                     </div>
                     <div class="filter-group" style="flex: 1 1 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
-                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%;">
+                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 150px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%;">
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
@@ -1697,6 +1703,19 @@ def generate_html(all_data, all_stores):
         </div>
     </div>
 
+    <!-- Modal SKU Detail (when clicking Kode Kecil) -->
+    <div class="modal-overlay" id="skuModal" onclick="closeSkuModal(event)">
+        <div class="modal-content" style="max-width: 800px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="skuModalTitle">📋 Detail SKU</h2>
+                <button class="modal-close" onclick="closeSkuModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="skuModalBody">
+                <!-- Content will be filled by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Embedded data
         const allData = ''' + data_json + ''';
@@ -1810,6 +1829,7 @@ def generate_html(all_data, all_stores):
             updateSeriesFilter(data);
             renderAreaTags();
             renderStoreGrid();
+            updateTableWarehouseDropdown();
             updateTableAreaDropdown();
             applyFilters();
         }
@@ -2041,6 +2061,7 @@ def generate_html(all_data, all_stores):
             const size = document.getElementById('filterSize').value;
 
             // Table-specific filters (separate from chart filters)
+            const tableWarehouse = document.getElementById('tableFilterWarehouse').value;
             const tableArea = document.getElementById('tableFilterArea').value;
             const tableStore = document.getElementById('tableFilterStore').value;
             const tableTier = document.getElementById('tableFilterTier').value;
@@ -2061,14 +2082,18 @@ def generate_html(all_data, all_stores):
                 data = data.filter(item => (item.size || '').startsWith(size));
             }
 
-            // Filter by table area/store (from dedicated table filter section)
+            // Filter by Warehouse
+            if (tableWarehouse) {
+                data = data.filter(item => item.store_stock && item.store_stock[tableWarehouse] !== undefined);
+            }
+
+            // Filter by Store (or Area if no store selected)
             if (tableStore) {
-                // Gunakan !== undefined agar stok 0 tetap muncul
                 data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined);
             } else if (tableArea) {
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.keys(item.store_stock).some(store => getAreaFromStore(store) === tableArea);
+                    return Object.keys(item.store_stock).some(store => !isWarehouseLocation(store) && getAreaFromStore(store) === tableArea);
                 });
             }
 
@@ -2112,6 +2137,7 @@ def generate_html(all_data, all_stores):
 
         function resetTableFilters() {
             document.getElementById('searchInput').value = '';
+            document.getElementById('tableFilterWarehouse').value = '';
             document.getElementById('tableFilterArea').value = '';
             document.getElementById('tableFilterStore').value = '';
             document.getElementById('tableFilterTier').value = '';
@@ -2127,16 +2153,58 @@ def generate_html(all_data, all_stores):
             return wh.concat(rt);
         }
 
+        function isWarehouseLocation(name) {
+            const upper = (name || '').toUpperCase();
+            return upper.includes('WAREHOUSE') || upper.includes('GUDANG') || upper.includes('BOX') ||
+                   upper.includes('PROTOL') || upper.includes('REJECT') || upper.includes('WH ') ||
+                   upper.startsWith('WH') || upper.includes('PUSAT');
+        }
+
+        function updateTableWarehouseDropdown() {
+            var entityData = allData[currentEntity] || {};
+            var whData = entityData.warehouse || [];
+
+            // Collect warehouses
+            const whStock = {};
+            whData.forEach(item => {
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([loc, stock]) => {
+                        if (isWarehouseLocation(loc)) {
+                            if (!whStock[loc]) whStock[loc] = 0;
+                            whStock[loc] += stock || 0;
+                        }
+                    });
+                }
+            });
+
+            const whSelect = document.getElementById('tableFilterWarehouse');
+            const currentValue = whSelect.value;
+            whSelect.innerHTML = '<option value="">Semua Warehouse</option>';
+
+            Object.entries(whStock)
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .forEach(([name, stock]) => {
+                    whSelect.innerHTML += `<option value="${name}">${name} (${stock.toLocaleString('id-ID')})</option>`;
+                });
+
+            if (whStock[currentValue]) {
+                whSelect.value = currentValue;
+            }
+        }
+
         function updateTableAreaDropdown() {
-            const data = getAllStoresAndWarehouses();
+            var entityData = allData[currentEntity] || {};
+            var rtData = entityData.retail || [];
             const areas = new Set();
 
-            // Collect unique areas from store_stock
-            data.forEach(item => {
+            // Collect unique areas from retail stores only
+            rtData.forEach(item => {
                 if (item.store_stock) {
                     Object.keys(item.store_stock).forEach(store => {
-                        const area = getAreaFromStore(store);
-                        if (area) areas.add(area);
+                        if (!isWarehouseLocation(store)) {
+                            const area = getAreaFromStore(store);
+                            if (area && area !== 'Warehouse') areas.add(area);
+                        }
                     });
                 }
             });
@@ -2145,12 +2213,10 @@ def generate_html(all_data, all_stores):
             const currentValue = areaSelect.value;
             areaSelect.innerHTML = '<option value="">Semua Area</option>';
 
-            // Sort areas alphabetically
             Array.from(areas).sort().forEach(area => {
                 areaSelect.innerHTML += `<option value="${area}">${area}</option>`;
             });
 
-            // Restore selection if still valid
             if (areas.has(currentValue)) {
                 areaSelect.value = currentValue;
             }
@@ -2159,23 +2225,25 @@ def generate_html(all_data, all_stores):
         }
 
         function updateTableStoreDropdown() {
-            const data = getAllStoresAndWarehouses();
+            var entityData = allData[currentEntity] || {};
+            var rtData = entityData.retail || [];
             const selectedArea = document.getElementById('tableFilterArea').value;
             const storeSelect = document.getElementById('tableFilterStore');
             const currentValue = storeSelect.value;
 
-            // Collect stores with stock
+            // Collect retail stores only
             const storeStock = {};
-            data.forEach(item => {
+            rtData.forEach(item => {
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
-                        if (!storeStock[store]) storeStock[store] = 0;
-                        storeStock[store] += stock || 0;
+                        if (!isWarehouseLocation(store)) {
+                            if (!storeStock[store]) storeStock[store] = 0;
+                            storeStock[store] += stock || 0;
+                        }
                     });
                 }
             });
 
-            // Filter by area if selected
             let stores = Object.entries(storeStock)
                 .map(([name, stock]) => ({ name, stock }))
                 .sort((a, b) => a.name.localeCompare(b.name));
@@ -2184,12 +2252,11 @@ def generate_html(all_data, all_stores):
                 stores = stores.filter(s => getAreaFromStore(s.name) === selectedArea);
             }
 
-            storeSelect.innerHTML = '<option value="">Semua Store/WH</option>';
+            storeSelect.innerHTML = '<option value="">Semua Store</option>';
             stores.forEach(s => {
                 storeSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.stock.toLocaleString('id-ID')})</option>`;
             });
 
-            // Restore selection if still valid
             if (stores.some(s => s.name === currentValue)) {
                 storeSelect.value = currentValue;
             }
@@ -2199,18 +2266,21 @@ def generate_html(all_data, all_stores):
             const start = (currentPage - 1) * itemsPerPage;
             const pageData = filteredData.slice(start, start + itemsPerPage);
             const tbody = document.getElementById('tableBody');
+            const tableWarehouse = document.getElementById('tableFilterWarehouse').value;
             const tableStore = document.getElementById('tableFilterStore').value;
+            const selectedLocation = tableStore || tableWarehouse;
 
             if (!pageData.length) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
             } else {
                 tbody.innerHTML = pageData.map(item => {
                     let displayStock = item.total;
-                    if (tableStore && item.store_stock) {
-                        displayStock = item.store_stock[tableStore] || 0;
+                    if (selectedLocation && item.store_stock) {
+                        displayStock = item.store_stock[selectedLocation] || 0;
                     }
+                    const kodeKecil = item.kode_kecil || '-';
                     return `<tr>
-                        <td><strong>${item.kode_kecil || '-'}</strong></td>
+                        <td><a href="#" onclick="showSkuDetail('${kodeKecil}'); return false;" style="color:#2563eb; text-decoration:none; font-weight:600;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
                         <td>${item.series || '-'}</td>
                         <td>${item.tipe || '-'}</td>
@@ -3307,9 +3377,81 @@ def generate_html(all_data, all_stores):
             document.body.style.overflow = 'auto';
         }
 
+        // SKU Detail Modal Functions
+        function showSkuDetail(kodeKecil) {
+            const allItems = getAllStoresAndWarehouses();
+            const tableWarehouse = document.getElementById('tableFilterWarehouse').value;
+            const tableStore = document.getElementById('tableFilterStore').value;
+            const selectedLocation = tableStore || tableWarehouse;
+
+            // Find all SKUs with this kode_kecil
+            const skuItems = allItems.filter(item => (item.kode_kecil || '').toUpperCase() === kodeKecil.toUpperCase());
+
+            if (!skuItems.length) {
+                alert('Data tidak ditemukan');
+                return;
+            }
+
+            // Build modal content
+            let html = `<div style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px;">
+                <strong>Kode Kecil:</strong> ${kodeKecil} |
+                <strong>Total SKU:</strong> ${skuItems.length}
+            </div>`;
+
+            html += `<div style="max-height: 400px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead style="position: sticky; top: 0; background: #1e3a5f; color: white;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left;">SKU</th>
+                            <th style="padding: 10px; text-align: left;">Nama Barang</th>
+                            <th style="padding: 10px; text-align: right;">Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            let totalQty = 0;
+            skuItems.forEach((item, idx) => {
+                let qty = item.total;
+                if (selectedLocation && item.store_stock && item.store_stock[selectedLocation] !== undefined) {
+                    qty = item.store_stock[selectedLocation];
+                }
+                totalQty += qty;
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                html += `<tr style="background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 8px 10px; font-weight: 500;">${item.sku}</td>
+                    <td style="padding: 8px 10px;">${item.name || '-'}</td>
+                    <td style="padding: 8px 10px; text-align: right; font-weight: 600;">${qty.toLocaleString('id-ID')}</td>
+                </tr>`;
+            });
+
+            html += `</tbody>
+                    <tfoot style="background: #1e3a5f; color: white; font-weight: bold;">
+                        <tr>
+                            <td colspan="2" style="padding: 10px;">Total</td>
+                            <td style="padding: 10px; text-align: right;">${totalQty.toLocaleString('id-ID')}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
+
+            document.getElementById('skuModalTitle').textContent = '📋 Detail SKU: ' + kodeKecil;
+            document.getElementById('skuModalBody').innerHTML = html;
+            document.getElementById('skuModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSkuModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('skuModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
         // Close tier modal with Escape key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeTierModal();
+            if (e.key === 'Escape') {
+                closeTierModal();
+                closeSkuModal();
+            }
         });
 
         // ==================== STOCK CONTROL FUNCTIONS ====================
