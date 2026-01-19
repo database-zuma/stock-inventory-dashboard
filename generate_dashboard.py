@@ -2137,6 +2137,7 @@ def generate_html(all_data, all_stores):
                     <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('target')" data-tab="target">🎯 Target</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('gender')" data-tab="gender">👫 Gender</button>
                 </div>
 
                 <!-- Sales Performance Tab -->
@@ -2252,6 +2253,30 @@ def generate_html(all_data, all_stores):
                     <div style="margin-top:20px;">
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📋 Recent Transactions</h4>
                         <div id="salesRecentTransactions" style="max-height:400px;overflow-y:auto;"></div>
+                    </div>
+                </div>
+
+                <!-- Gender Tab -->
+                <div class="sales-tab-content" id="salesTabGender" style="padding:20px;display:none;">
+                    <!-- Gender Summary -->
+                    <div style="margin-bottom:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
+                        <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
+                    </div>
+                    <!-- Weekly Gender Trend -->
+                    <div style="margin-bottom:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
+                        <div id="salesGenderWeeklyTrend"></div>
+                    </div>
+                    <!-- Gender by Area -->
+                    <div style="margin-bottom:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Gender Performance by Area</h4>
+                        <div id="salesGenderByArea" style="max-height:500px;overflow-y:auto;"></div>
+                    </div>
+                    <!-- Gender by Store -->
+                    <div>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Gender Performance by Store</h4>
+                        <div id="salesGenderByStore" style="max-height:500px;overflow-y:auto;"></div>
                     </div>
                 </div>
             </div>
@@ -4906,6 +4931,69 @@ def generate_html(all_data, all_stores):
         let currentSalesTab = 'performance';
         let filteredSalesData = [];
 
+        // Helper: Get area from store name with smart matching
+        function getAreaFromStore(storeName) {
+            if (!storeName) return 'Unknown';
+            const s = storeName.toLowerCase().trim();
+
+            // 1. Try exact match in storeAreaMap
+            if (storeAreaMap[s]) return storeAreaMap[s];
+
+            // 2. Try without "zuma " prefix
+            const noPrefix = s.replace(/^zuma\s*/i, '');
+            if (storeAreaMap[noPrefix]) return storeAreaMap[noPrefix];
+
+            // 3. Try partial match
+            for (const [key, area] of Object.entries(storeAreaMap)) {
+                if (s.includes(key) || key.includes(noPrefix)) return area;
+            }
+
+            // 4. Fallback: determine area from store name keywords
+            if (s.includes('lombok') || s.includes('mataram')) return 'Lombok';
+            if (s.includes('batam') || s.includes('nagoya')) return 'Batam';
+            if (s.includes('manado') || s.includes('mega mall')) return 'Sulawesi';
+            if (s.includes('pekanbaru') || s.includes('ska')) return 'Sumatera';
+            if (s.includes('bali') || s.includes('galeria') || s.includes('level 21') || s.includes('lippo bali') ||
+                s.includes('icon') || s.includes('dalung') || s.includes('kedonganan') || s.includes('kesiman') ||
+                s.includes('panjer') || s.includes('peguyangan') || s.includes('peliatan') || s.includes('penatih') ||
+                s.includes('singaraja') || s.includes('tabanan') || s.includes('tanah lot') || s.includes('bajra') ||
+                s.includes('bangli') || s.includes('batubulan') || s.includes('jembrana') || s.includes('kapal') ||
+                s.includes('karangasem') || s.includes('klungkung') || s.includes('lebah') || s.includes('monang') ||
+                s.includes('monkey') || s.includes('ubud') || s.includes('pemogan') || s.includes('seririt') ||
+                s.includes('uluwatu')) return 'Bali';
+            if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') ||
+                s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) return 'Jakarta';
+            if (s.includes('surabaya') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('royal plaza') ||
+                s.includes('ptc') || s.includes('cito') || s.includes('city of tomorrow') || s.includes('sidoarjo') ||
+                s.includes('gresik') || s.includes('mog') || s.includes('olympic') || s.includes('mojokerto') ||
+                s.includes('sunrise') || s.includes('matos') || s.includes('malang') || s.includes('batu')) return 'Jawa Timur';
+
+            return 'Unknown';
+        }
+
+        // Helper: Get gender from SKU
+        function getGenderFromSKU(sku) {
+            if (!sku) return 'Unknown';
+            const firstChar = sku.charAt(0).toUpperCase();
+            if (firstChar === 'M') return 'Men';
+            if (firstChar === 'L') return 'Ladies';
+            if (firstChar === 'K' || firstChar === 'J' || firstChar === 'B' || firstChar === 'G' || firstChar === 'Z') {
+                // Kids/Junior/Baby/Girls - check second char or category
+                if (sku.startsWith('K') || sku.startsWith('J1') || sku.startsWith('B1') || sku.startsWith('B2')) return 'Kids';
+                if (sku.startsWith('G')) return 'Girls';
+                if (sku.startsWith('Z')) return 'Unisex';
+            }
+            return 'Unknown';
+        }
+
+        // Helper: Get week number from date
+        function getWeekNumber(dateStr) {
+            const date = new Date(dateStr);
+            const firstDay = new Date(date.getFullYear(), 0, 1);
+            const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
+            return Math.ceil((days + firstDay.getDay() + 1) / 7);
+        }
+
         function initSalesFilters() {
             if (!salesDetailData || salesDetailData.length === 0) return;
 
@@ -4921,10 +5009,9 @@ def generate_html(all_data, all_stores):
                 if (item.category) categories.add(item.category);
                 if (item.spg) spgs.add(item.spg);
                 if (item.date) dates.add(item.date);
-                // Get area from storeAreaMap
-                const storeLower = (item.store || '').toLowerCase();
-                const area = storeAreaMap[storeLower] || '';
-                if (area) areas.add(area);
+                // Get area using helper function
+                const area = getAreaFromStore(item.store);
+                if (area && area !== 'Unknown') areas.add(area);
             });
 
             // Populate store filter
@@ -4975,8 +5062,7 @@ def generate_html(all_data, all_stores):
                 if (category && item.category !== category) return false;
                 if (spg && item.spg !== spg) return false;
                 if (area) {
-                    const storeLower = (item.store || '').toLowerCase();
-                    const itemArea = storeAreaMap[storeLower] || '';
+                    const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
                 if (search && !item.sku.toLowerCase().includes(search) && !item.category.toLowerCase().includes(search)) return false;
@@ -5004,6 +5090,7 @@ def generate_html(all_data, all_stores):
             renderSalesSPG();
             renderSalesTarget();
             renderSalesTransaction();
+            renderSalesGender();
         }
 
         function renderSalesSummaryCards() {
@@ -5111,8 +5198,7 @@ def generate_html(all_data, all_stores):
             // Sales by Area
             const byArea = {};
             data.forEach(item => {
-                const storeLower = (item.store || '').toLowerCase();
-                const area = storeAreaMap[storeLower] || 'Unknown';
+                const area = getAreaFromStore(item.store);
                 if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, stores: new Set() };
                 byArea[area].sales += item.total || 0;
                 byArea[area].qty += item.qty || 0;
@@ -5353,22 +5439,44 @@ def generate_html(all_data, all_stores):
         function renderSalesTarget() {
             const data = filteredSalesData;
 
-            // Sales by store
+            // Sales by store (using normalized store names)
             const byStore = {};
+            const storeNameMap = {}; // Map normalized -> original
             data.forEach(item => {
                 const store = item.store || 'Unknown';
-                if (!byStore[store]) byStore[store] = 0;
-                byStore[store] += item.total || 0;
+                const normalized = store.toLowerCase().replace(/^zuma\s*/i, '').trim();
+                if (!byStore[normalized]) {
+                    byStore[normalized] = 0;
+                    storeNameMap[normalized] = store;
+                }
+                byStore[normalized] += item.total || 0;
             });
 
-            // Achievement by Store
+            // Achievement by Store - improved matching
             const storeAchArr = [];
-            Object.keys(targetData).forEach(storeLower => {
-                const target = targetData[storeLower];
+            Object.keys(targetData).forEach(targetKey => {
+                const target = targetData[targetKey];
                 const storeName = target.store;
-                const area = target.area;
+                const area = target.area || getAreaFromStore(storeName);
                 const jan = target.jan || 0;
-                const actual = Object.entries(byStore).find(([s, _]) => s.toLowerCase() === storeLower)?.[1] || 0;
+
+                // Try multiple matching strategies
+                const normalizedTarget = storeName.toLowerCase().replace(/^zuma\s*/i, '').trim();
+                let actual = 0;
+
+                // 1. Exact match on normalized name
+                if (byStore[normalizedTarget] !== undefined) {
+                    actual = byStore[normalizedTarget];
+                } else {
+                    // 2. Partial match
+                    for (const [key, sales] of Object.entries(byStore)) {
+                        if (key.includes(normalizedTarget) || normalizedTarget.includes(key)) {
+                            actual = sales;
+                            break;
+                        }
+                    }
+                }
+
                 const achievement = jan > 0 ? (actual / jan * 100) : 0;
                 const gap = jan - actual;
                 storeAchArr.push({ store: storeName, area, target: jan, actual, achievement, gap });
@@ -5507,6 +5615,164 @@ def generate_html(all_data, all_stores):
             });
             recentHtml += '</tbody></table>';
             document.getElementById('salesRecentTransactions').innerHTML = recentHtml;
+        }
+
+        function renderSalesGender() {
+            const data = filteredSalesData;
+
+            // Gender Summary
+            const byGender = {};
+            data.forEach(item => {
+                const gender = getGenderFromSKU(item.sku);
+                if (!byGender[gender]) byGender[gender] = { sales: 0, qty: 0, trx: new Set() };
+                byGender[gender].sales += item.total || 0;
+                byGender[gender].qty += item.qty || 0;
+                byGender[gender].trx.add(item.order_no);
+            });
+
+            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Unisex: '#10b981', Unknown: '#6b7280' };
+            const genderIcons = { Men: '👨', Ladies: '👩', Kids: '👶', Girls: '👧', Unisex: '👥', Unknown: '❓' };
+            const totalSales = Object.values(byGender).reduce((sum, g) => sum + g.sales, 0);
+
+            let summaryHtml = '';
+            Object.entries(byGender).filter(([g, _]) => g !== 'Unknown').sort((a, b) => b[1].sales - a[1].sales).forEach(([gender, val]) => {
+                const pct = totalSales > 0 ? (val.sales / totalSales * 100) : 0;
+                summaryHtml += '<div style="flex:1;min-width:150px;background:white;border-radius:12px;padding:15px;border-left:4px solid ' + (genderColors[gender] || '#6b7280') + ';box-shadow:0 2px 8px rgba(0,0,0,0.08);">';
+                summaryHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+                summaryHtml += '<span style="font-size:1.5rem;">' + (genderIcons[gender] || '❓') + '</span>';
+                summaryHtml += '<span style="font-size:0.9rem;font-weight:600;color:' + (genderColors[gender] || '#6b7280') + ';">' + gender + '</span></div>';
+                summaryHtml += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;">Rp ' + Math.round(val.sales / 1000000).toFixed(1) + 'jt</div>';
+                summaryHtml += '<div style="font-size:0.75rem;color:#6b7280;">' + val.qty + ' pcs | ' + pct.toFixed(1) + '%</div>';
+                summaryHtml += '</div>';
+            });
+            document.getElementById('salesGenderSummary').innerHTML = summaryHtml;
+
+            // Weekly Gender Trend with Growth
+            const weeklyByGender = {};
+            data.forEach(item => {
+                const week = 'W' + getWeekNumber(item.date);
+                const gender = getGenderFromSKU(item.sku);
+                if (gender === 'Unknown') return;
+                if (!weeklyByGender[week]) weeklyByGender[week] = {};
+                if (!weeklyByGender[week][gender]) weeklyByGender[week][gender] = { sales: 0, qty: 0 };
+                weeklyByGender[week][gender].sales += item.total || 0;
+                weeklyByGender[week][gender].qty += item.qty || 0;
+            });
+
+            const weeks = Object.keys(weeklyByGender).sort();
+            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Unisex'].filter(g =>
+                weeks.some(w => weeklyByGender[w] && weeklyByGender[w][g])
+            );
+
+            let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            weeklyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Week</th>';
+            genders.forEach(g => {
+                weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;">Growth</th>';
+            });
+            weeklyHtml += '</tr></thead><tbody>';
+
+            weeks.forEach((week, idx) => {
+                weeklyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;font-weight:600;">' + week + '</td>';
+                genders.forEach(g => {
+                    const curr = weeklyByGender[week]?.[g]?.sales || 0;
+                    const prev = idx > 0 ? (weeklyByGender[weeks[idx-1]]?.[g]?.sales || 0) : 0;
+                    const growth = prev > 0 ? ((curr - prev) / prev * 100) : 0;
+                    const growthColor = growth > 0 ? '#10b981' : growth < 0 ? '#ef4444' : '#6b7280';
+                    const growthIcon = growth > 0 ? '↑' : growth < 0 ? '↓' : '-';
+                    weeklyHtml += '<td style="text-align:right;padding:8px;font-weight:500;">Rp ' + Math.round(curr / 1000000).toFixed(1) + 'jt</td>';
+                    weeklyHtml += '<td style="text-align:right;padding:8px;color:' + growthColor + ';font-weight:600;">' + (idx > 0 ? growthIcon + ' ' + Math.abs(growth).toFixed(1) + '%' : '-') + '</td>';
+                });
+                weeklyHtml += '</tr>';
+            });
+            weeklyHtml += '</tbody></table>';
+            document.getElementById('salesGenderWeeklyTrend').innerHTML = weeklyHtml;
+
+            // Gender by Area
+            const genderByArea = {};
+            data.forEach(item => {
+                const area = getAreaFromStore(item.store);
+                const gender = getGenderFromSKU(item.sku);
+                if (gender === 'Unknown' || area === 'Unknown') return;
+                if (!genderByArea[area]) genderByArea[area] = {};
+                if (!genderByArea[area][gender]) genderByArea[area][gender] = { sales: 0, qty: 0 };
+                genderByArea[area][gender].sales += item.total || 0;
+                genderByArea[area][gender].qty += item.qty || 0;
+            });
+
+            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            areaHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Area</th>';
+            genders.forEach(g => {
+                areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
+            });
+            areaHtml += '<th style="text-align:right;padding:8px;">Total</th></tr></thead><tbody>';
+
+            Object.entries(genderByArea).sort((a, b) => {
+                const totalA = Object.values(a[1]).reduce((sum, v) => sum + v.sales, 0);
+                const totalB = Object.values(b[1]).reduce((sum, v) => sum + v.sales, 0);
+                return totalB - totalA;
+            }).forEach(([area, genderData]) => {
+                const totalArea = Object.values(genderData).reduce((sum, v) => sum + v.sales, 0);
+                areaHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;font-weight:600;">' + area + '</td>';
+                genders.forEach(g => {
+                    const val = genderData[g]?.sales || 0;
+                    const pct = totalArea > 0 ? (val / totalArea * 100) : 0;
+                    areaHtml += '<td style="text-align:right;padding:8px;">';
+                    if (val > 0) {
+                        areaHtml += '<div style="font-weight:500;">Rp ' + Math.round(val / 1000000).toFixed(1) + 'jt</div>';
+                        areaHtml += '<div style="font-size:0.7rem;color:#6b7280;">' + pct.toFixed(1) + '%</div>';
+                    } else {
+                        areaHtml += '<span style="color:#d1d5db;">-</span>';
+                    }
+                    areaHtml += '</td>';
+                });
+                areaHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + Math.round(totalArea / 1000000).toFixed(1) + 'jt</td></tr>';
+            });
+            areaHtml += '</tbody></table>';
+            document.getElementById('salesGenderByArea').innerHTML = areaHtml;
+
+            // Gender by Store (Top 20)
+            const genderByStore = {};
+            data.forEach(item => {
+                const store = item.store || 'Unknown';
+                const gender = getGenderFromSKU(item.sku);
+                if (gender === 'Unknown') return;
+                if (!genderByStore[store]) genderByStore[store] = { area: getAreaFromStore(store) };
+                if (!genderByStore[store][gender]) genderByStore[store][gender] = { sales: 0, qty: 0 };
+                genderByStore[store][gender].sales += item.total || 0;
+                genderByStore[store][gender].qty += item.qty || 0;
+            });
+
+            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Toko</th><th style="text-align:left;padding:8px;">Area</th>';
+            genders.forEach(g => {
+                storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + '</th>';
+            });
+            storeHtml += '<th style="text-align:right;padding:8px;">Total</th><th style="text-align:center;padding:8px;">Dominant</th></tr></thead><tbody>';
+
+            Object.entries(genderByStore).sort((a, b) => {
+                const totalA = Object.entries(a[1]).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
+                const totalB = Object.entries(b[1]).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
+                return totalB - totalA;
+            }).slice(0, 30).forEach(([store, storeData]) => {
+                const area = storeData.area || 'Unknown';
+                const totalStore = Object.entries(storeData).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
+                let dominant = { gender: '-', pct: 0 };
+                genders.forEach(g => {
+                    const pct = totalStore > 0 ? ((storeData[g]?.sales || 0) / totalStore * 100) : 0;
+                    if (pct > dominant.pct) dominant = { gender: g, pct };
+                });
+                storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + store + '</td>';
+                storeHtml += '<td style="padding:8px;color:#6b7280;font-size:0.75rem;">' + area + '</td>';
+                genders.forEach(g => {
+                    const val = storeData[g]?.sales || 0;
+                    storeHtml += '<td style="text-align:right;padding:8px;">' + (val > 0 ? Math.round(val / 1000000).toFixed(1) + 'jt' : '-') + '</td>';
+                });
+                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">Rp ' + Math.round(totalStore / 1000000).toFixed(1) + 'jt</td>';
+                storeHtml += '<td style="text-align:center;padding:8px;"><span style="background:' + (genderColors[dominant.gender] || '#e5e7eb') + ';color:white;padding:2px 8px;border-radius:10px;font-size:0.7rem;">' + dominant.gender + ' ' + dominant.pct.toFixed(0) + '%</span></td></tr>';
+            });
+            storeHtml += '</tbody></table>';
+            document.getElementById('salesGenderByStore').innerHTML = storeHtml;
         }
 
         function switchSalesTab(tab) {
