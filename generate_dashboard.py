@@ -3458,8 +3458,8 @@ def generate_html(all_data, all_stores):
                         <tr>
                             <th style="padding: 10px; text-align: left;">SKU</th>
                             <th style="padding: 10px; text-align: left;">Nama Barang</th>
-                            <th style="padding: 10px; text-align: right;">Qty</th>
                             <th style="padding: 10px; text-align: center;">Asst</th>
+                            <th style="padding: 10px; text-align: right;">Qty</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -3473,8 +3473,8 @@ def generate_html(all_data, all_stores):
                 html += `<tr style="background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 8px 10px; font-weight: 500;">${item.sku}</td>
                     <td style="padding: 8px 10px;">${item.name}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
                     <td style="padding: 8px 10px; text-align: center; font-weight: 600; color: #6366f1;">${asstCount}</td>
+                    <td style="padding: 8px 10px; text-align: right; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
                 </tr>`;
             });
 
@@ -3483,8 +3483,8 @@ def generate_html(all_data, all_stores):
                     <tfoot style="background: #1e3a5f; color: white; font-weight: bold;">
                         <tr>
                             <td colspan="2" style="padding: 10px;">Total</td>
-                            <td style="padding: 10px; text-align: right; ${totalColor}">${totalQty.toLocaleString('id-ID')}</td>
                             <td style="padding: 10px;"></td>
+                            <td style="padding: 10px; text-align: right; ${totalColor}">${totalQty.toLocaleString('id-ID')}</td>
                         </tr>
                     </tfoot>
                 </table>
