@@ -4,7 +4,7 @@ Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 
 ## Live Dashboard
 
-**[Buka Dashboard](https://database-id.github.io/stock-inventory-dashboard/dashboard_inventory.html)**
+**[Buka Dashboard](https://database-zuma.github.io/stock-inventory-dashboard/dashboard_inventory.html)**
 
 ## Fitur
 
