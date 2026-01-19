@@ -2116,6 +2116,10 @@ def generate_html(all_data, all_stores):
                             <option value="Men">Men</option>
                             <option value="Ladies">Ladies</option>
                             <option value="Kids">Kids</option>
+                            <option value="Baby">Baby</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Girls">Girls</option>
+                            <option value="Boys">Boys</option>
                         </select>
                     </div>
                     <div style="min-width:120px;">
@@ -2210,17 +2214,25 @@ def generate_html(all_data, all_stores):
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📦 Category Performance</h4>
                         <div id="salesCategoryPerf"></div>
                     </div>
-                    <!-- Size Distribution -->
+                    <!-- Tier Performance -->
                     <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📏 Size Distribution</h4>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏷️ Tier Performance</h4>
+                        <div id="salesTierPerf"></div>
+                    </div>
+                    <!-- Size Distribution by Gender -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📏 Size Distribution by Gender</h4>
                         <div id="salesSizeDistribution"></div>
                     </div>
                 </div>
 
                 <!-- SPG Tab -->
                 <div class="sales-tab-content" id="salesTabSPG" style="padding:20px;display:none;">
+                    <!-- SPG Summary Cards -->
+                    <div id="salesSPGSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px;"></div>
+                    <!-- SPG Leaderboard -->
                     <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
-                    <div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div>
+                    <div id="salesSPGLeaderboard" style="max-height:500px;overflow-y:auto;"></div>
                 </div>
 
                 <!-- Target Tab -->
@@ -2246,22 +2258,10 @@ def generate_html(all_data, all_stores):
 
                 <!-- Transaction Tab -->
                 <div class="sales-tab-content" id="salesTabTransaction" style="padding:20px;display:none;">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
-                        <!-- Discount Usage -->
-                        <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏷️ Discount/Promo Usage</h4>
-                            <div id="salesDiscountUsage"></div>
-                        </div>
-                        <!-- Return Rate -->
-                        <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">↩️ Return Analysis</h4>
-                            <div id="salesReturnAnalysis"></div>
-                        </div>
-                    </div>
                     <!-- Transaction Detail -->
-                    <div style="margin-top:20px;">
+                    <div>
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📋 Recent Transactions</h4>
-                        <div id="salesRecentTransactions" style="max-height:400px;overflow-y:auto;"></div>
+                        <div id="salesRecentTransactions" style="max-height:600px;overflow-y:auto;"></div>
                     </div>
                 </div>
 
@@ -4986,12 +4986,11 @@ def generate_html(all_data, all_stores):
             const firstChar = sku.charAt(0).toUpperCase();
             if (firstChar === 'M') return 'Men';
             if (firstChar === 'L') return 'Ladies';
-            if (firstChar === 'K' || firstChar === 'J' || firstChar === 'B' || firstChar === 'G' || firstChar === 'Z') {
-                // Kids/Junior/Baby/Girls - check second char or category
-                if (sku.startsWith('K') || sku.startsWith('J1') || sku.startsWith('B1') || sku.startsWith('B2')) return 'Kids';
-                if (sku.startsWith('G')) return 'Girls';
-                if (sku.startsWith('Z')) return 'Unisex';
-            }
+            if (firstChar === 'K') return 'Kids';
+            if (firstChar === 'J') return 'Junior';
+            if (firstChar === 'G') return 'Girls';
+            if (firstChar === 'B') return 'Boys';
+            if (firstChar === 'Z') return 'Baby';
             return 'Unknown';
         }
 
@@ -5134,15 +5133,19 @@ def generate_html(all_data, all_stores):
             Object.values(targetData).forEach(t => { totalTarget += (t.jan || 0); });
             const achievement = totalTarget > 0 ? (totalSales / totalTarget * 100) : 0;
 
-            const formatRp = (val) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
+            // Format number with thousand separator (Indonesian style)
+            const formatNum = (val, decimals = 0) => {
+                return val.toLocaleString('id-ID', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            };
+            const formatRp = (val) => 'Rp ' + formatNum(val, 0);
 
             const cards = [
                 { label: 'Total Sales', value: formatRp(totalSales), color: '#10b981', icon: '💰' },
-                { label: 'Transaksi', value: totalTransactions.toLocaleString('id-ID'), color: '#3b82f6', icon: '🧾' },
-                { label: 'Total Qty', value: totalQty.toLocaleString('id-ID') + ' pcs', color: '#8b5cf6', icon: '📦' },
+                { label: 'Transaksi', value: formatNum(totalTransactions), color: '#3b82f6', icon: '🧾' },
+                { label: 'Total Qty', value: formatNum(totalQty) + ' pcs', color: '#8b5cf6', icon: '📦' },
                 { label: 'ATV', value: formatRp(atv), color: '#f59e0b', icon: '📊' },
-                { label: 'ATU', value: atu.toFixed(2) + ' pcs', color: '#ec4899', icon: '📈' },
-                { label: 'Achievement', value: achievement.toFixed(1) + '%', color: achievement >= 100 ? '#10b981' : '#ef4444', icon: '🎯' }
+                { label: 'ATU', value: formatNum(atu, 2) + ' pcs', color: '#ec4899', icon: '📈' },
+                { label: 'Achievement', value: formatNum(achievement, 2) + '%', color: achievement >= 100 ? '#10b981' : '#ef4444', icon: '🎯' }
             ];
 
             let html = '';
@@ -5176,12 +5179,12 @@ def generate_html(all_data, all_stores):
             })).sort((a, b) => b.sales - a.sales).slice(0, 15);
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Toko</th><th style="text-align:right;padding:8px;">Sales</th><th style="text-align:right;padding:8px;">Qty</th><th style="text-align:right;padding:8px;">Trx</th></tr></thead><tbody>';
+            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th></tr></thead><tbody>';
             storeArr.forEach((s, i) => {
                 storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;">' + (i+1) + '. ' + s.store + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">Rp ' + Math.round(s.sales).toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;">' + s.qty + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;">' + s.trx + '</td></tr>';
+                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:8px;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:8px;">' + s.trx.toLocaleString('id-ID') + '</td></tr>';
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
@@ -5205,16 +5208,16 @@ def generate_html(all_data, all_stores):
             })).sort((a, b) => b.sales - a.sales).slice(0, 15);
 
             let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            spgHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">SPG</th><th style="text-align:left;padding:6px;">Toko</th><th style="text-align:right;padding:6px;">Sales</th><th style="text-align:right;padding:6px;">Trx</th><th style="text-align:right;padding:6px;">ATV</th><th style="text-align:right;padding:6px;">ATU</th></tr></thead><tbody>';
+            spgHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">SPG</th><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th><th style="text-align:right;padding:6px;color:#374151;">Trx</th><th style="text-align:right;padding:6px;color:#374151;">ATV</th><th style="text-align:right;padding:6px;color:#374151;">ATU</th></tr></thead><tbody>';
             spgArr.forEach((s, i) => {
                 const storeDisplay = s.stores.length > 1 ? s.stores[0] + ' +' + (s.stores.length - 1) : (s.stores[0] || '-');
                 spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 spgHtml += '<td style="padding:6px;font-weight:500;">' + (i+1) + '. ' + s.spg + '</td>';
                 spgHtml += '<td style="padding:6px;color:#6b7280;font-size:0.7rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="' + s.stores.join(', ') + '">' + storeDisplay + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + Math.round(s.sales / 1000000).toFixed(1) + 'jt</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;">' + s.trx + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + Math.round(s.atv / 1000).toFixed(0) + 'k</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;color:#8b5cf6;">' + s.atu.toFixed(1) + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID', {maximumFractionDigits: 0}) + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#8b5cf6;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>';
                 spgHtml += '</tr>';
             });
             spgHtml += '</tbody></table>';
@@ -5236,10 +5239,10 @@ def generate_html(all_data, all_stores):
 
             let areaHtml = '<div style="display:flex;flex-wrap:wrap;gap:15px;">';
             areaArr.forEach(a => {
-                areaHtml += '<div style="flex:1;min-width:200px;background:#f8fafc;border-radius:10px;padding:15px;">';
+                areaHtml += '<div style="flex:1;min-width:200px;background:#f8fafc;border-radius:10px;padding:15px;border:1px solid #e2e8f0;">';
                 areaHtml += '<div style="font-weight:600;color:#374151;margin-bottom:8px;">' + a.area + '</div>';
-                areaHtml += '<div style="font-size:1.1rem;font-weight:700;color:#10b981;">Rp ' + Math.round(a.sales).toLocaleString('id-ID') + '</div>';
-                areaHtml += '<div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">' + a.qty + ' pcs | ' + a.stores + ' toko</div>';
+                areaHtml += '<div style="font-size:1.1rem;font-weight:700;color:#10b981;">Rp ' + a.sales.toLocaleString('id-ID') + '</div>';
+                areaHtml += '<div style="font-size:0.75rem;color:#4b5563;margin-top:4px;">' + a.qty.toLocaleString('id-ID') + ' pcs | ' + a.stores + ' toko</div>';
                 areaHtml += '</div>';
             });
             areaHtml += '</div>';
@@ -5264,13 +5267,13 @@ def generate_html(all_data, all_stores):
             })).sort((a, b) => a.date.localeCompare(b.date));
 
             let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            dailyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">Tanggal</th><th style="text-align:right;padding:6px;">Sales</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Trx</th></tr></thead><tbody>';
+            dailyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Tanggal</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Trx</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
-                dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + d.date + ' (' + dayName + ')</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;font-weight:600;">Rp ' + Math.round(d.sales).toLocaleString('id-ID') + '</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;">' + d.qty + '</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;">' + d.trx + '</td></tr>';
+                dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;color:#374151;">' + d.date + ' (' + dayName + ')</td>';
+                dailyHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + d.sales.toLocaleString('id-ID') + '</td>';
+                dailyHtml += '<td style="text-align:right;padding:6px;color:#374151;">' + d.qty.toLocaleString('id-ID') + '</td>';
+                dailyHtml += '<td style="text-align:right;padding:6px;color:#374151;">' + d.trx.toLocaleString('id-ID') + '</td></tr>';
             });
             dailyHtml += '</tbody></table>';
             document.getElementById('salesDailyTrend').innerHTML = dailyHtml;
@@ -5291,18 +5294,17 @@ def generate_html(all_data, all_stores):
             Object.entries(byHour).forEach(([hour, val]) => {
                 const pct = maxHourSales > 0 ? (val.sales / maxHourSales * 100) : 0;
                 hourHtml += '<div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;">';
-                hourHtml += '<div style="width:50px;">' + hour + ':00</div>';
+                hourHtml += '<div style="width:50px;color:#374151;font-weight:500;">' + hour + ':00</div>';
                 hourHtml += '<div style="flex:1;height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;">';
                 hourHtml += '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>';
-                hourHtml += '<div style="width:100px;text-align:right;">Rp ' + Math.round(val.sales / 1000000).toLocaleString('id-ID') + 'jt</div>';
+                hourHtml += '<div style="width:120px;text-align:right;color:#374151;">Rp ' + val.sales.toLocaleString('id-ID') + '</div>';
                 hourHtml += '</div>';
             });
             hourHtml += '</div>';
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
-            // Weekly summary with daily growth curve
+            // Weekly summary with daily growth curve - Start from Monday
             const byDayOfWeek = { 0: { sales: 0, count: 0 }, 1: { sales: 0, count: 0 }, 2: { sales: 0, count: 0 }, 3: { sales: 0, count: 0 }, 4: { sales: 0, count: 0 }, 5: { sales: 0, count: 0 }, 6: { sales: 0, count: 0 } };
-            const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
             // Count sales by day of week
             const dateCount = {};
@@ -5315,47 +5317,52 @@ def generate_html(all_data, all_stores):
                 }
             });
 
-            // Calculate average per day
-            const avgByDay = dayNames.map((_, idx) => {
-                return byDayOfWeek[idx].count > 0 ? byDayOfWeek[idx].sales / byDayOfWeek[idx].count : 0;
+            // Reorder days: Mon(1), Tue(2), Wed(3), Thu(4), Fri(5), Sat(6), Sun(0)
+            const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+            const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+            // Calculate average per day (in Monday-first order)
+            const avgByDay = dayOrder.map(dayIdx => {
+                return byDayOfWeek[dayIdx].count > 0 ? byDayOfWeek[dayIdx].sales / byDayOfWeek[dayIdx].count : 0;
             });
 
             const maxDaySales = Math.max(...avgByDay);
             const minDaySales = Math.min(...avgByDay.filter(v => v > 0));
 
             // Create SVG line chart
-            const chartWidth = 600;
-            const chartHeight = 150;
-            const padding = 40;
-            const usableWidth = chartWidth - padding * 2;
-            const usableHeight = chartHeight - padding;
+            const chartWidth = 700;
+            const chartHeight = 180;
+            const padding = 50;
+            const paddingRight = 60;
+            const usableWidth = chartWidth - padding - paddingRight;
+            const usableHeight = chartHeight - padding - 20;
 
             // Calculate points for the line
             const points = avgByDay.map((sales, idx) => {
                 const x = padding + (idx / 6) * usableWidth;
-                const y = maxDaySales > 0 ? chartHeight - padding - ((sales - minDaySales * 0.8) / (maxDaySales - minDaySales * 0.8) * usableHeight) : chartHeight - padding;
-                return { x, y, sales };
+                const y = maxDaySales > 0 ? chartHeight - padding - ((sales - minDaySales * 0.8) / (maxDaySales - minDaySales * 0.8 + 1) * usableHeight) : chartHeight - padding;
+                return { x, y, sales, dayIdx: dayOrder[idx] };
             });
 
-            let weeklyHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;">';
+            let weeklyHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
 
             // SVG Chart
             weeklyHtml += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
 
             // Grid lines
             for (let i = 0; i <= 4; i++) {
-                const y = padding / 2 + (i / 4) * usableHeight;
-                weeklyHtml += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - padding) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
+                const y = 20 + (i / 4) * usableHeight;
+                weeklyHtml += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - paddingRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
             }
 
             // Area fill
             let areaPath = 'M ' + points[0].x + ' ' + (chartHeight - padding);
             points.forEach(p => { areaPath += ' L ' + p.x + ' ' + p.y; });
             areaPath += ' L ' + points[6].x + ' ' + (chartHeight - padding) + ' Z';
-            weeklyHtml += '<path d="' + areaPath + '" fill="url(#gradient)" opacity="0.3"/>';
+            weeklyHtml += '<path d="' + areaPath + '" fill="url(#weeklyGradient)" opacity="0.3"/>';
 
             // Gradient definition
-            weeklyHtml += '<defs><linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/><stop offset="100%" style="stop-color:#10b981;stop-opacity:0"/></linearGradient></defs>';
+            weeklyHtml += '<defs><linearGradient id="weeklyGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/><stop offset="100%" style="stop-color:#10b981;stop-opacity:0"/></linearGradient></defs>';
 
             // Line
             let linePath = 'M ' + points[0].x + ' ' + points[0].y;
@@ -5364,18 +5371,18 @@ def generate_html(all_data, all_stores):
 
             // Data points and labels
             points.forEach((p, idx) => {
-                const isWeekend = idx === 0 || idx === 6;
-                weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="6" fill="' + (isWeekend ? '#f59e0b' : '#10b981') + '" stroke="white" stroke-width="2"/>';
-                weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 5) + '" text-anchor="middle" font-size="11" fill="#6b7280" font-weight="600">' + dayNames[idx] + '</text>';
-                weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 12) + '" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">' + Math.round(p.sales / 1000000).toFixed(1) + 'jt</text>';
+                const isWeekend = p.dayIdx === 0 || p.dayIdx === 6; // Sunday or Saturday
+                weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="7" fill="' + (isWeekend ? '#f59e0b' : '#10b981') + '" stroke="white" stroke-width="2"/>';
+                weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 8) + '" text-anchor="middle" font-size="11" fill="#374151" font-weight="600">' + dayNames[idx] + '</text>';
+                weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 14) + '" text-anchor="middle" font-size="10" fill="#1f2937" font-weight="700">Rp ' + p.sales.toLocaleString('id-ID', {maximumFractionDigits: 0}) + '</text>';
             });
 
             weeklyHtml += '</svg>';
 
             // Legend
-            weeklyHtml += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.75rem;">';
-            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#10b981;border-radius:50%;"></span> Weekday</div>';
-            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f59e0b;border-radius:50%;"></span> Weekend</div>';
+            weeklyHtml += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.8rem;">';
+            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#10b981;border-radius:50%;"></span><span style="color:#374151;">Weekday</span></div>';
+            weeklyHtml += '<div style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;background:#f59e0b;border-radius:50%;"></span><span style="color:#374151;">Weekend</span></div>';
             weeklyHtml += '</div>';
 
             weeklyHtml += '</div>';
@@ -5402,7 +5409,7 @@ def generate_html(all_data, all_stores):
 
             // Top 20
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">Artikel</th><th style="text-align:left;padding:6px;">Kategori</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
+            topHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;">Kategori</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 20).forEach((a, i) => {
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
                 topHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
@@ -5414,7 +5421,7 @@ def generate_html(all_data, all_stores):
 
             // Bottom 20 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;">Artikel</th><th style="text-align:left;padding:6px;">Kategori</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
+            slowHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;">Kategori</th><th style="text-align:right;padding:6px;color:#991b1b;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-20).reverse().forEach((a, i) => {
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
                 slowHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
@@ -5424,70 +5431,241 @@ def generate_html(all_data, all_stores):
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance - Table format with bar chart
+            // Category Performance - Table format with Gender and Series
             const byCategory = {};
             data.forEach(item => {
                 const cat = item.category || 'Unknown';
-                if (!byCategory[cat]) byCategory[cat] = { sales: 0, qty: 0, trx: new Set() };
+                const gender = getGenderFromSKU(item.sku);
+                const seriesRaw = (item.collection || '').split('|')[0].trim();
+                const series = (seriesRaw && seriesRaw !== 'Umum' && seriesRaw !== 'All Item') ? seriesRaw : '-';
+
+                if (!byCategory[cat]) byCategory[cat] = { sales: 0, qty: 0, trx: new Set(), genders: {}, seriesList: {} };
                 byCategory[cat].sales += item.total || 0;
                 byCategory[cat].qty += item.qty || 0;
                 byCategory[cat].trx.add(item.order_no);
+
+                // Track gender breakdown
+                if (!byCategory[cat].genders[gender]) byCategory[cat].genders[gender] = 0;
+                byCategory[cat].genders[gender] += item.total || 0;
+
+                // Track series breakdown
+                if (series !== '-') {
+                    if (!byCategory[cat].seriesList[series]) byCategory[cat].seriesList[series] = 0;
+                    byCategory[cat].seriesList[series] += item.total || 0;
+                }
             });
 
-            const catArr = Object.entries(byCategory).map(([cat, val]) => ({
-                cat, sales: val.sales, qty: val.qty, trx: val.trx.size
-            })).sort((a, b) => b.sales - a.sales);
+            const catArr = Object.entries(byCategory).map(([cat, val]) => {
+                // Get top 2 genders
+                const topGenders = Object.entries(val.genders).sort((a, b) => b[1] - a[1]).slice(0, 2);
+                // Get top 2 series
+                const topSeries = Object.entries(val.seriesList).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+                return {
+                    cat, sales: val.sales, qty: val.qty, trx: val.trx.size,
+                    genders: topGenders,
+                    seriesList: topSeries
+                };
+            }).sort((a, b) => b.sales - a.sales);
 
             const totalCatSales = catArr.reduce((sum, c) => sum + c.sales, 0);
             const maxCatSales = Math.max(...catArr.map(c => c.sales));
 
+            // Gender icons for display
+            const genderIcons = { Men: '👨', Ladies: '👩', Kids: '🧒', Girls: '👧', Baby: '👶', Junior: '🧒', Boys: '👦', Unknown: '❓' };
+            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
+
             let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            catHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Kategori</th><th style="text-align:left;padding:8px;">Share</th><th style="text-align:right;padding:8px;">Sales</th><th style="text-align:right;padding:8px;">Qty</th><th style="text-align:right;padding:8px;">%</th></tr></thead><tbody>';
+            catHtml += '<thead><tr style="background:#f8fafc;">';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Kategori</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Gender</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Series</th>';
+            catHtml += '<th style="text-align:left;padding:8px;width:150px;color:#374151;">Share</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">Sales</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">Qty</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">%</th>';
+            catHtml += '</tr></thead><tbody>';
+
             catArr.forEach((c, i) => {
                 const pct = totalCatSales > 0 ? (c.sales / totalCatSales * 100) : 0;
                 const barPct = maxCatSales > 0 ? (c.sales / maxCatSales * 100) : 0;
                 const rowBg = i % 2 === 0 ? '' : 'background:#fafafa;';
+
+                // Format gender display
+                let genderDisplay = '';
+                if (c.genders && c.genders.length > 0) {
+                    genderDisplay = c.genders.map(g => {
+                        const icon = genderIcons[g[0]] || '';
+                        const color = genderColors[g[0]] || '#6b7280';
+                        return '<span style="display:inline-block;padding:2px 6px;background:' + color + '20;color:' + color + ';border-radius:4px;font-size:0.7rem;margin-right:4px;">' + icon + ' ' + g[0] + '</span>';
+                    }).join('');
+                } else {
+                    genderDisplay = '<span style="color:#9ca3af;">-</span>';
+                }
+
+                // Format series display
+                let seriesDisplay = '';
+                if (c.seriesList && c.seriesList.length > 0) {
+                    seriesDisplay = c.seriesList.map(s => {
+                        return '<span style="display:inline-block;padding:2px 6px;background:#f3f4f6;color:#374151;border-radius:4px;font-size:0.7rem;margin-right:4px;border:1px solid #e5e7eb;">' + s[0] + '</span>';
+                    }).join('');
+                } else {
+                    seriesDisplay = '<span style="color:#9ca3af;">-</span>';
+                }
+
                 catHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + rowBg + '">';
                 catHtml += '<td style="padding:8px;font-weight:600;color:#374151;">' + c.cat + '</td>';
-                catHtml += '<td style="padding:8px;width:200px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div></td>';
-                catHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + Math.round(c.sales / 1000000).toFixed(1) + 'jt</td>';
-                catHtml += '<td style="text-align:right;padding:8px;">' + c.qty.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="padding:8px;">' + genderDisplay + '</td>';
+                catHtml += '<td style="padding:8px;">' + seriesDisplay + '</td>';
+                catHtml += '<td style="padding:8px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div></td>';
+                catHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
                 catHtml += '</tr>';
             });
             catHtml += '</tbody></table>';
             document.getElementById('salesCategoryPerf').innerHTML = catHtml;
 
-            // Size Distribution - Table format with bar chart
-            const bySize = {};
+            // Tier Performance with chart
+            const byTier = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                const sizeMatch = sku.match(/Z(\d{2,3})$/);
-                const size = sizeMatch ? sizeMatch[1] : 'Unknown';
-                if (!bySize[size]) bySize[size] = { qty: 0, sales: 0 };
-                bySize[size].qty += item.qty || 0;
-                bySize[size].sales += item.total || 0;
+                const kodeKecil = sku.replace(/Z\\d{2,3}$/, '');
+                const masterInfo = masterData[sku.toUpperCase()] || {};
+                const produkInfo = masterProduk[kodeKecil.toUpperCase()] || {};
+                const tier = masterInfo.tier || produkInfo.tier || '-';
+                if (!byTier[tier]) byTier[tier] = { sales: 0, qty: 0, trx: new Set() };
+                byTier[tier].sales += item.total || 0;
+                byTier[tier].qty += item.qty || 0;
+                byTier[tier].trx.add(item.order_no);
             });
 
-            const sizeArr = Object.entries(bySize).map(([size, val]) => ({ size, qty: val.qty, sales: val.sales }))
-                .filter(s => s.size !== 'Unknown')
-                .sort((a, b) => parseInt(a.size) - parseInt(b.size));
+            const tierArr = Object.entries(byTier).map(([tier, val]) => ({
+                tier, sales: val.sales, qty: val.qty, trx: val.trx.size
+            })).filter(t => t.tier !== '-' && t.tier !== '').sort((a, b) => {
+                const tierOrder = ['1', '2', '3', '4', '5'];
+                return tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier);
+            });
 
-            const totalSizeQty = sizeArr.reduce((sum, s) => sum + s.qty, 0);
-            const maxSizeQty = Math.max(...sizeArr.map(s => s.qty));
+            const totalTierSales = tierArr.reduce((sum, t) => sum + t.sales, 0);
+            const maxTierSales = Math.max(...tierArr.map(t => t.sales));
+            const tierColors = { '1': '#ef4444', '2': '#f59e0b', '3': '#10b981', '4': '#3b82f6', '5': '#8b5cf6' };
+
+            // Find best and worst tier
+            const sortedByPerf = [...tierArr].sort((a, b) => b.sales - a.sales);
+            const bestTier = sortedByPerf[0] || { tier: '-', sales: 0 };
+            const worstTier = sortedByPerf[sortedByPerf.length - 1] || { tier: '-', sales: 0 };
+
+            let tierHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">';
+
+            // Summary Cards
+            tierHtml += '<div style="display:flex;flex-direction:column;gap:10px;">';
+            tierHtml += '<div style="background:#dcfce7;border-radius:8px;padding:12px;border-left:4px solid #10b981;">';
+            tierHtml += '<div style="font-size:0.75rem;color:#166534;">🏆 Best Performing Tier</div>';
+            tierHtml += '<div style="font-size:1.2rem;font-weight:700;color:#15803d;">Tier ' + bestTier.tier + '</div>';
+            tierHtml += '<div style="font-size:0.8rem;color:#166534;">Rp ' + bestTier.sales.toLocaleString('id-ID') + '</div></div>';
+            tierHtml += '<div style="background:#fef2f2;border-radius:8px;padding:12px;border-left:4px solid #ef4444;">';
+            tierHtml += '<div style="font-size:0.75rem;color:#991b1b;">📉 Lowest Performing Tier</div>';
+            tierHtml += '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;">Tier ' + worstTier.tier + '</div>';
+            tierHtml += '<div style="font-size:0.8rem;color:#991b1b;">Rp ' + worstTier.sales.toLocaleString('id-ID') + '</div></div>';
+            tierHtml += '</div>';
+
+            // Bar Chart
+            tierHtml += '<div style="background:#f8fafc;border-radius:12px;padding:15px;">';
+            tierHtml += '<div style="display:flex;align-items:flex-end;justify-content:space-around;height:150px;gap:10px;">';
+            tierArr.forEach(t => {
+                const barHeight = maxTierSales > 0 ? (t.sales / maxTierSales * 100) : 0;
+                const color = tierColors[t.tier] || '#6b7280';
+                tierHtml += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;">';
+                tierHtml += '<div style="font-size:0.7rem;font-weight:600;color:#374151;margin-bottom:5px;">Rp ' + (t.sales/1000000).toFixed(1) + 'jt</div>';
+                tierHtml += '<div style="width:100%;max-width:50px;height:' + barHeight + '%;min-height:10px;background:' + color + ';border-radius:6px 6px 0 0;"></div>';
+                tierHtml += '<div style="font-size:0.8rem;font-weight:700;color:#374151;margin-top:8px;">Tier ' + t.tier + '</div>';
+                tierHtml += '<div style="font-size:0.7rem;color:#6b7280;">' + t.qty.toLocaleString('id-ID') + ' pcs</div>';
+                tierHtml += '</div>';
+            });
+            tierHtml += '</div></div>';
+
+            // Table
+            tierHtml += '<div style="grid-column:1/-1;">';
+            tierHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            tierHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Tier</th><th style="text-align:left;padding:8px;color:#374151;">Share</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th><th style="text-align:right;padding:8px;color:#374151;">%</th></tr></thead><tbody>';
+            tierArr.forEach(t => {
+                const pct = totalTierSales > 0 ? (t.sales / totalTierSales * 100) : 0;
+                const barPct = maxTierSales > 0 ? (t.sales / maxTierSales * 100) : 0;
+                const color = tierColors[t.tier] || '#6b7280';
+                tierHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                tierHtml += '<td style="padding:8px;"><span style="display:inline-block;padding:4px 12px;background:' + color + ';color:white;border-radius:20px;font-weight:700;">Tier ' + t.tier + '</span></td>';
+                tierHtml += '<td style="padding:8px;width:200px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div></div></td>';
+                tierHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + t.sales.toLocaleString('id-ID') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + t.qty.toLocaleString('id-ID') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + t.trx.toLocaleString('id-ID') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
+                tierHtml += '</tr>';
+            });
+            tierHtml += '</tbody></table></div>';
+            tierHtml += '</div>';
+            document.getElementById('salesTierPerf').innerHTML = tierHtml;
+
+            // Size Distribution by Gender
+            const bySizeGender = {};
+            data.forEach(item => {
+                const sku = item.sku || '';
+                const sizeMatch = sku.match(/Z(\\d{2,3})$/);
+                const size = sizeMatch ? sizeMatch[1] : 'Unknown';
+                const gender = getGenderFromSKU(sku);
+                if (size === 'Unknown') return;
+
+                if (!bySizeGender[size]) bySizeGender[size] = { total: 0, byGender: {} };
+                bySizeGender[size].total += item.qty || 0;
+                if (!bySizeGender[size].byGender[gender]) bySizeGender[size].byGender[gender] = 0;
+                bySizeGender[size].byGender[gender] += item.qty || 0;
+            });
+
+            const sizeGenderArr = Object.entries(bySizeGender).map(([size, val]) => ({
+                size, total: val.total, byGender: val.byGender
+            })).sort((a, b) => parseInt(a.size) - parseInt(b.size));
+
+            const allGenders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g => {
+                return sizeGenderArr.some(s => s.byGender[g] > 0);
+            });
+
+            const totalSizeQty = sizeGenderArr.reduce((sum, s) => sum + s.total, 0);
 
             let sizeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            sizeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;width:60px;">Size</th><th style="text-align:left;padding:8px;">Distribution</th><th style="text-align:right;padding:8px;width:80px;">Qty</th><th style="text-align:right;padding:8px;width:60px;">%</th></tr></thead><tbody>';
-            sizeArr.forEach(s => {
-                const pct = totalSizeQty > 0 ? (s.qty / totalSizeQty * 100) : 0;
-                const barPct = maxSizeQty > 0 ? (s.qty / maxSizeQty * 100) : 0;
+            sizeHtml += '<thead><tr style="background:#f8fafc;">';
+            sizeHtml += '<th style="text-align:left;padding:8px;color:#374151;">Size</th>';
+            allGenders.forEach(g => {
+                sizeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
+            });
+            sizeHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th>';
+            sizeHtml += '<th style="text-align:right;padding:8px;color:#374151;">%</th>';
+            sizeHtml += '</tr></thead><tbody>';
+
+            sizeGenderArr.forEach(s => {
+                const pct = totalSizeQty > 0 ? (s.total / totalSizeQty * 100) : 0;
                 sizeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 sizeHtml += '<td style="padding:8px;font-weight:700;color:#374151;">' + s.size + '</td>';
-                sizeHtml += '<td style="padding:8px;"><div style="height:20px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div></td>';
-                sizeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                allGenders.forEach(g => {
+                    const qty = s.byGender[g] || 0;
+                    const color = qty > 0 ? (genderColors[g] || '#374151') : '#d1d5db';
+                    sizeHtml += '<td style="text-align:right;padding:8px;color:' + color + ';font-weight:' + (qty > 0 ? '600' : '400') + ';">' + (qty > 0 ? qty.toLocaleString('id-ID') : '-') + '</td>';
+                });
+                sizeHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#374151;">' + s.total.toLocaleString('id-ID') + '</td>';
                 sizeHtml += '<td style="text-align:right;padding:8px;color:#6b7280;">' + pct.toFixed(1) + '%</td>';
                 sizeHtml += '</tr>';
             });
+
+            // Add totals row
+            sizeHtml += '<tr style="background:#f8fafc;font-weight:700;">';
+            sizeHtml += '<td style="padding:8px;color:#374151;">TOTAL</td>';
+            allGenders.forEach(g => {
+                const genderTotal = sizeGenderArr.reduce((sum, s) => sum + (s.byGender[g] || 0), 0);
+                sizeHtml += '<td style="text-align:right;padding:8px;color:' + (genderColors[g] || '#374151') + ';">' + genderTotal.toLocaleString('id-ID') + '</td>';
+            });
+            sizeHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + totalSizeQty.toLocaleString('id-ID') + '</td>';
+            sizeHtml += '<td style="text-align:right;padding:8px;color:#374151;">100%</td>';
+            sizeHtml += '</tr>';
+
             sizeHtml += '</tbody></table>';
             document.getElementById('salesSizeDistribution').innerHTML = sizeHtml;
         }
@@ -5513,21 +5691,59 @@ def generate_html(all_data, all_stores):
                 atu: val.trx.size > 0 ? val.qty / val.trx.size : 0
             })).sort((a, b) => b.sales - a.sales);
 
+            // Summary Cards
+            const totalSPG = spgArr.length;
+            const totalSalesSPG = spgArr.reduce((sum, s) => sum + s.sales, 0);
+            const avgSalesSPG = totalSPG > 0 ? totalSalesSPG / totalSPG : 0;
+            const avgATV = spgArr.length > 0 ? spgArr.reduce((sum, s) => sum + s.atv, 0) / spgArr.length : 0;
+            const avgATU = spgArr.length > 0 ? spgArr.reduce((sum, s) => sum + s.atu, 0) / spgArr.length : 0;
+            const topSPG = spgArr[0] || { spg: '-', sales: 0 };
+
+            let summaryHtml = '';
+            summaryHtml += '<div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">👥 Total SPG</div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">' + totalSPG + '</div></div>';
+
+            summaryHtml += '<div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">💰 Avg Sales/SPG</div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + (avgSalesSPG/1000000).toFixed(1) + 'jt</div></div>';
+
+            summaryHtml += '<div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">🛒 Avg ATV</div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + Math.round(avgATV).toLocaleString('id-ID') + '</div></div>';
+
+            summaryHtml += '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">📦 Avg ATU</div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">' + avgATU.toFixed(2) + '</div></div>';
+
+            summaryHtml += '<div style="background:linear-gradient(135deg,#ec4899,#db2777);border-radius:12px;padding:15px;color:white;grid-column:span 2;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">🏆 Top Performer</div>';
+            summaryHtml += '<div style="font-size:1.2rem;font-weight:700;">' + topSPG.spg + '</div>';
+            summaryHtml += '<div style="font-size:0.8rem;opacity:0.9;">Sales: Rp ' + (topSPG.sales/1000000).toFixed(1) + 'jt</div></div>';
+
+            document.getElementById('salesSPGSummary').innerHTML = summaryHtml;
+
+            // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            html += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Rank</th><th style="text-align:left;padding:8px;">SPG</th><th style="text-align:left;padding:8px;">Toko</th><th style="text-align:right;padding:8px;">Sales</th><th style="text-align:right;padding:8px;">Qty</th><th style="text-align:right;padding:8px;">Trx</th><th style="text-align:right;padding:8px;">ATV</th><th style="text-align:right;padding:8px;">ATU</th></tr></thead><tbody>';
-            spgArr.forEach((s, i) => {
-                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-                html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i < 3 ? 'background:#fef9c3;' : '') + '">';
-                html += '<td style="padding:8px;font-weight:600;">' + medal + '</td>';
-                html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';">' + s.spg + '</td>';
-                html += '<td style="padding:8px;font-size:0.7rem;color:#6b7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
-                html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + Math.round(s.sales).toLocaleString('id-ID') + '</td>';
-                html += '<td style="text-align:right;padding:8px;">' + s.qty + '</td>';
-                html += '<td style="text-align:right;padding:8px;">' + s.trx + '</td>';
-                html += '<td style="text-align:right;padding:8px;color:#3b82f6;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
-                html += '<td style="text-align:right;padding:8px;color:#8b5cf6;">' + s.atu.toFixed(2) + '</td>';
-                html += '</tr>';
-            });
+            html += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Rank</th><th style="text-align:left;padding:8px;color:#374151;">SPG</th><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th><th style="text-align:right;padding:8px;color:#374151;">ATV</th><th style="text-align:right;padding:8px;color:#374151;">ATU</th></tr></thead><tbody>';
+
+            if (spgArr.length === 0) {
+                html += '<tr><td colspan="8" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
+            } else {
+                spgArr.forEach((s, i) => {
+                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+                    html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i < 3 ? 'background:#fef9c3;' : '') + '">';
+                    html += '<td style="padding:8px;font-weight:600;color:#374151;">' + medal + '</td>';
+                    html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#1f2937;">' + s.spg + '</td>';
+                    html += '<td style="padding:8px;font-size:0.7rem;color:#6b7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
+                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + Math.round(s.sales).toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.qty + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.trx + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#3b82f6;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#8b5cf6;">' + s.atu.toFixed(2) + '</td>';
+                    html += '</tr>';
+                });
+            }
             html += '</tbody></table>';
             document.getElementById('salesSPGLeaderboard').innerHTML = html;
         }
@@ -5581,7 +5797,7 @@ def generate_html(all_data, all_stores):
             storeAchArr.sort((a, b) => b.achievement - a.achievement);
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">Toko</th><th style="text-align:right;padding:6px;">Target</th><th style="text-align:right;padding:6px;">Actual</th><th style="text-align:right;padding:6px;">Achv %</th></tr></thead><tbody>';
+            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:right;padding:6px;color:#374151;">Target</th><th style="text-align:right;padding:6px;color:#374151;">Actual</th><th style="text-align:right;padding:6px;color:#374151;">Achv %</th></tr></thead><tbody>';
             storeAchArr.forEach(s => {
                 const achvColor = s.achievement >= 100 ? '#10b981' : s.achievement >= 80 ? '#f59e0b' : '#ef4444';
                 storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + s.store + '</td>';
@@ -5620,7 +5836,7 @@ def generate_html(all_data, all_stores):
             // Gap Analysis - stores below target
             const gapStores = storeAchArr.filter(s => s.achievement < 100).sort((a, b) => b.gap - a.gap);
             let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            gapHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;">Toko</th><th style="text-align:right;padding:6px;">Gap</th><th style="text-align:right;padding:6px;">Achv %</th><th style="text-align:left;padding:6px;">Status</th></tr></thead><tbody>';
+            gapHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;">Toko</th><th style="text-align:right;padding:6px;color:#991b1b;">Gap</th><th style="text-align:right;padding:6px;color:#991b1b;">Achv %</th><th style="text-align:left;padding:6px;color:#991b1b;">Status</th></tr></thead><tbody>';
             gapStores.slice(0, 15).forEach(s => {
                 const status = s.achievement < 50 ? '🔴 Critical' : s.achievement < 80 ? '🟡 Warning' : '🟢 On Track';
                 gapHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + s.store + '</td>';
@@ -5635,61 +5851,6 @@ def generate_html(all_data, all_stores):
         function renderSalesTransaction() {
             const data = filteredSalesData;
 
-            // Discount/Promo Usage
-            const withDiscount = data.filter(item => (item.disc_amt || 0) > 0 || item.promo);
-            const discountRate = data.length > 0 ? (withDiscount.length / data.length * 100) : 0;
-            const totalDiscAmt = data.reduce((sum, item) => sum + (item.disc_amt || 0), 0);
-
-            const byPromo = {};
-            data.forEach(item => {
-                const promo = item.promo || (item.disc_code ? item.disc_code : 'No Promo');
-                if (!byPromo[promo]) byPromo[promo] = { count: 0, sales: 0 };
-                byPromo[promo].count++;
-                byPromo[promo].sales += item.total || 0;
-            });
-
-            const promoArr = Object.entries(byPromo).map(([promo, val]) => ({
-                promo, count: val.count, sales: val.sales
-            })).sort((a, b) => b.count - a.count).slice(0, 10);
-
-            let discHtml = '<div style="margin-bottom:15px;">';
-            discHtml += '<div style="display:flex;gap:20px;margin-bottom:15px;">';
-            discHtml += '<div style="background:#fef3c7;border-radius:8px;padding:12px;flex:1;">';
-            discHtml += '<div style="font-size:0.75rem;color:#92400e;">Discount Rate</div>';
-            discHtml += '<div style="font-size:1.2rem;font-weight:700;color:#d97706;">' + discountRate.toFixed(1) + '%</div></div>';
-            discHtml += '<div style="background:#fee2e2;border-radius:8px;padding:12px;flex:1;">';
-            discHtml += '<div style="font-size:0.75rem;color:#991b1b;">Total Discount</div>';
-            discHtml += '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;">Rp ' + Math.round(totalDiscAmt).toLocaleString('id-ID') + '</div></div>';
-            discHtml += '</div>';
-            discHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            discHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">Promo/Discount</th><th style="text-align:right;padding:6px;">Count</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
-            promoArr.forEach(p => {
-                discHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">' + p.promo + '</td>';
-                discHtml += '<td style="text-align:right;padding:6px;">' + p.count + '</td>';
-                discHtml += '<td style="text-align:right;padding:6px;">Rp ' + Math.round(p.sales).toLocaleString('id-ID') + '</td></tr>';
-            });
-            discHtml += '</tbody></table></div>';
-            document.getElementById('salesDiscountUsage').innerHTML = discHtml;
-
-            // Return Analysis
-            const withRetur = data.filter(item => (item.retur_qty || 0) > 0);
-            const totalRetur = data.reduce((sum, item) => sum + (item.retur_qty || 0), 0);
-            const totalQty = data.reduce((sum, item) => sum + (item.qty || 0), 0);
-            const returRate = totalQty > 0 ? (totalRetur / totalQty * 100) : 0;
-
-            let returHtml = '<div style="display:flex;gap:20px;margin-bottom:15px;">';
-            returHtml += '<div style="background:#fef2f2;border-radius:8px;padding:12px;flex:1;">';
-            returHtml += '<div style="font-size:0.75rem;color:#991b1b;">Return Rate</div>';
-            returHtml += '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;">' + returRate.toFixed(2) + '%</div></div>';
-            returHtml += '<div style="background:#fee2e2;border-radius:8px;padding:12px;flex:1;">';
-            returHtml += '<div style="font-size:0.75rem;color:#991b1b;">Total Retur</div>';
-            returHtml += '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;">' + totalRetur + ' pcs</div></div>';
-            returHtml += '</div>';
-            if (withRetur.length > 0) {
-                returHtml += '<div style="font-size:0.75rem;color:#6b7280;">Jumlah transaksi dengan retur: ' + withRetur.length + '</div>';
-            }
-            document.getElementById('salesReturnAnalysis').innerHTML = returHtml;
-
             // Recent Transactions
             const recentData = [...data].sort((a, b) => {
                 const dateCompare = b.date.localeCompare(a.date);
@@ -5698,7 +5859,7 @@ def generate_html(all_data, all_stores):
             }).slice(0, 50);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            recentHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;">Tanggal</th><th style="text-align:left;padding:6px;">Toko</th><th style="text-align:left;padding:6px;">Order</th><th style="text-align:left;padding:6px;">SKU</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Total</th></tr></thead><tbody>';
+            recentHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Tanggal</th><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:left;padding:6px;color:#374151;">Order</th><th style="text-align:left;padding:6px;color:#374151;">SKU</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Total</th></tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 recentHtml += '<td style="padding:6px;">' + item.date + '</td>';
@@ -5726,8 +5887,8 @@ def generate_html(all_data, all_stores):
                 byGender[gender].trx.add(item.order_no);
             });
 
-            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Unisex: '#10b981', Unknown: '#6b7280' };
-            const genderIcons = { Men: '👨', Ladies: '👩', Kids: '👶', Girls: '👧', Unisex: '👥', Unknown: '❓' };
+            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
+            const genderIcons = { Men: '👨', Ladies: '👩', Kids: '🧒', Girls: '👧', Baby: '👶', Junior: '🧒', Boys: '👦', Unknown: '❓' };
             const totalSales = Object.values(byGender).reduce((sum, g) => sum + g.sales, 0);
 
             let summaryHtml = '';
@@ -5756,15 +5917,15 @@ def generate_html(all_data, all_stores):
             });
 
             const weeks = Object.keys(weeklyByGender).sort();
-            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Unisex'].filter(g =>
+            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g =>
                 weeks.some(w => weeklyByGender[w] && weeklyByGender[w][g])
             );
 
             let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            weeklyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Week</th>';
+            weeklyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Week</th>';
             genders.forEach(g => {
                 weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
-                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;">Growth</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#6b7280;">Growth</th>';
             });
             weeklyHtml += '</tr></thead><tbody>';
 
@@ -5797,11 +5958,11 @@ def generate_html(all_data, all_stores):
             });
 
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            areaHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Area</th>';
+            areaHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Area</th>';
             genders.forEach(g => {
                 areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
             });
-            areaHtml += '<th style="text-align:right;padding:8px;">Total</th></tr></thead><tbody>';
+            areaHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th></tr></thead><tbody>';
 
             Object.entries(genderByArea).sort((a, b) => {
                 const totalA = Object.values(a[1]).reduce((sum, v) => sum + v.sales, 0);
@@ -5840,11 +6001,11 @@ def generate_html(all_data, all_stores):
             });
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">Toko</th><th style="text-align:left;padding:8px;">Area</th>';
+            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:left;padding:8px;color:#374151;">Area</th>';
             genders.forEach(g => {
                 storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + '</th>';
             });
-            storeHtml += '<th style="text-align:right;padding:8px;">Total</th><th style="text-align:center;padding:8px;">Dominant</th></tr></thead><tbody>';
+            storeHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th><th style="text-align:center;padding:8px;color:#374151;">Dominant</th></tr></thead><tbody>';
 
             Object.entries(genderByStore).sort((a, b) => {
                 const totalA = Object.entries(a[1]).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
