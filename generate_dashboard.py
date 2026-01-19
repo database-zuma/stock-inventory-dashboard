@@ -62,6 +62,13 @@ FILES_CONFIG = {
     }
 }
 
+# Toko dengan data DOUBLED (perlu dibagi 2) - karena export dari sistem punya duplikat kode lama & baru
+DOUBLED_STORES = {
+    'zuma city of tomorrow mall': 0.5,  # Data dobel, kalikan 0.5
+    'zuma tanah lot': 0.5,
+    'zuma lippo bali': 0.5,
+}
+
 # Google Sheets Configuration
 # Base URL untuk spreadsheet
 SPREADSHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMI13PjlcKpGxF2QKXIkn0-QS0bVsqrw2MZVRVcm8l7jt_lT2sKgRcFYnVDDqmT5LUzPm8nFxMTgS9/pub'
@@ -680,6 +687,10 @@ def read_csv_detailed(filepath, entity, data_type):
             for col_idx, store_name in store_cols.items():
                 if col_idx < len(row):
                     stock_val = parse_number(row[col_idx])
+                    # Apply correction for doubled stores
+                    correction = DOUBLED_STORES.get(store_name.lower(), 1.0)
+                    if correction != 1.0:
+                        stock_val = int(stock_val * correction)
                     store_stock[store_name] = stock_val  # Include semua, termasuk 0
 
             # Extract product info
