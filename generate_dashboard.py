@@ -1445,9 +1445,9 @@ def generate_html(all_data, all_stores):
                             <option value="8">Tier 8</option>
                         </select>
                     </div>
-                    <div class="filter-group" style="flex: 1 1 auto;">
+                    <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
-                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 150px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%;">
+                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
                     </div>
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
