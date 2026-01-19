@@ -3379,6 +3379,34 @@ def generate_html(all_data, all_stores):
             document.body.style.overflow = 'auto';
         }
 
+        // Helper function to get assortment count for a size
+        function getAssortmentForSize(sku, assortmentStr) {
+            if (!assortmentStr || assortmentStr === '-') return '-';
+
+            // Extract size suffix from SKU (e.g., Z22 from Z2LS01Z22)
+            const sizeMatch = sku.match(/Z(\d+)$/i);
+            if (!sizeMatch) return '-';
+
+            const sizeNum = parseInt(sizeMatch[1]);
+            const parts = assortmentStr.split('-').map(p => parseInt(p));
+
+            if (parts.length === 3) {
+                // 3-part assortment: Z21/Z22=first, Z23/Z24=second, Z25/Z26=third
+                if (sizeNum <= 22) return parts[0] || '-';
+                if (sizeNum <= 24) return parts[1] || '-';
+                return parts[2] || '-';
+            } else if (parts.length === 5) {
+                // 5-part assortment: Z21=first, Z22=second, Z23=third, Z24=fourth, Z25=fifth
+                const idx = sizeNum - 21;
+                return (idx >= 0 && idx < parts.length) ? parts[idx] : '-';
+            } else if (parts.length === 4) {
+                // 4-part assortment: Z21=first, Z22=second, Z23=third, Z24=fourth
+                const idx = sizeNum - 21;
+                return (idx >= 0 && idx < parts.length) ? parts[idx] : '-';
+            }
+            return '-';
+        }
+
         // SKU Detail Modal Functions
         function showSkuDetail(kodeKecil) {
             // Use retail data only to avoid duplicates
@@ -3405,8 +3433,8 @@ def generate_html(all_data, all_stores):
                 }
             });
 
-            // Convert to array and sort by qty (highest first)
-            const skuItems = Object.values(skuMap).sort((a, b) => b.qty - a.qty);
+            // Convert to array and sort by SKU (alphabetically)
+            const skuItems = Object.values(skuMap).sort((a, b) => a.sku.localeCompare(b.sku));
 
             if (!skuItems.length) {
                 alert('Data tidak ditemukan');
@@ -3431,6 +3459,7 @@ def generate_html(all_data, all_stores):
                             <th style="padding: 10px; text-align: left;">SKU</th>
                             <th style="padding: 10px; text-align: left;">Nama Barang</th>
                             <th style="padding: 10px; text-align: right;">Qty</th>
+                            <th style="padding: 10px; text-align: center;">Asst</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -3440,10 +3469,12 @@ def generate_html(all_data, all_stores):
                 totalQty += item.qty;
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 const qtyColor = item.qty < 0 ? 'color: #dc2626;' : '';
+                const asstCount = getAssortmentForSize(item.sku, assortment);
                 html += `<tr style="background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 8px 10px; font-weight: 500;">${item.sku}</td>
                     <td style="padding: 8px 10px;">${item.name}</td>
                     <td style="padding: 8px 10px; text-align: right; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
+                    <td style="padding: 8px 10px; text-align: center; font-weight: 600; color: #6366f1;">${asstCount}</td>
                 </tr>`;
             });
 
@@ -3453,6 +3484,7 @@ def generate_html(all_data, all_stores):
                         <tr>
                             <td colspan="2" style="padding: 10px;">Total</td>
                             <td style="padding: 10px; text-align: right; ${totalColor}">${totalQty.toLocaleString('id-ID')}</td>
+                            <td style="padding: 10px;"></td>
                         </tr>
                     </tfoot>
                 </table>
