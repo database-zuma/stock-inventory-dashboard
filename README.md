@@ -27,6 +27,44 @@ Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 - **Filters**: Area, Gender, Tier, Search, TW Status, TO Status
 - **Data Source**: WH dari DDD + LJBB, Retail dari DDD
 
+### 4. Sales Dashboard
+Dashboard analisis penjualan dengan multiple tabs:
+
+#### Performance Tab
+- **Summary Cards**: Total Sales, Total Qty, Total Trx, ATV, ATU
+- **Sales by Store**: Top 5 (filter area) / Top 10 (semua)
+- **Sales by SPG**: Top 5 (area) / Top 10 (semua) / All (filter store)
+- **Sales by Area**: Breakdown per area dengan chart
+
+#### Trend Tab
+- **Daily Sales Trend**: Grafik penjualan harian
+- **Weekly Summary**: Ringkasan mingguan (Weekday vs Weekend)
+
+#### Produk Tab
+- **Top Selling Articles (Top 20)**: Artikel terlaris
+- **Slow Moving (Bottom 20)**: Artikel penjualan terendah
+- **Category Performance**: Breakdown per Gender dengan Tipe (Jepit/Fashion) dan Series
+- **Tier Performance**: Analisis penjualan per tier
+- **Size Distribution by Gender**: Distribusi ukuran per gender
+
+#### SPG Tab
+- **SPG Summary Cards**: Total SPG, Avg Sales/SPG, Avg ATV, Avg ATU, Top Performer
+- **SPG Leaderboard**: Ranking lengkap semua SPG
+
+#### Target Tab
+- **Achievement by Store**: Pencapaian target per toko
+- **Achievement by Area**: Pencapaian target per area
+- **Gap to Target**: Analisis gap yang perlu dikejar
+
+#### Transaksi Tab
+- **Recent Transactions**: Detail transaksi terbaru
+
+#### Gender Tab
+- **Gender Sales Summary**: Ringkasan penjualan per gender
+- **Weekly Gender Growth**: Trend pertumbuhan per gender
+- **Gender Performance by Area**: Breakdown per area
+- **Gender Performance by Store**: Breakdown per toko
+
 ## Struktur File
 
 ```
@@ -37,7 +75,8 @@ Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 ├── Stock WH MBB.csv           # Data stock warehouse MBB
 ├── Stock WH UBB.csv           # Data stock warehouse UBB
 ├── Stok Retail DDD.csv        # Data stock retail
-├── salesss.csv                # Data sales (untuk Stock Control)
+├── salesss.csv                # Data sales summary (untuk Stock Control)
+├── sales_2026.csv             # Data sales detail (untuk Sales Dashboard)
 └── README.md                  # Dokumentasi
 ```
 
@@ -67,10 +106,12 @@ Dashboard akan otomatis terupdate di GitHub Pages dalam beberapa menit.
 
 - Stock Warehouse: Export dari sistem inventory
 - Stock Retail: Export dari POS/sistem retail
-- Sales Data: Export dari sistem penjualan (salesss.csv)
+- Sales Summary: Export dari sistem penjualan (salesss.csv) - untuk Stock Control
+- Sales Detail: Export dari sistem penjualan (sales_2026.csv) - untuk Sales Dashboard
 - Master Produk: Google Sheets (auto-fetch saat generate)
 - Master Store: Google Sheets (auto-fetch saat generate)
 - Max Stock: Google Sheets (auto-fetch saat generate)
+- Target Data: Google Sheets (auto-fetch saat generate)
 
 ## Tech Stack
 
