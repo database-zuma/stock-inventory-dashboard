@@ -485,6 +485,7 @@ def extract_product_info(name, sku):
         'category': '',
         'gender': '',
         'series': '',
+        'tipe': '',
         'color': '',
         'kode_kecil': '',
         'nama_master': '',
@@ -508,6 +509,12 @@ def extract_product_info(name, sku):
     else:
         # Fallback: extract kode kecil dari SKU
         info['kode_kecil'] = extract_kode_kecil(sku)
+
+    # Get tipe from MASTER_PRODUK by kode_kecil
+    kode_kecil_upper = (info['kode_kecil'] or '').upper()
+    if kode_kecil_upper and kode_kecil_upper in MASTER_PRODUK:
+        produk_info = MASTER_PRODUK[kode_kecil_upper]
+        info['tipe'] = produk_info.get('tipe', '')
 
     # Fallback size dari SKU jika Master Data tidak punya
     if not info['size']:
@@ -711,6 +718,7 @@ def read_csv_detailed(filepath, entity, data_type):
                 'category': info['category'],
                 'gender': info['gender'],
                 'series': info['series'],
+                'tipe': info['tipe'],
                 'tier': info['tier'],
                 'color': info['color'],
                 'total': total,
@@ -1364,57 +1372,57 @@ def generate_html(all_data, all_stores):
 
         <!-- Data Table -->
         <div class="table-section">
-            <div class="table-header">
-                <h3 id="tableTitle">📦 Data Stock Warehouse-Store</h3>
-                <div class="table-actions">
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="Cari SKU / Nama..." oninput="applyFilters()">
-                    </div>
+            <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 id="tableTitle" style="margin: 0;">📦 Data Stock Warehouse-Store</h3>
                     <button class="btn btn-secondary" onclick="exportData()">📥 Export</button>
                 </div>
+                <!-- Filter Row -->
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
+                        <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 150px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Area</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Store / Warehouse</label>
+                        <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 200px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Store/WH</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Tier</label>
+                        <select id="tableFilterTier" onchange="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="0">Tier 0</option>
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                            <option value="4">Tier 4</option>
+                            <option value="5">Tier 5</option>
+                            <option value="8">Tier 8</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 1 1 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
+                        <input type="text" id="searchInput" placeholder="Cari Kode / Nama..." oninput="applyFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%;">
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
+                        <button class="btn btn-secondary" onclick="resetTableFilters()" style="font-size: 0.85rem; padding: 8px 14px; border-radius: 6px;">↺ Reset</button>
+                    </div>
+                </div>
             </div>
-            <!-- Filter inside table section -->
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 12px 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px;">
-                <div class="filter-group" style="min-width: 140px;">
-                    <label style="font-size: 0.75rem; color: #64748b;">Area</label>
-                    <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
-                        <option value="">Semua Area</option>
-                    </select>
-                </div>
-                <div class="filter-group" style="min-width: 160px;">
-                    <label style="font-size: 0.75rem; color: #64748b;">Store / Warehouse</label>
-                    <select id="tableFilterStore" onchange="applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
-                        <option value="">Semua</option>
-                    </select>
-                </div>
-                <div class="filter-group" style="min-width: 100px;">
-                    <label style="font-size: 0.75rem; color: #64748b;">Tier</label>
-                    <select id="tableFilterTier" onchange="applyFilters()" style="font-size: 0.8rem; padding: 6px 10px;">
-                        <option value="">Semua</option>
-                        <option value="0">Tier 0</option>
-                        <option value="1">Tier 1</option>
-                        <option value="2">Tier 2</option>
-                        <option value="3">Tier 3</option>
-                        <option value="4">Tier 4</option>
-                        <option value="5">Tier 5</option>
-                        <option value="8">Tier 8</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label style="font-size: 0.75rem; color: #64748b;">&nbsp;</label>
-                    <button class="btn btn-secondary" onclick="resetTableFilters()" style="font-size: 0.8rem; padding: 6px 12px;">↺ Reset</button>
-                </div>
-            </div>
-            <div class="table-wrapper">
+            <div class="table-wrapper" style="margin-top: 15px;">
                 <table>
                     <thead>
                         <tr>
-                            <th onclick="sortData('sku')">Kode SKU ↕</th>
                             <th onclick="sortData('kode_kecil')">Kode Kecil ↕</th>
-                            <th onclick="sortData('name')">Nama Barang ↕</th>
-                            <th onclick="sortData('size')">Size ↕</th>
                             <th onclick="sortData('gender')">Gender ↕</th>
                             <th onclick="sortData('series')">Series ↕</th>
+                            <th onclick="sortData('tipe')">Tipe ↕</th>
+                            <th onclick="sortData('name')">Nama Barang ↕</th>
                             <th onclick="sortData('tier')">Tier ↕</th>
                             <th onclick="sortData('total')">Total ↕</th>
                         </tr>
@@ -2185,7 +2193,7 @@ def generate_html(all_data, all_stores):
             const tableStore = document.getElementById('tableFilterStore').value;
 
             if (!pageData.length) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
             } else {
                 tbody.innerHTML = pageData.map(item => {
                     let displayStock = item.total;
@@ -2193,12 +2201,11 @@ def generate_html(all_data, all_stores):
                         displayStock = item.store_stock[tableStore] || 0;
                     }
                     return `<tr>
-                        <td><strong>${item.sku}</strong></td>
-                        <td>${item.kode_kecil || '-'}</td>
-                        <td>${item.name || '-'}</td>
-                        <td>${item.size || '-'}</td>
+                        <td><strong>${item.kode_kecil || '-'}</strong></td>
                         <td>${item.gender || '-'}</td>
                         <td>${item.series || '-'}</td>
+                        <td>${item.tipe || '-'}</td>
+                        <td>${item.name || '-'}</td>
                         <td>${item.tier || '-'}</td>
                         <td><strong>${displayStock.toLocaleString('id-ID')}</strong></td>
                     </tr>`;
@@ -2236,9 +2243,9 @@ def generate_html(all_data, all_stores):
 
         function exportData() {
             if (!filteredData.length) { alert('Tidak ada data'); return; }
-            const headers = ['Kode SKU', 'Kode Kecil', 'Nama Barang', 'Size', 'Gender', 'Series', 'Tier', 'Total Stock'];
+            const headers = ['Kode Kecil', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Total Stock'];
             const csv = [headers.join(','), ...filteredData.map(i => [
-                i.sku, i.kode_kecil || '', `"${(i.name || '').replace(/"/g, '""')}"`, i.size, i.gender || '', i.series, i.tier || '', i.total
+                i.kode_kecil || '', i.gender || '', i.series || '', i.tipe || '', `"${(i.name || '').replace(/"/g, '""')}"`, i.tier || '', i.total
             ].join(','))].join('\\n');
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
