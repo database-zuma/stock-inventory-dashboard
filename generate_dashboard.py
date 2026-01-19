@@ -2010,7 +2010,8 @@ def generate_html(all_data, all_stores):
         // Update Retail charts
         function updateRetailCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
-            let totalSku = 0;
+            // Total SKU = jumlah item dalam data (data sudah difilter sebelum masuk fungsi ini)
+            let totalSku = data.length;
             let totalStock = 0;
             let minusArticles = 0;
             let minusPairs = 0;
@@ -2021,34 +2022,27 @@ def generate_html(all_data, all_stores):
                 const series = item.series || '-';
                 const seriesGender = (series && series !== '-' && series !== '') ? series + ' - ' + gender : '';
 
-                // Check if item exists in selected location/area
-                let hasStockInFilter = false;
+                // Calculate stock value based on filter
                 let stockValue = 0;
 
                 if (locationFilter) {
-                    // Store filter - only count if item has this store
+                    // Store filter - get stock for this store
                     if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                        hasStockInFilter = true;
                         stockValue = item.store_stock[locationFilter];
                     }
                 } else if (areaFilter) {
-                    // Area filter - only count if item has any store in this area
+                    // Area filter - sum stock for all stores in this area
                     if (item.store_stock) {
                         Object.entries(item.store_stock).forEach(([loc, stock]) => {
                             if (getAreaFromStore(loc) === areaFilter) {
-                                hasStockInFilter = true;
                                 stockValue += stock;
                             }
                         });
                     }
                 } else {
-                    // No filter - count all
-                    hasStockInFilter = true;
+                    // No filter - use total
                     stockValue = item.total || 0;
                 }
-
-                // Count SKU only if exists in filtered location/area
-                if (hasStockInFilter) totalSku++;
 
                 catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
                 if (seriesGender) {
@@ -2137,7 +2131,8 @@ def generate_html(all_data, all_stores):
         // Update Warehouse charts
         function updateWarehouseCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
-            let totalSku = 0;
+            // Total SKU = jumlah item dalam data (data sudah difilter sebelum masuk fungsi ini)
+            let totalSku = data.length;
             let totalStock = 0;
             let minusArticles = 0;
             let minusPairs = 0;
@@ -2148,34 +2143,27 @@ def generate_html(all_data, all_stores):
                 const series = item.series || '-';
                 const seriesGender = (series && series !== '-' && series !== '') ? series + ' - ' + gender : '';
 
-                // Check if item exists in selected location/area
-                let hasStockInFilter = false;
+                // Calculate stock value based on filter
                 let stockValue = 0;
 
                 if (locationFilter) {
-                    // Warehouse filter - only count if item has this warehouse
+                    // Warehouse filter - get stock for this warehouse
                     if (item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                        hasStockInFilter = true;
                         stockValue = item.store_stock[locationFilter];
                     }
                 } else if (areaFilter) {
-                    // Area filter - only count if item has any warehouse in this area
+                    // Area filter - sum stock for all warehouses in this area
                     if (item.store_stock) {
                         Object.entries(item.store_stock).forEach(([loc, stock]) => {
                             if (getAreaFromStore(loc) === areaFilter) {
-                                hasStockInFilter = true;
                                 stockValue += stock;
                             }
                         });
                     }
                 } else {
-                    // No filter - count all
-                    hasStockInFilter = true;
+                    // No filter - use total
                     stockValue = item.total || 0;
                 }
-
-                // Count SKU only if exists in filtered location/area
-                if (hasStockInFilter) totalSku++;
 
                 catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
                 if (seriesGender) {
