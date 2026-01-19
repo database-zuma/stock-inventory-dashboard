@@ -2028,7 +2028,7 @@ def generate_html(all_data, all_stores):
         // Update Retail charts
         function updateRetailCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
-            let totalSku = data.length;
+            let totalSku = 0;
             let totalStock = 0;
             let minusArticles = 0;
             let minusPairs = 0;
@@ -2052,6 +2052,9 @@ def generate_html(all_data, all_stores):
                 } else {
                     stockValue = item.total || 0;
                 }
+
+                // Count SKU only if has stock in filtered location/area
+                if (stockValue !== 0) totalSku++;
 
                 catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
                 if (seriesGender) {
@@ -2136,7 +2139,7 @@ def generate_html(all_data, all_stores):
         // Update Warehouse charts
         function updateWarehouseCharts(data, locationFilter, areaFilter) {
             const catData = {}, areaData = {}, seriesData = {};
-            let totalSku = data.length;
+            let totalSku = 0;
             let totalStock = 0;
             let minusArticles = 0;
             let minusPairs = 0;
@@ -2160,6 +2163,9 @@ def generate_html(all_data, all_stores):
                 } else {
                     stockValue = item.total || 0;
                 }
+
+                // Count SKU only if has stock in filtered location/area
+                if (stockValue !== 0) totalSku++;
 
                 catData[gender] = (catData[gender] || 0) + Math.max(0, stockValue);
                 if (seriesGender) {
