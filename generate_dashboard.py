@@ -2087,7 +2087,7 @@ def generate_html(all_data, all_stores):
                     seriesData[seriesGender] = (seriesData[seriesGender] || 0) + Math.max(0, stockValue);
                 }
 
-                if (stockValue > 0) totalStock += stockValue;
+                totalStock += stockValue;  // Include all stock
 
                 // Area calculation
                 if (locationFilter) {
@@ -2208,7 +2208,7 @@ def generate_html(all_data, all_stores):
                     seriesData[seriesGender] = (seriesData[seriesGender] || 0) + Math.max(0, stockValue);
                 }
 
-                if (stockValue > 0) totalStock += stockValue;
+                totalStock += stockValue;  // Include all stock
 
                 // Area calculation
                 if (locationFilter) {
