@@ -2167,18 +2167,7 @@ def generate_html(all_data, all_stores):
                     </div>
                     <!-- By Area -->
                     <div style="margin-top:20px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                            <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
-                            <select id="salesByAreaWeekFilter" onchange="renderSalesAreaChart()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
-                                <option value="all">All Weeks</option>
-                                <option value="W1">W1 (1-7)</option>
-                                <option value="W2">W2 (8-14)</option>
-                                <option value="W3">W3 (15-21)</option>
-                                <option value="W4">W4 (22-28)</option>
-                                <option value="W5">W5 (29-31)</option>
-                            </select>
-                        </div>
-                        <div id="salesByAreaChart" style="margin-bottom:15px;"></div>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
                         <div id="salesByAreaTable"></div>
                     </div>
                 </div>
@@ -2217,6 +2206,16 @@ def generate_html(all_data, all_stores):
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
                         <div id="salesWeekByWeek"></div>
                     </div>
+                    <!-- Sales by Area Trend -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
+                        <div id="salesAreaTrend"></div>
+                    </div>
+                    <!-- Sales by Gender Trend -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
+                        <div id="salesGenderTrend"></div>
+                    </div>
                 </div>
 
                 <!-- Product Tab -->
@@ -2235,18 +2234,7 @@ def generate_html(all_data, all_stores):
                     </div>
                     <!-- Gender Sales Summary -->
                     <div style="margin-top:20px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                            <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">📊 Sales by Gender</h4>
-                            <select id="salesByGenderWeekFilter" onchange="renderSalesGenderChart()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
-                                <option value="all">All Weeks</option>
-                                <option value="W1">W1 (1-7)</option>
-                                <option value="W2">W2 (8-14)</option>
-                                <option value="W3">W3 (15-21)</option>
-                                <option value="W4">W4 (22-28)</option>
-                                <option value="W5">W5 (29-31)</option>
-                            </select>
-                        </div>
-                        <div id="salesByGenderChart" style="margin-bottom:15px;"></div>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
                         <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
                     </div>
                     <!-- Weekly Gender Growth -->
@@ -5414,177 +5402,119 @@ def generate_html(all_data, all_stores):
             });
             areaHtml += '</div>';
             document.getElementById('salesByAreaTable').innerHTML = areaHtml;
-
-            // Render area chart
-            renderSalesAreaChart();
         }
 
-        function renderSalesAreaChart() {
+        function renderSalesAreaTrend() {
             var data = filteredSalesData;
-            var weekFilterEl = document.getElementById('salesByAreaWeekFilter');
-            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
-            var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-            // Area colors
+            // Area colors (hijau-biru theme)
             var areaColors = {
                 'Bali': '#10b981',
                 'Jawa Timur': '#3b82f6',
                 'Jakarta': '#f59e0b',
-                'Luar Jawa': '#8b5cf6',
-                'Unknown': '#6b7280'
+                'Luar Jawa': '#8b5cf6'
             };
 
-            var points = [];
-            var areaData = {};
             var areas = ['Bali', 'Jawa Timur', 'Jakarta', 'Luar Jawa'];
 
-            if (weekFilter === 'all') {
-                // ALL WEEKS: aggregate by week (W1-W5) per area
-                var byWeekArea = {};
-                data.forEach(function(item) {
-                    var dateObj = new Date(item.date);
-                    if (isNaN(dateObj)) return;
-                    var dayOfMonth = dateObj.getDate();
-                    var weekNum = Math.ceil(dayOfMonth / 7);
-                    var weekLabel = 'W' + weekNum;
-                    var area = getAreaFromStore(item.store);
-                    if (!byWeekArea[weekLabel]) byWeekArea[weekLabel] = {};
-                    if (!byWeekArea[weekLabel][area]) byWeekArea[weekLabel][area] = 0;
-                    byWeekArea[weekLabel][area] += item.total || 0;
-                });
+            // Aggregate by week per area
+            var byWeekArea = {};
+            data.forEach(function(item) {
+                var dateObj = new Date(item.date);
+                if (isNaN(dateObj)) return;
+                var dayOfMonth = dateObj.getDate();
+                var weekNum = Math.ceil(dayOfMonth / 7);
+                var weekLabel = 'W' + weekNum;
+                var area = getAreaFromStore(item.store);
+                if (area === 'Unknown') return;
+                if (!byWeekArea[weekLabel]) byWeekArea[weekLabel] = {};
+                if (!byWeekArea[weekLabel][area]) byWeekArea[weekLabel][area] = 0;
+                byWeekArea[weekLabel][area] += item.total || 0;
+            });
 
-                var weeks = ['W1', 'W2', 'W3', 'W4', 'W5'];
-                weeks.forEach(function(w) {
-                    var point = { label: w, subLabel: '' };
-                    areas.forEach(function(a) {
-                        point[a] = (byWeekArea[w] && byWeekArea[w][a]) ? byWeekArea[w][a] : 0;
-                    });
-                    points.push(point);
+            var weeks = ['W1', 'W2', 'W3', 'W4', 'W5'];
+            var weekData = weeks.map(function(w) {
+                var point = { week: w };
+                areas.forEach(function(a) {
+                    point[a] = (byWeekArea[w] && byWeekArea[w][a]) ? byWeekArea[w][a] : 0;
                 });
-            } else {
-                // SPECIFIC WEEK: show dates chronologically per area
-                var weekNum = parseInt(weekFilter.replace('W', ''));
-                var startDate = (weekNum - 1) * 7 + 1;
-                var endDate = Math.min(weekNum * 7, 31);
-
-                var byDateArea = {};
-                data.forEach(function(item) {
-                    var dateObj = new Date(item.date);
-                    if (isNaN(dateObj)) return;
-                    var dayOfMonth = dateObj.getDate();
-                    if (dayOfMonth >= startDate && dayOfMonth <= endDate) {
-                        var area = getAreaFromStore(item.store);
-                        if (!byDateArea[dayOfMonth]) byDateArea[dayOfMonth] = {};
-                        if (!byDateArea[dayOfMonth][area]) byDateArea[dayOfMonth][area] = 0;
-                        byDateArea[dayOfMonth][area] += item.total || 0;
-                    }
-                });
-
-                for (var d = startDate; d <= endDate; d++) {
-                    var dateForDay = new Date(2026, 0, d);
-                    var dayOfWeek = dateForDay.getDay();
-                    var point = {
-                        label: String(d),
-                        subLabel: '(' + dayNamesShort[dayOfWeek] + ')',
-                        dayOfWeek: dayOfWeek
-                    };
-                    areas.forEach(function(a) {
-                        point[a] = (byDateArea[d] && byDateArea[d][a]) ? byDateArea[d][a] : 0;
-                    });
-                    points.push(point);
-                }
-            }
+                return point;
+            });
 
             // Find max sales for scaling
             var maxSales = 0;
-            points.forEach(function(p) {
+            weekData.forEach(function(w) {
                 areas.forEach(function(a) {
-                    if (p[a] > maxSales) maxSales = p[a];
+                    if (w[a] > maxSales) maxSales = w[a];
                 });
             });
 
-            // Create SVG chart
-            var chartWidth = 800;
-            var chartHeight = 300;
+            // Chart dimensions (same as Sales by Week)
+            var chartWidth = 600;
+            var chartHeight = 250;
             var padding = 60;
             var paddingRight = 30;
-            var paddingTop = 50;
-            var paddingBottom = 55;
+            var paddingTop = 40;
+            var paddingBottom = 50;
             var usableWidth = chartWidth - padding - paddingRight;
             var usableHeight = chartHeight - paddingTop - paddingBottom;
 
-            // Calculate x positions
-            var numPoints = points.length;
-            points.forEach(function(p, idx) {
-                p.x = padding + (idx / (numPoints - 1 || 1)) * usableWidth;
+            // Calculate positions
+            var points = weekData.map(function(w, idx) {
+                var x = padding + (idx / (weekData.length - 1 || 1)) * usableWidth;
+                var result = { x: x, week: w.week };
+                areas.forEach(function(a) {
+                    result[a] = w[a];
+                    result[a + '_y'] = maxSales > 0 ? paddingTop + (1 - w[a] / maxSales) * usableHeight : chartHeight - paddingBottom;
+                });
+                return result;
             });
 
-            var chartHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
-            chartHtml += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
+            var html = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
+            html += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
 
             // Grid lines
             for (var i = 0; i <= 4; i++) {
-                var gridY = paddingTop + (i / 4) * usableHeight;
-                chartHtml += '<line x1="' + padding + '" y1="' + gridY + '" x2="' + (chartWidth - paddingRight) + '" y2="' + gridY + '" stroke="#e2e8f0" stroke-width="1"/>';
+                var y = paddingTop + (i / 4) * usableHeight;
+                html += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - paddingRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
             }
 
-            // Gradient definitions
-            chartHtml += '<defs>';
-            areas.forEach(function(a) {
-                chartHtml += '<linearGradient id="areaGrad' + a.replace(/\\s/g, '') + '" x1="0%" y1="0%" x2="0%" y2="100%">';
-                chartHtml += '<stop offset="0%" style="stop-color:' + (areaColors[a] || '#6b7280') + ';stop-opacity:0.3"/>';
-                chartHtml += '<stop offset="100%" style="stop-color:' + (areaColors[a] || '#6b7280') + ';stop-opacity:0"/>';
-                chartHtml += '</linearGradient>';
-            });
-            chartHtml += '</defs>';
-
-            // Draw lines and points for each area
+            // Draw lines for each area
             areas.forEach(function(area) {
-                var areaPoints = points.map(function(p) {
-                    var y = maxSales > 0 ? paddingTop + (1 - p[area] / maxSales) * usableHeight : chartHeight - paddingBottom;
-                    return { x: p.x, y: y, sales: p[area] };
-                });
-
-                // Line
-                if (areaPoints.length > 1) {
-                    var linePath = 'M ' + areaPoints[0].x + ' ' + areaPoints[0].y;
-                    areaPoints.slice(1).forEach(function(ap) { linePath += ' L ' + ap.x + ' ' + ap.y; });
-                    chartHtml += '<path d="' + linePath + '" fill="none" stroke="' + (areaColors[area] || '#6b7280') + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+                if (points.length > 1) {
+                    var linePath = 'M ' + points[0].x + ' ' + points[0][area + '_y'];
+                    points.slice(1).forEach(function(p) { linePath += ' L ' + p.x + ' ' + p[area + '_y']; });
+                    html += '<path d="' + linePath + '" fill="none" stroke="' + areaColors[area] + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
                 }
 
-                // Points
-                areaPoints.forEach(function(ap) {
-                    if (ap.sales > 0) {
-                        chartHtml += '<circle cx="' + ap.x + '" cy="' + ap.y + '" r="5" fill="' + (areaColors[area] || '#6b7280') + '" stroke="white" stroke-width="2"/>';
-                    }
+                // Points with values
+                points.forEach(function(p) {
+                    html += '<circle cx="' + p.x + '" cy="' + p[area + '_y'] + '" r="8" fill="' + areaColors[area] + '" stroke="white" stroke-width="2"/>';
                 });
             });
 
-            // X-axis labels
+            // X-axis labels (week names)
             points.forEach(function(p) {
-                chartHtml += '<text x="' + p.x + '" y="' + (chartHeight - 22) + '" text-anchor="middle" font-size="11" fill="#374151" font-weight="600">' + p.label + '</text>';
-                if (p.subLabel) {
-                    chartHtml += '<text x="' + p.x + '" y="' + (chartHeight - 8) + '" text-anchor="middle" font-size="9" fill="#6b7280">' + p.subLabel + '</text>';
-                }
+                html += '<text x="' + p.x + '" y="' + (chartHeight - 15) + '" text-anchor="middle" font-size="14" fill="#374151" font-weight="700">' + p.week + '</text>';
             });
 
-            chartHtml += '</svg>';
+            html += '</svg>';
 
             // Legend
-            chartHtml += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.8rem;flex-wrap:wrap;">';
+            html += '<div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:0.8rem;flex-wrap:wrap;">';
             areas.forEach(function(a) {
-                chartHtml += '<div style="display:flex;align-items:center;gap:5px;">';
-                chartHtml += '<span style="width:12px;height:3px;background:' + (areaColors[a] || '#6b7280') + ';border-radius:2px;"></span>';
-                chartHtml += '<span style="color:#374151;">' + a + '</span>';
-                chartHtml += '</div>';
+                html += '<div style="display:flex;align-items:center;gap:5px;">';
+                html += '<span style="width:12px;height:12px;background:' + areaColors[a] + ';border-radius:50%;"></span>';
+                html += '<span style="color:#374151;">' + a + '</span>';
+                html += '</div>';
             });
-            chartHtml += '</div>';
+            html += '</div>';
 
-            chartHtml += '</div>';
+            html += '</div>';
 
-            var chartContainer = document.getElementById('salesByAreaChart');
-            if (chartContainer) {
-                chartContainer.innerHTML = chartHtml;
+            var container = document.getElementById('salesAreaTrend');
+            if (container) {
+                container.innerHTML = html;
             }
         }
 
@@ -5873,6 +5803,10 @@ def generate_html(all_data, all_stores):
             } else {
                 document.getElementById('salesWeekByWeek').innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">Tidak ada data mingguan</div>';
             }
+
+            // Render Area and Gender trends
+            renderSalesAreaTrend();
+            renderSalesGenderTrend();
         }
 
         function renderSalesProduct() {
@@ -6357,11 +6291,8 @@ def generate_html(all_data, all_stores):
             document.getElementById('salesRecentTransactions').innerHTML = recentHtml;
         }
 
-        function renderSalesGenderChart() {
+        function renderSalesGenderTrend() {
             var data = filteredSalesData;
-            var weekFilterEl = document.getElementById('salesByGenderWeekFilter');
-            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
-            var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
             // Gender colors
             var genderColors = {
@@ -6374,8 +6305,7 @@ def generate_html(all_data, all_stores):
                 'Boys': '#8b5cf6'
             };
 
-            var points = [];
-            var genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'];
+            var allGenders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'];
 
             // Filter genders yang punya data
             var gendersWithData = {};
@@ -6383,147 +6313,106 @@ def generate_html(all_data, all_stores):
                 var g = getGenderFromSKU(item.sku);
                 if (g && g !== 'Unknown') gendersWithData[g] = true;
             });
-            genders = genders.filter(function(g) { return gendersWithData[g]; });
+            var genders = allGenders.filter(function(g) { return gendersWithData[g]; });
 
-            if (weekFilter === 'all') {
-                // ALL WEEKS: aggregate by week (W1-W5) per gender
-                var byWeekGender = {};
-                data.forEach(function(item) {
-                    var dateObj = new Date(item.date);
-                    if (isNaN(dateObj)) return;
-                    var dayOfMonth = dateObj.getDate();
-                    var weekNum = Math.ceil(dayOfMonth / 7);
-                    var weekLabel = 'W' + weekNum;
-                    var gender = getGenderFromSKU(item.sku);
-                    if (gender === 'Unknown') return;
-                    if (!byWeekGender[weekLabel]) byWeekGender[weekLabel] = {};
-                    if (!byWeekGender[weekLabel][gender]) byWeekGender[weekLabel][gender] = 0;
-                    byWeekGender[weekLabel][gender] += item.total || 0;
+            // Aggregate by week per gender
+            var byWeekGender = {};
+            data.forEach(function(item) {
+                var dateObj = new Date(item.date);
+                if (isNaN(dateObj)) return;
+                var dayOfMonth = dateObj.getDate();
+                var weekNum = Math.ceil(dayOfMonth / 7);
+                var weekLabel = 'W' + weekNum;
+                var gender = getGenderFromSKU(item.sku);
+                if (gender === 'Unknown') return;
+                if (!byWeekGender[weekLabel]) byWeekGender[weekLabel] = {};
+                if (!byWeekGender[weekLabel][gender]) byWeekGender[weekLabel][gender] = 0;
+                byWeekGender[weekLabel][gender] += item.total || 0;
+            });
+
+            var weeks = ['W1', 'W2', 'W3', 'W4', 'W5'];
+            var weekData = weeks.map(function(w) {
+                var point = { week: w };
+                genders.forEach(function(g) {
+                    point[g] = (byWeekGender[w] && byWeekGender[w][g]) ? byWeekGender[w][g] : 0;
                 });
-
-                var weeks = ['W1', 'W2', 'W3', 'W4', 'W5'];
-                weeks.forEach(function(w) {
-                    var point = { label: w, subLabel: '' };
-                    genders.forEach(function(g) {
-                        point[g] = (byWeekGender[w] && byWeekGender[w][g]) ? byWeekGender[w][g] : 0;
-                    });
-                    points.push(point);
-                });
-            } else {
-                // SPECIFIC WEEK: show dates chronologically per gender
-                var weekNum = parseInt(weekFilter.replace('W', ''));
-                var startDate = (weekNum - 1) * 7 + 1;
-                var endDate = Math.min(weekNum * 7, 31);
-
-                var byDateGender = {};
-                data.forEach(function(item) {
-                    var dateObj = new Date(item.date);
-                    if (isNaN(dateObj)) return;
-                    var dayOfMonth = dateObj.getDate();
-                    if (dayOfMonth >= startDate && dayOfMonth <= endDate) {
-                        var gender = getGenderFromSKU(item.sku);
-                        if (gender === 'Unknown') return;
-                        if (!byDateGender[dayOfMonth]) byDateGender[dayOfMonth] = {};
-                        if (!byDateGender[dayOfMonth][gender]) byDateGender[dayOfMonth][gender] = 0;
-                        byDateGender[dayOfMonth][gender] += item.total || 0;
-                    }
-                });
-
-                for (var d = startDate; d <= endDate; d++) {
-                    var dateForDay = new Date(2026, 0, d);
-                    var dayOfWeek = dateForDay.getDay();
-                    var point = {
-                        label: String(d),
-                        subLabel: '(' + dayNamesShort[dayOfWeek] + ')',
-                        dayOfWeek: dayOfWeek
-                    };
-                    genders.forEach(function(g) {
-                        point[g] = (byDateGender[d] && byDateGender[d][g]) ? byDateGender[d][g] : 0;
-                    });
-                    points.push(point);
-                }
-            }
+                return point;
+            });
 
             // Find max sales for scaling
             var maxSales = 0;
-            points.forEach(function(p) {
+            weekData.forEach(function(w) {
                 genders.forEach(function(g) {
-                    if (p[g] > maxSales) maxSales = p[g];
+                    if (w[g] > maxSales) maxSales = w[g];
                 });
             });
 
-            // Create SVG chart
-            var chartWidth = 800;
-            var chartHeight = 300;
+            // Chart dimensions (same as Sales by Week)
+            var chartWidth = 600;
+            var chartHeight = 250;
             var padding = 60;
             var paddingRight = 30;
-            var paddingTop = 50;
-            var paddingBottom = 55;
+            var paddingTop = 40;
+            var paddingBottom = 50;
             var usableWidth = chartWidth - padding - paddingRight;
             var usableHeight = chartHeight - paddingTop - paddingBottom;
 
-            // Calculate x positions
-            var numPoints = points.length;
-            points.forEach(function(p, idx) {
-                p.x = padding + (idx / (numPoints - 1 || 1)) * usableWidth;
+            // Calculate positions
+            var points = weekData.map(function(w, idx) {
+                var x = padding + (idx / (weekData.length - 1 || 1)) * usableWidth;
+                var result = { x: x, week: w.week };
+                genders.forEach(function(g) {
+                    result[g] = w[g];
+                    result[g + '_y'] = maxSales > 0 ? paddingTop + (1 - w[g] / maxSales) * usableHeight : chartHeight - paddingBottom;
+                });
+                return result;
             });
 
-            var chartHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
-            chartHtml += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
+            var html = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
+            html += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
 
             // Grid lines
             for (var i = 0; i <= 4; i++) {
-                var gridY = paddingTop + (i / 4) * usableHeight;
-                chartHtml += '<line x1="' + padding + '" y1="' + gridY + '" x2="' + (chartWidth - paddingRight) + '" y2="' + gridY + '" stroke="#e2e8f0" stroke-width="1"/>';
+                var y = paddingTop + (i / 4) * usableHeight;
+                html += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - paddingRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
             }
 
-            // Draw lines and points for each gender
+            // Draw lines for each gender
             genders.forEach(function(gender) {
-                var genderPoints = points.map(function(p) {
-                    var y = maxSales > 0 ? paddingTop + (1 - p[gender] / maxSales) * usableHeight : chartHeight - paddingBottom;
-                    return { x: p.x, y: y, sales: p[gender] };
-                });
-
-                // Line
-                if (genderPoints.length > 1) {
-                    var linePath = 'M ' + genderPoints[0].x + ' ' + genderPoints[0].y;
-                    genderPoints.slice(1).forEach(function(gp) { linePath += ' L ' + gp.x + ' ' + gp.y; });
-                    chartHtml += '<path d="' + linePath + '" fill="none" stroke="' + (genderColors[gender] || '#6b7280') + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+                if (points.length > 1) {
+                    var linePath = 'M ' + points[0].x + ' ' + points[0][gender + '_y'];
+                    points.slice(1).forEach(function(p) { linePath += ' L ' + p.x + ' ' + p[gender + '_y']; });
+                    html += '<path d="' + linePath + '" fill="none" stroke="' + genderColors[gender] + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
                 }
 
                 // Points
-                genderPoints.forEach(function(gp) {
-                    if (gp.sales > 0) {
-                        chartHtml += '<circle cx="' + gp.x + '" cy="' + gp.y + '" r="5" fill="' + (genderColors[gender] || '#6b7280') + '" stroke="white" stroke-width="2"/>';
-                    }
+                points.forEach(function(p) {
+                    html += '<circle cx="' + p.x + '" cy="' + p[gender + '_y'] + '" r="8" fill="' + genderColors[gender] + '" stroke="white" stroke-width="2"/>';
                 });
             });
 
-            // X-axis labels
+            // X-axis labels (week names)
             points.forEach(function(p) {
-                chartHtml += '<text x="' + p.x + '" y="' + (chartHeight - 22) + '" text-anchor="middle" font-size="11" fill="#374151" font-weight="600">' + p.label + '</text>';
-                if (p.subLabel) {
-                    chartHtml += '<text x="' + p.x + '" y="' + (chartHeight - 8) + '" text-anchor="middle" font-size="9" fill="#6b7280">' + p.subLabel + '</text>';
-                }
+                html += '<text x="' + p.x + '" y="' + (chartHeight - 15) + '" text-anchor="middle" font-size="14" fill="#374151" font-weight="700">' + p.week + '</text>';
             });
 
-            chartHtml += '</svg>';
+            html += '</svg>';
 
             // Legend
-            chartHtml += '<div style="display:flex;justify-content:center;gap:15px;margin-top:10px;font-size:0.8rem;flex-wrap:wrap;">';
+            html += '<div style="display:flex;justify-content:center;gap:15px;margin-top:10px;font-size:0.8rem;flex-wrap:wrap;">';
             genders.forEach(function(g) {
-                chartHtml += '<div style="display:flex;align-items:center;gap:5px;">';
-                chartHtml += '<span style="width:12px;height:3px;background:' + (genderColors[g] || '#6b7280') + ';border-radius:2px;"></span>';
-                chartHtml += '<span style="color:#374151;">' + g + '</span>';
-                chartHtml += '</div>';
+                html += '<div style="display:flex;align-items:center;gap:5px;">';
+                html += '<span style="width:12px;height:12px;background:' + genderColors[g] + ';border-radius:50%;"></span>';
+                html += '<span style="color:#374151;">' + g + '</span>';
+                html += '</div>';
             });
-            chartHtml += '</div>';
+            html += '</div>';
 
-            chartHtml += '</div>';
+            html += '</div>';
 
-            var chartContainer = document.getElementById('salesByGenderChart');
-            if (chartContainer) {
-                chartContainer.innerHTML = chartHtml;
+            var container = document.getElementById('salesGenderTrend');
+            if (container) {
+                container.innerHTML = html;
             }
         }
 
@@ -6681,9 +6570,6 @@ def generate_html(all_data, all_stores):
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesGenderByStore').innerHTML = storeHtml;
-
-            // Render gender chart
-            renderSalesGenderChart();
         }
 
         function switchSalesTab(tab) {
