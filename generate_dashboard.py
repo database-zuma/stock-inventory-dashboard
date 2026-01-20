@@ -6101,23 +6101,23 @@ def generate_html(all_data, all_stores):
             const topSPG = spgArr[0] || { spg: '-', sales: 0 };
 
             let summaryHtml = '';
-            summaryHtml += '<div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="background:#3b82f6;border-radius:12px;padding:15px;color:white;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">👥 Total SPG</div>';
             summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">' + totalSPG + '</div></div>';
 
-            summaryHtml += '<div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:12px;padding:15px;color:white;">';
-            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">💰 Avg Sales/SPG</div>';
-            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + (avgSalesSPG/1000000).toFixed(1) + 'jt</div></div>';
+            summaryHtml += '<div style="background:#10b981;border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">💰 Total Sales</div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + (totalSalesSPG/1000000000).toFixed(2) + 'M</div></div>';
 
-            summaryHtml += '<div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="background:#8b5cf6;border-radius:12px;padding:15px;color:white;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">🛒 Avg ATV</div>';
-            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + avgATV.toLocaleString('id-ID') + '</div></div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + (avgATV/1000).toFixed(0) + 'rb</div></div>';
 
-            summaryHtml += '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;padding:15px;color:white;">';
+            summaryHtml += '<div style="background:#f59e0b;border-radius:12px;padding:15px;color:white;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">📦 Avg ATU</div>';
             summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">' + avgATU.toFixed(2) + '</div></div>';
 
-            summaryHtml += '<div style="background:linear-gradient(135deg,#ec4899,#db2777);border-radius:12px;padding:15px;color:white;grid-column:span 2;">';
+            summaryHtml += '<div style="background:#ec4899;border-radius:12px;padding:15px;color:white;grid-column:span 2;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">🏆 Top Performer</div>';
             summaryHtml += '<div style="font-size:1.2rem;font-weight:700;">' + topSPG.spg + '</div>';
             summaryHtml += '<div style="font-size:0.8rem;opacity:0.9;">Sales: Rp ' + (topSPG.sales/1000000).toFixed(1) + 'jt</div></div>';
