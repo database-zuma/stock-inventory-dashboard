@@ -2009,32 +2009,22 @@ def generate_html(all_data, all_stores):
                 </div>
             </div>
 
+            <!-- View Mode Toggle -->
+            <div style="display:flex;gap:8px;margin-bottom:15px;justify-content:center;">
+                <button id="scViewSku" onclick="switchStockControlView('sku')" style="padding:10px 20px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:white;transition:all 0.2s;">
+                    Kode SKU (Per Size)
+                </button>
+                <button id="scViewKodeKecil" onclick="switchStockControlView('kodeKecil')" style="padding:10px 20px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:white;color:#6366f1;transition:all 0.2s;">
+                    Kode Kecil (Aggregate)
+                </button>
+            </div>
+
             <!-- Control Stock Table -->
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                 <div style="overflow-x:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
-                        <thead>
-                            <tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">
-                                <th style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;white-space:nowrap;cursor:pointer;" onclick="sortStockControl('sku')">KODE SKU</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('size')">SIZE</th>
-                                <th style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;max-width:200px;">ARTICLE</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">SERIES</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">GENDER</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">TIER</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('nov')">NOV</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('des')">DES</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('jan')">JAN</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#92400e;cursor:pointer;" onclick="sortStockControl('avg')">AVG 3M</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#fbbf24;color:#78350f;">WH PUSAT</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#34d399;color:#064e3b;">WH BALI</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#60a5fa;color:#1e3a8a;">WH JKT</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#1e3a8a;cursor:pointer;" onclick="sortStockControl('whTotal')">WH TOTAL</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#166534;cursor:pointer;" onclick="sortStockControl('stokToko')">STOK TOKO</th>
-                                <th style="padding:8px 6px;text-align:right;color:white;font-size:0.7rem;background:#7c3aed;cursor:pointer;" onclick="sortStockControl('global')">GLOBAL</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;background:#0891b2;cursor:pointer;" onclick="sortStockControl('tw')">TW</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;background:#0d9488;cursor:pointer;" onclick="sortStockControl('to')">TO</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;background:#dc2626;cursor:pointer;" onclick="sortStockControl('twto')">TW+TO</th>
-                            </tr>
+                        <thead id="scTableHead">
+                            <!-- Header will be rendered dynamically by JavaScript -->
                         </thead>
                         <tbody id="scTableBody">
                         </tbody>
@@ -4630,9 +4620,156 @@ def generate_html(all_data, all_stores):
 
         // ==================== STOCK CONTROL FUNCTIONS ====================
         let scItems = [];
+        let scKodeKecilItems = [];
         let scFilteredItems = [];
         let scCurrentPage = 1;
         const scItemsPerPage = 50;
+        let scViewMode = 'sku'; // 'sku' or 'kodeKecil'
+
+        // Build aggregated items by Kode Kecil (sum all sizes)
+        function buildKodeKecilItems() {
+            const kodeKecilMap = {};
+
+            scItems.forEach(item => {
+                const kk = item.kodeKecil || item.sku;
+                if (!kk) return;
+
+                if (!kodeKecilMap[kk]) {
+                    kodeKecilMap[kk] = {
+                        kodeKecil: kk,
+                        name: item.name,
+                        series: item.series,
+                        gender: item.gender,
+                        tier: item.tier,
+                        WHS: 0, WHB: 0, WHJ: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0,
+                        stokTokoLombok: 0,
+                        globalStock: 0,
+                        whTotal: 0,
+                        skuList: []
+                    };
+                }
+
+                // Sum all stock values
+                kodeKecilMap[kk].WHS += item.WHS || 0;
+                kodeKecilMap[kk].WHB += item.WHB || 0;
+                kodeKecilMap[kk].WHJ += item.WHJ || 0;
+                kodeKecilMap[kk].stokToko += item.stokToko || 0;
+                kodeKecilMap[kk].stokTokoBali += item.stokTokoBali || 0;
+                kodeKecilMap[kk].stokTokoJakarta += item.stokTokoJakarta || 0;
+                kodeKecilMap[kk].stokTokoJatim += item.stokTokoJatim || 0;
+                kodeKecilMap[kk].stokTokoBatam += item.stokTokoBatam || 0;
+                kodeKecilMap[kk].stokTokoSulawesi += item.stokTokoSulawesi || 0;
+                kodeKecilMap[kk].stokTokoSumatera += item.stokTokoSumatera || 0;
+                kodeKecilMap[kk].stokTokoLombok += item.stokTokoLombok || 0;
+                kodeKecilMap[kk].skuList.push(item.sku);
+            });
+
+            // Calculate totals
+            Object.values(kodeKecilMap).forEach(item => {
+                item.whTotal = item.WHS + item.WHB + item.WHJ;
+                item.globalStock = item.whTotal + item.stokToko;
+            });
+
+            return Object.values(kodeKecilMap);
+        }
+
+        // Get aggregated sales for Kode Kecil (sum all SKU sales)
+        function getKodeKecilSales(skuList) {
+            let nov = 0, des = 0, jan = 0;
+            skuList.forEach(sku => {
+                const skuUpper = (sku || '').toUpperCase();
+                const s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
+                nov += s.nov;
+                des += s.des;
+                jan += s.jan;
+            });
+            const avg = (nov + des + jan) / 3;
+            return { nov, des, jan, avg };
+        }
+
+        // Switch view mode
+        function switchStockControlView(mode) {
+            scViewMode = mode;
+            scCurrentPage = 1;
+
+            // Update button styles
+            const btnSku = document.getElementById('scViewSku');
+            const btnKK = document.getElementById('scViewKodeKecil');
+
+            if (mode === 'sku') {
+                btnSku.style.background = '#6366f1';
+                btnSku.style.color = 'white';
+                btnKK.style.background = 'white';
+                btnKK.style.color = '#6366f1';
+            } else {
+                btnSku.style.background = 'white';
+                btnSku.style.color = '#6366f1';
+                btnKK.style.background = '#6366f1';
+                btnKK.style.color = 'white';
+            }
+
+            renderStockControlTable();
+        }
+
+        // Render table header based on view mode
+        function renderStockControlHeader() {
+            const thead = document.getElementById('scTableHead');
+            if (!thead) return;
+
+            const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;';
+
+            if (scViewMode === 'sku') {
+                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
+                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\\'sku\\')">KODE SKU</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;" onclick="sortStockControl(\\'size\\')">SIZE</th>' +
+                    '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'nov\\')">NOV</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'des\\')">DES</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'jan\\')">JAN</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\\'avg\\')">AVG 3M</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\\'whTotal\\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\\'stokToko\\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\\'global\\')">GLOBAL</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\\'tw\\')">TW</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\\'to\\')">TO</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\\'twto\\')">TW+TO</th>' +
+                '</tr>';
+            } else {
+                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
+                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\\'kodeKecil\\')">KODE KECIL</th>' +
+                    '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'nov\\')">NOV</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'des\\')">DES</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\\'jan\\')">JAN</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\\'avg\\')">AVG 3M</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\\'whTotal\\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\\'stokToko\\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\\'global\\')">GLOBAL</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\\'tw\\')">TW</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\\'to\\')">TO</th>' +
+                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\\'twto\\')">TW+TO</th>' +
+                '</tr>';
+            }
+        }
 
         function buildSkuItems() {
             const skuMap = {};
@@ -4735,6 +4872,7 @@ def generate_html(all_data, all_stores):
 
         function initStockControl() {
             scItems = buildSkuItems();
+            scKodeKecilItems = buildKodeKecilItems();
             // Populate series filter
             const seriesSet = new Set();
             scItems.forEach(item => { if (item.series) seriesSet.add(item.series); });
@@ -4745,10 +4883,14 @@ def generate_html(all_data, all_stores):
                     seriesSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
                 });
             }
+            renderStockControlHeader();
             renderStockControlTable();
         }
 
         function renderStockControlTable() {
+            // Render header based on view mode
+            renderStockControlHeader();
+
             const area = document.getElementById('scFilterArea')?.value || '';
             const gender = document.getElementById('scFilterGender')?.value || '';
             const tier = document.getElementById('scFilterTier')?.value || '';
@@ -4768,12 +4910,32 @@ def generate_html(all_data, all_stores):
                 return { nov: s.nov, des: s.des, jan: s.jan, avg: avg };
             }
 
+            // Helper function to get sales for item (handles both modes)
+            function getItemSales(item) {
+                if (scViewMode === 'kodeKecil') {
+                    return getKodeKecilSales(item.skuList || []);
+                } else {
+                    return getSales(item.sku);
+                }
+            }
+
+            // Choose source data based on view mode
+            const sourceItems = scViewMode === 'kodeKecil' ? scKodeKecilItems : scItems;
+
             // Filter items
-            scFilteredItems = scItems.filter(item => {
+            scFilteredItems = sourceItems.filter(item => {
                 if (gender && item.gender !== gender) return false;
                 if (tier && String(item.tier) !== tier) return false;
                 if (series && item.series !== series) return false;
-                if (search && !item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+
+                // Search filter (different field based on view mode)
+                if (search) {
+                    if (scViewMode === 'kodeKecil') {
+                        if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    } else {
+                        if (!item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    }
+                }
 
                 // Area filter for stock
                 if (area) {
@@ -4790,7 +4952,7 @@ def generate_html(all_data, all_stores):
 
                 // TW filter (warehouse turnover)
                 if (twFilter) {
-                    const sales = getSales(item.sku);
+                    const sales = getItemSales(item);
                     const whStock = area === 'Bali' ? item.WHB : (area === 'Jakarta' ? item.WHJ : (area === 'Jawa Timur' ? item.WHS : item.whTotal));
                     const tw = sales.avg > 0 ? (whStock / sales.avg) : 999;
                     if (twFilter === 'critical' && tw >= 2) return false;
@@ -4840,7 +5002,7 @@ def generate_html(all_data, all_stores):
             if (!tbody) return;
 
             tbody.innerHTML = pageData.map(item => {
-                const sales = getSales(item.sku);
+                const sales = getItemSales(item);
                 let nov = sales.nov, des = sales.des, jan = sales.jan, avgSales = sales.avg;
                 let whStock, tokoStock, globalStock;
 
@@ -4918,33 +5080,58 @@ def generate_html(all_data, all_stores):
                     whPusat = item.WHS.toLocaleString();
                 }
 
-                return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                    '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
-                    '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
-                    '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
-                    '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
-                    '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
-                    '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
-                    '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
-                '</tr>';
+                // Different row structure based on view mode
+                if (scViewMode === 'kodeKecil') {
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
+                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + (item.kodeKecil||'-') + '</td>' +
+                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
+                    '</tr>';
+                } else {
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
+                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
+                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
+                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
+                    '</tr>';
+                }
             }).join('');
 
-            // Page info
+            // Page info (different label based on view mode)
+            const itemLabel = scViewMode === 'kodeKecil' ? 'Artikel' : 'SKUs';
             document.getElementById('scPageInfo').textContent =
                 'Showing ' + (start + 1) + '-' + Math.min(start + scItemsPerPage, scFilteredItems.length) +
-                ' of ' + scFilteredItems.length + ' SKUs';
+                ' of ' + scFilteredItems.length + ' ' + itemLabel;
 
             // Pagination
             renderScPagination(totalPages);
@@ -4989,15 +5176,26 @@ def generate_html(all_data, all_stores):
                 scSortAsc = true;
             }
 
+            // Helper to get sales based on view mode
+            function getSortSales(item) {
+                if (scViewMode === 'kodeKecil') {
+                    return getKodeKecilSales(item.skuList || []);
+                } else {
+                    const skuUpper = (item.sku || '').toUpperCase();
+                    return salesMap[skuUpper] || {nov: 0, des: 0, jan: 0, avg: 0};
+                }
+            }
+
             scFilteredItems.sort((a, b) => {
                 let valA, valB;
-                const salesA = salesMap[(a.sku || '').toUpperCase()] || {nov: 0, des: 0, jan: 0};
-                const salesB = salesMap[(b.sku || '').toUpperCase()] || {nov: 0, des: 0, jan: 0};
-                const avgA = (salesA.nov + salesA.des + salesA.jan) / 3;
-                const avgB = (salesB.nov + salesB.des + salesB.jan) / 3;
+                const salesA = getSortSales(a);
+                const salesB = getSortSales(b);
+                const avgA = salesA.avg !== undefined ? salesA.avg : (salesA.nov + salesA.des + salesA.jan) / 3;
+                const avgB = salesB.avg !== undefined ? salesB.avg : (salesB.nov + salesB.des + salesB.jan) / 3;
 
                 switch(column) {
                     case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
+                    case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
                     case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
                     case 'nov': valA = salesA.nov; valB = salesB.nov; break;
                     case 'des': valA = salesA.des; valB = salesB.des; break;
@@ -5005,14 +5203,16 @@ def generate_html(all_data, all_stores):
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
                     case 'stokToko': valA = a.stokToko; valB = b.stokToko; break;
-                    case 'globalStock': valA = a.globalStock; valB = b.globalStock; break;
+                    case 'global': valA = a.globalStock; valB = b.globalStock; break;
                     case 'tw': valA = avgA > 0 ? a.whTotal / avgA : 999; valB = avgB > 0 ? b.whTotal / avgB : 999; break;
                     case 'to': valA = avgA > 0 ? a.stokToko / avgA : 999; valB = avgB > 0 ? b.stokToko / avgB : 999; break;
                     case 'twto':
                         valA = avgA > 0 ? a.globalStock / avgA : 999;
                         valB = avgB > 0 ? b.globalStock / avgB : 999;
                         break;
-                    default: valA = a.sku || ''; valB = b.sku || '';
+                    default:
+                        valA = scViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
+                        valB = scViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
                 }
 
                 if (typeof valA === 'string') {
