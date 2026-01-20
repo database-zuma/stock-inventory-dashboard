@@ -2148,9 +2148,7 @@ def generate_html(all_data, all_stores):
                     <button class="sales-tab-btn" onclick="switchSalesTab('trend')" data-tab="trend">📈 Trend</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">👟 Produk</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
-                    <button class="sales-tab-btn" onclick="switchSalesTab('target')" data-tab="target">🎯 Target</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
-                    <button class="sales-tab-btn" onclick="switchSalesTab('gender')" data-tab="gender">👫 Gender</button>
                 </div>
 
                 <!-- Sales Performance Tab -->
@@ -2161,10 +2159,10 @@ def generate_html(all_data, all_stores):
                             <h4 id="salesByStoreTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
                             <div id="salesByStoreTable" style="max-height:400px;overflow-y:auto;"></div>
                         </div>
-                        <!-- By SPG -->
+                        <!-- Gap to Target (Need Action) -->
                         <div>
-                            <h4 id="salesBySPGTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Sales by SPG</h4>
-                            <div id="salesBySPGTable" style="max-height:400px;overflow-y:auto;"></div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Gap to Target (Need Action)</h4>
+                            <div id="salesGapAnalysis" style="max-height:400px;overflow-y:auto;"></div>
                         </div>
                     </div>
                     <!-- By Area -->
@@ -2188,10 +2186,25 @@ def generate_html(all_data, all_stores):
                             <div id="salesByHour"></div>
                         </div>
                     </div>
-                    <!-- Weekly Summary -->
+                    <!-- Sales by Day -->
                     <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Weekly Summary</h4>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
+                            <select id="salesByDayWeekFilter" onchange="renderSalesTrend()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
+                                <option value="all">All Weeks</option>
+                                <option value="W1">W1 (1-7)</option>
+                                <option value="W2">W2 (8-14)</option>
+                                <option value="W3">W3 (15-21)</option>
+                                <option value="W4">W4 (22-28)</option>
+                                <option value="W5">W5 (29-31)</option>
+                            </select>
+                        </div>
                         <div id="salesWeeklySummary"></div>
+                    </div>
+                    <!-- Week by Week Trend -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
+                        <div id="salesWeekByWeek"></div>
                     </div>
                 </div>
 
@@ -2200,18 +2213,38 @@ def generate_html(all_data, all_stores):
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;">
                         <!-- Top Selling -->
                         <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top Selling Articles (Top 20)</h4>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top Selling Articles (Top 5)</h4>
                             <div id="salesTopArticles" style="max-height:500px;overflow-y:auto;"></div>
                         </div>
                         <!-- Slow Moving -->
                         <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🐢 Slow Moving (Bottom 20)</h4>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🐢 Slow Moving (Bottom 5)</h4>
                             <div id="salesSlowMoving" style="max-height:500px;overflow-y:auto;"></div>
                         </div>
                     </div>
-                    <!-- Category Performance -->
+                    <!-- Gender Sales Summary -->
                     <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📦 Category Performance</h4>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
+                        <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
+                    </div>
+                    <!-- Weekly Gender Growth -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
+                        <div id="salesGenderWeeklyTrend"></div>
+                    </div>
+                    <!-- Gender by Area -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Gender Performance by Area</h4>
+                        <div id="salesGenderByArea" style="max-height:500px;overflow-y:auto;"></div>
+                    </div>
+                    <!-- Gender by Store -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Gender Performance by Store</h4>
+                        <div id="salesGenderByStore" style="max-height:500px;overflow-y:auto;"></div>
+                    </div>
+                    <!-- Series Performance -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📦 Series Performance</h4>
                         <div id="salesCategoryPerf"></div>
                     </div>
                     <!-- Tier Performance -->
@@ -2230,31 +2263,14 @@ def generate_html(all_data, all_stores):
                 <div class="sales-tab-content" id="salesTabSPG" style="padding:20px;display:none;">
                     <!-- SPG Summary Cards -->
                     <div id="salesSPGSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px;"></div>
+                    <!-- Sales by SPG (moved from Performance) -->
+                    <h4 id="salesBySPGTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Sales by SPG</h4>
+                    <div id="salesBySPGTable" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
                     <!-- SPG Leaderboard -->
                     <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
                     <div id="salesSPGLeaderboard" style="max-height:500px;overflow-y:auto;"></div>
                 </div>
 
-                <!-- Target Tab -->
-                <div class="sales-tab-content" id="salesTabTarget" style="padding:20px;display:none;">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;">
-                        <!-- Achievement by Store -->
-                        <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🎯 Achievement by Store</h4>
-                            <div id="salesTargetByStore" style="max-height:500px;overflow-y:auto;"></div>
-                        </div>
-                        <!-- Achievement by Area -->
-                        <div>
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Achievement by Area</h4>
-                            <div id="salesTargetByArea"></div>
-                        </div>
-                    </div>
-                    <!-- Gap Analysis -->
-                    <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Gap to Target (Need Action)</h4>
-                        <div id="salesGapAnalysis" style="max-height:400px;overflow-y:auto;"></div>
-                    </div>
-                </div>
 
                 <!-- Transaction Tab -->
                 <div class="sales-tab-content" id="salesTabTransaction" style="padding:20px;display:none;">
@@ -2265,29 +2281,6 @@ def generate_html(all_data, all_stores):
                     </div>
                 </div>
 
-                <!-- Gender Tab -->
-                <div class="sales-tab-content" id="salesTabGender" style="padding:20px;display:none;">
-                    <!-- Gender Summary -->
-                    <div style="margin-bottom:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
-                        <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
-                    </div>
-                    <!-- Weekly Gender Trend -->
-                    <div style="margin-bottom:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
-                        <div id="salesGenderWeeklyTrend"></div>
-                    </div>
-                    <!-- Gender by Area -->
-                    <div style="margin-bottom:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Gender Performance by Area</h4>
-                        <div id="salesGenderByArea" style="max-height:500px;overflow-y:auto;"></div>
-                    </div>
-                    <!-- Gender by Store -->
-                    <div>
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Gender Performance by Store</h4>
-                        <div id="salesGenderByStore" style="max-height:500px;overflow-y:auto;"></div>
-                    </div>
-                </div>
             </div>
         </div> <!-- End salesView -->
 
@@ -2347,6 +2340,7 @@ def generate_html(all_data, all_stores):
         const skuTierMap = {};
         const skuSeriesMap = {};
         const skuTipeMap = {};
+        const articleNameMap = {};  // Map article code (without size) to product name
         Object.values(allData).forEach(entityData => {
             (entityData.warehouse || []).forEach(item => {
                 const sku = item.sku ? item.sku.toUpperCase() : '';
@@ -2354,6 +2348,9 @@ def generate_html(all_data, all_stores):
                     if (item.tier && item.tier !== '-') skuTierMap[sku] = item.tier;
                     if (item.series && item.series !== '-') skuSeriesMap[sku] = item.series;
                     if (item.tipe && item.tipe !== '-') skuTipeMap[sku] = item.tipe;
+                    // Map article (SKU without size) to name
+                    const article = sku.replace(/Z\\d{2,3}$/, '');
+                    if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
                 }
             });
             (entityData.retail || []).forEach(item => {
@@ -2362,6 +2359,9 @@ def generate_html(all_data, all_stores):
                     if (item.tier && item.tier !== '-') skuTierMap[sku] = item.tier;
                     if (item.series && item.series !== '-') skuSeriesMap[sku] = item.series;
                     if (item.tipe && item.tipe !== '-') skuTipeMap[sku] = item.tipe;
+                    // Map article (SKU without size) to name
+                    const article = sku.replace(/Z\\d{2,3}$/, '');
+                    if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
                 }
             });
         });
@@ -3739,7 +3739,7 @@ def generate_html(all_data, all_stores):
             if (maxStockMap[s]) return maxStockMap[s].max_stock;
 
             // Try tanpa "zuma " prefix
-            var sNoZuma = s.replace(/^zuma\s+/i, '');
+            var sNoZuma = s.toLowerCase().replace('zuma ', '').replace('zuma', '');
             if (maxStockMap[sNoZuma]) return maxStockMap[sNoZuma].max_stock;
 
             // Partial match
@@ -4867,9 +4867,9 @@ def generate_html(all_data, all_stores):
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + Math.round(nov) + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + Math.round(des) + '</td>' +
-                    '<td style="padding:8px;text-align:right;color:#374151;">' + Math.round(jan) + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
+                    '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
                     '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
                     '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
                     '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
@@ -4985,7 +4985,7 @@ def generate_html(all_data, all_stores):
             if (storeAreaMap[s]) return storeAreaMap[s];
 
             // 2. Try without "zuma " prefix
-            const noPrefix = s.replace(/^zuma\s*/i, '');
+            const noPrefix = s.toLowerCase().replace('zuma ', '').replace('zuma', '');
             if (storeAreaMap[noPrefix]) return storeAreaMap[noPrefix];
 
             // 3. Try partial match
@@ -5027,12 +5027,37 @@ def generate_html(all_data, all_stores):
             if (firstChar === 'G') return 'Girls';
             if (firstChar === 'B') return 'Boys';
             if (firstChar === 'Z') return 'Baby';
+
+            // Fallback: check series from skuSeriesMap to determine gender
+            const skuUpper = sku.toUpperCase();
+            const series = skuSeriesMap[skuUpper] || '';
+            const seriesUpper = series.toUpperCase();
+
+            // Ladies series
+            if (seriesUpper.includes('ELSA') || seriesUpper.includes('LADIES') || seriesUpper.includes('FREYA') ||
+                seriesUpper.includes('IRIS') || seriesUpper.includes('KIM') || seriesUpper.includes('PUFFY') ||
+                seriesUpper.includes('WEDGES')) return 'Ladies';
+            // Men series
+            if (seriesUpper.includes('MEN') || seriesUpper.includes('DALLAS') || seriesUpper.includes('ONYX')) return 'Men';
+            // Kids series
+            if (seriesUpper.includes('KIDS') || seriesUpper.includes('DISNEY')) return 'Kids';
+            // Baby series
+            if (seriesUpper.includes('BABY') || seriesUpper.includes('VELCRO') || seriesUpper.includes('WBB') || seriesUpper.includes('MILTON')) return 'Baby';
+            // Girls series
+            if (seriesUpper.includes('GIRLS') || seriesUpper.includes('DOVER')) return 'Girls';
+            // Boys series
+            if (seriesUpper.includes('BOYS') || seriesUpper.includes('SLIDE')) return 'Boys';
+            // Junior series
+            if (seriesUpper.includes('JUNIOR')) return 'Junior';
+
             return 'Unknown';
         }
 
         // Helper: Get week number from date
         function getWeekNumber(dateStr) {
+            if (!dateStr) return 0;
             const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return 0;
             const firstDay = new Date(date.getFullYear(), 0, 1);
             const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
             return Math.ceil((days + firstDay.getDay() + 1) / 7);
@@ -5143,14 +5168,14 @@ def generate_html(all_data, all_stores):
             const endDate = document.getElementById('salesFilterEndDate').value;
             document.getElementById('salesPeriodRange').textContent = (startDate || '-') + ' s/d ' + (endDate || '-');
 
-            renderSalesSummaryCards();
-            renderSalesPerformance();
-            renderSalesTrend();
-            renderSalesProduct();
-            renderSalesSPG();
-            renderSalesTarget();
-            renderSalesTransaction();
-            renderSalesGender();
+            try { renderSalesSummaryCards(); } catch(e) { console.error('renderSalesSummaryCards error:', e); }
+            try { renderSalesPerformance(); } catch(e) { console.error('renderSalesPerformance error:', e); }
+            try { renderSalesTrend(); } catch(e) { console.error('renderSalesTrend error:', e); }
+            try { renderSalesProduct(); } catch(e) { console.error('renderSalesProduct error:', e); }
+            try { renderSalesSPG(); } catch(e) { console.error('renderSalesSPG error:', e); }
+            try { renderSalesTarget(); } catch(e) { console.error('renderSalesTarget error:', e); }
+            try { renderSalesTransaction(); } catch(e) { console.error('renderSalesTransaction error:', e); }
+            try { renderSalesGender(); } catch(e) { console.error('renderSalesGender error:', e); }
         }
 
         function renderSalesSummaryCards() {
@@ -5207,35 +5232,101 @@ def generate_html(all_data, all_stores):
         function renderSalesPerformance() {
             const data = filteredSalesData;
 
-            // Sales by Store - dynamic limit based on filter
+            // Sales by Store - show all stores with Target and Achv columns
             const salesArea = document.getElementById('salesFilterArea').value;
             const salesStore = document.getElementById('salesFilterStore').value;
-            const storeLimit = salesArea ? 5 : 10;  // 5 if area filtered, 10 for all
 
             const byStore = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
+                // Skip Pameran and KSquare stores
+                if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
                 if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, trx: new Set() };
                 byStore[store].sales += item.total || 0;
                 byStore[store].qty += item.qty || 0;
                 byStore[store].trx.add(item.order_no);
             });
 
-            const storeArr = Object.entries(byStore).map(([store, val]) => ({
-                store, sales: val.sales, qty: val.qty, trx: val.trx.size
-            })).sort((a, b) => b.sales - a.sales).slice(0, storeLimit);
+            // Build target lookup map using simple string replace
+            const targetMap = {};
+
+            // Store name aliases for matching (sales name -> target name)
+            const storeAliases = {
+                'mall bali icon': 'icon bali',
+                'icon mall gresik': 'icon gresik',
+                'bintaro xchange': 'bintaro exchange',
+                'nagoya hill batam': 'nagoya hills'
+            };
+
+            function normalizeStoreName(name) {
+                let normalized = name.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
+                // Apply aliases
+                if (storeAliases[normalized]) {
+                    normalized = storeAliases[normalized];
+                }
+                return normalized;
+            }
+
+            if (targetData && typeof targetData === 'object') {
+                Object.values(targetData).forEach(t => {
+                    if (t && t.store) {
+                        const normalizedName = normalizeStoreName(t.store);
+                        targetMap[normalizedName] = t.jan || 0;
+                    }
+                });
+            }
+
+            // Add Tanah Lot store (no sales data but needs to be listed)
+            if (!byStore['ZUMA Tanah Lot']) {
+                byStore['ZUMA Tanah Lot'] = { sales: 0, qty: 0, trx: new Set() };
+            }
+
+            const storeArr = Object.entries(byStore)
+                .filter(([store, _]) => !store.toLowerCase().includes('pameran') && !store.toLowerCase().includes('ksquare'))
+                .map(([store, val]) => {
+                    // Find target for this store
+                    const normalizedStore = normalizeStoreName(store);
+                    let target = targetMap[normalizedStore] || 0;
+                    // Try partial match if exact match not found
+                    if (!target) {
+                        for (const [key, tgt] of Object.entries(targetMap)) {
+                            if (key.includes(normalizedStore) || normalizedStore.includes(key)) {
+                                target = tgt;
+                                break;
+                            }
+                        }
+                    }
+                    const achv = target > 0 ? (val.sales / target * 100) : 0;
+                    const area = getAreaFromStore(store);
+                    return { store, area, sales: val.sales, qty: val.qty, trx: val.trx.size, target, achv };
+                }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Trx</th></tr></thead><tbody>';
+            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
+            storeHtml += '<th style="text-align:center;padding:6px;color:#374151;background:#f8fafc;width:40px;">No</th>';
+            storeHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
+            storeHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Area</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Target</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Achv</th>';
+            storeHtml += '</tr></thead><tbody>';
             storeArr.forEach((s, i) => {
-                storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;">' + (i+1) + '. ' + s.store + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;">' + s.qty.toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:8px;">' + s.trx.toLocaleString('id-ID') + '</td></tr>';
+                const achvColor = s.achv >= 100 ? '#10b981' : s.achv >= 80 ? '#f59e0b' : '#ef4444';
+                storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                storeHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
+                storeHtml += '<td style="padding:6px;">' + s.store + '</td>';
+                storeHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + (s.sales / 1000000).toFixed(2) + 'jt</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;font-weight:700;color:' + achvColor + ';">' + (s.target > 0 ? s.achv.toFixed(1) + '%' : '-') + '</td></tr>';
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
-            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store (Top ' + storeLimit + ')';
+            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store';
 
             // Sales by SPG with Store, ATV, ATU - dynamic limit
             // SPG limit: 5 if area filter, ALL if store filter, 10 for all
@@ -5268,7 +5359,7 @@ def generate_html(all_data, all_stores):
                 spgHtml += '<td style="padding:6px;color:#6b7280;font-size:0.7rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="' + s.stores.join(', ') + '">' + storeDisplay + '</td>';
                 spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
                 spgHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID', {maximumFractionDigits: 0}) + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID') + '</td>';
                 spgHtml += '<td style="text-align:right;padding:6px;color:#8b5cf6;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>';
                 spgHtml += '</tr>';
             });
@@ -5321,7 +5412,7 @@ def generate_html(all_data, all_stores):
             })).sort((a, b) => a.date.localeCompare(b.date));
 
             let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            dailyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Tanggal</th><th style="text-align:right;padding:6px;color:#374151;">Sales</th><th style="text-align:right;padding:6px;color:#374151;">Qty</th><th style="text-align:right;padding:6px;color:#374151;">Trx</th></tr></thead><tbody>';
+            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
                 dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;color:#374151;">' + d.date + ' (' + dayName + ')</td>';
@@ -5357,78 +5448,152 @@ def generate_html(all_data, all_stores):
             hourHtml += '</div>';
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
-            // Weekly summary with daily growth curve - Start from Monday
-            const byDayOfWeek = { 0: { sales: 0, count: 0 }, 1: { sales: 0, count: 0 }, 2: { sales: 0, count: 0 }, 3: { sales: 0, count: 0 }, 4: { sales: 0, count: 0 }, 5: { sales: 0, count: 0 }, 6: { sales: 0, count: 0 } };
+            // Sales by Day with week filter
+            var weekFilterEl = document.getElementById('salesByDayWeekFilter');
+            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
+            var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            var dayNamesFull = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+            var dayOrder = [1, 2, 3, 4, 5, 6, 0];
 
-            // Count sales by day of week
-            const dateCount = {};
-            data.forEach(item => {
-                const day = new Date(item.date).getDay();
-                byDayOfWeek[day].sales += item.total || 0;
-                if (!dateCount[item.date + '-' + day]) {
-                    dateCount[item.date + '-' + day] = true;
-                    byDayOfWeek[day].count++;
+            var points = [];
+            var maxDaySales = 0;
+            var minDaySales = 0;
+
+            if (weekFilter === 'all') {
+                // ALL WEEKS: aggregate by day of week (Senin-Minggu)
+                var byDayOfWeek = { 0: { sales: 0, count: 0 }, 1: { sales: 0, count: 0 }, 2: { sales: 0, count: 0 }, 3: { sales: 0, count: 0 }, 4: { sales: 0, count: 0 }, 5: { sales: 0, count: 0 }, 6: { sales: 0, count: 0 } };
+                var dateCount = {};
+
+                data.forEach(function(item) {
+                    var dateObj = new Date(item.date);
+                    if (isNaN(dateObj)) return;
+                    var day = dateObj.getDay();
+                    byDayOfWeek[day].sales += item.total || 0;
+                    if (!dateCount[item.date + '-' + day]) {
+                        dateCount[item.date + '-' + day] = true;
+                        byDayOfWeek[day].count++;
+                    }
+                });
+
+                var avgByDay = dayOrder.map(function(dayIdx) {
+                    return byDayOfWeek[dayIdx].count > 0 ? byDayOfWeek[dayIdx].sales / byDayOfWeek[dayIdx].count : 0;
+                });
+
+                maxDaySales = Math.max.apply(null, avgByDay);
+                var positiveVals = avgByDay.filter(function(v) { return v > 0; });
+                minDaySales = positiveVals.length > 0 ? Math.min.apply(null, positiveVals) : 0;
+
+                points = avgByDay.map(function(sales, idx) {
+                    return {
+                        sales: sales,
+                        label: dayNamesFull[idx],
+                        subLabel: '',
+                        dayOfWeek: dayOrder[idx],
+                        hasData: byDayOfWeek[dayOrder[idx]].count > 0
+                    };
+                });
+            } else {
+                // SPECIFIC WEEK: show dates chronologically (1, 2, 3... or 8, 9, 10...)
+                var weekNum = parseInt(weekFilter.replace('W', ''));
+                var startDate = (weekNum - 1) * 7 + 1;
+                var endDate = Math.min(weekNum * 7, 31);
+
+                // Aggregate sales by date
+                var dailySales = {};
+                data.forEach(function(item) {
+                    var itemDate = new Date(item.date);
+                    if (isNaN(itemDate)) return;
+                    var dayOfMonth = itemDate.getDate();
+                    if (dayOfMonth >= startDate && dayOfMonth <= endDate) {
+                        if (!dailySales[dayOfMonth]) dailySales[dayOfMonth] = 0;
+                        dailySales[dayOfMonth] += item.total || 0;
+                    }
+                });
+
+                // Build points for each date in the week
+                var salesValues = [];
+                for (var d = startDate; d <= endDate; d++) {
+                    var dateForDay = new Date(2026, 0, d);
+                    var dayOfWeek = dateForDay.getDay();
+                    var sales = dailySales[d] || 0;
+                    var hasData = dailySales[d] !== undefined && dailySales[d] > 0;
+                    salesValues.push(sales);
+                    points.push({
+                        sales: sales,
+                        label: String(d),
+                        subLabel: '(' + dayNamesShort[dayOfWeek] + ')',
+                        dayOfWeek: dayOfWeek,
+                        hasData: hasData
+                    });
                 }
-            });
 
-            // Reorder days: Mon(1), Tue(2), Wed(3), Thu(4), Fri(5), Sat(6), Sun(0)
-            const dayOrder = [1, 2, 3, 4, 5, 6, 0];
-            const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-
-            // Calculate average per day (in Monday-first order)
-            const avgByDay = dayOrder.map(dayIdx => {
-                return byDayOfWeek[dayIdx].count > 0 ? byDayOfWeek[dayIdx].sales / byDayOfWeek[dayIdx].count : 0;
-            });
-
-            const maxDaySales = Math.max(...avgByDay);
-            const minDaySales = Math.min(...avgByDay.filter(v => v > 0));
+                maxDaySales = Math.max.apply(null, salesValues);
+                var posVals = salesValues.filter(function(v) { return v > 0; });
+                minDaySales = posVals.length > 0 ? Math.min.apply(null, posVals) : 0;
+            }
 
             // Create SVG line chart
-            const chartWidth = 700;
-            const chartHeight = 180;
-            const padding = 50;
-            const paddingRight = 60;
-            const usableWidth = chartWidth - padding - paddingRight;
-            const usableHeight = chartHeight - padding - 20;
+            var chartWidth = 800;
+            var chartHeight = 280;
+            var padding = 60;
+            var paddingRight = 30;
+            var paddingTop = 50;
+            var paddingBottom = 55;
+            var usableWidth = chartWidth - padding - paddingRight;
+            var usableHeight = chartHeight - paddingTop - paddingBottom;
 
-            // Calculate points for the line
-            const points = avgByDay.map((sales, idx) => {
-                const x = padding + (idx / 6) * usableWidth;
-                const y = maxDaySales > 0 ? chartHeight - padding - ((sales - minDaySales * 0.8) / (maxDaySales - minDaySales * 0.8 + 1) * usableHeight) : chartHeight - padding;
-                return { x, y, sales, dayIdx: dayOrder[idx] };
+            // Calculate x, y positions for points
+            var numPoints = points.length;
+            points.forEach(function(p, idx) {
+                p.x = padding + (idx / (numPoints - 1 || 1)) * usableWidth;
+                p.y = maxDaySales > 0 ? chartHeight - paddingBottom - ((p.sales - minDaySales * 0.8) / (maxDaySales - minDaySales * 0.8 + 1) * usableHeight) : chartHeight - paddingBottom;
             });
 
-            let weeklyHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
+            var weeklyHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
 
             // SVG Chart
             weeklyHtml += '<svg width="100%" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" style="max-width:100%;">';
 
             // Grid lines
-            for (let i = 0; i <= 4; i++) {
-                const y = 20 + (i / 4) * usableHeight;
-                weeklyHtml += '<line x1="' + padding + '" y1="' + y + '" x2="' + (chartWidth - paddingRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
+            for (var i = 0; i <= 4; i++) {
+                var gridY = paddingTop + (i / 4) * usableHeight;
+                weeklyHtml += '<line x1="' + padding + '" y1="' + gridY + '" x2="' + (chartWidth - paddingRight) + '" y2="' + gridY + '" stroke="#e2e8f0" stroke-width="1"/>';
             }
 
-            // Area fill
-            let areaPath = 'M ' + points[0].x + ' ' + (chartHeight - padding);
-            points.forEach(p => { areaPath += ' L ' + p.x + ' ' + p.y; });
-            areaPath += ' L ' + points[6].x + ' ' + (chartHeight - padding) + ' Z';
-            weeklyHtml += '<path d="' + areaPath + '" fill="url(#weeklyGradient)" opacity="0.3"/>';
+            // Area fill (hanya jika ada points)
+            if (points.length > 0) {
+                var areaPath = 'M ' + points[0].x + ' ' + (chartHeight - paddingBottom);
+                points.forEach(function(p) { areaPath += ' L ' + p.x + ' ' + p.y; });
+                areaPath += ' L ' + points[points.length - 1].x + ' ' + (chartHeight - paddingBottom) + ' Z';
+                weeklyHtml += '<path d="' + areaPath + '" fill="url(#weeklyGradient)" opacity="0.3"/>';
+            }
 
             // Gradient definition
             weeklyHtml += '<defs><linearGradient id="weeklyGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/><stop offset="100%" style="stop-color:#10b981;stop-opacity:0"/></linearGradient></defs>';
 
-            // Line
-            let linePath = 'M ' + points[0].x + ' ' + points[0].y;
-            points.slice(1).forEach(p => { linePath += ' L ' + p.x + ' ' + p.y; });
-            weeklyHtml += '<path d="' + linePath + '" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+            // Line (hanya jika ada points)
+            if (points.length > 0) {
+                var linePath = 'M ' + points[0].x + ' ' + points[0].y;
+                points.slice(1).forEach(function(p) { linePath += ' L ' + p.x + ' ' + p.y; });
+                weeklyHtml += '<path d="' + linePath + '" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+            }
 
             // Data points and labels
-            points.forEach((p, idx) => {
-                const isWeekend = p.dayIdx === 0 || p.dayIdx === 6; // Sunday or Saturday
-                weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="7" fill="' + (isWeekend ? '#f59e0b' : '#10b981') + '" stroke="white" stroke-width="2"/>';
-                weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 8) + '" text-anchor="middle" font-size="11" fill="#374151" font-weight="600">' + dayNames[idx] + '</text>';
-                weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 14) + '" text-anchor="middle" font-size="10" fill="#1f2937" font-weight="700">Rp ' + p.sales.toLocaleString('id-ID', {maximumFractionDigits: 0}) + '</text>';
+            points.forEach(function(p, idx) {
+                var isWeekend = p.dayOfWeek === 0 || p.dayOfWeek === 6; // Sunday or Saturday
+                if (p.hasData) {
+                    weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="8" fill="' + (isWeekend ? '#f59e0b' : '#10b981') + '" stroke="white" stroke-width="2"/>';
+                    weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 18) + '" text-anchor="middle" font-size="11" fill="#1f2937" font-weight="700">Rp ' + (p.sales/1000000).toFixed(1) + 'jt</text>';
+                } else {
+                    weeklyHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="6" fill="#d1d5db" stroke="white" stroke-width="2"/>';
+                    weeklyHtml += '<text x="' + p.x + '" y="' + (p.y - 18) + '" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="600">-</text>';
+                }
+                // Label: tanggal atau nama hari
+                weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 22) + '" text-anchor="middle" font-size="12" fill="#374151" font-weight="700">' + p.label + '</text>';
+                // Sub-label: nama hari singkat (jika ada)
+                if (p.subLabel) {
+                    weeklyHtml += '<text x="' + p.x + '" y="' + (chartHeight - 8) + '" text-anchor="middle" font-size="10" fill="#6b7280">' + p.subLabel + '</text>';
+                }
             });
 
             weeklyHtml += '</svg>';
@@ -5441,6 +5606,79 @@ def generate_html(all_data, all_stores):
 
             weeklyHtml += '</div>';
             document.getElementById('salesWeeklySummary').innerHTML = weeklyHtml;
+
+            // Week by Week Trend (W1, W2, W3, W4)
+            const byWeek = {};
+            data.forEach(item => {
+                const date = new Date(item.date);
+                if (isNaN(date)) return;
+                const dayOfMonth = date.getDate();
+                const weekNum = Math.ceil(dayOfMonth / 7);
+                const weekLabel = 'W' + weekNum;
+                if (!byWeek[weekLabel]) byWeek[weekLabel] = 0;
+                byWeek[weekLabel] += item.total || 0;
+            });
+
+            const weeks = ['W1', 'W2', 'W3', 'W4', 'W5'];
+            const weekData = weeks.map(w => ({ week: w, sales: byWeek[w] || 0 }));
+
+            if (weekData.length > 0) {
+                const maxWeekSales = Math.max(...weekData.map(w => w.sales));
+                const wkChartWidth = 600;
+                const wkChartHeight = 250;
+                const wkPadding = 60;
+                const wkPaddingRight = 30;
+                const wkPaddingTop = 40;
+                const wkPaddingBottom = 50;
+                const wkUsableWidth = wkChartWidth - wkPadding - wkPaddingRight;
+                const wkUsableHeight = wkChartHeight - wkPaddingTop - wkPaddingBottom;
+
+                const wkPoints = weekData.map((w, idx) => {
+                    const x = wkPadding + (idx / (weekData.length - 1 || 1)) * wkUsableWidth;
+                    const y = maxWeekSales > 0 ? wkPaddingTop + (1 - w.sales / maxWeekSales) * wkUsableHeight : wkChartHeight - wkPaddingBottom;
+                    return { x, y, sales: w.sales, week: w.week };
+                });
+
+                let wkHtml = '<div style="background:#f8fafc;border-radius:12px;padding:15px;border:1px solid #e2e8f0;">';
+                wkHtml += '<svg width="100%" height="' + wkChartHeight + '" viewBox="0 0 ' + wkChartWidth + ' ' + wkChartHeight + '" style="max-width:100%;">';
+
+                // Grid lines
+                for (let i = 0; i <= 4; i++) {
+                    const y = wkPaddingTop + (i / 4) * wkUsableHeight;
+                    wkHtml += '<line x1="' + wkPadding + '" y1="' + y + '" x2="' + (wkChartWidth - wkPaddingRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1"/>';
+                }
+
+                // Area fill
+                if (wkPoints.length > 1) {
+                    let wkAreaPath = 'M ' + wkPoints[0].x + ' ' + (wkChartHeight - wkPaddingBottom);
+                    wkPoints.forEach(p => { wkAreaPath += ' L ' + p.x + ' ' + p.y; });
+                    wkAreaPath += ' L ' + wkPoints[wkPoints.length - 1].x + ' ' + (wkChartHeight - wkPaddingBottom) + ' Z';
+                    wkHtml += '<path d="' + wkAreaPath + '" fill="url(#weekByWeekGradient)" opacity="0.3"/>';
+                }
+
+                // Gradient definition
+                wkHtml += '<defs><linearGradient id="weekByWeekGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#6366f1;stop-opacity:1"/><stop offset="100%" style="stop-color:#6366f1;stop-opacity:0"/></linearGradient></defs>';
+
+                // Line
+                if (wkPoints.length > 1) {
+                    let wkLinePath = 'M ' + wkPoints[0].x + ' ' + wkPoints[0].y;
+                    wkPoints.slice(1).forEach(p => { wkLinePath += ' L ' + p.x + ' ' + p.y; });
+                    wkHtml += '<path d="' + wkLinePath + '" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+                }
+
+                // Data points and labels
+                wkPoints.forEach(p => {
+                    wkHtml += '<circle cx="' + p.x + '" cy="' + p.y + '" r="10" fill="#6366f1" stroke="white" stroke-width="3"/>';
+                    wkHtml += '<text x="' + p.x + '" y="' + (wkChartHeight - 15) + '" text-anchor="middle" font-size="14" fill="#374151" font-weight="700">' + p.week + '</text>';
+                    wkHtml += '<text x="' + p.x + '" y="' + (p.y - 20) + '" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">Rp ' + (p.sales/1000000).toFixed(1) + 'jt</text>';
+                });
+
+                wkHtml += '</svg>';
+                wkHtml += '</div>';
+                document.getElementById('salesWeekByWeek').innerHTML = wkHtml;
+            } else {
+                document.getElementById('salesWeekByWeek').innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">Tidak ada data mingguan</div>';
+            }
         }
 
         function renderSalesProduct() {
@@ -5461,32 +5699,34 @@ def generate_html(all_data, all_stores):
                 article, sales: val.sales, qty: val.qty, category: val.category
             })).sort((a, b) => b.qty - a.qty);
 
-            // Top 20
+            // Top 5
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Kategori</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th></tr></thead><tbody>';
-            articleArr.slice(0, 20).forEach((a, i) => {
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Nama Barang</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th></tr></thead><tbody>';
+            articleArr.slice(0, 5).forEach((a, i) => {
+                const productName = articleNameMap[a.article.toUpperCase()] || a.category || '-';
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
-                topHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
+                topHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + productName + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + a.qty + '</td>';
-                topHtml += '<td style="text-align:right;padding:6px;">Rp ' + Math.round(a.sales).toLocaleString('id-ID') + '</td></tr>';
+                topHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
             topHtml += '</tbody></table>';
             document.getElementById('salesTopArticles').innerHTML = topHtml;
 
-            // Bottom 20 (slow moving)
+            // Bottom 5 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Kategori</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Sales</th></tr></thead><tbody>';
-            articleArr.slice(-20).reverse().forEach((a, i) => {
+            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Nama Barang</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Sales</th></tr></thead><tbody>';
+            articleArr.slice(-5).reverse().forEach((a, i) => {
+                const productName = articleNameMap[a.article.toUpperCase()] || a.category || '-';
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
-                slowHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (a.category || '-') + '</td>';
+                slowHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + productName + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
-                slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + Math.round(a.sales).toLocaleString('id-ID') + '</td></tr>';
+                slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance - by Gender with Series and Tipe (from Stock Data/Master Produk)
-            const byGenderCat = {};
+            // Category Performance - by Gender > Series > Tipe breakdown (from Stock Data/Master Produk)
+            const byGenderSeries = {};
             data.forEach(item => {
                 const sku = item.sku || '';
                 const skuUpper = sku.toUpperCase();
@@ -5496,91 +5736,80 @@ def generate_html(all_data, all_stores):
                 const series = skuSeriesMap[skuUpper] || '-';
                 const tipe = skuTipeMap[skuUpper] || '-';
 
-                // Group by Gender
-                if (!byGenderCat[gender]) byGenderCat[gender] = { sales: 0, qty: 0, trx: new Set(), seriesList: {}, tipeList: {} };
-                byGenderCat[gender].sales += item.total || 0;
-                byGenderCat[gender].qty += item.qty || 0;
-                byGenderCat[gender].trx.add(item.order_no);
+                // Group by Gender > Series
+                const key = gender + '|' + series;
+                if (!byGenderSeries[key]) byGenderSeries[key] = { gender, series, sales: 0, qty: 0, tipeList: {} };
+                byGenderSeries[key].sales += item.total || 0;
+                byGenderSeries[key].qty += item.qty || 0;
 
-                // Track series breakdown
-                if (series && series !== '-') {
-                    if (!byGenderCat[gender].seriesList[series]) byGenderCat[gender].seriesList[series] = 0;
-                    byGenderCat[gender].seriesList[series] += item.total || 0;
-                }
-
-                // Track tipe breakdown
+                // Track tipe breakdown within each gender-series
                 if (tipe && tipe !== '-') {
-                    if (!byGenderCat[gender].tipeList[tipe]) byGenderCat[gender].tipeList[tipe] = 0;
-                    byGenderCat[gender].tipeList[tipe] += item.total || 0;
+                    if (!byGenderSeries[key].tipeList[tipe]) byGenderSeries[key].tipeList[tipe] = 0;
+                    byGenderSeries[key].tipeList[tipe] += item.total || 0;
                 }
             });
 
-            const catArr = Object.entries(byGenderCat).map(([gender, val]) => {
-                // Get top 3 series
-                const topSeries = Object.entries(val.seriesList).sort((a, b) => b[1] - a[1]).slice(0, 3);
-                // Get tipe breakdown
-                const tipeBreakdown = Object.entries(val.tipeList).sort((a, b) => b[1] - a[1]);
-
-                return {
-                    cat: gender, sales: val.sales, qty: val.qty, trx: val.trx.size,
-                    seriesList: topSeries,
-                    tipeList: tipeBreakdown
-                };
-            }).sort((a, b) => b.sales - a.sales);
+            // Convert to array and sort by sales
+            const catArr = Object.values(byGenderSeries)
+                .filter(item => item.series !== '-')  // Exclude items without series
+                .sort((a, b) => {
+                    // First sort by gender, then by sales within gender
+                    if (a.gender !== b.gender) {
+                        const genderOrder = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys', 'Unknown'];
+                        return genderOrder.indexOf(a.gender) - genderOrder.indexOf(b.gender);
+                    }
+                    return b.sales - a.sales;
+                });
 
             const totalCatSales = catArr.reduce((sum, c) => sum + c.sales, 0);
-            const maxCatSales = Math.max(...catArr.map(c => c.sales));
+            const maxCatSales = catArr.length > 0 ? Math.max(...catArr.map(c => c.sales)) : 0;
 
             // Gender icons for display
             const genderIcons = { Men: '👨', Ladies: '👩', Kids: '🧒', Girls: '👧', Baby: '👶', Junior: '🧒', Boys: '👦', Unknown: '❓' };
             const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
 
             let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            catHtml += '<thead><tr style="background:#f8fafc;">';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Gender</th>';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Tipe</th>';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;">Series</th>';
-            catHtml += '<th style="text-align:left;padding:8px;width:150px;color:#374151;">Share</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">Sales</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">Qty</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;">%</th>';
+            catHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Gender</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Series</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Tipe</th>';
+            catHtml += '<th style="text-align:left;padding:8px;width:120px;color:#374151;background:#f8fafc;">Share</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">%</th>';
             catHtml += '</tr></thead><tbody>';
 
+            let currentGender = '';
             catArr.forEach((c, i) => {
                 const pct = totalCatSales > 0 ? (c.sales / totalCatSales * 100) : 0;
                 const barPct = maxCatSales > 0 ? (c.sales / maxCatSales * 100) : 0;
-                const rowBg = i % 2 === 0 ? '' : 'background:#fafafa;';
-                const icon = genderIcons[c.cat] || '❓';
-                const color = genderColors[c.cat] || '#6b7280';
+                const color = genderColors[c.gender] || '#6b7280';
 
-                // Format tipe display (Jepit/Fashion)
+                // Show gender only on first row of each gender group
+                const showGender = c.gender !== currentGender;
+                currentGender = c.gender;
+
+                // Format tipe display (Jepit/Fashion) - no icons, black text
+                const tipeEntries = Object.entries(c.tipeList).sort((a, b) => b[1] - a[1]);
                 let tipeDisplay = '';
-                if (c.tipeList && c.tipeList.length > 0) {
-                    tipeDisplay = c.tipeList.map(t => {
-                        const tipeIcon = t[0] === 'Jepit' ? '🩴' : '👟';
-                        const tipeColor = t[0] === 'Jepit' ? '#f59e0b' : '#8b5cf6';
-                        return '<span style="display:inline-block;padding:2px 6px;background:' + tipeColor + '20;color:' + tipeColor + ';border-radius:4px;font-size:0.7rem;margin-right:4px;">' + tipeIcon + ' ' + t[0] + '</span>';
+                if (tipeEntries.length > 0) {
+                    tipeDisplay = tipeEntries.map(t => {
+                        return '<span style="display:inline-block;padding:2px 6px;background:#f3f4f6;color:#374151;border-radius:4px;font-size:0.7rem;margin-right:4px;border:1px solid #e5e7eb;">' + t[0] + '</span>';
                     }).join('');
                 } else {
                     tipeDisplay = '<span style="color:#9ca3af;">-</span>';
                 }
 
-                // Format series display
-                let seriesDisplay = '';
-                if (c.seriesList && c.seriesList.length > 0) {
-                    seriesDisplay = c.seriesList.map(s => {
-                        return '<span style="display:inline-block;padding:2px 6px;background:#f3f4f6;color:#374151;border-radius:4px;font-size:0.7rem;margin-right:4px;border:1px solid #e5e7eb;">' + s[0] + '</span>';
-                    }).join('');
+                catHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + (showGender ? 'border-top:2px solid ' + color + ';' : '') + '">';
+                if (showGender) {
+                    catHtml += '<td style="padding:8px;font-weight:600;vertical-align:top;"><span style="display:inline-block;padding:4px 10px;background:' + color + '20;color:' + color + ';border-radius:6px;">' + c.gender + '</span></td>';
                 } else {
-                    seriesDisplay = '<span style="color:#9ca3af;">-</span>';
+                    catHtml += '<td style="padding:8px;"></td>';
                 }
-
-                catHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + rowBg + '">';
-                catHtml += '<td style="padding:8px;font-weight:600;"><span style="display:inline-block;padding:4px 10px;background:' + color + '20;color:' + color + ';border-radius:6px;">' + icon + ' ' + c.cat + '</span></td>';
+                catHtml += '<td style="padding:8px;"><span style="display:inline-block;padding:2px 8px;background:#f3f4f6;color:#374151;border-radius:4px;font-size:0.75rem;border:1px solid #e5e7eb;">' + c.series + '</span></td>';
                 catHtml += '<td style="padding:8px;">' + tipeDisplay + '</td>';
-                catHtml += '<td style="padding:8px;">' + seriesDisplay + '</td>';
-                catHtml += '<td style="padding:8px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:linear-gradient(90deg,' + color + ',' + color + '80);"></div></div></td>';
-                catHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="padding:8px;"><div style="height:16px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div></div></td>';
+                catHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
                 catHtml += '</tr>';
@@ -5600,133 +5829,120 @@ def generate_html(all_data, all_stores):
                 byTier[tier].trx.add(item.order_no);
             });
 
-            const tierArr = Object.entries(byTier).map(([tier, val]) => ({
-                tier, sales: val.sales, qty: val.qty, trx: val.trx.size
-            })).filter(t => t.tier !== '-' && t.tier !== '').sort((a, b) => {
-                const tierOrder = ['1', '2', '3', '4', '5'];
-                return tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier);
+            // Ensure all tiers are shown even if no sales (including Tier 8)
+            const allTiers = ['1', '2', '3', '4', '5', '8'];
+            const tierArr = allTiers.map(tier => {
+                const data = byTier[tier] || { sales: 0, qty: 0, trx: new Set() };
+                return {
+                    tier,
+                    sales: data.sales || 0,
+                    qty: data.qty || 0,
+                    trx: data.trx ? data.trx.size : 0
+                };
             });
 
             const totalTierSales = tierArr.reduce((sum, t) => sum + t.sales, 0);
-            const maxTierSales = Math.max(...tierArr.map(t => t.sales));
-            const tierColors = { '1': '#ef4444', '2': '#f59e0b', '3': '#10b981', '4': '#3b82f6', '5': '#8b5cf6' };
+            const maxTierSales = Math.max(...tierArr.map(t => t.sales), 1);  // Use 1 as minimum to avoid division by zero
+            const tierColors = { '1': '#ef4444', '2': '#f59e0b', '3': '#10b981', '4': '#3b82f6', '5': '#8b5cf6', '8': '#ec4899' };
 
-            // Find best and worst tier
-            const sortedByPerf = [...tierArr].sort((a, b) => b.sales - a.sales);
-            const bestTier = sortedByPerf[0] || { tier: '-', sales: 0 };
-            const worstTier = sortedByPerf[sortedByPerf.length - 1] || { tier: '-', sales: 0 };
+            // Clean table layout for Tier Performance
+            let tierHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">';
+            tierHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
+            tierHtml += '<th style="text-align:left;padding:10px;color:#374151;background:#f8fafc;">Tier</th>';
+            tierHtml += '<th style="text-align:left;padding:10px;color:#374151;background:#f8fafc;width:200px;">Share</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Sales</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Qty</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Trx</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">%</th>';
+            tierHtml += '</tr></thead><tbody>';
 
-            let tierHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">';
-
-            // Summary Cards
-            tierHtml += '<div style="display:flex;flex-direction:column;gap:10px;">';
-            tierHtml += '<div style="background:#dcfce7;border-radius:8px;padding:12px;border-left:4px solid #10b981;">';
-            tierHtml += '<div style="font-size:0.75rem;color:#166534;">🏆 Best Performing Tier</div>';
-            tierHtml += '<div style="font-size:1.2rem;font-weight:700;color:#15803d;">Tier ' + bestTier.tier + '</div>';
-            tierHtml += '<div style="font-size:0.8rem;color:#166534;">Rp ' + bestTier.sales.toLocaleString('id-ID') + '</div></div>';
-            tierHtml += '<div style="background:#fef2f2;border-radius:8px;padding:12px;border-left:4px solid #ef4444;">';
-            tierHtml += '<div style="font-size:0.75rem;color:#991b1b;">📉 Lowest Performing Tier</div>';
-            tierHtml += '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;">Tier ' + worstTier.tier + '</div>';
-            tierHtml += '<div style="font-size:0.8rem;color:#991b1b;">Rp ' + worstTier.sales.toLocaleString('id-ID') + '</div></div>';
-            tierHtml += '</div>';
-
-            // Bar Chart
-            tierHtml += '<div style="background:#f8fafc;border-radius:12px;padding:15px;">';
-            tierHtml += '<div style="display:flex;align-items:flex-end;justify-content:space-around;height:150px;gap:10px;">';
-            tierArr.forEach(t => {
-                const barHeight = maxTierSales > 0 ? (t.sales / maxTierSales * 100) : 0;
-                const color = tierColors[t.tier] || '#6b7280';
-                tierHtml += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;">';
-                tierHtml += '<div style="font-size:0.7rem;font-weight:600;color:#374151;margin-bottom:5px;">Rp ' + (t.sales/1000000).toFixed(1) + 'jt</div>';
-                tierHtml += '<div style="width:100%;max-width:50px;height:' + barHeight + '%;min-height:10px;background:' + color + ';border-radius:6px 6px 0 0;"></div>';
-                tierHtml += '<div style="font-size:0.8rem;font-weight:700;color:#374151;margin-top:8px;">Tier ' + t.tier + '</div>';
-                tierHtml += '<div style="font-size:0.7rem;color:#6b7280;">' + t.qty.toLocaleString('id-ID') + ' pcs</div>';
-                tierHtml += '</div>';
-            });
-            tierHtml += '</div></div>';
-
-            // Table
-            tierHtml += '<div style="grid-column:1/-1;">';
-            tierHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            tierHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Tier</th><th style="text-align:left;padding:8px;color:#374151;">Share</th><th style="text-align:right;padding:8px;color:#374151;">Sales</th><th style="text-align:right;padding:8px;color:#374151;">Qty</th><th style="text-align:right;padding:8px;color:#374151;">Trx</th><th style="text-align:right;padding:8px;color:#374151;">%</th></tr></thead><tbody>';
             tierArr.forEach(t => {
                 const pct = totalTierSales > 0 ? (t.sales / totalTierSales * 100) : 0;
                 const barPct = maxTierSales > 0 ? (t.sales / maxTierSales * 100) : 0;
                 const color = tierColors[t.tier] || '#6b7280';
+
                 tierHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                tierHtml += '<td style="padding:8px;"><span style="display:inline-block;padding:4px 12px;background:' + color + ';color:white;border-radius:20px;font-weight:700;">Tier ' + t.tier + '</span></td>';
-                tierHtml += '<td style="padding:8px;width:200px;"><div style="height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div></div></td>';
-                tierHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + t.sales.toLocaleString('id-ID') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + t.qty.toLocaleString('id-ID') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + t.trx.toLocaleString('id-ID') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
+                tierHtml += '<td style="padding:10px;">';
+                tierHtml += '<span style="display:inline-block;padding:6px 14px;background:' + color + ';color:white;border-radius:20px;font-weight:700;font-size:0.9rem;">Tier ' + t.tier + '</span>';
+                tierHtml += '</td>';
+                tierHtml += '<td style="padding:10px;"><div style="height:20px;background:#e2e8f0;border-radius:4px;overflow:hidden;position:relative;">';
+                tierHtml += '<div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div>';
+                tierHtml += '</div></td>';
+                tierHtml += '<td style="text-align:right;padding:10px;font-weight:700;color:' + (t.sales > 0 ? '#10b981' : '#9ca3af') + ';font-size:0.9rem;">' + (t.sales > 0 ? 'Rp ' + t.sales.toLocaleString('id-ID') : '-') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:10px;color:' + (t.qty > 0 ? '#374151' : '#9ca3af') + ';">' + (t.qty > 0 ? t.qty.toLocaleString('id-ID') : '-') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:10px;color:' + (t.trx > 0 ? '#374151' : '#9ca3af') + ';">' + (t.trx > 0 ? t.trx.toLocaleString('id-ID') : '-') + '</td>';
+                tierHtml += '<td style="text-align:right;padding:10px;color:' + (pct > 0 ? '#6b7280' : '#9ca3af') + ';font-weight:600;font-size:0.9rem;">' + (pct > 0 ? pct.toFixed(1) + '%' : '-') + '</td>';
                 tierHtml += '</tr>';
             });
-            tierHtml += '</tbody></table></div>';
-            tierHtml += '</div>';
+            tierHtml += '</tbody></table>';
             document.getElementById('salesTierPerf').innerHTML = tierHtml;
 
-            // Size Distribution by Gender
-            const bySizeGender = {};
+            // Size Distribution by Gender - Visual cards per gender
+            const byGenderSize = {};
             data.forEach(item => {
                 const sku = item.sku || '';
                 const sizeMatch = sku.match(/Z(\\d{2,3})$/);
                 const size = sizeMatch ? sizeMatch[1] : 'Unknown';
                 const gender = getGenderFromSKU(sku);
-                if (size === 'Unknown') return;
+                if (size === 'Unknown' || gender === 'Unknown') return;
 
-                if (!bySizeGender[size]) bySizeGender[size] = { total: 0, byGender: {} };
-                bySizeGender[size].total += item.qty || 0;
-                if (!bySizeGender[size].byGender[gender]) bySizeGender[size].byGender[gender] = 0;
-                bySizeGender[size].byGender[gender] += item.qty || 0;
+                if (!byGenderSize[gender]) byGenderSize[gender] = { total: 0, sizes: {} };
+                byGenderSize[gender].total += item.qty || 0;
+                if (!byGenderSize[gender].sizes[size]) byGenderSize[gender].sizes[size] = 0;
+                byGenderSize[gender].sizes[size] += item.qty || 0;
             });
 
-            const sizeGenderArr = Object.entries(bySizeGender).map(([size, val]) => ({
-                size, total: val.total, byGender: val.byGender
-            })).sort((a, b) => parseInt(a.size) - parseInt(b.size));
+            // Sort genders by total qty
+            const genderSizeArr = Object.entries(byGenderSize)
+                .map(([gender, val]) => ({ gender, total: val.total, sizes: val.sizes }))
+                .sort((a, b) => b.total - a.total);
 
-            const allGenders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g => {
-                return sizeGenderArr.some(s => s.byGender[g] > 0);
-            });
+            let sizeHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">';
 
-            const totalSizeQty = sizeGenderArr.reduce((sum, s) => sum + s.total, 0);
+            genderSizeArr.forEach(g => {
+                const color = genderColors[g.gender] || '#6b7280';
 
-            let sizeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            sizeHtml += '<thead><tr style="background:#f8fafc;">';
-            sizeHtml += '<th style="text-align:left;padding:8px;color:#374151;">Size</th>';
-            allGenders.forEach(g => {
-                sizeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
-            });
-            sizeHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th>';
-            sizeHtml += '<th style="text-align:right;padding:8px;color:#374151;">%</th>';
-            sizeHtml += '</tr></thead><tbody>';
+                // Sort sizes by qty descending
+                const sizeArr = Object.entries(g.sizes)
+                    .map(([size, qty]) => ({ size, qty }))
+                    .sort((a, b) => b.qty - a.qty);
 
-            sizeGenderArr.forEach(s => {
-                const pct = totalSizeQty > 0 ? (s.total / totalSizeQty * 100) : 0;
-                sizeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                sizeHtml += '<td style="padding:8px;font-weight:700;color:#374151;">' + s.size + '</td>';
-                allGenders.forEach(g => {
-                    const qty = s.byGender[g] || 0;
-                    const color = qty > 0 ? (genderColors[g] || '#374151') : '#d1d5db';
-                    sizeHtml += '<td style="text-align:right;padding:8px;color:' + color + ';font-weight:' + (qty > 0 ? '600' : '400') + ';">' + (qty > 0 ? qty.toLocaleString('id-ID') : '-') + '</td>';
+                const maxQty = sizeArr.length > 0 ? sizeArr[0].qty : 1;
+
+                sizeHtml += '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #e2e8f0;box-shadow:0 2px 4px rgba(0,0,0,0.05);">';
+
+                // Header
+                sizeHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid ' + color + ';">';
+                sizeHtml += '<div style="display:flex;align-items:center;gap:8px;">';
+                sizeHtml += '<span style="font-weight:700;color:' + color + ';font-size:1rem;">' + g.gender + '</span>';
+                sizeHtml += '</div>';
+                sizeHtml += '<div style="text-align:right;">';
+                sizeHtml += '<div style="font-weight:700;color:#374151;">' + g.total.toLocaleString('id-ID') + ' pcs</div>';
+                sizeHtml += '</div></div>';
+
+                // Size bars
+                sizeHtml += '<div style="display:flex;flex-direction:column;gap:6px;">';
+                sizeArr.forEach(s => {
+                    const share = g.total > 0 ? (s.qty / g.total * 100) : 0;
+                    const barWidth = maxQty > 0 ? (s.qty / maxQty * 100) : 0;
+
+                    sizeHtml += '<div style="display:flex;align-items:center;gap:8px;">';
+                    sizeHtml += '<div style="width:35px;font-weight:600;color:#374151;font-size:0.85rem;">' + s.size + '</div>';
+                    sizeHtml += '<div style="flex:1;height:20px;background:#f3f4f6;border-radius:4px;overflow:hidden;position:relative;">';
+                    sizeHtml += '<div style="height:100%;width:' + barWidth + '%;background:' + color + ';border-radius:4px;"></div>';
+                    sizeHtml += '</div>';
+                    sizeHtml += '<div style="width:70px;text-align:right;font-size:0.8rem;">';
+                    sizeHtml += '<span style="font-weight:600;color:#374151;">' + s.qty.toLocaleString('id-ID') + '</span>';
+                    sizeHtml += '<span style="color:#6b7280;margin-left:4px;">(' + share.toFixed(1) + '%)</span>';
+                    sizeHtml += '</div>';
+                    sizeHtml += '</div>';
                 });
-                sizeHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#374151;">' + s.total.toLocaleString('id-ID') + '</td>';
-                sizeHtml += '<td style="text-align:right;padding:8px;color:#6b7280;">' + pct.toFixed(1) + '%</td>';
-                sizeHtml += '</tr>';
+                sizeHtml += '</div>';
+
+                sizeHtml += '</div>';
             });
 
-            // Add totals row
-            sizeHtml += '<tr style="background:#f8fafc;font-weight:700;">';
-            sizeHtml += '<td style="padding:8px;color:#374151;">TOTAL</td>';
-            allGenders.forEach(g => {
-                const genderTotal = sizeGenderArr.reduce((sum, s) => sum + (s.byGender[g] || 0), 0);
-                sizeHtml += '<td style="text-align:right;padding:8px;color:' + (genderColors[g] || '#374151') + ';">' + genderTotal.toLocaleString('id-ID') + '</td>';
-            });
-            sizeHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + totalSizeQty.toLocaleString('id-ID') + '</td>';
-            sizeHtml += '<td style="text-align:right;padding:8px;color:#374151;">100%</td>';
-            sizeHtml += '</tr>';
-
-            sizeHtml += '</tbody></table>';
+            sizeHtml += '</div>';
             document.getElementById('salesSizeDistribution').innerHTML = sizeHtml;
         }
 
@@ -5770,7 +5986,7 @@ def generate_html(all_data, all_stores):
 
             summaryHtml += '<div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:12px;padding:15px;color:white;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">🛒 Avg ATV</div>';
-            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + Math.round(avgATV).toLocaleString('id-ID') + '</div></div>';
+            summaryHtml += '<div style="font-size:1.5rem;font-weight:700;">Rp ' + avgATV.toLocaleString('id-ID') + '</div></div>';
 
             summaryHtml += '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;padding:15px;color:white;">';
             summaryHtml += '<div style="font-size:0.75rem;opacity:0.9;">📦 Avg ATU</div>';
@@ -5796,10 +6012,10 @@ def generate_html(all_data, all_stores):
                     html += '<td style="padding:8px;font-weight:600;color:#374151;">' + medal + '</td>';
                     html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#1f2937;">' + s.spg + '</td>';
                     html += '<td style="padding:8px;font-size:0.7rem;color:#6b7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
-                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + Math.round(s.sales).toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.qty + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.trx + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#3b82f6;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID') + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#8b5cf6;">' + s.atu.toFixed(2) + '</td>';
                     html += '</tr>';
                 });
@@ -5816,7 +6032,9 @@ def generate_html(all_data, all_stores):
             const storeNameMap = {}; // Map normalized -> original
             data.forEach(item => {
                 const store = item.store || 'Unknown';
-                const normalized = store.toLowerCase().replace(/^zuma\s*/i, '').trim();
+                // Skip Pameran and KSquare stores
+                if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
+                const normalized = store.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
                 if (!byStore[normalized]) {
                     byStore[normalized] = 0;
                     storeNameMap[normalized] = store;
@@ -5828,12 +6046,15 @@ def generate_html(all_data, all_stores):
             const storeAchArr = [];
             Object.keys(targetData).forEach(targetKey => {
                 const target = targetData[targetKey];
+                if (!target || !target.store) return;
+                // Skip header row and KSquare stores
+                if (target.store === 'Nama Toko' || target.store.toLowerCase().includes('ksquare')) return;
                 const storeName = target.store;
                 const area = target.area || getAreaFromStore(storeName);
                 const jan = target.jan || 0;
 
                 // Try multiple matching strategies
-                const normalizedTarget = storeName.toLowerCase().replace(/^zuma\s*/i, '').trim();
+                const normalizedTarget = storeName.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
                 let actual = 0;
 
                 // 1. Exact match on normalized name
@@ -5856,55 +6077,61 @@ def generate_html(all_data, all_stores):
 
             storeAchArr.sort((a, b) => b.achievement - a.achievement);
 
-            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;">Toko</th><th style="text-align:right;padding:6px;color:#374151;">Target</th><th style="text-align:right;padding:6px;color:#374151;">Actual</th><th style="text-align:right;padding:6px;color:#374151;">Achv %</th></tr></thead><tbody>';
-            storeAchArr.forEach(s => {
-                const achvColor = s.achievement >= 100 ? '#10b981' : s.achievement >= 80 ? '#f59e0b' : '#ef4444';
-                storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + s.store + '</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">Rp ' + Math.round(s.target / 1000000).toFixed(1) + 'jt</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;">Rp ' + Math.round(s.actual / 1000000).toFixed(1) + 'jt</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:700;color:' + achvColor + ';">' + s.achievement.toFixed(1) + '%</td></tr>';
-            });
-            storeHtml += '</tbody></table>';
-            document.getElementById('salesTargetByStore').innerHTML = storeHtml;
+            // Achievement by Store - removed from UI
 
-            // Achievement by Area
-            const byArea = {};
-            storeAchArr.forEach(s => {
-                const area = s.area || 'Unknown';
-                if (!byArea[area]) byArea[area] = { target: 0, actual: 0 };
-                byArea[area].target += s.target;
-                byArea[area].actual += s.actual;
-            });
+            // Gap Analysis - all stores sorted by achievement (lowest first)
+            const allStores = storeAchArr.sort((a, b) => a.achievement - b.achievement);
 
-            let areaHtml = '<div style="display:flex;flex-wrap:wrap;gap:15px;">';
-            Object.entries(byArea).forEach(([area, val]) => {
-                const achv = val.target > 0 ? (val.actual / val.target * 100) : 0;
-                const achvColor = achv >= 100 ? '#10b981' : achv >= 80 ? '#f59e0b' : '#ef4444';
-                areaHtml += '<div style="flex:1;min-width:200px;background:#f8fafc;border-radius:10px;padding:15px;">';
-                areaHtml += '<div style="font-weight:600;color:#374151;">' + area + '</div>';
-                areaHtml += '<div style="margin:8px 0;"><span style="font-size:0.75rem;color:#6b7280;">Target:</span> <span style="font-weight:500;">Rp ' + Math.round(val.target / 1000000).toFixed(1) + 'jt</span></div>';
-                areaHtml += '<div><span style="font-size:0.75rem;color:#6b7280;">Actual:</span> <span style="font-weight:600;color:#10b981;">Rp ' + Math.round(val.actual / 1000000).toFixed(1) + 'jt</span></div>';
-                areaHtml += '<div style="margin-top:10px;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">';
-                areaHtml += '<div style="height:100%;width:' + Math.min(achv, 100) + '%;background:' + achvColor + ';"></div></div>';
-                areaHtml += '<div style="text-align:center;margin-top:5px;font-weight:700;color:' + achvColor + ';">' + achv.toFixed(1) + '%</div>';
-                areaHtml += '</div>';
-            });
-            areaHtml += '</div>';
-            document.getElementById('salesTargetByArea').innerHTML = areaHtml;
-
-            // Gap Analysis - stores below target
-            const gapStores = storeAchArr.filter(s => s.achievement < 100).sort((a, b) => b.gap - a.gap);
             let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            gapHtml += '<thead><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;">Toko</th><th style="text-align:right;padding:6px;color:#991b1b;">Gap</th><th style="text-align:right;padding:6px;color:#991b1b;">Achv %</th><th style="text-align:left;padding:6px;color:#991b1b;">Status</th></tr></thead><tbody>';
-            gapStores.slice(0, 15).forEach(s => {
-                const status = s.achievement < 50 ? '🔴 Critical' : s.achievement < 80 ? '🟡 Warning' : '🟢 On Track';
-                gapHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + s.store + '</td>';
-                gapHtml += '<td style="text-align:right;padding:6px;color:#ef4444;font-weight:600;">-Rp ' + Math.round(s.gap / 1000000).toFixed(1) + 'jt</td>';
-                gapHtml += '<td style="text-align:right;padding:6px;">' + s.achievement.toFixed(1) + '%</td>';
+            gapHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
+            gapHtml += '<th style="text-align:center;padding:6px;color:#374151;background:#f8fafc;width:40px;">No</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Area</th>';
+            gapHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Gap/Surplus</th>';
+            gapHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Achv %</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Status</th>';
+            gapHtml += '</tr></thead><tbody>';
+            allStores.forEach((s, idx) => {
+                let status, rowBg, gapText, gapColor;
+                if (s.achievement >= 100) {
+                    status = '✅ Achieved';
+                    rowBg = 'background:#f0fdf4;';
+                    const surplus = s.actual - s.target;
+                    gapText = '+Rp ' + (surplus / 1000000).toFixed(2) + 'jt';
+                    gapColor = '#10b981';
+                } else if (s.achievement >= 80) {
+                    status = '🟢 On Track';
+                    rowBg = '';
+                    gapText = '-Rp ' + (s.gap / 1000000).toFixed(2) + 'jt';
+                    gapColor = '#f59e0b';
+                } else if (s.achievement >= 50) {
+                    status = '🟡 Warning';
+                    rowBg = 'background:#fefce8;';
+                    gapText = '-Rp ' + (s.gap / 1000000).toFixed(2) + 'jt';
+                    gapColor = '#f59e0b';
+                } else {
+                    status = '🔴 Critical';
+                    rowBg = 'background:#fef2f2;';
+                    gapText = '-Rp ' + (s.gap / 1000000).toFixed(2) + 'jt';
+                    gapColor = '#ef4444';
+                }
+                gapHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + rowBg + '">';
+                gapHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (idx + 1) + '</td>';
+                gapHtml += '<td style="padding:6px;">' + s.store + '</td>';
+                gapHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
+                gapHtml += '<td style="text-align:right;padding:6px;color:' + gapColor + ';font-weight:600;">' + gapText + '</td>';
+                gapHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + s.achievement.toFixed(1) + '%</td>';
                 gapHtml += '<td style="padding:6px;font-size:0.75rem;">' + status + '</td></tr>';
             });
             gapHtml += '</tbody></table>';
+            // Legend explanation - moved to bottom
+            gapHtml += '<div style="margin-top:10px;padding:8px;background:#f8fafc;border-radius:6px;font-size:0.75rem;display:flex;flex-wrap:wrap;gap:12px;">';
+            gapHtml += '<span><strong>Keterangan:</strong></span>';
+            gapHtml += '<span>🔴 Critical = &lt;50%</span>';
+            gapHtml += '<span>🟡 Warning = 50-79%</span>';
+            gapHtml += '<span>🟢 On Track = 80-99%</span>';
+            gapHtml += '<span>✅ Achieved = ≥100%</span>';
+            gapHtml += '</div>';
             document.getElementById('salesGapAnalysis').innerHTML = gapHtml;
         }
 
@@ -5913,21 +6140,23 @@ def generate_html(all_data, all_stores):
 
             // Recent Transactions
             const recentData = [...data].sort((a, b) => {
-                const dateCompare = b.date.localeCompare(a.date);
+                const dateA = a.date || '';
+                const dateB = b.date || '';
+                const dateCompare = dateB.localeCompare(dateA);
                 if (dateCompare !== 0) return dateCompare;
-                return b.hour - a.hour;
+                return (b.hour || 0) - (a.hour || 0);
             }).slice(0, 50);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
             recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Order</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th></tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                recentHtml += '<td style="padding:6px;">' + item.date + '</td>';
-                recentHtml += '<td style="padding:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.store + '</td>';
-                recentHtml += '<td style="padding:6px;">' + item.order_no + '</td>';
-                recentHtml += '<td style="padding:6px;">' + item.sku + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">' + item.qty + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + Math.round(item.total).toLocaleString('id-ID') + '</td>';
+                recentHtml += '<td style="padding:6px;">' + (item.date || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.store || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;">' + (item.order_no || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;">' + (item.sku || '-') + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total || 0).toLocaleString('id-ID') + '</td>';
                 recentHtml += '</tr>';
             });
             recentHtml += '</tbody></table>';
@@ -5955,10 +6184,8 @@ def generate_html(all_data, all_stores):
             Object.entries(byGender).filter(([g, _]) => g !== 'Unknown').sort((a, b) => b[1].sales - a[1].sales).forEach(([gender, val]) => {
                 const pct = totalSales > 0 ? (val.sales / totalSales * 100) : 0;
                 summaryHtml += '<div style="flex:1;min-width:150px;background:white;border-radius:12px;padding:15px;border-left:4px solid ' + (genderColors[gender] || '#6b7280') + ';box-shadow:0 2px 8px rgba(0,0,0,0.08);">';
-                summaryHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-                summaryHtml += '<span style="font-size:1.5rem;">' + (genderIcons[gender] || '❓') + '</span>';
-                summaryHtml += '<span style="font-size:0.9rem;font-weight:600;color:' + (genderColors[gender] || '#6b7280') + ';">' + gender + '</span></div>';
-                summaryHtml += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;">Rp ' + Math.round(val.sales / 1000000).toFixed(1) + 'jt</div>';
+                summaryHtml += '<div style="font-size:0.95rem;font-weight:700;color:' + (genderColors[gender] || '#6b7280') + ';margin-bottom:8px;">' + gender + '</div>';
+                summaryHtml += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;">Rp ' + (val.sales / 1000000).toFixed(2) + 'jt</div>';
                 summaryHtml += '<div style="font-size:0.75rem;color:#6b7280;">' + val.qty + ' pcs | ' + pct.toFixed(1) + '%</div>';
                 summaryHtml += '</div>';
             });
@@ -5984,7 +6211,7 @@ def generate_html(all_data, all_stores):
             let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             weeklyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Week</th>';
             genders.forEach(g => {
-                weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
                 weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#6b7280;">Growth</th>';
             });
             weeklyHtml += '</tr></thead><tbody>';
@@ -5997,7 +6224,7 @@ def generate_html(all_data, all_stores):
                     const growth = prev > 0 ? ((curr - prev) / prev * 100) : 0;
                     const growthColor = growth > 0 ? '#10b981' : growth < 0 ? '#ef4444' : '#6b7280';
                     const growthIcon = growth > 0 ? '↑' : growth < 0 ? '↓' : '-';
-                    weeklyHtml += '<td style="text-align:right;padding:8px;font-weight:500;">Rp ' + Math.round(curr / 1000000).toFixed(1) + 'jt</td>';
+                    weeklyHtml += '<td style="text-align:right;padding:8px;font-weight:500;">Rp ' + (curr / 1000000).toFixed(2) + 'jt</td>';
                     weeklyHtml += '<td style="text-align:right;padding:8px;color:' + growthColor + ';font-weight:600;">' + (idx > 0 ? growthIcon + ' ' + Math.abs(growth).toFixed(1) + '%' : '-') + '</td>';
                 });
                 weeklyHtml += '</tr>';
@@ -6020,7 +6247,7 @@ def generate_html(all_data, all_stores):
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             areaHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Area</th>';
             genders.forEach(g => {
-                areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + ' ' + g + '</th>';
+                areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
             });
             areaHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th></tr></thead><tbody>';
 
@@ -6036,14 +6263,14 @@ def generate_html(all_data, all_stores):
                     const pct = totalArea > 0 ? (val / totalArea * 100) : 0;
                     areaHtml += '<td style="text-align:right;padding:8px;">';
                     if (val > 0) {
-                        areaHtml += '<div style="font-weight:500;">Rp ' + Math.round(val / 1000000).toFixed(1) + 'jt</div>';
+                        areaHtml += '<div style="font-weight:500;">Rp ' + (val / 1000000).toFixed(2) + 'jt</div>';
                         areaHtml += '<div style="font-size:0.7rem;color:#6b7280;">' + pct.toFixed(1) + '%</div>';
                     } else {
                         areaHtml += '<span style="color:#d1d5db;">-</span>';
                     }
                     areaHtml += '</td>';
                 });
-                areaHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + Math.round(totalArea / 1000000).toFixed(1) + 'jt</td></tr>';
+                areaHtml += '<td style="text-align:right;padding:8px;font-weight:700;color:#10b981;">Rp ' + (totalArea / 1000000).toFixed(2) + 'jt</td></tr>';
             });
             areaHtml += '</tbody></table>';
             document.getElementById('salesGenderByArea').innerHTML = areaHtml;
@@ -6061,11 +6288,11 @@ def generate_html(all_data, all_stores):
             });
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Toko</th><th style="text-align:left;padding:8px;color:#374151;">Area</th>';
+            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Area</th>';
             genders.forEach(g => {
-                storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + (genderIcons[g] || '') + '</th>';
+                storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';background:#f8fafc;">' + g + '</th>';
             });
-            storeHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th><th style="text-align:center;padding:8px;color:#374151;">Dominant</th></tr></thead><tbody>';
+            storeHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Total</th><th style="text-align:center;padding:8px;color:#374151;background:#f8fafc;">Dominant</th></tr></thead><tbody>';
 
             Object.entries(genderByStore).sort((a, b) => {
                 const totalA = Object.entries(a[1]).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
@@ -6083,9 +6310,9 @@ def generate_html(all_data, all_stores):
                 storeHtml += '<td style="padding:8px;color:#6b7280;font-size:0.75rem;">' + area + '</td>';
                 genders.forEach(g => {
                     const val = storeData[g]?.sales || 0;
-                    storeHtml += '<td style="text-align:right;padding:8px;">' + (val > 0 ? Math.round(val / 1000000).toFixed(1) + 'jt' : '-') + '</td>';
+                    storeHtml += '<td style="text-align:right;padding:8px;">' + (val > 0 ? (val / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
                 });
-                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">Rp ' + Math.round(totalStore / 1000000).toFixed(1) + 'jt</td>';
+                storeHtml += '<td style="text-align:right;padding:8px;font-weight:600;">Rp ' + (totalStore / 1000000).toFixed(2) + 'jt</td>';
                 storeHtml += '<td style="text-align:center;padding:8px;"><span style="background:' + (genderColors[dominant.gender] || '#e5e7eb') + ';color:white;padding:2px 8px;border-radius:10px;font-size:0.7rem;">' + dominant.gender + ' ' + dominant.pct.toFixed(0) + '%</span></td></tr>';
             });
             storeHtml += '</tbody></table>';
