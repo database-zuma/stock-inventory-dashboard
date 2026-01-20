@@ -6239,14 +6239,29 @@ def generate_html(all_data, all_stores):
             }).slice(0, 50);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Order</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th></tr></thead><tbody>';
+            recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SPG</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Order</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Price</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Disc%</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Promo</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th>';
+            recentHtml += '</tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 recentHtml += '<td style="padding:6px;">' + (item.date || '-') + '</td>';
-                recentHtml += '<td style="padding:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.store || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.store || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.spg || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;">' + (item.order_no || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;">' + (item.sku || '-') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">' + (item.disc_pct || 0) + '%</td>';
+                recentHtml += '<td style="padding:6px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.65rem;">' + (item.promo || '-') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total || 0).toLocaleString('id-ID') + '</td>';
                 recentHtml += '</tr>';
             });
