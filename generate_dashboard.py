@@ -5049,17 +5049,20 @@ def generate_html(all_data, all_stores):
             const dates = new Set();
 
             salesDetailData.forEach(item => {
+                // Skip non-sandal items
+                if (!isSandalSKU(item.sku)) return;
+
                 if (item.store) stores.add(item.store);
                 if (item.category) categories.add(item.category);
-                if (item.collection) {
-                    // Extract series from collection (e.g., "STRIPE|All Item" -> "STRIPE")
-                    const ser = item.collection.split('|')[0].trim();
-                    if (ser && ser !== 'Umum' && ser !== 'All Item') series.add(ser);
-                }
                 if (item.date) dates.add(item.date);
                 // Get area using helper function
                 const area = getAreaFromStore(item.store);
                 if (area && area !== 'Unknown') areas.add(area);
+            });
+
+            // Get series from skuSeriesMap (from Master Produk via stock data)
+            Object.values(skuSeriesMap).forEach(ser => {
+                if (ser && ser !== '-') series.add(ser);
             });
 
             // Populate store filter
