@@ -2290,7 +2290,7 @@ def generate_html(all_data, all_stores):
                 </div>
 
                 <!-- SPG Tab -->
-                <div class="sales-tab-content" id="salesTabSPG" style="padding:20px;display:none;">
+                <div class="sales-tab-content" id="salesTabSpg" style="padding:20px;display:none;">
                     <!-- SPG Summary Cards -->
                     <div id="salesSPGSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px;"></div>
                     <!-- SPG Leaderboard -->
