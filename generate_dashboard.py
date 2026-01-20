@@ -2146,7 +2146,7 @@ def generate_html(all_data, all_stores):
                 <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
                     <button class="sales-tab-btn active" onclick="switchSalesTab('performance')" data-tab="performance">📊 Performance</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('trend')" data-tab="trend">📈 Trend</button>
-                    <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">👟 Produk</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">🩴 Produk</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
                 </div>
