@@ -2388,6 +2388,14 @@ def generate_html(all_data, all_stores):
         const salesDetailData = ''' + sales_detail_json + ''';  // Sales detail transactions
         const targetData = ''' + target_json + ''';  // Target per toko
 
+        // Global format functions
+        function formatNum(val, decimals = 0) {
+            return Number(val || 0).toLocaleString('id-ID', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+        function formatRp(val) {
+            return 'Rp ' + formatNum(val, 0);
+        }
+
         // Build SKU to tier and series mapping from stock data
         const skuTierMap = {};
         const skuSeriesMap = {};
