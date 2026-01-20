@@ -2150,6 +2150,7 @@ def generate_html(all_data, all_stores):
                     <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">🩴 Produk</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('skusearch')" data-tab="skusearch">🔍 Cari SKU</button>
                 </div>
 
                 <!-- Sales Performance Tab -->
@@ -2304,6 +2305,26 @@ def generate_html(all_data, all_stores):
                     <div>
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📋 Recent Transactions</h4>
                         <div id="salesRecentTransactions" style="max-height:600px;overflow-y:auto;"></div>
+                    </div>
+                </div>
+
+                <!-- SKU Search Tab -->
+                <div class="sales-tab-content" id="salesTabSkusearch" style="padding:20px;display:none;">
+                    <div>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU</h4>
+                        <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+                            <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
+                                style="flex:1;min-width:200px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
+                                onkeyup="if(event.key==='Enter') searchSKUSales()">
+                            <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                🔍 Cari
+                            </button>
+                            <button onclick="resetSKUSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                Reset
+                            </button>
+                        </div>
+                        <div id="skuSearchSummary" style="margin-bottom:15px;"></div>
+                        <div id="skuSearchResults" style="max-height:500px;overflow-y:auto;"></div>
                     </div>
                 </div>
 
@@ -6499,6 +6520,134 @@ def generate_html(all_data, all_stores):
             document.getElementById('salesFilterSeries').value = '';
             document.getElementById('salesFilterSearch').value = '';
             renderSalesDashboard();
+        }
+
+        // SKU Search Functions
+        function searchSKUSales() {
+            const searchTerm = (document.getElementById('skuSearchInput').value || '').trim().toUpperCase();
+            if (!searchTerm) {
+                document.getElementById('skuSearchSummary').innerHTML = '<p style="color:#ef4444;">Masukkan SKU atau Artikel untuk dicari</p>';
+                document.getElementById('skuSearchResults').innerHTML = '';
+                return;
+            }
+
+            // Filter sales data by SKU or article name
+            const results = salesDetailData.filter(item => {
+                const sku = (item.sku || '').toUpperCase();
+                const name = (articleNameMap[sku.substring(0,7)] || '').toUpperCase();
+                const kodeKecil = sku.substring(0,7);
+                return sku.includes(searchTerm) || name.includes(searchTerm) || kodeKecil.includes(searchTerm);
+            });
+
+            // Group by SKU
+            const skuGroups = {};
+            results.forEach(item => {
+                const sku = item.sku;
+                if (!skuGroups[sku]) {
+                    skuGroups[sku] = { qty: 0, total: 0, transactions: [] };
+                }
+                skuGroups[sku].qty += item.qty || 0;
+                skuGroups[sku].total += item.total || 0;
+                skuGroups[sku].transactions.push(item);
+            });
+
+            // Calculate totals
+            const totalQty = results.reduce((sum, item) => sum + (item.qty || 0), 0);
+            const totalSales = results.reduce((sum, item) => sum + (item.total || 0), 0);
+            const uniqueSKUs = Object.keys(skuGroups).length;
+
+            // Render summary
+            document.getElementById('skuSearchSummary').innerHTML =
+                '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
+                '<div style="background:#f0fdf4;padding:10px 15px;border-radius:8px;border-left:4px solid #22c55e;">' +
+                '<div style="font-size:0.75rem;color:#6b7280;">Total Qty</div>' +
+                '<div style="font-size:1.2rem;font-weight:600;color:#166534;">' + formatNum(totalQty) + '</div></div>' +
+                '<div style="background:#eff6ff;padding:10px 15px;border-radius:8px;border-left:4px solid #3b82f6;">' +
+                '<div style="font-size:0.75rem;color:#6b7280;">Total Sales</div>' +
+                '<div style="font-size:1.2rem;font-weight:600;color:#1e40af;">' + formatCurrency(totalSales) + '</div></div>' +
+                '<div style="background:#fefce8;padding:10px 15px;border-radius:8px;border-left:4px solid #eab308;">' +
+                '<div style="font-size:0.75rem;color:#6b7280;">SKU Ditemukan</div>' +
+                '<div style="font-size:1.2rem;font-weight:600;color:#a16207;">' + uniqueSKUs + '</div></div>' +
+                '<div style="background:#f5f3ff;padding:10px 15px;border-radius:8px;border-left:4px solid #8b5cf6;">' +
+                '<div style="font-size:0.75rem;color:#6b7280;">Transaksi</div>' +
+                '<div style="font-size:1.2rem;font-weight:600;color:#6d28d9;">' + formatNum(results.length) + '</div></div>' +
+                '</div>';
+
+            // Render results table grouped by SKU
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">' +
+                '<thead><tr style="background:#f1f5f9;position:sticky;top:0;">' +
+                '<th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">SKU</th>' +
+                '<th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">Nama</th>' +
+                '<th style="padding:8px;text-align:right;border-bottom:2px solid #e2e8f0;">Qty</th>' +
+                '<th style="padding:8px;text-align:right;border-bottom:2px solid #e2e8f0;">Total Sales</th>' +
+                '<th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Trx</th>' +
+                '</tr></thead><tbody>';
+
+            // Sort by total sales descending
+            const sortedSKUs = Object.entries(skuGroups).sort((a, b) => b[1].total - a[1].total);
+            sortedSKUs.forEach(([sku, data], idx) => {
+                const name = articleNameMap[sku.substring(0,7)] || '-';
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+                html += '<tr style="background:' + bgColor + ';" onclick="showSKUTransactionDetail(\\'' + sku + '\\')" style="cursor:pointer;">' +
+                    '<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#3b82f6;cursor:pointer;">' + sku + '</td>' +
+                    '<td style="padding:8px;border-bottom:1px solid #e2e8f0;">' + name + '</td>' +
+                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;">' + formatNum(data.qty) + '</td>' +
+                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#059669;">' + formatCurrency(data.total) + '</td>' +
+                    '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;">' + data.transactions.length + '</td>' +
+                    '</tr>';
+            });
+
+            html += '</tbody></table>';
+
+            if (sortedSKUs.length === 0) {
+                html = '<p style="text-align:center;color:#6b7280;padding:20px;">Tidak ada hasil untuk "' + searchTerm + '"</p>';
+            }
+
+            document.getElementById('skuSearchResults').innerHTML = html;
+        }
+
+        function resetSKUSearch() {
+            document.getElementById('skuSearchInput').value = '';
+            document.getElementById('skuSearchSummary').innerHTML = '';
+            document.getElementById('skuSearchResults').innerHTML = '<p style="text-align:center;color:#9ca3af;padding:40px;">Ketik SKU atau nama artikel lalu klik Cari</p>';
+        }
+
+        function showSKUTransactionDetail(sku) {
+            const transactions = salesDetailData.filter(item => item.sku === sku);
+            let html = '<div style="max-height:400px;overflow-y:auto;">' +
+                '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">' +
+                '<thead><tr style="background:#f1f5f9;position:sticky;top:0;">' +
+                '<th style="padding:6px;text-align:left;">Tanggal</th>' +
+                '<th style="padding:6px;text-align:left;">Toko</th>' +
+                '<th style="padding:6px;text-align:left;">SPG</th>' +
+                '<th style="padding:6px;text-align:right;">Qty</th>' +
+                '<th style="padding:6px;text-align:right;">Total</th>' +
+                '</tr></thead><tbody>';
+
+            transactions.sort((a, b) => b.date.localeCompare(a.date)).forEach((t, idx) => {
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+                html += '<tr style="background:' + bgColor + ';">' +
+                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + t.date + '</td>' +
+                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + t.store + '</td>' +
+                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + (t.spg || t.kasir || '-') + '</td>' +
+                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + t.qty + '</td>' +
+                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + formatCurrency(t.total) + '</td>' +
+                    '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+
+            const totalQty = transactions.reduce((sum, t) => sum + (t.qty || 0), 0);
+            const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
+
+            document.getElementById('skuModalTitle').textContent = '📋 Detail Transaksi: ' + sku;
+            document.getElementById('skuModalBody').innerHTML =
+                '<div style="margin-bottom:15px;display:flex;gap:15px;">' +
+                '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;"><strong>Total Qty:</strong> ' + formatNum(totalQty) + '</div>' +
+                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;"><strong>Total Sales:</strong> ' + formatCurrency(totalSales) + '</div>' +
+                '<div style="background:#fefce8;padding:8px 12px;border-radius:6px;"><strong>Transaksi:</strong> ' + transactions.length + '</div>' +
+                '</div>' + html;
+            document.getElementById('skuModal').style.display = 'flex';
         }
 
         // Initialize Sales Dashboard when view is switched
