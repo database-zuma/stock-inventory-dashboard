@@ -567,6 +567,8 @@ def load_sales_detail():
                     'product_name': product_name,
                     'qty': qty,
                     'price': price,
+                    'total_before_tax': total_before_tax,
+                    'tax_amount': tax_amount,
                     'total': total,
                     'gross': gross,
                     'hpp': hpp,
@@ -2100,7 +2102,7 @@ def generate_html(all_data, all_stores):
                     </div>
                     <div style="min-width:150px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
-                        <select id="salesFilterArea" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                        <select id="salesFilterArea" onchange="updateStoresByArea(); renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua Area</option>
                         </select>
                     </div>
@@ -2108,12 +2110,6 @@ def generate_html(all_data, all_stores):
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Toko:</label>
                         <select id="salesFilterStore" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua Toko</option>
-                        </select>
-                    </div>
-                    <div style="min-width:130px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Kategori:</label>
-                        <select id="salesFilterCategory" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
-                            <option value="">Semua</option>
                         </select>
                     </div>
                     <div style="min-width:100px;">
@@ -2134,10 +2130,6 @@ def generate_html(all_data, all_stores):
                         <select id="salesFilterSeries" onchange="renderSalesDashboard()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua</option>
                         </select>
-                    </div>
-                    <div style="min-width:100px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
-                        <input type="text" id="salesFilterSearch" onkeyup="renderSalesDashboard()" placeholder="SKU/Artikel..." style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                     </div>
                     <button onclick="resetSalesFilters()" style="padding:6px 12px;background:#f3f4f6;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:0.8rem;">Reset</button>
                 </div>
@@ -5168,12 +5160,6 @@ def generate_html(all_data, all_stores):
                 areaSelect.innerHTML += '<option value="' + a + '">' + a + '</option>';
             });
 
-            // Populate category filter
-            const catSelect = document.getElementById('salesFilterCategory');
-            Array.from(categories).sort().forEach(c => {
-                if (c && c !== 'Umum') catSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
-            });
-
             // Populate Series filter
             const seriesSelect = document.getElementById('salesFilterSeries');
             Array.from(series).sort().forEach(s => {
@@ -5186,6 +5172,35 @@ def generate_html(all_data, all_stores):
                 document.getElementById('salesFilterStartDate').value = sortedDates[0];
                 document.getElementById('salesFilterEndDate').value = sortedDates[sortedDates.length - 1];
             }
+
+            // Store all stores for filtering
+            window.allSalesStores = Array.from(stores).sort();
+        }
+
+        function updateStoresByArea() {
+            const selectedArea = document.getElementById('salesFilterArea').value;
+            const storeSelect = document.getElementById('salesFilterStore');
+            const currentStore = storeSelect.value;
+
+            // Clear store options
+            storeSelect.innerHTML = '<option value="">Semua Toko</option>';
+
+            // Filter stores by area
+            const filteredStores = window.allSalesStores.filter(store => {
+                if (!selectedArea) return true;
+                const storeArea = getAreaFromStore(store);
+                return storeArea.toLowerCase() === selectedArea.toLowerCase();
+            });
+
+            // Populate filtered stores
+            filteredStores.forEach(s => {
+                storeSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
+            });
+
+            // Keep current selection if still valid
+            if (filteredStores.includes(currentStore)) {
+                storeSelect.value = currentStore;
+            }
         }
 
         function getFilteredSalesData() {
@@ -5193,19 +5208,16 @@ def generate_html(all_data, all_stores):
             const endDate = document.getElementById('salesFilterEndDate').value;
             const area = document.getElementById('salesFilterArea').value;
             const store = document.getElementById('salesFilterStore').value;
-            const category = document.getElementById('salesFilterCategory').value;
             const gender = document.getElementById('salesFilterGender').value;
             const series = document.getElementById('salesFilterSeries').value;
-            const search = (document.getElementById('salesFilterSearch').value || '').toLowerCase();
 
             return salesDetailData.filter(item => {
-                // Filter out non-sandal items (GWP, BOX, BAG, etc.)
-                if (!isSandalSKU(item.sku)) return false;
+                // Include ALL items (sandal + non-sandal) for sales calculation
+                if (!item.sku) return false;
 
                 if (startDate && item.date < startDate) return false;
                 if (endDate && item.date > endDate) return false;
                 if (store && item.store !== store) return false;
-                if (category && item.category !== category) return false;
                 if (gender && getGenderFromSKU(item.sku) !== gender) return false;
                 if (series) {
                     // Get series from stock data mapping
@@ -5216,7 +5228,6 @@ def generate_html(all_data, all_stores):
                     const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
-                if (search && !item.sku.toLowerCase().includes(search) && !item.category.toLowerCase().includes(search)) return false;
                 return true;
             });
         }
@@ -5808,12 +5819,16 @@ def generate_html(all_data, all_stores):
         function renderSalesProduct() {
             const data = filteredSalesData;
 
-            // Top selling by category (extract article from SKU)
+            // Top selling by category (extract article from SKU) - SANDAL ONLY
+            const nonSandalPrefixes = ['SHOPBAG', 'PAPERBAG', 'INBOX', 'GWP', 'BOX', 'BAG', 'INNER', 'PAPER'];
             const byArticle = {};
             data.forEach(item => {
                 const sku = item.sku || '';
                 const article = sku.replace(/Z\\d{2,3}$/, '');
                 if (!article) return;
+                // Skip non-sandal items for Top Selling
+                const isNonSandal = nonSandalPrefixes.some(prefix => sku.toUpperCase().startsWith(prefix));
+                if (isNonSandal) return;
                 if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category };
                 byArticle[article].sales += item.total || 0;
                 byArticle[article].qty += item.qty || 0;
@@ -6126,13 +6141,21 @@ def generate_html(all_data, all_stores):
                 const store = item.store || 'Unknown';
                 // Skip Pameran and KSquare stores
                 if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
-                const normalized = store.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
+                const normalized = store.toLowerCase()
+                    .replace('zuma ', '').replace('zuma', '')
+                    .replace('exchange', 'xchange')  // Normalize Exchange to Xchange
+                    .replace('hills', 'hill')        // Normalize Hills to Hill
+                    .replace(/\s+/g, ' ').trim();
                 if (!byStore[normalized]) {
                     byStore[normalized] = 0;
                     storeNameMap[normalized] = store;
                 }
                 byStore[normalized] += item.total || 0;
             });
+
+            // Get filter values
+            const salesArea = document.getElementById('salesFilterArea').value;
+            const salesStore = document.getElementById('salesFilterStore').value;
 
             // Achievement by Store - improved matching
             const storeAchArr = [];
@@ -6145,17 +6168,29 @@ def generate_html(all_data, all_stores):
                 const area = target.area || getAreaFromStore(storeName);
                 const jan = target.jan || 0;
 
-                // Try multiple matching strategies
-                const normalizedTarget = storeName.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
+                // Filter by Area if selected
+                if (salesArea && area.toLowerCase() !== salesArea.toLowerCase()) return;
+                // Filter by Store if selected
+                if (salesStore && storeName !== salesStore) return;
+
+                // Normalize store name for matching
+                const normalizedTarget = storeName.toLowerCase()
+                    .replace('zuma ', '').replace('zuma', '')
+                    .replace('exchange', 'xchange')  // Handle Exchange vs Xchange
+                    .replace('hills', 'hill')        // Handle Hills vs Hill
+                    .replace(/\s+/g, ' ').trim();
                 let actual = 0;
 
                 // 1. Exact match on normalized name
                 if (byStore[normalizedTarget] !== undefined) {
                     actual = byStore[normalizedTarget];
                 } else {
-                    // 2. Partial match
+                    // 2. Try matching with variations
                     for (const [key, sales] of Object.entries(byStore)) {
-                        if (key.includes(normalizedTarget) || normalizedTarget.includes(key)) {
+                        const normalizedKey = key.replace('exchange', 'xchange').replace('hills', 'hill');
+                        if (normalizedKey === normalizedTarget ||
+                            normalizedKey.includes(normalizedTarget) ||
+                            normalizedTarget.includes(normalizedKey)) {
                             actual = sales;
                             break;
                         }
@@ -6169,9 +6204,7 @@ def generate_html(all_data, all_stores):
 
             storeAchArr.sort((a, b) => b.achievement - a.achievement);
 
-            // Achievement by Store - removed from UI
-
-            // Gap Analysis - all stores sorted by achievement (lowest first)
+            // Gap Analysis - all stores sorted by achievement (lowest first), filtered by area
             const allStores = storeAchArr.sort((a, b) => a.achievement - b.achievement);
 
             let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
@@ -6248,9 +6281,9 @@ def generate_html(all_data, all_stores):
             recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Price</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Disc%</th>';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Promo</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Tax</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;font-weight:700;">Sales</th>';
             recentHtml += '</tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -6261,9 +6294,9 @@ def generate_html(all_data, all_stores):
                 recentHtml += '<td style="padding:6px;">' + (item.sku || '-') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">' + (item.disc_pct || 0) + '%</td>';
-                recentHtml += '<td style="padding:6px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.65rem;">' + (item.promo || '-') + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total || 0).toLocaleString('id-ID') + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total_before_tax || 0).toLocaleString('id-ID') + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.tax_amount || 0).toLocaleString('id-ID') + '</td>';
+                recentHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#047857;">Rp ' + (item.total || 0).toLocaleString('id-ID') + '</td>';
                 recentHtml += '</tr>';
             });
             recentHtml += '</tbody></table>';
