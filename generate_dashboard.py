@@ -981,7 +981,7 @@ def generate_html(all_data, all_stores):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Stock Retail & Warehouse - Zuma Indonesia</title>
+    <title>Master Operations Dashboard - Zuma Indonesia</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1449,7 +1449,7 @@ def generate_html(all_data, all_stores):
         <div style="display:flex;align-items:center;gap:20px;">
             <img src="''' + LOGO_ZUMA + '''" alt="Zuma Logo" style="height:80px;width:auto;filter:brightness(0) invert(1);">
             <div>
-                <h1 style="font-size:1.4rem;margin:0;">Monitoring Stock Retail & Warehouse</h1>
+                <h1 style="font-size:1.4rem;margin:0;">Master Operations Dashboard</h1>
                 <p style="margin:5px 0 0 0;font-size:1rem;">Zuma Indonesia</p>
             </div>
         </div>
