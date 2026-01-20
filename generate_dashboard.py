@@ -6616,24 +6616,23 @@ def generate_html(all_data, all_stores):
                 return;
             }
 
-            // Full width table
+            // Full width table - no TRX column
             let html = '<table style="width:100%;border-collapse:collapse;">' +
                 '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
                 '<th style="padding:12px 15px;text-align:left;font-weight:600;">SKU</th>' +
                 '<th style="padding:12px 15px;text-align:left;font-weight:600;">NAMA ARTIKEL</th>' +
                 '<th style="padding:12px 15px;text-align:right;font-weight:600;">QTY</th>' +
                 '<th style="padding:12px 15px;text-align:right;font-weight:600;">TOTAL SALES</th>' +
-                '<th style="padding:12px 15px;text-align:center;font-weight:600;">TRX</th>' +
                 '</tr></thead><tbody>';
 
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const articleName = articleNameMap[m.sku.substring(0,7)] || articleNameMap[m.kodeKecil] || m.name || '-';
                 html += '<tr onclick="selectSKUFromList(\\'' + m.sku + '\\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\\'#dbeafe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;">' + m.sku + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + (m.name || m.kodeKecil || '-') + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#111827;">' + formatNum(m.qty) + '</td>' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;">' + formatRp(m.total) + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:center;color:#374151;">' + m.count + '</td>' +
                     '</tr>';
             });
 
@@ -6702,14 +6701,13 @@ def generate_html(all_data, all_stores):
                 '<div style="font-size:1.2rem;font-weight:600;color:#6d28d9;">' + formatNum(results.length) + '</div></div>' +
                 '</div>';
 
-            // Render results table grouped by SKU with store breakdown
+            // Render results table grouped by SKU with full store table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
                 '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
-                '<th style="padding:10px 8px;text-align:left;font-weight:600;">SKU</th>' +
-                '<th style="padding:10px 8px;text-align:left;font-weight:600;">Nama</th>' +
-                '<th style="padding:10px 8px;text-align:right;font-weight:600;">Qty</th>' +
-                '<th style="padding:10px 8px;text-align:right;font-weight:600;">Total Sales</th>' +
-                '<th style="padding:10px 8px;text-align:center;font-weight:600;">Trx</th>' +
+                '<th style="padding:12px 15px;text-align:left;font-weight:600;">SKU</th>' +
+                '<th style="padding:12px 15px;text-align:left;font-weight:600;">NAMA ARTIKEL</th>' +
+                '<th style="padding:12px 15px;text-align:right;font-weight:600;">QTY</th>' +
+                '<th style="padding:12px 15px;text-align:right;font-weight:600;">TOTAL SALES</th>' +
                 '</tr></thead><tbody>';
 
             // Sort by total sales descending
@@ -6726,21 +6724,35 @@ def generate_html(all_data, all_stores):
                     storeData[t.store].total += t.total || 0;
                 });
                 const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
-                const storeBreakdown = sortedStores.slice(0, 5).map(([store, sd]) =>
-                    '<span style="display:inline-block;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;margin:2px;font-size:0.75rem;">' + store.replace('Zuma ', '').replace('ZUMA ', '') + ': ' + sd.qty + '</span>'
-                ).join('');
-                const moreStores = sortedStores.length > 5 ? '<span style="color:#6b7280;font-size:0.75rem;"> +' + (sortedStores.length - 5) + ' toko</span>' : '';
+
+                // Build store table - show ALL stores
+                let storeTableHtml = '<table style="width:100%;border-collapse:collapse;margin-top:5px;">' +
+                    '<thead><tr style="background:#334155;color:white;">' +
+                    '<th style="padding:6px 10px;text-align:left;font-weight:500;font-size:0.8rem;">TOKO</th>' +
+                    '<th style="padding:6px 10px;text-align:right;font-weight:500;font-size:0.8rem;">QTY</th>' +
+                    '<th style="padding:6px 10px;text-align:right;font-weight:500;font-size:0.8rem;">SALES</th>' +
+                    '</tr></thead><tbody>';
+
+                sortedStores.forEach(([store, sd], storeIdx) => {
+                    const storeBg = storeIdx % 2 === 0 ? '#f8fafc' : '#ffffff';
+                    storeTableHtml += '<tr style="background:' + storeBg + ';">' +
+                        '<td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
+                        '<td style="padding:6px 10px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + sd.qty + '</td>' +
+                        '<td style="padding:6px 10px;text-align:right;border-bottom:1px solid #e2e8f0;color:#047857;">' + formatRp(sd.total) + '</td>' +
+                        '</tr>';
+                });
+                storeTableHtml += '</tbody></table>';
 
                 html += '<tr style="background:' + bgColor + ';cursor:pointer;" onclick="showSKUTransactionDetail(\\'' + sku + '\\')">' +
-                    '<td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#1d4ed8;font-weight:600;">' + sku + '</td>' +
-                    '<td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;color:#111827;">' + name + '</td>' +
-                    '<td style="padding:10px 8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(data.qty) + '</td>' +
-                    '<td style="padding:10px 8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(data.total) + '</td>' +
-                    '<td style="padding:10px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#111827;">' + data.transactions.length + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#1d4ed8;font-weight:600;">' + sku + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + name + '</td>' +
+                    '<td style="padding:12px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(data.qty) + '</td>' +
+                    '<td style="padding:12px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(data.total) + '</td>' +
                     '</tr>' +
                     '<tr style="background:' + bgColor + ';">' +
-                    '<td colspan="5" style="padding:5px 8px 12px 8px;border-bottom:2px solid #e2e8f0;">' +
-                    '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:3px;">📍 Terjual di:</div>' + storeBreakdown + moreStores +
+                    '<td colspan="4" style="padding:8px 15px 15px 15px;border-bottom:3px solid #cbd5e1;">' +
+                    '<div style="font-size:0.8rem;color:#374151;font-weight:600;margin-bottom:5px;">🏪 Penjualan per Toko (' + sortedStores.length + ' toko)</div>' +
+                    storeTableHtml +
                     '</td></tr>';
             });
 
