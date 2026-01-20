@@ -2343,20 +2343,41 @@ def generate_html(all_data, all_stores):
         const salesDetailData = ''' + sales_detail_json + ''';  // Sales detail transactions
         const targetData = ''' + target_json + ''';  // Target per toko
 
-        // Build SKU to tier mapping from stock data
+        // Build SKU to tier and series mapping from stock data
         const skuTierMap = {};
+        const skuSeriesMap = {};
+        const skuTipeMap = {};
         Object.values(allData).forEach(entityData => {
             (entityData.warehouse || []).forEach(item => {
-                if (item.sku && item.tier && item.tier !== '-') {
-                    skuTierMap[item.sku.toUpperCase()] = item.tier;
+                const sku = item.sku ? item.sku.toUpperCase() : '';
+                if (sku) {
+                    if (item.tier && item.tier !== '-') skuTierMap[sku] = item.tier;
+                    if (item.series && item.series !== '-') skuSeriesMap[sku] = item.series;
+                    if (item.tipe && item.tipe !== '-') skuTipeMap[sku] = item.tipe;
                 }
             });
             (entityData.retail || []).forEach(item => {
-                if (item.sku && item.tier && item.tier !== '-') {
-                    skuTierMap[item.sku.toUpperCase()] = item.tier;
+                const sku = item.sku ? item.sku.toUpperCase() : '';
+                if (sku) {
+                    if (item.tier && item.tier !== '-') skuTierMap[sku] = item.tier;
+                    if (item.series && item.series !== '-') skuSeriesMap[sku] = item.series;
+                    if (item.tipe && item.tipe !== '-') skuTipeMap[sku] = item.tipe;
                 }
             });
         });
+
+        // Helper function to check if SKU is a sandal (not accessory like GWP, BOX, BAG)
+        function isSandalSKU(sku) {
+            if (!sku) return false;
+            const upperSKU = sku.toUpperCase();
+            // Exclude GWP, BOX, BAG, INNER, PAPER items
+            if (upperSKU.startsWith('GWP')) return false;
+            if (upperSKU.includes('BOX')) return false;
+            if (upperSKU.includes('BAG')) return false;
+            if (upperSKU.includes('INNER')) return false;
+            if (upperSKU.includes('PAPER')) return false;
+            return true;
+        }
 
         let currentEntity = 'DDD';
         let currentType = 'warehouse';
@@ -5084,13 +5105,17 @@ def generate_html(all_data, all_stores):
             const search = (document.getElementById('salesFilterSearch').value || '').toLowerCase();
 
             return salesDetailData.filter(item => {
+                // Filter out non-sandal items (GWP, BOX, BAG, etc.)
+                if (!isSandalSKU(item.sku)) return false;
+
                 if (startDate && item.date < startDate) return false;
                 if (endDate && item.date > endDate) return false;
                 if (store && item.store !== store) return false;
                 if (category && item.category !== category) return false;
                 if (gender && getGenderFromSKU(item.sku) !== gender) return false;
                 if (series) {
-                    const itemSeries = (item.collection || '').split('|')[0].trim();
+                    // Get series from stock data mapping
+                    const itemSeries = skuSeriesMap[item.sku.toUpperCase()] || '';
                     if (itemSeries !== series) return false;
                 }
                 if (area) {
@@ -5457,21 +5482,16 @@ def generate_html(all_data, all_stores):
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
 
-            // Category Performance - by Gender with Series and Tipe
+            // Category Performance - by Gender with Series and Tipe (from Stock Data/Master Produk)
             const byGenderCat = {};
             data.forEach(item => {
                 const sku = item.sku || '';
+                const skuUpper = sku.toUpperCase();
                 const gender = getGenderFromSKU(sku);
 
-                // Extract series from collection (format: "SERIES NAME|...")
-                const collectionRaw = (item.collection || '').split('|')[0].trim();
-                const series = (collectionRaw && collectionRaw !== 'Umum' && collectionRaw !== 'All Item') ? collectionRaw : '-';
-
-                // Derive tipe from SKU pattern (Fashion vs Jepit)
-                // Fashion: starts with patterns like BB1, SJ1, etc. with letters after numbers
-                // Jepit: starts with Z2, L2, M1, K1, G1, etc. (simpler pattern)
-                const isFashion = /^[A-Z]{2}\d[A-Z]/.test(sku);
-                const tipe = isFashion ? 'Fashion' : 'Jepit';
+                // Get series and tipe from stock data mapping (from Master Produk)
+                const series = skuSeriesMap[skuUpper] || '-';
+                const tipe = skuTipeMap[skuUpper] || '-';
 
                 // Group by Gender
                 if (!byGenderCat[gender]) byGenderCat[gender] = { sales: 0, qty: 0, trx: new Set(), seriesList: {}, tipeList: {} };
@@ -5486,7 +5506,7 @@ def generate_html(all_data, all_stores):
                 }
 
                 // Track tipe breakdown
-                if (tipe) {
+                if (tipe && tipe !== '-') {
                     if (!byGenderCat[gender].tipeList[tipe]) byGenderCat[gender].tipeList[tipe] = 0;
                     byGenderCat[gender].tipeList[tipe] += item.total || 0;
                 }
