@@ -5353,46 +5353,6 @@ def generate_html(all_data, all_stores):
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
             document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store';
 
-            // Sales by SPG with Store, ATV, ATU - dynamic limit
-            // SPG limit: 5 if area filter, ALL if store filter, 10 for all
-            const spgLimit = salesStore ? 999 : (salesArea ? 5 : 10);
-
-            const bySPG = {};
-            data.forEach(item => {
-                const spg = item.spg || item.kasir || 'Unknown';
-                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set(), stores: new Set() };
-                bySPG[spg].sales += item.total || 0;
-                bySPG[spg].qty += item.qty || 0;
-                bySPG[spg].trx.add(item.order_no);
-                if (item.store) bySPG[spg].stores.add(item.store);
-            });
-
-            const spgArrFull = Object.entries(bySPG).map(([spg, val]) => ({
-                spg, sales: val.sales, qty: val.qty, trx: val.trx.size,
-                stores: Array.from(val.stores),
-                atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
-                atu: val.trx.size > 0 ? val.qty / val.trx.size : 0
-            })).sort((a, b) => b.sales - a.sales);
-            const spgArr = spgArrFull.slice(0, spgLimit);
-
-            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            spgHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SPG</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">ATV</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">ATU</th></tr></thead><tbody>';
-            spgArr.forEach((s, i) => {
-                const storeDisplay = s.stores.length > 1 ? s.stores[0] + ' +' + (s.stores.length - 1) : (s.stores[0] || '-');
-                spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                spgHtml += '<td style="padding:6px;font-weight:500;">' + (i+1) + '. ' + s.spg + '</td>';
-                spgHtml += '<td style="padding:6px;color:#6b7280;font-size:0.7rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="' + s.stores.join(', ') + '">' + storeDisplay + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;color:#8b5cf6;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>';
-                spgHtml += '</tr>';
-            });
-            spgHtml += '</tbody></table>';
-            document.getElementById('salesBySPGTable').innerHTML = spgHtml;
-            const spgTitleText = salesStore ? '👤 Sales by SPG (' + salesStore.replace('Zuma ', '').replace('ZUMA ', '') + ' - All ' + spgArr.length + ')' : '👤 Sales by SPG (Top ' + spgArr.length + ')';
-            document.getElementById('salesBySPGTitle').textContent = spgTitleText;
-
             // Sales by Area
             const byArea = {};
             data.forEach(item => {
