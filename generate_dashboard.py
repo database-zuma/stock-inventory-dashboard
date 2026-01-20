@@ -471,8 +471,9 @@ def load_sales_data():
                 sku = row[15].strip().upper()
                 qty = int(row[13]) if row[13].strip() else 1
 
-                # Skip non-sandal items
-                if not sku or sku in ['SHOPBAG001', 'PAPERBAG001', 'INBOX001', '']:
+                # Skip empty SKU only (non-sandal items now INCLUDED in sales calculation)
+                # because store targets include non-sandal items too
+                if not sku:
                     continue
 
                 if sku not in SALES_DATA:
@@ -544,8 +545,8 @@ def load_sales_detail():
                 retur_qty = int(row[33]) if row[33].strip() else 0
                 spg = row[34].strip() if len(row) > 34 else kasir
 
-                # Skip non-sandal items
-                if sku in ['SHOPBAG001', 'PAPERBAG001', 'INBOX001', '']:
+                # Skip empty SKU only (non-sandal items now INCLUDED)
+                if not sku:
                     continue
 
                 SALES_DETAIL.append({
@@ -2391,17 +2392,12 @@ def generate_html(all_data, all_stores):
             });
         });
 
-        // Helper function to check if SKU is a sandal (not accessory like GWP, BOX, BAG)
+        // Helper function to check if SKU is valid (include all items including non-sandal)
+        // Non-sandal items (GWP, BOX, BAG, INNER, PAPER) are now INCLUDED in sales calculation
+        // because store targets include non-sandal items too
         function isSandalSKU(sku) {
             if (!sku) return false;
-            const upperSKU = sku.toUpperCase();
-            // Exclude GWP, BOX, BAG, INNER, PAPER items
-            if (upperSKU.startsWith('GWP')) return false;
-            if (upperSKU.includes('BOX')) return false;
-            if (upperSKU.includes('BAG')) return false;
-            if (upperSKU.includes('INNER')) return false;
-            if (upperSKU.includes('PAPER')) return false;
-            return true;
+            return true;  // Include all items
         }
 
         let currentEntity = 'DDD';
