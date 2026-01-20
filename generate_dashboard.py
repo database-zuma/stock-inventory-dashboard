@@ -541,7 +541,11 @@ def load_sales_detail():
                 disc_pct = float(row[18].replace(',', '.')) if row[18].strip() else 0
                 disc_amt = float(row[19].replace(',', '.')) if row[19].strip() else 0
                 disc_code = row[20].strip()
-                total = float(row[22].replace(',', '.')) if row[22].strip() else 0
+                # Get Total (index 22) and Tax Amount (index 25)
+                total_before_tax = float(row[22].replace(',', '.')) if row[22].strip() else 0
+                tax_amount = float(row[25].replace(',', '.')) if len(row) > 25 and row[25].strip() else 0
+                # Sales = Total + Tax Amount
+                total = total_before_tax + tax_amount
                 promo = row[24].strip()
                 retur_qty = int(row[33]) if row[33].strip() else 0
                 spg = row[34].strip() if len(row) > 34 else kasir
