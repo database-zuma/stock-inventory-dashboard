@@ -39,6 +39,8 @@ Dashboard analisis penjualan dengan multiple tabs:
 #### Trend Tab
 - **Daily Sales Trend**: Grafik penjualan harian
 - **Weekly Summary**: Ringkasan mingguan (Weekday vs Weekend)
+- **Sales by Area**: Bar chart per area dengan filter week (W1-W5)
+- **Sales by Gender**: Bar chart per gender dengan filter week (W1-W5)
 
 #### Produk Tab
 - **Top Selling Articles (Top 20)**: Artikel terlaris
@@ -48,8 +50,7 @@ Dashboard analisis penjualan dengan multiple tabs:
 - **Size Distribution by Gender**: Distribusi ukuran per gender
 
 #### SPG Tab
-- **SPG Summary Cards**: Total SPG, Avg Sales/SPG, Avg ATV, Avg ATU, Top Performer
-- **SPG Leaderboard**: Ranking lengkap semua SPG
+- **SPG Leaderboard**: Ranking lengkap semua SPG dengan kolom Rank, SPG, Toko, Sales, Qty, Trx, ATV, ATU
 
 #### Target Tab
 - **Achievement by Store**: Pencapaian target per toko
@@ -57,7 +58,7 @@ Dashboard analisis penjualan dengan multiple tabs:
 - **Gap to Target**: Analisis gap yang perlu dikejar
 
 #### Transaksi Tab
-- **Recent Transactions**: Detail transaksi terbaru
+- **Recent Transactions**: Detail 500 transaksi terbaru (Tanggal, Toko, SPG, Order, SKU, Qty, Price, Disc%, Promo, Total)
 
 #### Gender Tab
 - **Gender Sales Summary**: Ringkasan penjualan per gender
