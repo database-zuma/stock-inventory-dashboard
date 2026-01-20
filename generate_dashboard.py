@@ -6609,7 +6609,7 @@ def generate_html(all_data, all_stores):
                     '<div style="font-size:0.8rem;color:#6b7280;">' + (m.name || m.kodeKecil) + '</div>' +
                     '</div>' +
                     '<div style="text-align:right;">' +
-                    '<div style="font-weight:500;color:#059669;">' + formatCurrency(m.total) + '</div>' +
+                    '<div style="font-weight:500;color:#059669;">' + formatRp(m.total) + '</div>' +
                     '<div style="font-size:0.75rem;color:#6b7280;">' + m.qty + ' pcs · ' + m.count + ' trx</div>' +
                     '</div>' +
                     '</div>';
@@ -6679,7 +6679,7 @@ def generate_html(all_data, all_stores):
                 '<div style="font-size:1.2rem;font-weight:600;color:#166534;">' + formatNum(totalQty) + '</div></div>' +
                 '<div style="background:#eff6ff;padding:10px 15px;border-radius:8px;border-left:4px solid #3b82f6;">' +
                 '<div style="font-size:0.75rem;color:#6b7280;">Total Sales</div>' +
-                '<div style="font-size:1.2rem;font-weight:600;color:#1e40af;">' + formatCurrency(totalSales) + '</div></div>' +
+                '<div style="font-size:1.2rem;font-weight:600;color:#1e40af;">' + formatRp(totalSales) + '</div></div>' +
                 '<div style="background:#fefce8;padding:10px 15px;border-radius:8px;border-left:4px solid #eab308;">' +
                 '<div style="font-size:0.75rem;color:#6b7280;">SKU Ditemukan</div>' +
                 '<div style="font-size:1.2rem;font-weight:600;color:#a16207;">' + uniqueSKUs + '</div></div>' +
@@ -6707,7 +6707,7 @@ def generate_html(all_data, all_stores):
                     '<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#3b82f6;cursor:pointer;">' + sku + '</td>' +
                     '<td style="padding:8px;border-bottom:1px solid #e2e8f0;">' + name + '</td>' +
                     '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;">' + formatNum(data.qty) + '</td>' +
-                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#059669;">' + formatCurrency(data.total) + '</td>' +
+                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#059669;">' + formatRp(data.total) + '</td>' +
                     '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;">' + data.transactions.length + '</td>' +
                     '</tr>';
             });
@@ -6746,7 +6746,7 @@ def generate_html(all_data, all_stores):
                     '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + t.store + '</td>' +
                     '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + (t.spg || t.kasir || '-') + '</td>' +
                     '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + t.qty + '</td>' +
-                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + formatCurrency(t.total) + '</td>' +
+                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + formatRp(t.total) + '</td>' +
                     '</tr>';
             });
 
@@ -6759,7 +6759,7 @@ def generate_html(all_data, all_stores):
             document.getElementById('skuModalBody').innerHTML =
                 '<div style="margin-bottom:15px;display:flex;gap:15px;">' +
                 '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;"><strong>Total Qty:</strong> ' + formatNum(totalQty) + '</div>' +
-                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;"><strong>Total Sales:</strong> ' + formatCurrency(totalSales) + '</div>' +
+                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;"><strong>Total Sales:</strong> ' + formatRp(totalSales) + '</div>' +
                 '<div style="background:#fefce8;padding:8px 12px;border-radius:6px;"><strong>Transaksi:</strong> ' + transactions.length + '</div>' +
                 '</div>' + html;
             document.getElementById('skuModal').style.display = 'flex';
