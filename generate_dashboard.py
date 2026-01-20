@@ -1913,9 +1913,19 @@ def generate_html(all_data, all_stores):
         <!-- ==================== STOCK CONTROL VIEW ==================== -->
         <div class="view-container" id="stockcontrolView">
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:16px;padding:20px;margin-bottom:20px;">
+            <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:16px;padding:20px;margin-bottom:15px;">
                 <h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">📊 Control Stock - Turnover Analysis</h2>
                 <p style="margin:0;color:#6b7280;font-size:0.85rem;">Data sales: November, Desember, Januari (3 bulan terakhir)</p>
+            </div>
+
+            <!-- View Mode Toggle -->
+            <div style="display:flex;gap:10px;margin-bottom:20px;justify-content:center;">
+                <button id="scViewSku" onclick="switchStockControlView('sku')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:white;transition:all 0.2s;">
+                    Turnover Analysis By SKU
+                </button>
+                <button id="scViewKodeKecil" onclick="switchStockControlView('kodeKecil')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:white;color:#6366f1;transition:all 0.2s;">
+                    Turnover Analysis By Kode Kecil
+                </button>
             </div>
 
             <!-- Summary Cards -->
@@ -2007,16 +2017,6 @@ def generate_html(all_data, all_stores):
                         <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                     </div>
                 </div>
-            </div>
-
-            <!-- View Mode Toggle -->
-            <div style="display:flex;gap:8px;margin-bottom:15px;justify-content:center;">
-                <button id="scViewSku" onclick="switchStockControlView('sku')" style="padding:10px 20px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:white;transition:all 0.2s;">
-                    Kode SKU (Per Size)
-                </button>
-                <button id="scViewKodeKecil" onclick="switchStockControlView('kodeKecil')" style="padding:10px 20px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:white;color:#6366f1;transition:all 0.2s;">
-                    Kode Kecil (Aggregate)
-                </button>
             </div>
 
             <!-- Control Stock Table -->
