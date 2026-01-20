@@ -2312,16 +2312,21 @@ def generate_html(all_data, all_stores):
                 <div class="sales-tab-content" id="salesTabSkusearch" style="padding:20px;display:none;">
                     <div>
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU</h4>
-                        <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
-                            <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
-                                style="flex:1;min-width:200px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
-                                onkeyup="if(event.key==='Enter') searchSKUSales()">
-                            <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
-                                🔍 Cari
-                            </button>
-                            <button onclick="resetSKUSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
-                                Reset
-                            </button>
+                        <div style="position:relative;margin-bottom:15px;">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                                <div style="position:relative;flex:1;min-width:250px;">
+                                    <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
+                                        style="width:100%;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
+                                        onkeyup="showSKUSuggestions(event)" onfocus="showSKUSuggestions(event)" autocomplete="off">
+                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;max-height:300px;overflow-y:auto;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                                </div>
+                                <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                    🔍 Cari
+                                </button>
+                                <button onclick="resetSKUSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                    Reset
+                                </button>
+                            </div>
                         </div>
                         <div id="skuSearchSummary" style="margin-bottom:15px;"></div>
                         <div id="skuSearchResults" style="max-height:500px;overflow-y:auto;"></div>
@@ -6523,6 +6528,116 @@ def generate_html(all_data, all_stores):
         }
 
         // SKU Search Functions
+        let skuSalesCache = null;  // Cache for SKU sales data
+
+        function buildSKUSalesCache() {
+            if (skuSalesCache) return skuSalesCache;
+            skuSalesCache = {};
+            salesDetailData.forEach(item => {
+                const sku = item.sku;
+                if (!sku) return;
+                if (!skuSalesCache[sku]) {
+                    skuSalesCache[sku] = { qty: 0, total: 0, count: 0 };
+                }
+                skuSalesCache[sku].qty += item.qty || 0;
+                skuSalesCache[sku].total += item.total || 0;
+                skuSalesCache[sku].count++;
+            });
+            return skuSalesCache;
+        }
+
+        function showSKUSuggestions(event) {
+            const input = document.getElementById('skuSearchInput');
+            const suggestions = document.getElementById('skuSuggestions');
+            const searchTerm = (input.value || '').trim().toUpperCase();
+
+            // Handle Enter key
+            if (event && event.key === 'Enter') {
+                suggestions.style.display = 'none';
+                searchSKUSales();
+                return;
+            }
+
+            // Handle Escape key
+            if (event && event.key === 'Escape') {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            if (searchTerm.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            // Build cache if not exists
+            const cache = buildSKUSalesCache();
+
+            // Find matching SKUs
+            const matches = [];
+            Object.keys(cache).forEach(sku => {
+                const name = articleNameMap[sku.substring(0,7)] || '';
+                const kodeKecil = sku.substring(0,7);
+                if (sku.toUpperCase().includes(searchTerm) ||
+                    name.toUpperCase().includes(searchTerm) ||
+                    kodeKecil.toUpperCase().includes(searchTerm)) {
+                    matches.push({
+                        sku: sku,
+                        name: name,
+                        kodeKecil: kodeKecil,
+                        qty: cache[sku].qty,
+                        total: cache[sku].total,
+                        count: cache[sku].count
+                    });
+                }
+            });
+
+            // Sort by total sales descending and limit to 15
+            matches.sort((a, b) => b.total - a.total);
+            const topMatches = matches.slice(0, 15);
+
+            if (topMatches.length === 0) {
+                suggestions.innerHTML = '<div style="padding:12px;color:#6b7280;text-align:center;">Tidak ada hasil</div>';
+                suggestions.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            topMatches.forEach(m => {
+                html += '<div onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="padding:10px 15px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background=\\'#f8fafc\\'" onmouseout="this.style.background=\\'white\\'">' +
+                    '<div>' +
+                    '<div style="font-weight:500;color:#1f2937;font-family:monospace;">' + m.sku + '</div>' +
+                    '<div style="font-size:0.8rem;color:#6b7280;">' + (m.name || m.kodeKecil) + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                    '<div style="font-weight:500;color:#059669;">' + formatCurrency(m.total) + '</div>' +
+                    '<div style="font-size:0.75rem;color:#6b7280;">' + m.qty + ' pcs · ' + m.count + ' trx</div>' +
+                    '</div>' +
+                    '</div>';
+            });
+
+            if (matches.length > 15) {
+                html += '<div style="padding:8px;text-align:center;color:#3b82f6;font-size:0.8rem;">+ ' + (matches.length - 15) + ' lainnya, tekan Enter untuk lihat semua</div>';
+            }
+
+            suggestions.innerHTML = html;
+            suggestions.style.display = 'block';
+        }
+
+        function selectSKUSuggestion(sku) {
+            document.getElementById('skuSearchInput').value = sku;
+            document.getElementById('skuSuggestions').style.display = 'none';
+            searchSKUSales();
+        }
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            const suggestions = document.getElementById('skuSuggestions');
+            const input = document.getElementById('skuSearchInput');
+            if (suggestions && input && !input.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.style.display = 'none';
+            }
+        });
+
         function searchSKUSales() {
             const searchTerm = (document.getElementById('skuSearchInput').value || '').trim().toUpperCase();
             if (!searchTerm) {
