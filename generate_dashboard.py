@@ -6236,7 +6236,7 @@ def generate_html(all_data, all_stores):
                 const dateCompare = dateB.localeCompare(dateA);
                 if (dateCompare !== 0) return dateCompare;
                 return (b.hour || 0) - (a.hour || 0);
-            }).slice(0, 50);
+            }).slice(0, 500);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
             recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
