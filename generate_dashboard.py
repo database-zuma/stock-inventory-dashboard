@@ -981,7 +981,7 @@ def generate_html(all_data, all_stores):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Operations Dashboard - Zuma Indonesia</title>
+    <title>Monitoring Stock Retail & Warehouse - Zuma Indonesia</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1449,7 +1449,7 @@ def generate_html(all_data, all_stores):
         <div style="display:flex;align-items:center;gap:20px;">
             <img src="''' + LOGO_ZUMA + '''" alt="Zuma Logo" style="height:80px;width:auto;filter:brightness(0) invert(1);">
             <div>
-                <h1 style="font-size:1.4rem;margin:0;">Master Operations Dashboard</h1>
+                <h1 style="font-size:1.4rem;margin:0;">Monitoring Stock Retail & Warehouse</h1>
                 <p style="margin:5px 0 0 0;font-size:1rem;">Zuma Indonesia</p>
             </div>
         </div>
@@ -1909,16 +1909,6 @@ def generate_html(all_data, all_stores):
                 <p style="margin:0;color:#6b7280;font-size:0.85rem;">Data sales: November, Desember, Januari (3 bulan terakhir)</p>
             </div>
 
-            <!-- View Mode Tabs -->
-            <div style="display:flex;gap:10px;margin-bottom:20px;">
-                <button id="scTabSku" onclick="switchScView('sku')" style="padding:10px 20px;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;background:#3b82f6;color:white;">
-                    📋 Turnover Analysis Kode SKU
-                </button>
-                <button id="scTabKodeKecil" onclick="switchScView('kodeKecil')" style="padding:10px 20px;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;background:#e5e7eb;color:#374151;">
-                    📦 Turnover Analysis Kode Kecil
-                </button>
-            </div>
-
             <!-- Summary Cards -->
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
                 <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:15px;">
@@ -2016,8 +2006,8 @@ def generate_html(all_data, all_stores):
                     <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
                         <thead>
                             <tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">
-                                <th id="scHeaderKode" style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;white-space:nowrap;cursor:pointer;" onclick="sortStockControl('sku')">KODE SKU</th>
-                                <th id="scHeaderSize" style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('size')">SIZE</th>
+                                <th style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;white-space:nowrap;cursor:pointer;" onclick="sortStockControl('sku')">KODE SKU</th>
+                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('size')">SIZE</th>
                                 <th style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;max-width:200px;">ARTICLE</th>
                                 <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">SERIES</th>
                                 <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">GENDER</th>
@@ -4610,27 +4600,6 @@ def generate_html(all_data, all_stores):
         let scFilteredItems = [];
         let scCurrentPage = 1;
         const scItemsPerPage = 50;
-        let scViewMode = 'sku'; // 'sku' or 'kodeKecil'
-
-        function switchScView(mode) {
-            scViewMode = mode;
-            scCurrentPage = 1;
-            // Update tab styles
-            var tabSku = document.getElementById('scTabSku');
-            var tabKodeKecil = document.getElementById('scTabKodeKecil');
-            if (mode === 'sku') {
-                tabSku.style.background = '#3b82f6';
-                tabSku.style.color = 'white';
-                tabKodeKecil.style.background = '#e5e7eb';
-                tabKodeKecil.style.color = '#374151';
-            } else {
-                tabSku.style.background = '#e5e7eb';
-                tabSku.style.color = '#374151';
-                tabKodeKecil.style.background = '#3b82f6';
-                tabKodeKecil.style.color = 'white';
-            }
-            renderStockControlTable();
-        }
 
         function buildSkuItems() {
             const skuMap = {};
@@ -4755,87 +4724,19 @@ def generate_html(all_data, all_stores):
             const toFilter = document.getElementById('scFilterTO')?.value || '';
             const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
 
-            // Update header based on view mode
-            var headerKode = document.getElementById('scHeaderKode');
-            if (headerKode) {
-                headerKode.textContent = scViewMode === 'sku' ? 'KODE SKU' : 'KODE KECIL';
-            }
-            // Hide/show SIZE column based on view mode
-            var headerSize = document.getElementById('scHeaderSize');
-            if (headerSize) {
-                headerSize.style.display = scViewMode === 'sku' ? '' : 'none';
-            }
-
             // Use salesMap directly (loaded from salesss.csv)
             // salesMap format: {SKU: {nov, des, jan}}
 
-            // Helper function to get sales for SKU or array of SKUs
-            function getSales(skuOrList) {
-                var nov = 0, des = 0, jan = 0;
-                if (Array.isArray(skuOrList)) {
-                    // Aggregate sales from all SKUs in the list
-                    skuOrList.forEach(function(sku) {
-                        var skuUpper = (sku || '').toUpperCase();
-                        var s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
-                        nov += s.nov;
-                        des += s.des;
-                        jan += s.jan;
-                    });
-                } else {
-                    var skuUpper = (skuOrList || '').toUpperCase();
-                    var s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
-                    nov = s.nov;
-                    des = s.des;
-                    jan = s.jan;
-                }
-                var avg = (nov + des + jan) / 3;
-                return { nov: nov, des: des, jan: jan, avg: avg };
-            }
-
-            // Prepare data based on view mode
-            var dataToUse = scItems;
-            if (scViewMode === 'kodeKecil') {
-                // Aggregate by kodeKecil
-                var kodeKecilMap = {};
-                scItems.forEach(function(item) {
-                    var kk = item.kodeKecil || item.sku;
-                    if (!kodeKecilMap[kk]) {
-                        kodeKecilMap[kk] = {
-                            sku: kk,
-                            kodeKecil: kk,
-                            name: item.name,
-                            size: '-',
-                            series: item.series,
-                            gender: item.gender,
-                            tier: item.tier,
-                            WHS: 0, WHB: 0, WHJ: 0,
-                            stokToko: 0, whTotal: 0, globalStock: 0,
-                            stokTokoBali: 0, stokTokoJakarta: 0, stokTokoJatim: 0,
-                            stokTokoBatam: 0, stokTokoSulawesi: 0, stokTokoSumatera: 0, stokTokoLombok: 0,
-                            skuList: []
-                        };
-                    }
-                    var agg = kodeKecilMap[kk];
-                    agg.WHS += item.WHS || 0;
-                    agg.WHB += item.WHB || 0;
-                    agg.WHJ += item.WHJ || 0;
-                    agg.stokToko += item.stokToko || 0;
-                    agg.whTotal += item.whTotal || 0;
-                    agg.globalStock += item.globalStock || 0;
-                    agg.stokTokoBali += item.stokTokoBali || 0;
-                    agg.stokTokoJakarta += item.stokTokoJakarta || 0;
-                    agg.stokTokoJatim += item.stokTokoJatim || 0;
-                    agg.stokTokoBatam += item.stokTokoBatam || 0;
-                    agg.stokTokoSulawesi += item.stokTokoSulawesi || 0;
-                    agg.stokTokoSumatera += item.stokTokoSumatera || 0;
-                    agg.stokTokoLombok += item.stokTokoLombok || 0;
-                    agg.skuList.push(item.sku);
-                });
-                dataToUse = Object.values(kodeKecilMap);
+            // Helper function to get sales for SKU
+            function getSales(sku) {
+                const skuUpper = (sku || '').toUpperCase();
+                const s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
+                const avg = (s.nov + s.des + s.jan) / 3;
+                return { nov: s.nov, des: s.des, jan: s.jan, avg: avg };
             }
 
             // Filter items
-            scFilteredItems = dataToUse.filter(item => {
+            scFilteredItems = scItems.filter(item => {
                 if (gender && item.gender !== gender) return false;
                 if (tier && String(item.tier) !== tier) return false;
                 if (series && item.series !== series) return false;
@@ -4856,7 +4757,7 @@ def generate_html(all_data, all_stores):
 
                 // TW filter (warehouse turnover)
                 if (twFilter) {
-                    const sales = getSales(item.skuList || item.sku);
+                    const sales = getSales(item.sku);
                     const whStock = area === 'Bali' ? item.WHB : (area === 'Jakarta' ? item.WHJ : (area === 'Jawa Timur' ? item.WHS : item.whTotal));
                     const tw = sales.avg > 0 ? (whStock / sales.avg) : 999;
                     if (twFilter === 'critical' && tw >= 2) return false;
@@ -4906,7 +4807,7 @@ def generate_html(all_data, all_stores):
             if (!tbody) return;
 
             tbody.innerHTML = pageData.map(item => {
-                const sales = getSales(item.skuList || item.sku);
+                const sales = getSales(item.sku);
                 let nov = sales.nov, des = sales.des, jan = sales.jan, avgSales = sales.avg;
                 let whStock, tokoStock, globalStock;
 
@@ -4984,10 +4885,9 @@ def generate_html(all_data, all_stores):
                     whPusat = item.WHS.toLocaleString();
                 }
 
-                var sizeCell = scViewMode === 'sku' ? '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' : '';
                 return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
                     '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
-                    sizeCell +
+                    '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
                     '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
@@ -5009,10 +4909,9 @@ def generate_html(all_data, all_stores):
             }).join('');
 
             // Page info
-            var itemLabel = scViewMode === 'sku' ? 'SKUs' : 'Kode Kecil';
             document.getElementById('scPageInfo').textContent =
                 'Showing ' + (start + 1) + '-' + Math.min(start + scItemsPerPage, scFilteredItems.length) +
-                ' of ' + scFilteredItems.length + ' ' + itemLabel;
+                ' of ' + scFilteredItems.length + ' SKUs';
 
             // Pagination
             renderScPagination(totalPages);
