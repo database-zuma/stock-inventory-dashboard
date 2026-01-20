@@ -6091,23 +6091,23 @@ def generate_html(all_data, all_stores):
             })).sort((a, b) => b.sales - a.sales);
 
             // Leaderboard Table
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Rank</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">SPG</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Trx</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">ATV</th><th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">ATU</th></tr></thead><tbody>';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
+            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;border-bottom:2px solid #000;"><th style="text-align:left;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">Rank</th><th style="text-align:left;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">SPG</th><th style="text-align:left;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">Toko</th><th style="text-align:right;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">Sales</th><th style="text-align:right;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">Qty</th><th style="text-align:right;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">Trx</th><th style="text-align:right;padding:8px;color:#000;background:#f8fafc;border-right:1px solid #ccc;">ATV</th><th style="text-align:right;padding:8px;color:#000;background:#f8fafc;">ATU</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
                 html += '<tr><td colspan="8" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
             } else {
                 spgArr.forEach((s, i) => {
                     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-                    html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i < 3 ? 'background:#fef9c3;' : '') + '">';
-                    html += '<td style="padding:8px;font-weight:600;color:#374151;">' + medal + '</td>';
-                    html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#1f2937;">' + s.spg + '</td>';
-                    html += '<td style="padding:8px;font-size:0.7rem;color:#6b7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
-                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.qty + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#374151;">' + s.trx + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#3b82f6;">Rp ' + s.atv.toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#8b5cf6;">' + s.atu.toFixed(2) + '</td>';
+                    html += '<tr style="border-bottom:1px solid #000;' + (i < 3 ? 'background:#fef9c3;' : '') + '">';
+                    html += '<td style="padding:8px;font-weight:600;color:#000;border-right:1px solid #ccc;">' + medal + '</td>';
+                    html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#000;border-right:1px solid #ccc;">' + s.spg + '</td>';
+                    html += '<td style="padding:8px;font-size:0.75rem;color:#000;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-right:1px solid #ccc;">' + s.stores + '</td>';
+                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;border-right:1px solid #ccc;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#000;font-weight:500;border-right:1px solid #ccc;">' + s.qty + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#000;font-weight:500;border-right:1px solid #ccc;">' + s.trx + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#3b82f6;font-weight:500;border-right:1px solid #ccc;">Rp ' + s.atv.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#8b5cf6;font-weight:500;">' + s.atu.toFixed(2) + '</td>';
                     html += '</tr>';
                 });
             }
