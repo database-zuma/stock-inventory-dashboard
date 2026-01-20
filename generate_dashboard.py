@@ -2318,7 +2318,7 @@ def generate_html(all_data, all_stores):
                                     <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
                                         style="width:100%;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
                                         onkeyup="showSKUSuggestions(event)" onfocus="showSKUSuggestions(event)" autocomplete="off">
-                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;width:500px;background:white;border:1px solid #cbd5e1;border-radius:8px;max-height:400px;overflow-y:auto;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,0.2);"></div>
+                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;width:800px;background:white;border:1px solid #94a3b8;border-radius:8px;max-height:450px;overflow-y:auto;z-index:1000;box-shadow:0 8px 30px rgba(0,0,0,0.25);"></div>
                                 </div>
                                 <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
                                     🔍 Cari
@@ -6609,23 +6609,31 @@ def generate_html(all_data, all_stores):
                 return;
             }
 
-            let html = '';
+            // Table format for suggestions
+            let html = '<table style="width:100%;border-collapse:collapse;">' +
+                '<thead><tr style="background:#1e293b;color:white;">' +
+                '<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.8rem;">SKU</th>' +
+                '<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.8rem;">NAMA ARTIKEL</th>' +
+                '<th style="padding:10px 12px;text-align:right;font-weight:600;font-size:0.8rem;">QTY</th>' +
+                '<th style="padding:10px 12px;text-align:right;font-weight:600;font-size:0.8rem;">TOTAL SALES</th>' +
+                '<th style="padding:10px 12px;text-align:center;font-weight:600;font-size:0.8rem;">TRX</th>' +
+                '</tr></thead><tbody>';
+
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                html += '<div onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="padding:12px 15px;border-bottom:1px solid #e2e8f0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:' + bgColor + ';" onmouseover="this.style.background=\\'#e0f2fe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
-                    '<div style="flex:1;">' +
-                    '<div style="font-weight:600;color:#111827;font-family:monospace;font-size:0.95rem;">' + m.sku + '</div>' +
-                    '<div style="font-size:0.85rem;color:#374151;margin-top:2px;">' + (m.name || m.kodeKecil) + '</div>' +
-                    '</div>' +
-                    '<div style="text-align:right;min-width:120px;">' +
-                    '<div style="font-weight:600;color:#047857;font-size:0.95rem;">' + formatRp(m.total) + '</div>' +
-                    '<div style="font-size:0.8rem;color:#1f2937;margin-top:2px;">' + m.qty + ' pcs · ' + m.count + ' trx</div>' +
-                    '</div>' +
-                    '</div>';
+                html += '<tr onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\\'#dbeafe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
+                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.9rem;">' + m.sku + '</td>' +
+                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#111827;font-size:0.85rem;">' + (m.name || m.kodeKecil || '-') + '</td>' +
+                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#111827;font-size:0.9rem;">' + m.qty + '</td>' +
+                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;font-size:0.9rem;">' + formatRp(m.total) + '</td>' +
+                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;color:#374151;font-size:0.85rem;">' + m.count + '</td>' +
+                    '</tr>';
             });
 
+            html += '</tbody></table>';
+
             if (matches.length > 15) {
-                html += '<div style="padding:10px;text-align:center;color:#1d4ed8;font-size:0.85rem;font-weight:500;background:#eff6ff;">+ ' + (matches.length - 15) + ' lainnya, tekan Enter untuk lihat semua</div>';
+                html += '<div style="padding:12px;text-align:center;color:#1d4ed8;font-size:0.85rem;font-weight:500;background:#eff6ff;border-top:1px solid #e2e8f0;">+ ' + (matches.length - 15) + ' SKU lainnya, tekan Enter untuk lihat semua</div>';
             }
 
             suggestions.innerHTML = html;
