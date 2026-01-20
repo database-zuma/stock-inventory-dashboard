@@ -6588,15 +6588,20 @@ def generate_html(all_data, all_stores):
             // Find matching SKUs
             const matches = [];
             Object.keys(cache).forEach(sku => {
-                const name = articleNameMap[sku.substring(0,7)] || '';
-                const kodeKecil = sku.substring(0,7);
+                const article = sku.replace(/Z\\d{2,3}$/, '');
+                // Get name from articleNameMap or directly from salesDetailData
+                let name = articleNameMap[article] || '';
+                if (!name) {
+                    const saleItem = salesDetailData.find(d => d.sku === sku);
+                    if (saleItem && saleItem.product_name) name = saleItem.product_name;
+                }
                 if (sku.toUpperCase().includes(searchTerm) ||
                     name.toUpperCase().includes(searchTerm) ||
-                    kodeKecil.toUpperCase().includes(searchTerm)) {
+                    article.toUpperCase().includes(searchTerm)) {
                     matches.push({
                         sku: sku,
                         name: name,
-                        kodeKecil: kodeKecil,
+                        article: article,
                         qty: cache[sku].qty,
                         total: cache[sku].total,
                         count: cache[sku].count
@@ -6639,7 +6644,7 @@ def generate_html(all_data, all_stores):
 
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                const articleName = articleNameMap[m.sku.substring(0,7)] || articleNameMap[m.kodeKecil] || m.name || '-';
+                const articleName = m.name || articleNameMap[m.article] || '-';
                 html += '<tr onclick="selectSKUFromList(\\'' + m.sku + '\\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\\'#dbeafe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;">' + m.sku + '</td>' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
@@ -6674,9 +6679,9 @@ def generate_html(all_data, all_stores):
             // Filter sales data by SKU or article name
             const results = salesDetailData.filter(item => {
                 const sku = (item.sku || '').toUpperCase();
-                const name = (articleNameMap[sku.substring(0,7)] || '').toUpperCase();
-                const kodeKecil = sku.substring(0,7);
-                return sku.includes(searchTerm) || name.includes(searchTerm) || kodeKecil.includes(searchTerm);
+                const article = sku.replace(/Z\\d{2,3}$/, '');
+                const name = (item.product_name || articleNameMap[article] || '').toUpperCase();
+                return sku.includes(searchTerm) || name.includes(searchTerm) || article.includes(searchTerm);
             });
 
             // Group by SKU
@@ -6718,7 +6723,10 @@ def generate_html(all_data, all_stores):
             const sortedSKUs = Object.entries(skuGroups).sort((a, b) => b[1].total - a[1].total);
 
             sortedSKUs.forEach(([sku, data], idx) => {
-                const name = articleNameMap[sku.substring(0,7)] || articleNameMap[sku.replace(/Z\\d{2,3}$/, '')] || '-';
+                const article = sku.replace(/Z\\d{2,3}$/, '');
+                // Get name from transactions' product_name or articleNameMap
+                const firstTx = data.transactions.find(t => t.product_name);
+                const name = (firstTx && firstTx.product_name) || articleNameMap[article] || '-';
 
                 // Group by store and sort by qty descending
                 const storeData = {};
@@ -6739,12 +6747,13 @@ def generate_html(all_data, all_stores):
                     '<span style="color:#86efac;"><strong>' + formatRp(data.total) + '</strong></span>' +
                     '</div></div>';
 
-                // Store table
-                html += '<table style="width:100%;border-collapse:collapse;">' +
-                    '<thead><tr style="background:#334155;color:white;position:sticky;top:0;">' +
-                    '<th style="padding:10px 15px;text-align:left;font-weight:600;">TOKO</th>' +
-                    '<th style="padding:10px 15px;text-align:right;font-weight:600;">QTY</th>' +
-                    '<th style="padding:10px 15px;text-align:right;font-weight:600;">SALES</th>' +
+                // Store table with scrollable container for sticky header
+                html += '<div style="max-height:300px;overflow-y:auto;">' +
+                    '<table style="width:100%;border-collapse:collapse;">' +
+                    '<thead><tr style="background:#334155;color:white;position:sticky;top:0;z-index:1;">' +
+                    '<th style="padding:10px 15px;text-align:left;font-weight:600;background:#334155;">TOKO</th>' +
+                    '<th style="padding:10px 15px;text-align:right;font-weight:600;background:#334155;">QTY</th>' +
+                    '<th style="padding:10px 15px;text-align:right;font-weight:600;background:#334155;">SALES</th>' +
                     '</tr></thead><tbody>';
 
                 sortedStores.forEach(([store, sd], storeIdx) => {
@@ -6756,7 +6765,7 @@ def generate_html(all_data, all_stores):
                         '</tr>';
                 });
 
-                html += '</tbody></table></div>';
+                html += '</tbody></table></div></div>';
             });
 
             if (sortedSKUs.length === 0) {
