@@ -1,4 +1,4 @@
-# Stock Inventory Dashboard
+# Master Operations Dashboard
 
 Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 
@@ -20,6 +20,9 @@ Dashboard untuk monitoring stock Retail dan Warehouse ZUMA.
 - **Area-based View**: Breakdown per area (Bali, Jakarta, Jawa Timur)
 
 ### 3. Control Stock - Turnover Analysis
+- **2 View Mode**:
+  - **Turnover Analysis Kode SKU**: Detail per SKU (per size)
+  - **Turnover Analysis Kode Kecil**: Aggregate per artikel (semua size dijumlahkan)
 - **Summary Cards**: WH Pusat (Jatim), WH Bali, WH Jakarta, Total Stok Toko
 - **Sales Data**: NOV, DES, JAN (3 bulan terakhir dari salesss.csv)
 - **TW (Turnover Weeks)**: WH Stock / Avg Sales
