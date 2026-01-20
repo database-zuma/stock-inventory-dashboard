@@ -2293,12 +2293,9 @@ def generate_html(all_data, all_stores):
                 <div class="sales-tab-content" id="salesTabSPG" style="padding:20px;display:none;">
                     <!-- SPG Summary Cards -->
                     <div id="salesSPGSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px;"></div>
-                    <!-- Sales by SPG (moved from Performance) -->
-                    <h4 id="salesBySPGTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Sales by SPG</h4>
-                    <div id="salesBySPGTable" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
                     <!-- SPG Leaderboard -->
                     <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
-                    <div id="salesSPGLeaderboard" style="max-height:500px;overflow-y:auto;"></div>
+                    <div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div>
                 </div>
 
 
