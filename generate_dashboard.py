@@ -2312,24 +2312,19 @@ def generate_html(all_data, all_stores):
                 <div class="sales-tab-content" id="salesTabSkusearch" style="padding:20px;display:none;">
                     <div>
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU</h4>
-                        <div style="position:relative;margin-bottom:15px;">
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                                <div style="position:relative;flex:1;min-width:250px;">
-                                    <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
-                                        style="width:100%;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
-                                        onkeyup="showSKUSuggestions(event)" onfocus="showSKUSuggestions(event)" autocomplete="off">
-                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;width:800px;background:white;border:1px solid #94a3b8;border-radius:8px;max-height:450px;overflow-y:auto;z-index:1000;box-shadow:0 8px 30px rgba(0,0,0,0.25);"></div>
-                                </div>
-                                <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
-                                    🔍 Cari
-                                </button>
-                                <button onclick="resetSKUSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
-                                    Reset
-                                </button>
-                            </div>
+                        <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+                            <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
+                                style="flex:1;min-width:250px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
+                                onkeyup="handleSKUSearchKeyup(event)" autocomplete="off">
+                            <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                🔍 Cari
+                            </button>
+                            <button onclick="resetSKUSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
+                                Reset
+                            </button>
                         </div>
                         <div id="skuSearchSummary" style="margin-bottom:15px;"></div>
-                        <div id="skuSearchResults" style="max-height:500px;overflow-y:auto;"></div>
+                        <div id="skuSearchResults" style="max-height:600px;overflow-y:auto;"></div>
                     </div>
                 </div>
 
@@ -6537,6 +6532,7 @@ def generate_html(all_data, all_stores):
 
         // SKU Search Functions
         let skuSalesCache = null;  // Cache for SKU sales data
+        let isShowingSuggestions = false;  // Track if showing suggestions
 
         function buildSKUSalesCache() {
             if (skuSalesCache) return skuSalesCache;
@@ -6554,26 +6550,23 @@ def generate_html(all_data, all_stores):
             return skuSalesCache;
         }
 
-        function showSKUSuggestions(event) {
-            const input = document.getElementById('skuSearchInput');
-            const suggestions = document.getElementById('skuSuggestions');
-            const searchTerm = (input.value || '').trim().toUpperCase();
-
-            // Handle Enter key
-            if (event && event.key === 'Enter') {
-                suggestions.style.display = 'none';
+        function handleSKUSearchKeyup(event) {
+            // Handle Enter key - do full search
+            if (event.key === 'Enter') {
                 searchSKUSales();
                 return;
             }
 
-            // Handle Escape key
-            if (event && event.key === 'Escape') {
-                suggestions.style.display = 'none';
-                return;
-            }
+            // Show live suggestions as user types
+            showLiveSuggestions();
+        }
+
+        function showLiveSuggestions() {
+            const searchTerm = (document.getElementById('skuSearchInput').value || '').trim().toUpperCase();
 
             if (searchTerm.length < 2) {
-                suggestions.style.display = 'none';
+                document.getElementById('skuSearchSummary').innerHTML = '';
+                document.getElementById('skuSearchResults').innerHTML = '<p style="text-align:center;color:#9ca3af;padding:40px;">Ketik minimal 2 karakter untuk mencari...</p>';
                 return;
             }
 
@@ -6599,61 +6592,65 @@ def generate_html(all_data, all_stores):
                 }
             });
 
-            // Sort by total sales descending and limit to 15
+            // Sort by total sales descending
             matches.sort((a, b) => b.total - a.total);
-            const topMatches = matches.slice(0, 15);
+            const topMatches = matches.slice(0, 20);
 
-            if (topMatches.length === 0) {
-                suggestions.innerHTML = '<div style="padding:12px;color:#6b7280;text-align:center;">Tidak ada hasil</div>';
-                suggestions.style.display = 'block';
+            // Calculate totals
+            const totalQty = matches.reduce((sum, m) => sum + m.qty, 0);
+            const totalSales = matches.reduce((sum, m) => sum + m.total, 0);
+
+            // Show summary
+            document.getElementById('skuSearchSummary').innerHTML =
+                '<div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:10px;">' +
+                '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;border-left:3px solid #22c55e;">' +
+                '<span style="font-size:0.75rem;color:#166534;">Ditemukan:</span> <strong style="color:#166534;">' + matches.length + ' SKU</strong></div>' +
+                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;border-left:3px solid #3b82f6;">' +
+                '<span style="font-size:0.75rem;color:#1e40af;">Total Qty:</span> <strong style="color:#1e40af;">' + formatNum(totalQty) + '</strong></div>' +
+                '<div style="background:#fef3c7;padding:8px 12px;border-radius:6px;border-left:3px solid #f59e0b;">' +
+                '<span style="font-size:0.75rem;color:#b45309;">Total Sales:</span> <strong style="color:#b45309;">' + formatRp(totalSales) + '</strong></div>' +
+                '</div>';
+
+            if (matches.length === 0) {
+                document.getElementById('skuSearchResults').innerHTML = '<p style="text-align:center;color:#6b7280;padding:30px;">Tidak ada hasil untuk "' + searchTerm + '"</p>';
                 return;
             }
 
-            // Table format for suggestions
+            // Full width table
             let html = '<table style="width:100%;border-collapse:collapse;">' +
-                '<thead><tr style="background:#1e293b;color:white;">' +
-                '<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.8rem;">SKU</th>' +
-                '<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.8rem;">NAMA ARTIKEL</th>' +
-                '<th style="padding:10px 12px;text-align:right;font-weight:600;font-size:0.8rem;">QTY</th>' +
-                '<th style="padding:10px 12px;text-align:right;font-weight:600;font-size:0.8rem;">TOTAL SALES</th>' +
-                '<th style="padding:10px 12px;text-align:center;font-weight:600;font-size:0.8rem;">TRX</th>' +
+                '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
+                '<th style="padding:12px 15px;text-align:left;font-weight:600;">SKU</th>' +
+                '<th style="padding:12px 15px;text-align:left;font-weight:600;">NAMA ARTIKEL</th>' +
+                '<th style="padding:12px 15px;text-align:right;font-weight:600;">QTY</th>' +
+                '<th style="padding:12px 15px;text-align:right;font-weight:600;">TOTAL SALES</th>' +
+                '<th style="padding:12px 15px;text-align:center;font-weight:600;">TRX</th>' +
                 '</tr></thead><tbody>';
 
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                html += '<tr onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\\'#dbeafe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
-                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.9rem;">' + m.sku + '</td>' +
-                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#111827;font-size:0.85rem;">' + (m.name || m.kodeKecil || '-') + '</td>' +
-                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#111827;font-size:0.9rem;">' + m.qty + '</td>' +
-                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;font-size:0.9rem;">' + formatRp(m.total) + '</td>' +
-                    '<td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;color:#374151;font-size:0.85rem;">' + m.count + '</td>' +
+                html += '<tr onclick="selectSKUFromList(\\'' + m.sku + '\\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\\'#dbeafe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;">' + m.sku + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + (m.name || m.kodeKecil || '-') + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#111827;">' + formatNum(m.qty) + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;">' + formatRp(m.total) + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:center;color:#374151;">' + m.count + '</td>' +
                     '</tr>';
             });
 
             html += '</tbody></table>';
 
-            if (matches.length > 15) {
-                html += '<div style="padding:12px;text-align:center;color:#1d4ed8;font-size:0.85rem;font-weight:500;background:#eff6ff;border-top:1px solid #e2e8f0;">+ ' + (matches.length - 15) + ' SKU lainnya, tekan Enter untuk lihat semua</div>';
+            if (matches.length > 20) {
+                html += '<div style="padding:12px;text-align:center;color:#1d4ed8;font-size:0.9rem;font-weight:500;background:#eff6ff;border-top:2px solid #e2e8f0;">Menampilkan 20 dari ' + matches.length + ' SKU. Tekan Enter atau klik Cari untuk hasil lengkap.</div>';
             }
 
-            suggestions.innerHTML = html;
-            suggestions.style.display = 'block';
+            document.getElementById('skuSearchResults').innerHTML = html;
+            isShowingSuggestions = true;
         }
 
-        function selectSKUSuggestion(sku) {
+        function selectSKUFromList(sku) {
             document.getElementById('skuSearchInput').value = sku;
-            document.getElementById('skuSuggestions').style.display = 'none';
             searchSKUSales();
         }
-
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            const suggestions = document.getElementById('skuSuggestions');
-            const input = document.getElementById('skuSearchInput');
-            if (suggestions && input && !input.contains(e.target) && !suggestions.contains(e.target)) {
-                suggestions.style.display = 'none';
-            }
-        });
 
         function searchSKUSales() {
             const searchTerm = (document.getElementById('skuSearchInput').value || '').trim().toUpperCase();
