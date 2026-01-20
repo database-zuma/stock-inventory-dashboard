@@ -529,6 +529,7 @@ def load_sales_detail():
 
                 store = row[1].strip()
                 category = row[2].strip()
+                product_name = row[4].strip() if len(row) > 4 else ''  # Tags field has product name
                 collection = row[5].strip()
                 kasir = row[6].strip()
                 gross = float(row[8].replace(',', '.')) if row[8].strip() else 0
@@ -559,6 +560,7 @@ def load_sales_detail():
                     'spg': spg or kasir,
                     'order_no': order_no,
                     'sku': sku,
+                    'product_name': product_name,
                     'qty': qty,
                     'price': price,
                     'total': total,
@@ -2396,6 +2398,7 @@ def generate_html(all_data, all_stores):
         const skuSeriesMap = {};
         const skuTipeMap = {};
         const articleNameMap = {};  // Map article code (without size) to product name
+        // Build from stock data first
         Object.values(allData).forEach(entityData => {
             (entityData.warehouse || []).forEach(item => {
                 const sku = item.sku ? item.sku.toUpperCase() : '';
@@ -2419,6 +2422,15 @@ def generate_html(all_data, all_stores):
                     if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
                 }
             });
+        });
+        // Also build from sales data (product_name field from Tags column)
+        salesDetailData.forEach(item => {
+            if (item.sku && item.product_name && item.product_name !== '-') {
+                const article = item.sku.replace(/Z\\d{2,3}$/, '');
+                if (article && !articleNameMap[article]) {
+                    articleNameMap[article] = item.product_name;
+                }
+            }
         });
 
         // Helper function to check if SKU is valid (include all items including non-sandal)
@@ -6701,20 +6713,12 @@ def generate_html(all_data, all_stores):
                 '<div style="font-size:1.2rem;font-weight:600;color:#6d28d9;">' + formatNum(results.length) + '</div></div>' +
                 '</div>';
 
-            // Render results table grouped by SKU with full store table
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
-                '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
-                '<th style="padding:12px 15px;text-align:left;font-weight:600;">SKU</th>' +
-                '<th style="padding:12px 15px;text-align:left;font-weight:600;">NAMA ARTIKEL</th>' +
-                '<th style="padding:12px 15px;text-align:right;font-weight:600;">QTY</th>' +
-                '<th style="padding:12px 15px;text-align:right;font-weight:600;">TOTAL SALES</th>' +
-                '</tr></thead><tbody>';
-
-            // Sort by total sales descending
+            // Render each SKU with store breakdown
+            let html = '';
             const sortedSKUs = Object.entries(skuGroups).sort((a, b) => b[1].total - a[1].total);
+
             sortedSKUs.forEach(([sku, data], idx) => {
-                const name = articleNameMap[sku.substring(0,7)] || '-';
-                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                const name = articleNameMap[sku.substring(0,7)] || articleNameMap[sku.replace(/Z\\d{2,3}$/, '')] || '-';
 
                 // Group by store and sort by qty descending
                 const storeData = {};
@@ -6725,38 +6729,35 @@ def generate_html(all_data, all_stores):
                 });
                 const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
 
-                // Build store table - show ALL stores
-                let storeTableHtml = '<table style="width:100%;border-collapse:collapse;margin-top:5px;">' +
-                    '<thead><tr style="background:#334155;color:white;">' +
-                    '<th style="padding:6px 10px;text-align:left;font-weight:500;font-size:0.8rem;">TOKO</th>' +
-                    '<th style="padding:6px 10px;text-align:right;font-weight:500;font-size:0.8rem;">QTY</th>' +
-                    '<th style="padding:6px 10px;text-align:right;font-weight:500;font-size:0.8rem;">SALES</th>' +
+                // SKU Header Card
+                html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:15px;overflow:hidden;">' +
+                    '<div style="background:#1e293b;color:white;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
+                    '<div><span style="font-family:monospace;font-weight:600;font-size:1rem;">' + sku + '</span>' +
+                    '<span style="margin-left:15px;font-size:0.9rem;opacity:0.9;">' + name + '</span></div>' +
+                    '<div style="display:flex;gap:20px;">' +
+                    '<span><strong>' + formatNum(data.qty) + '</strong> pcs</span>' +
+                    '<span style="color:#86efac;"><strong>' + formatRp(data.total) + '</strong></span>' +
+                    '</div></div>';
+
+                // Store table
+                html += '<table style="width:100%;border-collapse:collapse;">' +
+                    '<thead><tr style="background:#334155;color:white;position:sticky;top:0;">' +
+                    '<th style="padding:10px 15px;text-align:left;font-weight:600;">TOKO</th>' +
+                    '<th style="padding:10px 15px;text-align:right;font-weight:600;">QTY</th>' +
+                    '<th style="padding:10px 15px;text-align:right;font-weight:600;">SALES</th>' +
                     '</tr></thead><tbody>';
 
                 sortedStores.forEach(([store, sd], storeIdx) => {
-                    const storeBg = storeIdx % 2 === 0 ? '#f8fafc' : '#ffffff';
-                    storeTableHtml += '<tr style="background:' + storeBg + ';">' +
-                        '<td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
-                        '<td style="padding:6px 10px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + sd.qty + '</td>' +
-                        '<td style="padding:6px 10px;text-align:right;border-bottom:1px solid #e2e8f0;color:#047857;">' + formatRp(sd.total) + '</td>' +
+                    const storeBg = storeIdx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    html += '<tr style="background:' + storeBg + ';">' +
+                        '<td style="padding:10px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
+                        '<td style="padding:10px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(sd.qty) + '</td>' +
+                        '<td style="padding:10px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(sd.total) + '</td>' +
                         '</tr>';
                 });
-                storeTableHtml += '</tbody></table>';
 
-                html += '<tr style="background:' + bgColor + ';cursor:pointer;" onclick="showSKUTransactionDetail(\\'' + sku + '\\')">' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#1d4ed8;font-weight:600;">' + sku + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + name + '</td>' +
-                    '<td style="padding:12px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(data.qty) + '</td>' +
-                    '<td style="padding:12px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(data.total) + '</td>' +
-                    '</tr>' +
-                    '<tr style="background:' + bgColor + ';">' +
-                    '<td colspan="4" style="padding:8px 15px 15px 15px;border-bottom:3px solid #cbd5e1;">' +
-                    '<div style="font-size:0.8rem;color:#374151;font-weight:600;margin-bottom:5px;">🏪 Penjualan per Toko (' + sortedStores.length + ' toko)</div>' +
-                    storeTableHtml +
-                    '</td></tr>';
+                html += '</tbody></table></div>';
             });
-
-            html += '</tbody></table>';
 
             if (sortedSKUs.length === 0) {
                 html = '<p style="text-align:center;color:#374151;padding:20px;font-weight:500;">Tidak ada hasil untuk "' + searchTerm + '"</p>';
