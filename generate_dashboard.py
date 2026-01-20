@@ -2017,7 +2017,7 @@ def generate_html(all_data, all_stores):
                         <thead>
                             <tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">
                                 <th id="scHeaderKode" style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;white-space:nowrap;cursor:pointer;" onclick="sortStockControl('sku')">KODE SKU</th>
-                                <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('size')">SIZE</th>
+                                <th id="scHeaderSize" style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;cursor:pointer;" onclick="sortStockControl('size')">SIZE</th>
                                 <th style="padding:8px 6px;text-align:left;color:white;font-size:0.7rem;max-width:200px;">ARTICLE</th>
                                 <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">SERIES</th>
                                 <th style="padding:8px 6px;text-align:center;color:white;font-size:0.7rem;">GENDER</th>
@@ -4760,6 +4760,11 @@ def generate_html(all_data, all_stores):
             if (headerKode) {
                 headerKode.textContent = scViewMode === 'sku' ? 'KODE SKU' : 'KODE KECIL';
             }
+            // Hide/show SIZE column based on view mode
+            var headerSize = document.getElementById('scHeaderSize');
+            if (headerSize) {
+                headerSize.style.display = scViewMode === 'sku' ? '' : 'none';
+            }
 
             // Use salesMap directly (loaded from salesss.csv)
             // salesMap format: {SKU: {nov, des, jan}}
@@ -4979,9 +4984,10 @@ def generate_html(all_data, all_stores):
                     whPusat = item.WHS.toLocaleString();
                 }
 
+                var sizeCell = scViewMode === 'sku' ? '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' : '';
                 return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
                     '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
-                    '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
+                    sizeCell +
                     '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                     '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
