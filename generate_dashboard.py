@@ -2318,7 +2318,7 @@ def generate_html(all_data, all_stores):
                                     <input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..."
                                         style="width:100%;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;"
                                         onkeyup="showSKUSuggestions(event)" onfocus="showSKUSuggestions(event)" autocomplete="off">
-                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;max-height:300px;overflow-y:auto;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                                    <div id="skuSuggestions" style="display:none;position:absolute;top:100%;left:0;width:500px;background:white;border:1px solid #cbd5e1;border-radius:8px;max-height:400px;overflow-y:auto;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,0.2);"></div>
                                 </div>
                                 <button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
                                     🔍 Cari
@@ -6610,21 +6610,22 @@ def generate_html(all_data, all_stores):
             }
 
             let html = '';
-            topMatches.forEach(m => {
-                html += '<div onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="padding:10px 15px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background=\\'#f8fafc\\'" onmouseout="this.style.background=\\'white\\'">' +
-                    '<div>' +
-                    '<div style="font-weight:500;color:#1f2937;font-family:monospace;">' + m.sku + '</div>' +
-                    '<div style="font-size:0.8rem;color:#6b7280;">' + (m.name || m.kodeKecil) + '</div>' +
+            topMatches.forEach((m, idx) => {
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                html += '<div onclick="selectSKUSuggestion(\\'' + m.sku + '\\')" style="padding:12px 15px;border-bottom:1px solid #e2e8f0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:' + bgColor + ';" onmouseover="this.style.background=\\'#e0f2fe\\'" onmouseout="this.style.background=\\'' + bgColor + '\\'">' +
+                    '<div style="flex:1;">' +
+                    '<div style="font-weight:600;color:#111827;font-family:monospace;font-size:0.95rem;">' + m.sku + '</div>' +
+                    '<div style="font-size:0.85rem;color:#374151;margin-top:2px;">' + (m.name || m.kodeKecil) + '</div>' +
                     '</div>' +
-                    '<div style="text-align:right;">' +
-                    '<div style="font-weight:500;color:#059669;">' + formatRp(m.total) + '</div>' +
-                    '<div style="font-size:0.75rem;color:#6b7280;">' + m.qty + ' pcs · ' + m.count + ' trx</div>' +
+                    '<div style="text-align:right;min-width:120px;">' +
+                    '<div style="font-weight:600;color:#047857;font-size:0.95rem;">' + formatRp(m.total) + '</div>' +
+                    '<div style="font-size:0.8rem;color:#1f2937;margin-top:2px;">' + m.qty + ' pcs · ' + m.count + ' trx</div>' +
                     '</div>' +
                     '</div>';
             });
 
             if (matches.length > 15) {
-                html += '<div style="padding:8px;text-align:center;color:#3b82f6;font-size:0.8rem;">+ ' + (matches.length - 15) + ' lainnya, tekan Enter untuk lihat semua</div>';
+                html += '<div style="padding:10px;text-align:center;color:#1d4ed8;font-size:0.85rem;font-weight:500;background:#eff6ff;">+ ' + (matches.length - 15) + ' lainnya, tekan Enter untuk lihat semua</div>';
             }
 
             suggestions.innerHTML = html;
@@ -6696,34 +6697,52 @@ def generate_html(all_data, all_stores):
                 '<div style="font-size:1.2rem;font-weight:600;color:#6d28d9;">' + formatNum(results.length) + '</div></div>' +
                 '</div>';
 
-            // Render results table grouped by SKU
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">' +
-                '<thead><tr style="background:#f1f5f9;position:sticky;top:0;">' +
-                '<th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">SKU</th>' +
-                '<th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">Nama</th>' +
-                '<th style="padding:8px;text-align:right;border-bottom:2px solid #e2e8f0;">Qty</th>' +
-                '<th style="padding:8px;text-align:right;border-bottom:2px solid #e2e8f0;">Total Sales</th>' +
-                '<th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Trx</th>' +
+            // Render results table grouped by SKU with store breakdown
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+                '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
+                '<th style="padding:10px 8px;text-align:left;font-weight:600;">SKU</th>' +
+                '<th style="padding:10px 8px;text-align:left;font-weight:600;">Nama</th>' +
+                '<th style="padding:10px 8px;text-align:right;font-weight:600;">Qty</th>' +
+                '<th style="padding:10px 8px;text-align:right;font-weight:600;">Total Sales</th>' +
+                '<th style="padding:10px 8px;text-align:center;font-weight:600;">Trx</th>' +
                 '</tr></thead><tbody>';
 
             // Sort by total sales descending
             const sortedSKUs = Object.entries(skuGroups).sort((a, b) => b[1].total - a[1].total);
             sortedSKUs.forEach(([sku, data], idx) => {
                 const name = articleNameMap[sku.substring(0,7)] || '-';
-                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
-                html += '<tr style="background:' + bgColor + ';" onclick="showSKUTransactionDetail(\\'' + sku + '\\')" style="cursor:pointer;">' +
-                    '<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#3b82f6;cursor:pointer;">' + sku + '</td>' +
-                    '<td style="padding:8px;border-bottom:1px solid #e2e8f0;">' + name + '</td>' +
-                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;">' + formatNum(data.qty) + '</td>' +
-                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#059669;">' + formatRp(data.total) + '</td>' +
-                    '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;">' + data.transactions.length + '</td>' +
-                    '</tr>';
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+
+                // Group by store and sort by qty descending
+                const storeData = {};
+                data.transactions.forEach(t => {
+                    if (!storeData[t.store]) storeData[t.store] = { qty: 0, total: 0 };
+                    storeData[t.store].qty += t.qty || 0;
+                    storeData[t.store].total += t.total || 0;
+                });
+                const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
+                const storeBreakdown = sortedStores.slice(0, 5).map(([store, sd]) =>
+                    '<span style="display:inline-block;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;margin:2px;font-size:0.75rem;">' + store.replace('Zuma ', '').replace('ZUMA ', '') + ': ' + sd.qty + '</span>'
+                ).join('');
+                const moreStores = sortedStores.length > 5 ? '<span style="color:#6b7280;font-size:0.75rem;"> +' + (sortedStores.length - 5) + ' toko</span>' : '';
+
+                html += '<tr style="background:' + bgColor + ';cursor:pointer;" onclick="showSKUTransactionDetail(\\'' + sku + '\\')">' +
+                    '<td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-family:monospace;color:#1d4ed8;font-weight:600;">' + sku + '</td>' +
+                    '<td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;color:#111827;">' + name + '</td>' +
+                    '<td style="padding:10px 8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(data.qty) + '</td>' +
+                    '<td style="padding:10px 8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(data.total) + '</td>' +
+                    '<td style="padding:10px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#111827;">' + data.transactions.length + '</td>' +
+                    '</tr>' +
+                    '<tr style="background:' + bgColor + ';">' +
+                    '<td colspan="5" style="padding:5px 8px 12px 8px;border-bottom:2px solid #e2e8f0;">' +
+                    '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:3px;">📍 Terjual di:</div>' + storeBreakdown + moreStores +
+                    '</td></tr>';
             });
 
             html += '</tbody></table>';
 
             if (sortedSKUs.length === 0) {
-                html = '<p style="text-align:center;color:#6b7280;padding:20px;">Tidak ada hasil untuk "' + searchTerm + '"</p>';
+                html = '<p style="text-align:center;color:#374151;padding:20px;font-weight:500;">Tidak ada hasil untuk "' + searchTerm + '"</p>';
             }
 
             document.getElementById('skuSearchResults').innerHTML = html;
@@ -6737,39 +6756,74 @@ def generate_html(all_data, all_stores):
 
         function showSKUTransactionDetail(sku) {
             const transactions = salesDetailData.filter(item => item.sku === sku);
-            let html = '<div style="max-height:400px;overflow-y:auto;">' +
+            const totalQty = transactions.reduce((sum, t) => sum + (t.qty || 0), 0);
+            const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
+            const articleName = articleNameMap[sku.substring(0,7)] || '-';
+
+            // Group by store and sort by qty descending
+            const storeData = {};
+            transactions.forEach(t => {
+                if (!storeData[t.store]) storeData[t.store] = { qty: 0, total: 0, count: 0 };
+                storeData[t.store].qty += t.qty || 0;
+                storeData[t.store].total += t.total || 0;
+                storeData[t.store].count++;
+            });
+            const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
+
+            // Store breakdown table
+            let storeHtml = '<div style="margin-bottom:20px;">' +
+                '<h4 style="margin:0 0 10px 0;color:#111827;font-size:0.95rem;">🏪 Penjualan per Toko (diurutkan qty terbanyak)</h4>' +
+                '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+                '<thead><tr style="background:#1e293b;color:white;">' +
+                '<th style="padding:8px;text-align:left;font-weight:600;">Toko</th>' +
+                '<th style="padding:8px;text-align:right;font-weight:600;">Qty</th>' +
+                '<th style="padding:8px;text-align:right;font-weight:600;">Sales</th>' +
+                '<th style="padding:8px;text-align:center;font-weight:600;">Trx</th>' +
+                '</tr></thead><tbody>';
+
+            sortedStores.forEach(([store, sd], idx) => {
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                storeHtml += '<tr style="background:' + bgColor + ';">' +
+                    '<td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#111827;font-weight:500;">' + store + '</td>' +
+                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + sd.qty + '</td>' +
+                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#047857;">' + formatRp(sd.total) + '</td>' +
+                    '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#111827;">' + sd.count + '</td>' +
+                    '</tr>';
+            });
+            storeHtml += '</tbody></table></div>';
+
+            // Transaction detail table
+            let trxHtml = '<div><h4 style="margin:0 0 10px 0;color:#111827;font-size:0.95rem;">📋 Detail Transaksi</h4>' +
+                '<div style="max-height:250px;overflow-y:auto;">' +
                 '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">' +
-                '<thead><tr style="background:#f1f5f9;position:sticky;top:0;">' +
-                '<th style="padding:6px;text-align:left;">Tanggal</th>' +
-                '<th style="padding:6px;text-align:left;">Toko</th>' +
-                '<th style="padding:6px;text-align:left;">SPG</th>' +
-                '<th style="padding:6px;text-align:right;">Qty</th>' +
-                '<th style="padding:6px;text-align:right;">Total</th>' +
+                '<thead><tr style="background:#334155;color:white;position:sticky;top:0;">' +
+                '<th style="padding:6px 8px;text-align:left;font-weight:500;">Tanggal</th>' +
+                '<th style="padding:6px 8px;text-align:left;font-weight:500;">Toko</th>' +
+                '<th style="padding:6px 8px;text-align:left;font-weight:500;">SPG</th>' +
+                '<th style="padding:6px 8px;text-align:right;font-weight:500;">Qty</th>' +
+                '<th style="padding:6px 8px;text-align:right;font-weight:500;">Total</th>' +
                 '</tr></thead><tbody>';
 
             transactions.sort((a, b) => b.date.localeCompare(a.date)).forEach((t, idx) => {
-                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
-                html += '<tr style="background:' + bgColor + ';">' +
-                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + t.date + '</td>' +
-                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + t.store + '</td>' +
-                    '<td style="padding:6px;border-bottom:1px solid #e2e8f0;">' + (t.spg || t.kasir || '-') + '</td>' +
-                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + t.qty + '</td>' +
-                    '<td style="padding:6px;text-align:right;border-bottom:1px solid #e2e8f0;">' + formatRp(t.total) + '</td>' +
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                trxHtml += '<tr style="background:' + bgColor + ';">' +
+                    '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#374151;">' + t.date + '</td>' +
+                    '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#111827;">' + t.store + '</td>' +
+                    '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#374151;">' + (t.spg || t.kasir || '-') + '</td>' +
+                    '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #e2e8f0;color:#111827;font-weight:500;">' + t.qty + '</td>' +
+                    '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #e2e8f0;color:#047857;font-weight:500;">' + formatRp(t.total) + '</td>' +
                     '</tr>';
             });
+            trxHtml += '</tbody></table></div></div>';
 
-            html += '</tbody></table></div>';
-
-            const totalQty = transactions.reduce((sum, t) => sum + (t.qty || 0), 0);
-            const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
-
-            document.getElementById('skuModalTitle').textContent = '📋 Detail Transaksi: ' + sku;
+            document.getElementById('skuModalTitle').textContent = '📋 ' + sku + ' - ' + articleName;
             document.getElementById('skuModalBody').innerHTML =
-                '<div style="margin-bottom:15px;display:flex;gap:15px;">' +
-                '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;"><strong>Total Qty:</strong> ' + formatNum(totalQty) + '</div>' +
-                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;"><strong>Total Sales:</strong> ' + formatRp(totalSales) + '</div>' +
-                '<div style="background:#fefce8;padding:8px 12px;border-radius:6px;"><strong>Transaksi:</strong> ' + transactions.length + '</div>' +
-                '</div>' + html;
+                '<div style="margin-bottom:15px;display:flex;gap:12px;flex-wrap:wrap;">' +
+                '<div style="background:#dcfce7;padding:10px 15px;border-radius:8px;border-left:4px solid #22c55e;"><div style="font-size:0.75rem;color:#166534;">Total Qty</div><div style="font-size:1.1rem;font-weight:600;color:#166534;">' + formatNum(totalQty) + '</div></div>' +
+                '<div style="background:#dbeafe;padding:10px 15px;border-radius:8px;border-left:4px solid #3b82f6;"><div style="font-size:0.75rem;color:#1e40af;">Total Sales</div><div style="font-size:1.1rem;font-weight:600;color:#1e40af;">' + formatRp(totalSales) + '</div></div>' +
+                '<div style="background:#fef3c7;padding:10px 15px;border-radius:8px;border-left:4px solid #f59e0b;"><div style="font-size:0.75rem;color:#b45309;">Transaksi</div><div style="font-size:1.1rem;font-weight:600;color:#b45309;">' + transactions.length + '</div></div>' +
+                '<div style="background:#f3e8ff;padding:10px 15px;border-radius:8px;border-left:4px solid #a855f7;"><div style="font-size:0.75rem;color:#7c3aed;">Toko</div><div style="font-size:1.1rem;font-weight:600;color:#7c3aed;">' + sortedStores.length + '</div></div>' +
+                '</div>' + storeHtml + trxHtml;
             document.getElementById('skuModal').style.display = 'flex';
         }
 
