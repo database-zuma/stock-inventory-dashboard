@@ -5353,11 +5353,7 @@ def generate_html(all_data, all_stores):
                 });
             }
 
-            // Add Tanah Lot store (no sales data but needs to be listed)
-            if (!byStore['ZUMA Tanah Lot']) {
-                byStore['ZUMA Tanah Lot'] = { sales: 0, qty: 0, trx: new Set() };
-            }
-
+            // Only show stores that have data (already filtered by getFilteredSalesData)
             const storeArr = Object.entries(byStore)
                 .filter(([store, _]) => !store.toLowerCase().includes('pameran') && !store.toLowerCase().includes('ksquare'))
                 .map(([store, val]) => {
