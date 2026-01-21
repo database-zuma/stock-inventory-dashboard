@@ -7099,6 +7099,289 @@ def generate_html(all_data, all_stores):
             }
         };
     </script>
+
+    <!-- ZUMA AI Chat Widget -->
+    <style>
+        .chat-widget-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .chat-widget-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+        }
+        .chat-widget-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+        .chat-widget-container {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9998;
+        }
+        .chat-widget-container.open {
+            display: flex;
+        }
+        .chat-widget-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-widget-header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-widget-header-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        .chat-widget-header-text h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .chat-widget-header-text p {
+            margin: 0;
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+        .chat-widget-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .chat-widget-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #f8fafc;
+        }
+        .chat-msg {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-msg.user {
+            align-items: flex-end;
+        }
+        .chat-msg.assistant {
+            align-items: flex-start;
+        }
+        .chat-msg-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        .chat-msg.user .chat-msg-bubble {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg.assistant .chat-msg-bubble {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-widget-input {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            background: white;
+        }
+        .chat-widget-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .chat-widget-input input:focus {
+            border-color: #6366f1;
+        }
+        .chat-widget-input button {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .chat-widget-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .chat-typing {
+            display: flex;
+            gap: 4px;
+            padding: 10px 14px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+        .chat-typing span {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        @media (max-width: 480px) {
+            .chat-widget-container {
+                width: calc(100% - 32px);
+                right: 16px;
+                bottom: 90px;
+                height: 60vh;
+            }
+        }
+    </style>
+
+    <!-- Chat Button -->
+    <button class="chat-widget-btn" onclick="toggleChatWidget()" title="ZUMA AI Assistant">
+        <svg viewBox="0 0 24 24"><path d="M12 3c5.5 0 10 3.58 10 8s-4.5 8-10 8c-1.24 0-2.43-.18-3.53-.5C5.55 21 2 21 2 21c2.33-2.33 2.7-3.9 2.75-4.5C3.05 15.07 2 13.13 2 11c0-4.42 4.5-8 10-8z"/></svg>
+    </button>
+
+    <!-- Chat Container -->
+    <div class="chat-widget-container" id="chatWidget">
+        <div class="chat-widget-header">
+            <div class="chat-widget-header-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 3c5.5 0 10 3.58 10 8s-4.5 8-10 8c-1.24 0-2.43-.18-3.53-.5C5.55 21 2 21 2 21c2.33-2.33 2.7-3.9 2.75-4.5C3.05 15.07 2 13.13 2 11c0-4.42 4.5-8 10-8z"/></svg>
+            </div>
+            <div class="chat-widget-header-text">
+                <h3>ZUMA AI Assistant</h3>
+                <p>Stock & Sales Analyst</p>
+            </div>
+            <button class="chat-widget-close" onclick="toggleChatWidget()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="chat-widget-messages" id="chatMessages">
+            <div class="chat-msg assistant">
+                <div class="chat-msg-bubble">Halo! Saya ZUMA AI Assistant. Ada yang bisa saya bantu tentang stock atau sales?</div>
+            </div>
+        </div>
+        <div class="chat-widget-input">
+            <input type="text" id="chatInput" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+            <button onclick="sendChatMessage()" id="chatSendBtn">Kirim</button>
+        </div>
+    </div>
+
+    <script>
+        const CHAT_API_URL = 'https://web-production-70a45.up.railway.app';
+        const chatSessionId = 'session_' + Date.now();
+
+        function toggleChatWidget() {
+            document.getElementById('chatWidget').classList.toggle('open');
+        }
+
+        function addChatMessage(content, isUser) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg ' + (isUser ? 'user' : 'assistant');
+            msgDiv.innerHTML = '<div class="chat-msg-bubble">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n/g, '<br>') + '</div>';
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-msg assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const btn = document.getElementById('chatSendBtn');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addChatMessage(message, true);
+            input.value = '';
+            btn.disabled = true;
+            input.disabled = true;
+            showTyping();
+
+            try {
+                const resp = await fetch(CHAT_API_URL + '/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, session_id: chatSessionId })
+                });
+                const data = await resp.json();
+                hideTyping();
+                if (data.response) {
+                    addChatMessage(data.response, false);
+                } else if (data.error) {
+                    addChatMessage('Error: ' + data.error, false);
+                }
+            } catch (err) {
+                hideTyping();
+                addChatMessage('Error: Tidak dapat terhubung ke server.', false);
+            }
+
+            btn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    </script>
 </body>
 </html>'''
     return html
