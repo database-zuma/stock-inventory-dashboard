@@ -7318,9 +7318,73 @@ def generate_html(all_data, all_stores):
     <script>
         const CHAT_API_URL = 'https://web-production-70a45.up.railway.app';
         const chatSessionId = 'session_' + Date.now();
+        let dashboardContextSent = false;
 
         function toggleChatWidget() {
             document.getElementById('chatWidget').classList.toggle('open');
+        }
+
+        function getDashboardContext() {
+            let context = "=== DATA DASHBOARD ZUMA ===\\n\\n";
+
+            // Get current active tab/section
+            const activeTab = document.querySelector('.nav-item.active');
+            if (activeTab) {
+                context += "Tab Aktif: " + activeTab.textContent.trim() + "\\n\\n";
+            }
+
+            // Get summary cards data
+            const summaryCards = document.querySelectorAll('.metric-card, .summary-card, .stat-card');
+            if (summaryCards.length > 0) {
+                context += "== SUMMARY ==\\n";
+                summaryCards.forEach(card => {
+                    const label = card.querySelector('.metric-label, .card-title, h4, h5, small');
+                    const value = card.querySelector('.metric-value, .card-value, h2, h3, .value');
+                    if (label && value) {
+                        context += label.textContent.trim() + ": " + value.textContent.trim() + "\\n";
+                    }
+                });
+                context += "\\n";
+            }
+
+            // Get visible table data (limit rows for context size)
+            const tables = document.querySelectorAll('table:not([style*="display: none"])');
+            tables.forEach((table, idx) => {
+                if (idx > 2) return; // Max 3 tables
+                const caption = table.querySelector('caption, thead th');
+                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+                const rows = table.querySelectorAll('tbody tr');
+
+                if (headers.length > 0 && rows.length > 0) {
+                    context += "== TABEL " + (idx + 1) + " ==\\n";
+                    context += "Kolom: " + headers.join(" | ") + "\\n";
+
+                    // Get first 20 rows
+                    const maxRows = Math.min(rows.length, 20);
+                    for (let i = 0; i < maxRows; i++) {
+                        const cells = Array.from(rows[i].querySelectorAll('td')).map(td => td.textContent.trim());
+                        context += cells.join(" | ") + "\\n";
+                    }
+                    if (rows.length > 20) {
+                        context += "... dan " + (rows.length - 20) + " baris lainnya\\n";
+                    }
+                    context += "\\n";
+                }
+            });
+
+            // Get filter selections if any
+            const selects = document.querySelectorAll('select');
+            if (selects.length > 0) {
+                context += "== FILTER AKTIF ==\\n";
+                selects.forEach(select => {
+                    if (select.id && select.value) {
+                        context += select.id + ": " + select.options[select.selectedIndex].text + "\\n";
+                    }
+                });
+                context += "\\n";
+            }
+
+            return context;
         }
 
         function addChatMessage(content, isUser) {
@@ -7359,11 +7423,19 @@ def generate_html(all_data, all_stores):
             input.disabled = true;
             showTyping();
 
+            // Build message with dashboard context
+            let fullMessage = message;
+            if (!dashboardContextSent) {
+                const context = getDashboardContext();
+                fullMessage = "[KONTEKS DATA DASHBOARD]\\n" + context + "\\n[PERTANYAAN USER]\\n" + message;
+                dashboardContextSent = true;
+            }
+
             try {
                 const resp = await fetch(CHAT_API_URL + '/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, session_id: chatSessionId })
+                    body: JSON.stringify({ message: fullMessage, session_id: chatSessionId })
                 });
                 const data = await resp.json();
                 hideTyping();
@@ -7381,6 +7453,11 @@ def generate_html(all_data, all_stores):
             input.disabled = false;
             input.focus();
         }
+
+        // Refresh context when tab changes
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => { dashboardContextSent = false; });
+        });
     </script>
 </body>
 </html>'''
