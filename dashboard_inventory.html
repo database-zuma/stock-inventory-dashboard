@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Stock Retail & Warehouse - Zuma Indonesia</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,136 +13,185 @@
             --card-bg: rgba(255, 255, 255, 0.98); --shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: #ffffff; min-height: 100vh; color: #1f2937; }
+        body { font-family: 'Poppins', sans-serif; background: #f8fafc; min-height: 100vh; color: #1f2937; }
+
         .header {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); padding: 20px 40px; color: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%);
+            padding: 15px 30px; color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .header h1 { font-size: 1.6rem; font-weight: 700; }
-        .header p { opacity: 0.9; font-size: 0.85rem; }
-        .header .date { font-size: 0.8rem; opacity: 0.85; text-align: right; }
-        .container { max-width: 1700px; margin: 0 auto; padding: 25px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header p { opacity: 0.9; font-size: 0.8rem; }
+        .header .date { font-size: 0.75rem; opacity: 0.85; text-align: right; }
+        .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
 
         .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: #6b7280; }
         .loading-spinner { width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* View Buttons */
-        .view-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .view-btn {
-            padding: 12px 24px; border: 2px solid #e5e7eb; background: white; border-radius: 12px;
-            font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif; color: #6b7280;
-        }
-        .view-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .view-btn.active { background: var(--bg-gradient); color: white; border-color: transparent; }
+        /* View Toggle */
+        .view-toggle { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: 14px; box-shadow: var(--shadow); width: fit-content; margin-bottom: 20px; }
+        .view-btn { padding: 12px 24px; border: none; background: transparent; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; color: #6b7280; display: flex; align-items: center; gap: 8px; }
+        .view-btn:hover { background: #f3f4f6; }
+        .view-btn.active { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; }
+        .view-container { display: none; }
+        .view-container.active { display: block; }
 
         /* Entity Pills */
         .entity-section { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
         .entity-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-        .entity-pill {
-            padding: 10px 20px; border-radius: 25px; font-size: 0.85rem;
-            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-            border: 2px solid transparent; display: flex; align-items: center; gap: 8px;
-        }
-        .entity-pill.ddd { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: 2px solid #b91c1c; }
-        .entity-pill.ljbb { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: 2px solid #1d4ed8; }
-        .entity-pill.mbb { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: 2px solid #6d28d9; }
-        .entity-pill.ubb { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 2px solid #b45309; }
+        .entity-pill { padding: 10px 20px; border-radius: 25px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; display: flex; align-items: center; gap: 8px; }
+        .entity-pill.ddd { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .entity-pill.ljbb { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .entity-pill.mbb { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+        .entity-pill.ubb { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
         .entity-pill.active { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
-        .entity-pill:not(.active) { opacity: 0.7; }
+        .entity-pill:not(.active) { opacity: 0.6; }
         .entity-pill .count { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
 
         /* Tabs */
-        .tabs { display: flex; gap: 5px; margin-bottom: 25px; background: var(--card-bg); padding: 6px; border-radius: 14px; box-shadow: var(--shadow); width: fit-content; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: var(--card-bg); padding: 6px; border-radius: 14px; box-shadow: var(--shadow); width: fit-content; }
         .tab { padding: 10px 22px; border: none; background: transparent; border-radius: 10px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; color: #6b7280; }
         .tab:hover { background: #f3f4f6; }
         .tab.active { background: var(--bg-gradient); color: white; }
-        .tab:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 16px 16px 0 0; }
-        .stat-card.primary::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
-        .stat-card.success::before { background: linear-gradient(90deg, #10b981, #34d399); }
-        .stat-card.warning::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .stat-card.info::before { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
-        .stat-card.danger::before { background: linear-gradient(90deg, #ef4444, #f87171); }
-        .stat-card h3 { font-size: 0.7rem; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #1f2937; }
-        .stat-card .sub { font-size: 0.75rem; color: #9ca3af; margin-top: 5px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; padding: 15px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .stat-card h3 { font-size: 0.7rem; color: #6b7280; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; }
+        .stat-card .value { font-size: 1.5rem; font-weight: 700; color: #1f2937; }
+        .stat-card .sub-value { font-size: 0.75rem; color: #9ca3af; margin-top: 3px; }
+        .stat-card.clickable { cursor: pointer; transition: all 0.3s ease; }
+        .stat-card.clickable:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
 
-        /* Filter Section */
-        .filter-section { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 25px; }
-        .filter-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
-        .filter-group label { font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; }
-        .filter-group select, .filter-group input { padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.85rem; font-family: 'Poppins', sans-serif; transition: all 0.3s ease; }
-        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--primary); }
-
-        /* Table Styles */
-        .table-container { background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 25px; }
-        .table-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .table-header h2 { font-size: 1.1rem; font-weight: 600; color: #1f2937; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: #f8fafc; position: sticky; top: 0; }
-        th { padding: 14px 16px; text-align: left; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; white-space: nowrap; }
-        th:hover { background: #f1f5f9; }
-        td { padding: 14px 16px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
-        tr:hover { background: #fafbfc; }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-        .badge.high { background: #dcfce7; color: #166534; }
-        .badge.medium { background: #fef3c7; color: #92400e; }
-        .badge.low { background: #fee2e2; color: #dc2626; }
-        .badge.out { background: #1f2937; color: white; }
-
-        /* Pagination */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; }
-        .pagination button { padding: 8px 16px; border: 2px solid #e5e7eb; background: white; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 0.85rem; transition: all 0.3s ease; }
-        .pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-        .pagination button.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Charts */
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .chart-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
-        .chart-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 15px; color: #1f2937; }
+        /* Area Tags */
+        .area-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .area-tag { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; }
+        .area-tag.bali { background: #dcfce7; color: #166534; }
+        .area-tag.jakarta { background: #dbeafe; color: #1e40af; }
+        .area-tag.jawa-timur { background: #fef3c7; color: #b45309; }
+        .area-tag.lombok { background: #fce7f3; color: #be185d; }
+        .area-tag.active { border-color: #1f2937; transform: scale(1.05); }
 
         /* Store Summary */
-        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 25px; }
-        .store-card { background: var(--card-bg); border-radius: 12px; padding: 15px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
-        .store-card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
-        .store-card.active { border-color: var(--primary); background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(129,140,248,0.1)); }
-        .store-card h4 { font-size: 0.8rem; font-weight: 600; color: #1f2937; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .store-card .stock { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
-        .store-card .fill { font-size: 0.7rem; color: #6b7280; margin-top: 4px; }
+        .store-summary { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .store-summary h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 15px; }
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .store-item { background: #f8fafc; border-radius: 10px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; }
+        .store-item:hover { background: #f1f5f9; border-color: var(--primary-light); }
+        .store-item.active { background: #eef2ff; border-color: var(--primary); }
+        .store-item .store-name { font-size: 0.8rem; font-weight: 500; color: #374151; }
+        .store-item .store-area { font-size: 0.7rem; color: #9ca3af; }
+        .store-item .store-stock { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
 
-        /* View containers */
-        .view-container { display: none; }
-        .view-container.active { display: block; }
+        /* Table */
+        .table-section { background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+        .table-header { padding: 15px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .table-header h3 { font-size: 0.95rem; font-weight: 600; color: #374151; }
+        .table-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { color: white; padding: 12px 14px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; position: sticky; top: 0; z-index: 10; cursor: pointer; }
+        .retail-section th { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .warehouse-section th { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+        td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; font-size: 0.82rem; }
+        tr:hover { background: #f8fafc; }
+        .stock-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: 600; }
+        .stock-high { background: #d1fae5; color: #065f46; }
+        .stock-medium { background: #fef3c7; color: #92400e; }
+        .stock-low { background: #fee2e2; color: #991b1b; }
+        .stock-zero { background: #f3f4f6; color: #6b7280; }
+        .stock-negative { background: #fecaca; color: #dc2626; }
 
-        /* Analysis styles */
-        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        /* Pagination */
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-top: 1px solid #e5e7eb; }
+        .page-info { font-size: 0.8rem; color: #6b7280; }
+        .page-buttons { display: flex; gap: 4px; }
+        .page-btn { padding: 6px 12px; border: 1px solid #e5e7eb; background: white; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease; }
+        .page-btn:hover { background: #f3f4f6; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Filter Section */
+        .filter-section { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { min-width: 120px; }
+        .filter-group label { display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 4px; font-weight: 600; }
+        .filter-group select, .filter-group input { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.85rem; font-family: 'Poppins', sans-serif; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; width: 90%; max-width: 900px; max-height: 85vh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+        .modal-header { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.2rem; font-weight: 600; }
+        .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+        .modal-body { padding: 20px 25px; max-height: 60vh; overflow-y: auto; }
+        .modal-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .modal-stat { background: #fef2f2; border-radius: 12px; padding: 15px; text-align: center; }
+        .modal-stat .label { font-size: 0.75rem; color: #991b1b; font-weight: 600; }
+        .modal-stat .value { font-size: 1.5rem; font-weight: 700; color: #dc2626; margin-top: 5px; }
+        .negative-item { background: #fff; border: 1px solid #fecaca; border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+        .negative-item-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; background: #fef2f2; }
+        .negative-store { font-weight: 600; color: #1f2937; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .negative-store-area { font-size: 0.7rem; background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; }
+        .negative-stats { display: flex; align-items: center; gap: 12px; }
+        .negative-count { background: #dc2626; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .negative-articles { display: none; padding: 0 20px 20px; background: #fff; }
+        .negative-item.expanded .negative-articles { display: block; }
+        .expand-icon { font-size: 1.2rem; color: #991b1b; transition: transform 0.3s ease; }
+        .negative-item.expanded .expand-icon { transform: rotate(180deg); }
+
+        /* Max Stock Analysis */
+        .max-stock-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .summary-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); text-align: center; }
+        .summary-card.green { border-top: 4px solid #10b981; }
+        .summary-card.yellow { border-top: 4px solid #f59e0b; }
+        .summary-card.red { border-top: 4px solid #ef4444; }
+        .summary-card.blue { border-top: 4px solid #6366f1; }
+        .summary-card .label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+        .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #1f2937; margin-top: 8px; }
+        .summary-card .sub { font-size: 0.8rem; color: #9ca3af; margin-top: 4px; }
+
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .analysis-card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
-        .analysis-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 15px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        .store-analysis-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
-        .store-analysis-item:hover { background: #f1f5f9; transform: translateX(5px); }
+        .analysis-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 15px; color: #374151; }
+        .store-analysis-item { display: flex; align-items: center; gap: 15px; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 10px; }
+        .store-info { flex: 1; }
+        .store-info .name { font-weight: 600; color: #1f2937; font-size: 0.9rem; }
+        .store-info .area { font-size: 0.75rem; color: #9ca3af; }
+        .fill-indicator { width: 80px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .fill-bar { height: 100%; border-radius: 4px; }
+        .fill-bar.low { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .fill-bar.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .fill-bar.high { background: linear-gradient(90deg, #10b981, #34d399); }
+        .fill-bar.over { background: linear-gradient(90deg, #dc2626, #b91c1c); }
+        .fill-percent { font-size: 0.8rem; font-weight: 700; min-width: 50px; text-align: right; }
+        .fill-percent.low { color: #3b82f6; }
+        .fill-percent.medium { color: #f59e0b; }
+        .fill-percent.high { color: #10b981; }
+        .fill-percent.over { color: #dc2626; }
 
-        /* Progress bar */
-        .progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-        .progress-fill.high { background: linear-gradient(90deg, #10b981, #34d399); }
-        .progress-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .progress-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
+        /* Sales Tab Styles */
+        .sales-tab-btn { padding: 10px 16px; border: none; background: transparent; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #6b7280; transition: all 0.2s ease; border-bottom: 2px solid transparent; font-family: 'Poppins', sans-serif; }
+        .sales-tab-btn:hover { background: #f3f4f6; color: #374151; }
+        .sales-tab-btn.active { color: #10b981; border-bottom-color: #10b981; background: white; }
+        .sales-tab-content { display: none; }
+        .sales-tab-content.active { display: block; }
 
-        /* Sales styles */
-        .sales-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .sales-card { background: var(--card-bg); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); text-align: center; }
-        .sales-card h4 { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
-        .sales-card .value { font-size: 1.5rem; font-weight: 700; color: #1f2937; }
-        .sales-card .sub { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; }
+        /* SKU Detail Modal */
+        .sku-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .sku-modal-overlay.active { display: flex; }
+        .sku-modal-content { background: white; border-radius: 16px; width: 90%; max-width: 800px; max-height: 80vh; overflow: hidden; }
+        .sku-modal-header { background: linear-gradient(135deg, #6366f1, #818cf8); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .sku-modal-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .view-toggle { flex-wrap: wrap; }
+            .view-btn { padding: 10px 16px; font-size: 0.8rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -156,102 +204,158 @@
     </div>
 
     <div class="container">
-        <!-- View Buttons -->
-        <div class="view-buttons">
+        <!-- View Toggle -->
+        <div class="view-toggle">
             <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">📦 Stock Inventory</button>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">📈 Max Stock Analysis</button>
-            <button class="view-btn" data-view="control" onclick="switchView('control')">📋 Control Stock</button>
+            <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">📊 Control Stock</button>
             <button class="view-btn" data-view="sales" onclick="switchView('sales')">💰 Sales</button>
-        </div>
-
-        <!-- Entity Pills -->
-        <div class="entity-section">
-            <div class="entity-pills">
-                <div class="entity-pill ddd active" onclick="switchEntity('DDD')">
-                    <span>DDD</span>
-                    <span class="count" id="countDDD">-</span>
-                </div>
-                <div class="entity-pill ljbb" onclick="switchEntity('LJBB')">
-                    <span>LJBB</span>
-                    <span class="count" id="countLJBB">-</span>
-                </div>
-                <div class="entity-pill mbb" onclick="switchEntity('MBB')">
-                    <span>MBB</span>
-                    <span class="count" id="countMBB">-</span>
-                </div>
-                <div class="entity-pill ubb" onclick="switchEntity('UBB')">
-                    <span>UBB</span>
-                    <span class="count" id="countUBB">-</span>
-                </div>
-            </div>
         </div>
 
         <!-- ==================== INVENTORY VIEW ==================== -->
         <div class="view-container active" id="inventoryView">
+            <!-- Entity Section -->
+            <div class="entity-section">
+                <span style="font-weight:600; color:#374151; font-size:0.85rem;">ENTITAS:</span>
+                <div class="entity-pills">
+                    <div class="entity-pill ddd active" data-entity="DDD" onclick="selectEntity('DDD')">
+                        <span>DDD</span>
+                        <span class="count" id="countDDD">-</span>
+                    </div>
+                    <div class="entity-pill ljbb" data-entity="LJBB" onclick="selectEntity('LJBB')">
+                        <span>LJBB</span>
+                        <span class="count" id="countLJBB">-</span>
+                    </div>
+                    <div class="entity-pill mbb" data-entity="MBB" onclick="selectEntity('MBB')">
+                        <span>MBB</span>
+                        <span class="count" id="countMBB">-</span>
+                    </div>
+                    <div class="entity-pill ubb" data-entity="UBB" onclick="selectEntity('UBB')">
+                        <span>UBB</span>
+                        <span class="count" id="countUBB">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Retail/Warehouse -->
             <div class="tabs" id="inventoryTabs">
-                <button class="tab active" data-type="retail" onclick="switchTab('retail')">🏪 Retail Store</button>
-                <button class="tab" data-type="warehouse" onclick="switchTab('warehouse')">📦 Warehouse</button>
+                <button class="tab active" data-type="retail" onclick="switchInventoryTab('retail')">🏪 Retail Store</button>
+                <button class="tab" data-type="warehouse" onclick="switchInventoryTab('warehouse')">📦 Warehouse</button>
             </div>
 
-            <div id="statsContainer" class="stats-grid"></div>
-
-            <div id="storeGrid" class="store-grid"></div>
-
-            <div class="filter-section">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Search</label>
-                        <input type="text" id="searchInput" placeholder="SKU atau Nama Produk..." oninput="applyFilters()">
+            <!-- Retail Section -->
+            <div id="retailSection" class="retail-section">
+                <div class="stats-grid" id="rtStatsGrid"></div>
+                <div class="area-tags" id="rtAreaTags"></div>
+                <div class="store-summary" id="rtStoreSummary">
+                    <h3>📍 Stock per Store</h3>
+                    <div class="store-grid" id="rtStoreGrid"></div>
+                </div>
+                <div class="table-section">
+                    <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>Search:</label>
+                                <input type="text" id="rtSearch" placeholder="SKU/Artikel..." onkeyup="renderRetailTable()">
+                            </div>
+                            <div class="filter-group">
+                                <label>Gender:</label>
+                                <select id="rtFilterGender" onchange="renderRetailTable()">
+                                    <option value="">Semua</option>
+                                    <option value="MEN">Men</option>
+                                    <option value="LADIES">Ladies</option>
+                                    <option value="KIDS">Kids</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Stock Level:</label>
+                                <select id="rtFilterStock" onchange="renderRetailTable()">
+                                    <option value="">Semua</option>
+                                    <option value="high">High (>100)</option>
+                                    <option value="medium">Medium (10-100)</option>
+                                    <option value="low">Low (1-9)</option>
+                                    <option value="zero">Out of Stock</option>
+                                    <option value="negative">Negative</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label>Location</label>
-                        <select id="locationFilter" onchange="applyFilters()">
-                            <option value="">All Locations</option>
-                        </select>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead id="rtTableHead">
+                                <tr>
+                                    <th onclick="sortRetailTable('sku_code')">SKU</th>
+                                    <th onclick="sortRetailTable('product_name')">Produk</th>
+                                    <th onclick="sortRetailTable('location_name')">Lokasi</th>
+                                    <th onclick="sortRetailTable('quantity')">Qty</th>
+                                    <th>Level</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rtTableBody"></tbody>
+                        </table>
                     </div>
-                    <div class="filter-group">
-                        <label>Stock Level</label>
-                        <select id="stockFilter" onchange="applyFilters()">
-                            <option value="">All Levels</option>
-                            <option value="high">High (>100)</option>
-                            <option value="medium">Medium (10-100)</option>
-                            <option value="low">Low (1-9)</option>
-                            <option value="out">Out of Stock (0)</option>
-                        </select>
+                    <div class="pagination">
+                        <div class="page-info" id="rtPageInfo">0 records</div>
+                        <div class="page-buttons" id="rtPagination"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="table-header">
-                    <h2 id="tableTitle">Stock Retail</h2>
-                    <span id="recordCount">0 records</span>
+            <!-- Warehouse Section -->
+            <div id="warehouseSection" class="warehouse-section" style="display:none;">
+                <div class="stats-grid" id="whStatsGrid"></div>
+                <div class="area-tags" id="whAreaTags"></div>
+                <div class="store-summary" id="whStoreSummary">
+                    <h3>📦 Stock per Warehouse</h3>
+                    <div class="store-grid" id="whStoreGrid"></div>
                 </div>
-                <div style="overflow-x: auto; max-height: 600px;">
-                    <table id="inventoryTable">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable('sku_code')">SKU Code</th>
-                                <th onclick="sortTable('product_name')">Product Name</th>
-                                <th onclick="sortTable('location_name')">Location</th>
-                                <th onclick="sortTable('quantity')">Qty</th>
-                                <th>Level</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="pagination"></div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>Top 10 Locations by Stock</h3>
-                    <canvas id="locationChart"></canvas>
-                </div>
-                <div class="chart-card">
-                    <h3>Stock Distribution</h3>
-                    <canvas id="stockDistChart"></canvas>
+                <div class="table-section">
+                    <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>Search:</label>
+                                <input type="text" id="whSearch" placeholder="SKU/Artikel..." onkeyup="renderWarehouseTable()">
+                            </div>
+                            <div class="filter-group">
+                                <label>Gender:</label>
+                                <select id="whFilterGender" onchange="renderWarehouseTable()">
+                                    <option value="">Semua</option>
+                                    <option value="MEN">Men</option>
+                                    <option value="LADIES">Ladies</option>
+                                    <option value="KIDS">Kids</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Stock Level:</label>
+                                <select id="whFilterStock" onchange="renderWarehouseTable()">
+                                    <option value="">Semua</option>
+                                    <option value="high">High (>100)</option>
+                                    <option value="medium">Medium (10-100)</option>
+                                    <option value="low">Low (1-9)</option>
+                                    <option value="zero">Out of Stock</option>
+                                    <option value="negative">Negative</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead id="whTableHead">
+                                <tr>
+                                    <th onclick="sortWarehouseTable('sku_code')">SKU</th>
+                                    <th onclick="sortWarehouseTable('product_name')">Produk</th>
+                                    <th onclick="sortWarehouseTable('location_name')">Lokasi</th>
+                                    <th onclick="sortWarehouseTable('quantity')">Qty</th>
+                                    <th>Level</th>
+                                </tr>
+                            </thead>
+                            <tbody id="whTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <div class="page-info" id="whPageInfo">0 records</div>
+                        <div class="page-buttons" id="whPagination"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -262,23 +366,21 @@
                 <button class="tab active" data-mstype="warehouse" onclick="switchMaxStockTab('warehouse')">📦 Warehouse</button>
                 <button class="tab" data-mstype="retail" onclick="switchMaxStockTab('retail')">🏪 Retail Store</button>
             </div>
-
-            <div id="maxStockFilters" class="filter-section">
+            <div class="filter-section" id="msWHFilters">
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label>Area</label>
-                        <select id="msFilterArea" onchange="updateMaxStockAnalysis()">
-                            <option value="">All Areas</option>
+                        <label>Area:</label>
+                        <select id="msWHFilterArea" onchange="updateMaxStockAnalysis()">
+                            <option value="">Semua Area</option>
                             <option value="Bali">Bali</option>
                             <option value="Jakarta">Jakarta</option>
                             <option value="Jawa Timur">Jawa Timur</option>
-                            <option value="Lombok">Lombok</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Fill Rate</label>
-                        <select id="msFilterFillRate" onchange="updateMaxStockAnalysis()">
-                            <option value="">All</option>
+                        <label>Fill Rate:</label>
+                        <select id="msWHFilterFillRate" onchange="updateMaxStockAnalysis()">
+                            <option value="">Semua</option>
                             <option value="over">Overstocked (>100%)</option>
                             <option value="optimal">Optimal (70-100%)</option>
                             <option value="under">Understocked (<70%)</option>
@@ -286,897 +388,180 @@
                     </div>
                 </div>
             </div>
-
-            <div class="stats-grid" id="maxStockStats">
-                <div class="stat-card primary">
-                    <h3>Total Actual Stock</h3>
-                    <div class="value" id="msActualStock">-</div>
-                </div>
-                <div class="stat-card success">
-                    <h3>Total Max Stock</h3>
-                    <div class="value" id="msTotalMax">-</div>
-                </div>
-                <div class="stat-card warning">
-                    <h3>Fill Rate</h3>
-                    <div class="value" id="msFillRate">-</div>
-                </div>
-                <div class="stat-card info">
-                    <h3>Locations</h3>
-                    <div class="value" id="msLocationCount">-</div>
+            <div class="filter-section" id="msFilters" style="display:none;">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Area:</label>
+                        <select id="msFilterArea" onchange="updateStoreDropdown(); updateMaxStockAnalysis()">
+                            <option value="">Semua Area</option>
+                            <option value="Bali">Bali</option>
+                            <option value="Jakarta">Jakarta</option>
+                            <option value="Jawa Timur">Jawa Timur</option>
+                            <option value="Lombok">Lombok</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Store:</label>
+                        <select id="msFilterStore" onchange="updateMaxStockAnalysis()">
+                            <option value="">Semua Store</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Fill Rate:</label>
+                        <select id="msFilterFillRate" onchange="updateMaxStockAnalysis()">
+                            <option value="">Semua</option>
+                            <option value="over">Overstocked (>100%)</option>
+                            <option value="optimal">Optimal (70-100%)</option>
+                            <option value="under">Understocked (<70%)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-
+            <div class="max-stock-summary" id="maxStockSummary">
+                <div class="summary-card green"><div class="label">Total Actual Stock</div><div class="value" id="msActualStock">0</div></div>
+                <div class="summary-card blue"><div class="label">Total Max Stock</div><div class="value" id="msTotalMax">0</div></div>
+                <div class="summary-card yellow"><div class="label">Fill Rate</div><div class="value" id="msFillRate">0%</div></div>
+                <div class="summary-card red"><div class="label">Gap to Max</div><div class="value" id="msGap">0</div></div>
+            </div>
             <div class="analysis-grid">
-                <div class="analysis-card">
-                    <h3>📊 Store Analysis</h3>
-                    <div id="storeAnalysisList" style="max-height: 500px; overflow-y: auto;"></div>
-                </div>
-                <div class="analysis-card">
-                    <h3>📈 Fill Rate Distribution</h3>
-                    <canvas id="fillRateChart"></canvas>
-                </div>
+                <div class="analysis-card"><h3>📊 Fill Rate per Store/WH</h3><div id="fillRateList" style="max-height: 500px; overflow-y: auto;"></div></div>
+                <div class="analysis-card"><h3>📈 Entity Distribution</h3><div id="entityDistribution"></div></div>
             </div>
         </div>
 
         <!-- ==================== CONTROL STOCK VIEW ==================== -->
-        <div class="view-container" id="controlView">
+        <div class="view-container" id="stockcontrolView">
+            <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:16px;padding:20px;margin-bottom:15px;">
+                <h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">📊 Control Stock - Turnover Analysis</h2>
+                <p style="margin:0;color:#6b7280;font-size:0.85rem;">Data sales: 3 bulan terakhir</p>
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:20px;justify-content:center;">
+                <button id="scViewSku" onclick="switchStockControlView('sku')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:white;">Turnover By SKU</button>
+                <button id="scViewKodeKecil" onclick="switchStockControlView('kodeKecil')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #6366f1;background:white;color:#6366f1;">Turnover By Kode Kecil</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:15px;"><div style="font-size:0.8rem;color:#92400e;margin-bottom:5px;">🏭 WH Pusat</div><div id="scWhPusat" style="font-size:1.8rem;font-weight:700;color:#78350f;">0</div></div>
+                <div style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);border-radius:12px;padding:15px;"><div style="font-size:0.8rem;color:#065f46;margin-bottom:5px;">🏭 WH Bali</div><div id="scWhBali" style="font-size:1.8rem;font-weight:700;color:#064e3b;">0</div></div>
+                <div style="background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);border-radius:12px;padding:15px;"><div style="font-size:0.8rem;color:#1e40af;margin-bottom:5px;">🏭 WH Jakarta</div><div id="scWhJakarta" style="font-size:1.8rem;font-weight:700;color:#1e3a8a;">0</div></div>
+                <div style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-radius:12px;padding:15px;"><div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🏪 Stok Toko</div><div id="scStokToko" style="font-size:1.8rem;font-weight:700;color:#4c1d95;">0</div></div>
+            </div>
             <div class="filter-section">
-                <h2 style="margin-bottom: 15px; font-size: 1.2rem;">📊 Control Stock - Turnover Analysis</h2>
-                <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 15px;">Data sales: November, Desember, Januari (3 bulan terakhir)</p>
                 <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Search</label>
-                        <input type="text" id="controlSearch" placeholder="Kode atau Article..." oninput="filterControlStock()">
-                    </div>
-                    <div class="filter-group">
-                        <label>Gender</label>
-                        <select id="controlGender" onchange="filterControlStock()">
-                            <option value="">All</option>
-                            <option value="MEN">MEN</option>
-                            <option value="LADIES">LADIES</option>
-                            <option value="KIDS">KIDS</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Turnover Status</label>
-                        <select id="controlTurnover" onchange="filterControlStock()">
-                            <option value="">All</option>
-                            <option value="fast">Fast Moving (TO < 4)</option>
-                            <option value="normal">Normal (TO 4-12)</option>
-                            <option value="slow">Slow Moving (TO > 12)</option>
-                        </select>
-                    </div>
+                    <div class="filter-group"><label>Gender:</label><select id="scFilterGender" onchange="renderStockControlTable()"><option value="">Semua</option><option value="MEN">Men</option><option value="LADIES">Ladies</option><option value="KIDS">Kids</option></select></div>
+                    <div class="filter-group"><label>TW Status:</label><select id="scFilterTW" onchange="renderStockControlTable()"><option value="">Semua</option><option value="critical">&lt;2 (Critical)</option><option value="low">2-4 (Low)</option><option value="normal">4-8 (Normal)</option><option value="high">&gt;8 (High)</option></select></div>
+                    <div class="filter-group"><label>Search:</label><input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..."></div>
                 </div>
             </div>
-
-            <div class="stats-grid" id="controlStats">
-                <div class="stat-card primary">
-                    <h3>Total SKU</h3>
-                    <div class="value" id="ctrlTotalSKU">-</div>
-                </div>
-                <div class="stat-card success">
-                    <h3>Fast Moving</h3>
-                    <div class="value" id="ctrlFastMoving">-</div>
-                </div>
-                <div class="stat-card warning">
-                    <h3>Normal</h3>
-                    <div class="value" id="ctrlNormal">-</div>
-                </div>
-                <div class="stat-card danger">
-                    <h3>Slow Moving</h3>
-                    <div class="value" id="ctrlSlowMoving">-</div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div class="table-header">
-                    <h2>Turnover Analysis</h2>
-                    <span id="controlRecordCount">0 records</span>
-                </div>
-                <div style="overflow-x: auto; max-height: 600px;">
-                    <table id="controlTable">
-                        <thead>
-                            <tr>
-                                <th onclick="sortControlTable('kode_kecil')">Kode Kecil</th>
-                                <th onclick="sortControlTable('article')">Article</th>
-                                <th onclick="sortControlTable('series')">Series</th>
-                                <th onclick="sortControlTable('gender')">Gender</th>
-                                <th onclick="sortControlTable('avg_sales')">Avg Sales/Bln</th>
-                                <th onclick="sortControlTable('stock_wh')">Stock WH</th>
-                                <th onclick="sortControlTable('stock_retail')">Stock Retail</th>
-                                <th onclick="sortControlTable('turnover_wh')">TW (WH)</th>
-                                <th onclick="sortControlTable('turnover_retail')">TO (Retail)</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="controlTableBody"></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="controlPagination"></div>
-            </div>
+            <div class="table-section"><div class="table-wrapper"><table><thead id="scTableHead"></thead><tbody id="scTableBody"></tbody></table></div><div class="pagination"><div class="page-info" id="scPageInfo">0 records</div><div class="page-buttons" id="scPagination"></div></div></div>
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-top:15px;border:1px solid #e2e8f0;"><h4 style="margin:0 0 10px 0;color:#334155;font-size:0.9rem;">Keterangan:</h4><div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;"><span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">&lt;2 Critical</span><span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">2-4 Low</span><span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">4-8 Normal</span><span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;">&gt;8 High</span></div></div>
         </div>
 
         <!-- ==================== SALES VIEW ==================== -->
         <div class="view-container" id="salesView">
-            <div class="filter-section">
-                <h2 style="margin-bottom: 15px; font-size: 1.2rem;">💰 Sales Dashboard</h2>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Start Date</label>
-                        <input type="date" id="salesStartDate" onchange="loadSalesData()">
-                    </div>
-                    <div class="filter-group">
-                        <label>End Date</label>
-                        <input type="date" id="salesEndDate" onchange="loadSalesData()">
-                    </div>
-                    <div class="filter-group">
-                        <label>Store</label>
-                        <select id="salesStore" onchange="loadSalesData()">
-                            <option value="">All Stores</option>
-                        </select>
-                    </div>
+            <div style="background:linear-gradient(135deg,#dcfce7 0%,#f0fdf4 50%,#ecfeff 100%);border-radius:16px;padding:20px;margin-bottom:20px;"><h2 style="margin:0 0 5px 0;color:#1f2937;font-size:1.4rem;">💰 Sales Dashboard</h2><p style="margin:0;color:#6b7280;font-size:0.85rem;">Periode: <span id="salesPeriodRange">-</span></p></div>
+            <div class="filter-section"><div class="filter-row">
+                <div class="filter-group"><label>Mulai:</label><input type="date" id="salesFilterStartDate" onchange="renderSalesDashboard()"></div>
+                <div class="filter-group"><label>Akhir:</label><input type="date" id="salesFilterEndDate" onchange="renderSalesDashboard()"></div>
+                <div class="filter-group"><label>Area:</label><select id="salesFilterArea" onchange="updateSalesStoresByArea(); renderSalesDashboard()"><option value="">Semua Area</option></select></div>
+                <div class="filter-group"><label>Toko:</label><select id="salesFilterStore" onchange="renderSalesDashboard()"><option value="">Semua Toko</option></select></div>
+                <div class="filter-group"><label>Gender:</label><select id="salesFilterGender" onchange="renderSalesDashboard()"><option value="">Semua</option><option value="Men">Men</option><option value="Ladies">Ladies</option><option value="Kids">Kids</option></select></div>
+                <button onclick="resetSalesFilters()" style="padding:8px 16px;background:#f3f4f6;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;">Reset</button>
+            </div></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;" id="salesSummaryCards"></div>
+            <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+                <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                    <button class="sales-tab-btn active" onclick="switchSalesTab('performance')" data-tab="performance">📊 Performance</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('trend')" data-tab="trend">📈 Trend</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">🩴 Produk</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
+                    <button class="sales-tab-btn" onclick="switchSalesTab('skusearch')" data-tab="skusearch">🔍 Cari SKU</button>
                 </div>
-            </div>
-
-            <div class="sales-summary" id="salesSummary">
-                <div class="sales-card">
-                    <h4>Total Sales</h4>
-                    <div class="value" id="salesTotalQty">-</div>
-                    <div class="sub">units sold</div>
-                </div>
-                <div class="sales-card">
-                    <h4>Total Revenue</h4>
-                    <div class="value" id="salesTotalRevenue">-</div>
-                    <div class="sub">IDR</div>
-                </div>
-                <div class="sales-card">
-                    <h4>Transactions</h4>
-                    <div class="value" id="salesTotalTx">-</div>
-                    <div class="sub">orders</div>
-                </div>
-                <div class="sales-card">
-                    <h4>Avg per Day</h4>
-                    <div class="value" id="salesAvgDay">-</div>
-                    <div class="sub">units/day</div>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>Top 10 Products</h3>
-                    <canvas id="topProductsChart"></canvas>
-                </div>
-                <div class="chart-card">
-                    <h3>Top 10 Stores</h3>
-                    <canvas id="topStoresChart"></canvas>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div class="table-header">
-                    <h2>Sales Detail</h2>
-                    <span id="salesRecordCount">0 records</span>
-                </div>
-                <div style="overflow-x: auto; max-height: 500px;">
-                    <table id="salesTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Store</th>
-                                <th>SKU</th>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="salesTableBody"></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="salesPagination"></div>
+                <div class="sales-tab-content active" id="salesTabPerformance" style="padding:20px;"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;"><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4><div id="salesByStoreTable" style="max-height:400px;overflow-y:auto;"></div></div><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4><div id="salesByAreaTable"></div></div></div></div>
+                <div class="sales-tab-content" id="salesTabTrend" style="padding:20px;display:none;"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📅 Daily Sales Trend</h4><div id="salesDailyTrend" style="max-height:350px;overflow-y:auto;"></div></div><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Week</h4><div id="salesWeekByWeek"></div></div></div></div>
+                <div class="sales-tab-content" id="salesTabProduct" style="padding:20px;display:none;"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;"><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top Selling (Top 10)</h4><div id="salesTopArticles" style="max-height:500px;overflow-y:auto;"></div></div><div><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🐢 Slow Moving (Bottom 10)</h4><div id="salesSlowMoving" style="max-height:500px;overflow-y:auto;"></div></div></div><div style="margin-top:20px;"><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4><div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div></div></div>
+                <div class="sales-tab-content" id="salesTabSpg" style="padding:20px;display:none;"><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4><div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div></div>
+                <div class="sales-tab-content" id="salesTabTransaction" style="padding:20px;display:none;"><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📋 Recent Transactions</h4><div id="salesRecentTransactions" style="max-height:600px;overflow-y:auto;"></div></div>
+                <div class="sales-tab-content" id="salesTabSkusearch" style="padding:20px;display:none;"><h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU</h4><div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;"><input type="text" id="skuSearchInput" placeholder="Ketik SKU atau Artikel..." style="flex:1;min-width:250px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;" onkeyup="handleSKUSearchKeyup(event)"><button onclick="searchSKUSales()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;">🔍 Cari</button></div><div id="skuSearchResults" style="max-height:600px;overflow-y:auto;"></div></div>
             </div>
         </div>
 
-        <div class="loading" id="loadingIndicator" style="display: none;">
-            <div class="loading-spinner"></div>
-            <span>Loading data...</span>
-        </div>
+        <div class="loading" id="loadingIndicator" style="display:none;"><div class="loading-spinner"></div><span>Loading data...</span></div>
     </div>
 
+    <!-- Modals -->
+    <div class="modal-overlay" id="negativeModal" onclick="closeNegativeModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><div class="modal-header"><h2 id="negativeModalTitle">⚠️ Stok Minus Detail</h2><button class="modal-close" onclick="closeNegativeModal()">&times;</button></div><div class="modal-body" id="negativeModalBody"></div></div></div>
+    <div class="sku-modal-overlay" id="skuModal" onclick="closeSkuModal(event)"><div class="sku-modal-content" onclick="event.stopPropagation()"><div class="sku-modal-header"><h2 id="skuModalTitle">📋 Detail SKU</h2><button class="modal-close" onclick="closeSkuModal()">&times;</button></div><div class="sku-modal-body" id="skuModalBody"></div></div></div>
+
     <script>
-        // Supabase Config
         const SUPABASE_URL = 'https://usxmptrqsovoxvrburvp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzeG1wdHJxc292b3h2cmJ1cnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODA2NzMsImV4cCI6MjA4NDc1NjY3M30.JkznqF6YWFgg22ta9F8feZuFbRPkHqkpDnJdm2G4C5Q';
 
-        // State
-        let currentEntity = 'DDD';
-        let currentView = 'inventory';
-        let currentTab = 'retail';
-        let currentMsTab = 'warehouse';
-        let inventoryData = [];
-        let filteredData = [];
-        let stockControlData = [];
-        let filteredControlData = [];
-        let maxStockData = [];
-        let salesData = [];
-        let filteredSalesData = [];
-        let entityCounts = { DDD: 0, LJBB: 0, MBB: 0, UBB: 0 };
-        let currentPage = 1;
-        let controlPage = 1;
-        let salesPage = 1;
-        const pageSize = 100;
-        let sortColumn = 'quantity';
-        let sortDirection = 'desc';
-        let controlSortColumn = 'avg_sales';
-        let controlSortDirection = 'desc';
-        let locationChart, stockDistChart, fillRateChart, topProductsChart, topStoresChart;
+        let currentView = 'inventory', currentEntity = 'DDD', currentInventoryTab = 'retail', currentMsTab = 'warehouse', scViewMode = 'sku';
+        let inventoryData = [], stockControlData = [], maxStockData = [], salesData = [];
+        let retailFiltered = [], warehouseFiltered = [], scFiltered = [];
+        let rtPage = 1, whPage = 1, scPage = 1; const pageSize = 100;
+        let rtSortCol = 'quantity', rtSortDir = 'desc', whSortCol = 'quantity', whSortDir = 'desc', scSortCol = 'avg_sales', scSortDir = 'desc';
+        let currentStore = '', currentArea = '';
 
-        // Init
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-            // Set default dates for sales
-            const today = new Date();
-            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            document.getElementById('salesStartDate').value = lastMonth.toISOString().split('T')[0];
-            document.getElementById('salesEndDate').value = today.toISOString().split('T')[0];
-
+            const today = new Date(); const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('salesFilterStartDate').value = startOfMonth.toISOString().split('T')[0];
+            document.getElementById('salesFilterEndDate').value = today.toISOString().split('T')[0];
             await loadAllData();
         });
 
-        async function loadAllData() {
-            showLoading(true);
-            try {
-                await Promise.all([
-                    loadInventoryData(),
-                    loadStockControlData(),
-                    loadMaxStockData()
-                ]);
-                await loadEntityCounts();
-                renderCurrentView();
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-            showLoading(false);
-        }
-
-        async function fetchSupabase(table, params = '') {
-            const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            return resp.json();
-        }
-
-        async function loadInventoryData() {
-            let allData = [];
-            let offset = 0;
-            const limit = 1000;
-
-            while (true) {
-                const data = await fetchSupabase('inventory', `?select=*&limit=${limit}&offset=${offset}`);
-                if (!data || data.length === 0) break;
-                allData = allData.concat(data);
-                offset += limit;
-                if (data.length < limit) break;
-            }
-
-            inventoryData = allData;
-            console.log('Loaded inventory:', inventoryData.length);
-        }
-
-        async function loadStockControlData() {
-            const data = await fetchSupabase('stock_control', '?select=*');
-            stockControlData = data || [];
-            filteredControlData = [...stockControlData];
-            console.log('Loaded stock_control:', stockControlData.length);
-        }
-
-        async function loadMaxStockData() {
-            const data = await fetchSupabase('max_stock', '?select=*');
-            maxStockData = data || [];
-            console.log('Loaded max_stock:', maxStockData.length);
-        }
-
-        async function loadEntityCounts() {
-            const entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
-            for (const entity of entities) {
-                const filtered = inventoryData.filter(d => d.entity === entity);
-                entityCounts[entity] = filtered.reduce((sum, d) => sum + (d.quantity || 0), 0);
-                document.getElementById(`count${entity}`).textContent = entityCounts[entity].toLocaleString();
-            }
-        }
-
-        async function loadSalesData() {
-            showLoading(true);
-            const startDate = document.getElementById('salesStartDate').value;
-            const endDate = document.getElementById('salesEndDate').value;
-            const store = document.getElementById('salesStore').value;
-
-            let params = `?select=*&order=sale_date.desc`;
-            if (startDate) params += `&sale_date=gte.${startDate}`;
-            if (endDate) params += `&sale_date=lte.${endDate}T23:59:59`;
-            if (store) params += `&store_name=eq.${encodeURIComponent(store)}`;
-            params += `&limit=5000`;
-
-            const data = await fetchSupabase('sales', params);
-            salesData = data || [];
-            filteredSalesData = [...salesData];
-            renderSalesView();
-            showLoading(false);
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingIndicator').style.display = show ? 'flex' : 'none';
-        }
-
-        function switchView(view) {
-            currentView = view;
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.view === view);
-            });
-            document.querySelectorAll('.view-container').forEach(container => {
-                container.classList.toggle('active', container.id === view + 'View');
-            });
-            renderCurrentView();
-        }
-
-        function renderCurrentView() {
-            switch (currentView) {
-                case 'inventory': renderInventoryView(); break;
-                case 'maxstock': updateMaxStockAnalysis(); break;
-                case 'control': renderControlStockView(); break;
-                case 'sales': loadSalesData(); break;
-            }
-        }
-
-        function switchEntity(entity) {
-            currentEntity = entity;
-            document.querySelectorAll('.entity-pill').forEach(pill => {
-                pill.classList.toggle('active', pill.classList.contains(entity.toLowerCase()));
-            });
-            renderCurrentView();
-        }
-
-        function switchTab(type) {
-            currentTab = type;
-            document.querySelectorAll('#inventoryTabs .tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.type === type);
-            });
-            renderInventoryView();
-        }
-
-        function switchMaxStockTab(type) {
-            currentMsTab = type;
-            document.querySelectorAll('#maxstockView .tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.mstype === type);
-            });
-            updateMaxStockAnalysis();
-        }
-
-        // ==================== INVENTORY VIEW ====================
-        function renderInventoryView() {
-            // Filter by entity and type
-            filteredData = inventoryData.filter(d => {
-                if (d.entity !== currentEntity) return false;
-                if (d.location_type !== currentTab) return false;
-                return true;
-            });
-
-            // Update locations dropdown
-            const locations = [...new Set(filteredData.map(d => d.location_name))].sort();
-            const locationSelect = document.getElementById('locationFilter');
-            locationSelect.innerHTML = '<option value="">All Locations</option>' +
-                locations.map(l => `<option value="${l}">${l}</option>`).join('');
-
-            // Update store grid for DDD retail
-            if (currentEntity === 'DDD' && currentTab === 'retail') {
-                renderStoreGrid();
-            } else {
-                document.getElementById('storeGrid').innerHTML = '';
-            }
-
-            applyFilters();
-            renderStats();
-            renderCharts();
-        }
-
-        function renderStoreGrid() {
-            const storeStock = {};
-            filteredData.forEach(d => {
-                if (!storeStock[d.location_name]) storeStock[d.location_name] = 0;
-                storeStock[d.location_name] += d.quantity || 0;
-            });
-
-            const maxStock = maxStockData.reduce((map, m) => { map[m.store_name] = m.max_stock; return map; }, {});
-
-            const stores = Object.entries(storeStock).sort((a, b) => b[1] - a[1]);
-
-            document.getElementById('storeGrid').innerHTML = stores.map(([name, stock]) => {
-                const max = maxStock[name] || 1500;
-                const fill = Math.round((stock / max) * 100);
-                return `<div class="store-card" onclick="filterByStore('${name}')">
-                    <h4>${name}</h4>
-                    <div class="stock">${stock.toLocaleString()}</div>
-                    <div class="fill">Fill: ${fill}% of ${max.toLocaleString()}</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill ${fill > 100 ? 'high' : fill > 70 ? 'medium' : 'low'}" style="width: ${Math.min(fill, 100)}%"></div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function filterByStore(store) {
-            document.getElementById('locationFilter').value = store;
-            applyFilters();
-            document.querySelectorAll('.store-card').forEach(card => {
-                card.classList.toggle('active', card.querySelector('h4').textContent === store);
-            });
-        }
-
-        function applyFilters() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const location = document.getElementById('locationFilter').value;
-            const stockLevel = document.getElementById('stockFilter').value;
-
-            let data = inventoryData.filter(d => {
-                if (d.entity !== currentEntity) return false;
-                if (d.location_type !== currentTab) return false;
-                if (search && !d.sku_code?.toLowerCase().includes(search) && !d.product_name?.toLowerCase().includes(search)) return false;
-                if (location && d.location_name !== location) return false;
-                if (stockLevel) {
-                    const qty = d.quantity || 0;
-                    if (stockLevel === 'high' && qty <= 100) return false;
-                    if (stockLevel === 'medium' && (qty < 10 || qty > 100)) return false;
-                    if (stockLevel === 'low' && (qty < 1 || qty > 9)) return false;
-                    if (stockLevel === 'out' && qty !== 0) return false;
-                }
-                return true;
-            });
-
-            filteredData = sortData(data);
-            currentPage = 1;
-            renderTable();
-        }
-
-        function sortData(data) {
-            return [...data].sort((a, b) => {
-                let aVal = a[sortColumn] ?? '';
-                let bVal = b[sortColumn] ?? '';
-                if (typeof aVal === 'number') {
-                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-                }
-                return sortDirection === 'asc' ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
-            });
-        }
-
-        function sortTable(column) {
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'desc';
-            }
-            filteredData = sortData(filteredData);
-            renderTable();
-        }
-
-        function renderTable() {
-            const start = (currentPage - 1) * pageSize;
-            const pageData = filteredData.slice(start, start + pageSize);
-
-            document.getElementById('tableTitle').textContent = `Stock ${currentTab === 'retail' ? 'Retail' : 'Warehouse'} - ${currentEntity}`;
-            document.getElementById('recordCount').textContent = `${filteredData.length.toLocaleString()} records`;
-
-            document.getElementById('tableBody').innerHTML = pageData.map(d => {
-                const qty = d.quantity || 0;
-                let level = 'out', badge = 'OUT';
-                if (qty > 100) { level = 'high'; badge = 'HIGH'; }
-                else if (qty >= 10) { level = 'medium'; badge = 'MEDIUM'; }
-                else if (qty > 0) { level = 'low'; badge = 'LOW'; }
-
-                return `<tr>
-                    <td><strong>${d.sku_code || '-'}</strong></td>
-                    <td>${d.product_name || '-'}</td>
-                    <td>${d.location_name || '-'}</td>
-                    <td><strong>${qty.toLocaleString()}</strong></td>
-                    <td><span class="badge ${level}">${badge}</span></td>
-                </tr>`;
-            }).join('');
-
-            renderPagination();
-        }
-
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredData.length / pageSize);
-            if (totalPages <= 1) {
-                document.getElementById('pagination').innerHTML = '';
-                return;
-            }
-
-            let html = `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
-            html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
-
-            const start = Math.max(1, currentPage - 2);
-            const end = Math.min(totalPages, currentPage + 2);
-            for (let i = start; i <= end; i++) {
-                html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-            }
-
-            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
-            html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
-
-            document.getElementById('pagination').innerHTML = html;
-        }
-
-        function goToPage(page) {
-            currentPage = page;
-            renderTable();
-        }
-
-        function renderStats() {
-            const total = filteredData.reduce((sum, d) => sum + (d.quantity || 0), 0);
-            const locations = new Set(filteredData.map(d => d.location_name)).size;
-            const skus = new Set(filteredData.map(d => d.sku_code)).size;
-            const high = filteredData.filter(d => d.quantity > 100).length;
-            const low = filteredData.filter(d => d.quantity > 0 && d.quantity < 10).length;
-            const out = filteredData.filter(d => d.quantity === 0).length;
-
-            document.getElementById('statsContainer').innerHTML = `
-                <div class="stat-card primary"><h3>Total Stock</h3><div class="value">${total.toLocaleString()}</div></div>
-                <div class="stat-card info"><h3>Locations</h3><div class="value">${locations}</div></div>
-                <div class="stat-card success"><h3>SKUs</h3><div class="value">${skus.toLocaleString()}</div></div>
-                <div class="stat-card warning"><h3>High Stock</h3><div class="value">${high.toLocaleString()}</div></div>
-                <div class="stat-card danger"><h3>Low Stock</h3><div class="value">${low.toLocaleString()}</div></div>
-            `;
-        }
-
-        function renderCharts() {
-            // Location chart
-            const locationStock = {};
-            filteredData.forEach(d => {
-                if (!locationStock[d.location_name]) locationStock[d.location_name] = 0;
-                locationStock[d.location_name] += d.quantity || 0;
-            });
-            const topLocations = Object.entries(locationStock).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-            if (locationChart) locationChart.destroy();
-            locationChart = new Chart(document.getElementById('locationChart'), {
-                type: 'bar',
-                data: {
-                    labels: topLocations.map(l => l[0].replace('Zuma ', '').replace('Warehouse ', 'WH ')),
-                    datasets: [{ label: 'Stock', data: topLocations.map(l => l[1]), backgroundColor: 'rgba(99, 102, 241, 0.8)' }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-
-            // Stock distribution
-            const high = filteredData.filter(d => d.quantity > 100).length;
-            const medium = filteredData.filter(d => d.quantity >= 10 && d.quantity <= 100).length;
-            const low = filteredData.filter(d => d.quantity > 0 && d.quantity < 10).length;
-            const out = filteredData.filter(d => d.quantity === 0).length;
-
-            if (stockDistChart) stockDistChart.destroy();
-            stockDistChart = new Chart(document.getElementById('stockDistChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['High (>100)', 'Medium (10-100)', 'Low (1-9)', 'Out of Stock'],
-                    datasets: [{ data: [high, medium, low, out], backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#1f2937'] }]
-                },
-                options: { responsive: true }
-            });
-        }
-
-        // ==================== MAX STOCK ANALYSIS ====================
-        function updateMaxStockAnalysis() {
-            const filterArea = document.getElementById('msFilterArea').value;
-            const filterFillRate = document.getElementById('msFilterFillRate').value;
-
-            // Get data based on tab
-            let locationData = {};
-            const entityData = inventoryData.filter(d => d.entity === currentEntity && d.location_type === currentMsTab);
-
-            entityData.forEach(d => {
-                if (!locationData[d.location_name]) locationData[d.location_name] = 0;
-                locationData[d.location_name] += d.quantity || 0;
-            });
-
-            // Get max stock map
-            const maxStockMap = maxStockData.reduce((map, m) => { map[m.store_name] = m; return map; }, {});
-
-            // Build analysis data
-            let analysisData = Object.entries(locationData).map(([name, stock]) => {
-                const ms = maxStockMap[name] || { max_stock: currentMsTab === 'warehouse' ? 20000 : 1500, area: 'Unknown' };
-                const fill = ms.max_stock > 0 ? (stock / ms.max_stock) * 100 : 0;
-                return { name, stock, max: ms.max_stock, fill, area: ms.area };
-            });
-
-            // Apply filters
-            if (filterArea) {
-                analysisData = analysisData.filter(d => d.area === filterArea);
-            }
-            if (filterFillRate === 'over') {
-                analysisData = analysisData.filter(d => d.fill > 100);
-            } else if (filterFillRate === 'optimal') {
-                analysisData = analysisData.filter(d => d.fill >= 70 && d.fill <= 100);
-            } else if (filterFillRate === 'under') {
-                analysisData = analysisData.filter(d => d.fill < 70);
-            }
-
-            // Calculate totals
-            const totalActual = analysisData.reduce((sum, d) => sum + d.stock, 0);
-            const totalMax = analysisData.reduce((sum, d) => sum + d.max, 0);
-            const avgFill = totalMax > 0 ? (totalActual / totalMax) * 100 : 0;
-
-            document.getElementById('msActualStock').textContent = totalActual.toLocaleString();
-            document.getElementById('msTotalMax').textContent = totalMax.toLocaleString();
-            document.getElementById('msFillRate').textContent = avgFill.toFixed(1) + '%';
-            document.getElementById('msLocationCount').textContent = analysisData.length;
-
-            // Render store analysis list
-            analysisData.sort((a, b) => b.stock - a.stock);
-            document.getElementById('storeAnalysisList').innerHTML = analysisData.map(d => {
-                const fillClass = d.fill > 100 ? 'high' : d.fill > 70 ? 'medium' : 'low';
-                return `<div class="store-analysis-item">
-                    <div>
-                        <strong>${d.name}</strong>
-                        <div style="font-size: 0.75rem; color: #6b7280;">${d.area || 'Unknown'}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div><strong>${d.stock.toLocaleString()}</strong> / ${d.max.toLocaleString()}</div>
-                        <div style="font-size: 0.8rem; color: ${fillClass === 'high' ? '#10b981' : fillClass === 'medium' ? '#f59e0b' : '#ef4444'}">
-                            ${d.fill.toFixed(1)}%
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-
-            // Render fill rate chart
-            const over = analysisData.filter(d => d.fill > 100).length;
-            const optimal = analysisData.filter(d => d.fill >= 70 && d.fill <= 100).length;
-            const under = analysisData.filter(d => d.fill < 70).length;
-
-            if (fillRateChart) fillRateChart.destroy();
-            fillRateChart = new Chart(document.getElementById('fillRateChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Overstocked (>100%)', 'Optimal (70-100%)', 'Understocked (<70%)'],
-                    datasets: [{ data: [over, optimal, under], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }]
-                },
-                options: { responsive: true }
-            });
-        }
-
-        // ==================== CONTROL STOCK ====================
-        function renderControlStockView() {
-            filteredControlData = [...stockControlData];
-            filterControlStock();
-
-            const total = stockControlData.length;
-            const fast = stockControlData.filter(d => d.turnover_retail && d.turnover_retail < 4).length;
-            const normal = stockControlData.filter(d => d.turnover_retail && d.turnover_retail >= 4 && d.turnover_retail <= 12).length;
-            const slow = stockControlData.filter(d => !d.turnover_retail || d.turnover_retail > 12).length;
-
-            document.getElementById('ctrlTotalSKU').textContent = total;
-            document.getElementById('ctrlFastMoving').textContent = fast;
-            document.getElementById('ctrlNormal').textContent = normal;
-            document.getElementById('ctrlSlowMoving').textContent = slow;
-        }
-
-        function filterControlStock() {
-            const search = document.getElementById('controlSearch').value.toLowerCase();
-            const gender = document.getElementById('controlGender').value;
-            const turnover = document.getElementById('controlTurnover').value;
-
-            filteredControlData = stockControlData.filter(d => {
-                if (search && !d.kode_kecil?.toLowerCase().includes(search) && !d.article?.toLowerCase().includes(search)) return false;
-                if (gender && d.gender !== gender) return false;
-                if (turnover) {
-                    const to = d.turnover_retail || 999;
-                    if (turnover === 'fast' && to >= 4) return false;
-                    if (turnover === 'normal' && (to < 4 || to > 12)) return false;
-                    if (turnover === 'slow' && to <= 12) return false;
-                }
-                return true;
-            });
-
-            filteredControlData = sortControlData(filteredControlData);
-            controlPage = 1;
-            renderControlTable();
-        }
-
-        function sortControlData(data) {
-            return [...data].sort((a, b) => {
-                let aVal = a[controlSortColumn] ?? 0;
-                let bVal = b[controlSortColumn] ?? 0;
-                if (typeof aVal === 'number') {
-                    return controlSortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-                }
-                return controlSortDirection === 'asc' ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
-            });
-        }
-
-        function sortControlTable(column) {
-            if (controlSortColumn === column) {
-                controlSortDirection = controlSortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                controlSortColumn = column;
-                controlSortDirection = 'desc';
-            }
-            filteredControlData = sortControlData(filteredControlData);
-            renderControlTable();
-        }
-
-        function renderControlTable() {
-            const start = (controlPage - 1) * pageSize;
-            const pageData = filteredControlData.slice(start, start + pageSize);
-
-            document.getElementById('controlRecordCount').textContent = `${filteredControlData.length} records`;
-
-            document.getElementById('controlTableBody').innerHTML = pageData.map(d => {
-                const to = d.turnover_retail || 999;
-                let status = 'Slow', statusClass = 'low';
-                if (to < 4) { status = 'Fast'; statusClass = 'high'; }
-                else if (to <= 12) { status = 'Normal'; statusClass = 'medium'; }
-
-                return `<tr>
-                    <td><strong>${d.kode_kecil || '-'}</strong></td>
-                    <td>${d.article || '-'}</td>
-                    <td>${d.series || '-'}</td>
-                    <td>${d.gender || '-'}</td>
-                    <td>${d.avg_sales?.toLocaleString() || '0'}</td>
-                    <td>${d.stock_wh?.toLocaleString() || '0'}</td>
-                    <td>${d.stock_retail?.toLocaleString() || '0'}</td>
-                    <td>${d.turnover_wh?.toFixed(1) || '-'}</td>
-                    <td>${d.turnover_retail?.toFixed(1) || '-'}</td>
-                    <td><span class="badge ${statusClass}">${status}</span></td>
-                </tr>`;
-            }).join('');
-
-            renderControlPagination();
-        }
-
-        function renderControlPagination() {
-            const totalPages = Math.ceil(filteredControlData.length / pageSize);
-            if (totalPages <= 1) {
-                document.getElementById('controlPagination').innerHTML = '';
-                return;
-            }
-
-            let html = `<button onclick="goToControlPage(1)" ${controlPage === 1 ? 'disabled' : ''}>First</button>`;
-            html += `<button onclick="goToControlPage(${controlPage - 1})" ${controlPage === 1 ? 'disabled' : ''}>Prev</button>`;
-
-            const start = Math.max(1, controlPage - 2);
-            const end = Math.min(totalPages, controlPage + 2);
-            for (let i = start; i <= end; i++) {
-                html += `<button onclick="goToControlPage(${i})" class="${i === controlPage ? 'active' : ''}">${i}</button>`;
-            }
-
-            html += `<button onclick="goToControlPage(${controlPage + 1})" ${controlPage === totalPages ? 'disabled' : ''}>Next</button>`;
-            html += `<button onclick="goToControlPage(${totalPages})" ${controlPage === totalPages ? 'disabled' : ''}>Last</button>`;
-
-            document.getElementById('controlPagination').innerHTML = html;
-        }
-
-        function goToControlPage(page) {
-            controlPage = page;
-            renderControlTable();
-        }
-
-        // ==================== SALES ====================
-        function renderSalesView() {
-            // Populate store dropdown
-            const stores = [...new Set(salesData.map(d => d.store_name))].sort();
-            const storeSelect = document.getElementById('salesStore');
-            if (storeSelect.options.length <= 1) {
-                storeSelect.innerHTML = '<option value="">All Stores</option>' +
-                    stores.map(s => `<option value="${s}">${s}</option>`).join('');
-            }
-
-            // Calculate summary
-            const totalQty = salesData.reduce((sum, d) => sum + (d.quantity || 0), 0);
-            const totalRevenue = salesData.reduce((sum, d) => sum + (d.total || 0), 0);
-            const totalTx = salesData.length;
-
-            const startDate = new Date(document.getElementById('salesStartDate').value);
-            const endDate = new Date(document.getElementById('salesEndDate').value);
-            const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-            const avgDay = Math.round(totalQty / days);
-
-            document.getElementById('salesTotalQty').textContent = totalQty.toLocaleString();
-            document.getElementById('salesTotalRevenue').textContent = 'Rp ' + (totalRevenue / 1000000).toFixed(1) + 'M';
-            document.getElementById('salesTotalTx').textContent = totalTx.toLocaleString();
-            document.getElementById('salesAvgDay').textContent = avgDay.toLocaleString();
-
-            renderSalesCharts();
-            renderSalesTable();
-        }
-
-        function renderSalesCharts() {
-            // Top products
-            const productSales = {};
-            salesData.forEach(d => {
-                if (!productSales[d.sku_code]) productSales[d.sku_code] = 0;
-                productSales[d.sku_code] += d.quantity || 0;
-            });
-            const topProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-            if (topProductsChart) topProductsChart.destroy();
-            topProductsChart = new Chart(document.getElementById('topProductsChart'), {
-                type: 'bar',
-                data: {
-                    labels: topProducts.map(p => p[0]),
-                    datasets: [{ label: 'Units Sold', data: topProducts.map(p => p[1]), backgroundColor: 'rgba(99, 102, 241, 0.8)' }]
-                },
-                options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
-            });
-
-            // Top stores
-            const storeSales = {};
-            salesData.forEach(d => {
-                if (!storeSales[d.store_name]) storeSales[d.store_name] = 0;
-                storeSales[d.store_name] += d.quantity || 0;
-            });
-            const topStores = Object.entries(storeSales).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-            if (topStoresChart) topStoresChart.destroy();
-            topStoresChart = new Chart(document.getElementById('topStoresChart'), {
-                type: 'bar',
-                data: {
-                    labels: topStores.map(s => s[0].replace('Zuma ', '')),
-                    datasets: [{ label: 'Units Sold', data: topStores.map(s => s[1]), backgroundColor: 'rgba(236, 72, 153, 0.8)' }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-        }
-
-        function renderSalesTable() {
-            const start = (salesPage - 1) * pageSize;
-            const pageData = salesData.slice(start, start + pageSize);
-
-            document.getElementById('salesRecordCount').textContent = `${salesData.length} records`;
-
-            document.getElementById('salesTableBody').innerHTML = pageData.map(d => {
-                const date = new Date(d.sale_date).toLocaleDateString('id-ID');
-                return `<tr>
-                    <td>${date}</td>
-                    <td>${d.store_name || '-'}</td>
-                    <td><strong>${d.sku_code || '-'}</strong></td>
-                    <td>${d.product_name || '-'}</td>
-                    <td>${d.quantity || 0}</td>
-                    <td>Rp ${(d.price || 0).toLocaleString()}</td>
-                    <td>Rp ${(d.total || 0).toLocaleString()}</td>
-                </tr>`;
-            }).join('');
-
-            renderSalesPagination();
-        }
-
-        function renderSalesPagination() {
-            const totalPages = Math.ceil(salesData.length / pageSize);
-            if (totalPages <= 1) {
-                document.getElementById('salesPagination').innerHTML = '';
-                return;
-            }
-
-            let html = `<button onclick="goToSalesPage(1)" ${salesPage === 1 ? 'disabled' : ''}>First</button>`;
-            html += `<button onclick="goToSalesPage(${salesPage - 1})" ${salesPage === 1 ? 'disabled' : ''}>Prev</button>`;
-
-            const start = Math.max(1, salesPage - 2);
-            const end = Math.min(totalPages, salesPage + 2);
-            for (let i = start; i <= end; i++) {
-                html += `<button onclick="goToSalesPage(${i})" class="${i === salesPage ? 'active' : ''}">${i}</button>`;
-            }
-
-            html += `<button onclick="goToSalesPage(${salesPage + 1})" ${salesPage === totalPages ? 'disabled' : ''}>Next</button>`;
-            html += `<button onclick="goToSalesPage(${totalPages})" ${salesPage === totalPages ? 'disabled' : ''}>Last</button>`;
-
-            document.getElementById('salesPagination').innerHTML = html;
-        }
-
-        function goToSalesPage(page) {
-            salesPage = page;
-            renderSalesTable();
-        }
+        async function loadAllData() { showLoading(true); try { await Promise.all([loadInventoryData(), loadStockControlData(), loadMaxStockData()]); updateEntityCounts(); renderCurrentView(); } catch (e) { console.error('Error:', e); } showLoading(false); }
+        async function fetchSupabase(table, params = '') { const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }); return r.json(); }
+        async function loadInventoryData() { let all = [], offset = 0; while (true) { const d = await fetchSupabase('inventory', `?select=*&limit=1000&offset=${offset}`); if (!d || d.length === 0) break; all = all.concat(d); offset += 1000; if (d.length < 1000) break; } inventoryData = all; }
+        async function loadStockControlData() { stockControlData = await fetchSupabase('stock_control', '?select=*') || []; scFiltered = [...stockControlData]; }
+        async function loadMaxStockData() { maxStockData = await fetchSupabase('max_stock', '?select=*') || []; }
+        function showLoading(s) { document.getElementById('loadingIndicator').style.display = s ? 'flex' : 'none'; }
+        function updateEntityCounts() { ['DDD', 'LJBB', 'MBB', 'UBB'].forEach(e => { document.getElementById(`count${e}`).textContent = inventoryData.filter(d => d.entity === e).reduce((s, d) => s + (d.quantity || 0), 0).toLocaleString(); }); }
+        function switchView(v) { currentView = v; document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v)); document.querySelectorAll('.view-container').forEach(c => c.classList.toggle('active', c.id === v + 'View')); renderCurrentView(); }
+        function renderCurrentView() { if (currentView === 'inventory') renderInventoryView(); else if (currentView === 'maxstock') updateMaxStockAnalysis(); else if (currentView === 'stockcontrol') renderStockControlView(); else if (currentView === 'sales') loadSalesData(); }
+        function selectEntity(e) { currentEntity = e; document.querySelectorAll('.entity-pill').forEach(p => p.classList.toggle('active', p.dataset.entity === e)); renderInventoryView(); }
+        function switchInventoryTab(t) { currentInventoryTab = t; document.querySelectorAll('#inventoryTabs .tab').forEach(b => b.classList.toggle('active', b.dataset.type === t)); document.getElementById('retailSection').style.display = t === 'retail' ? 'block' : 'none'; document.getElementById('warehouseSection').style.display = t === 'warehouse' ? 'block' : 'none'; currentStore = ''; currentArea = ''; renderInventoryView(); }
+        function renderInventoryView() { if (currentInventoryTab === 'retail') { renderRetailStats(); renderRetailAreaTags(); renderRetailStoreGrid(); renderRetailTable(); } else { renderWarehouseStats(); renderWarehouseAreaTags(); renderWarehouseStoreGrid(); renderWarehouseTable(); } }
+        function getArea(n) { const u = (n || '').toUpperCase(); if (u.includes('BALI') || u.includes('GATSU') || u.includes('SERIRIT') || u.includes('SINGARAJA') || u.includes('TABANAN') || u.includes('KAPAL') || u.includes('BANGLI') || u.includes('PENATIH') || u.includes('KEDONGANAN') || u.includes('GIANYAR') || u.includes('UBUD') || u.includes('DENPASAR') || u.includes('KUTA') || u.includes('SANUR') || u.includes('SEMINYAK') || u.includes('CANGGU') || u.includes('NUSA DUA') || u.includes('JIMBARAN') || u.includes('ULUWATU') || u.includes('KLUNGKUNG') || u.includes('AMLAPURA') || u.includes('NEGARA')) return 'Bali'; if (u.includes('JAKARTA') || u.includes('PLUIT') || u.includes('KELAPA GADING') || u.includes('CEMPAKA') || u.includes('SUNTER')) return 'Jakarta'; if (u.includes('SURABAYA') || u.includes('MALANG') || u.includes('KEDIRI') || u.includes('JEMBER') || u.includes('JATIM') || u.includes('ROYAL') || u.includes('TUNJUNGAN') || u.includes('PAKUWON') || u.includes('GALAXY') || u.includes('CIPUTRA')) return 'Jawa Timur'; if (u.includes('LOMBOK') || u.includes('MATARAM')) return 'Lombok'; return 'Bali'; }
+        function renderRetailStats() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'retail'); const t = d.reduce((s, x) => s + (x.quantity || 0), 0); const l = new Set(d.map(x => x.location_name)).size; const neg = d.filter(x => (x.quantity || 0) < 0); const nl = new Set(neg.map(x => x.location_name)).size; const np = Math.abs(neg.reduce((s, x) => s + (x.quantity || 0), 0)); document.getElementById('rtStatsGrid').innerHTML = `<div class="stat-card" style="border-left:4px solid #3b82f6;"><h3>Total Stock</h3><div class="value">${t.toLocaleString()}</div></div><div class="stat-card" style="border-left:4px solid #10b981;"><h3>Stores</h3><div class="value">${l}</div></div><div class="stat-card clickable" style="border-left:4px solid #ef4444;" onclick="showNegativeDetails('retail')"><h3>Stok Minus</h3><div class="value" style="color:#dc2626;">${nl} lokasi</div><div class="sub-value">${neg.length} artikel | -${np} pairs</div></div>`; }
+        function renderRetailAreaTags() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'retail'); const as = {}; d.forEach(x => { const a = getArea(x.location_name); as[a] = (as[a] || 0) + (x.quantity || 0); }); const ac = { 'Bali': 'bali', 'Jakarta': 'jakarta', 'Jawa Timur': 'jawa-timur', 'Lombok': 'lombok' }; document.getElementById('rtAreaTags').innerHTML = Object.entries(as).map(([a, s]) => `<div class="area-tag ${ac[a] || 'bali'} ${currentArea === a ? 'active' : ''}" onclick="filterByArea('${a}', 'retail')">${a}: ${s.toLocaleString()}</div>`).join(''); }
+        function renderRetailStoreGrid() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'retail'); const ss = {}; d.forEach(x => { if (!ss[x.location_name]) ss[x.location_name] = { stock: 0, area: getArea(x.location_name) }; ss[x.location_name].stock += x.quantity || 0; }); let stores = Object.entries(ss).sort((a, b) => b[1].stock - a[1].stock); if (currentArea) stores = stores.filter(([n, d]) => d.area === currentArea); document.getElementById('rtStoreGrid').innerHTML = stores.map(([n, d]) => `<div class="store-item ${currentStore === n ? 'active' : ''}" onclick="filterByStore('${n}', 'retail')"><div><div class="store-name">${n}</div><div class="store-area">${d.area}</div></div><div class="store-stock">${d.stock.toLocaleString()}</div></div>`).join(''); }
+        function renderRetailTable() { let d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'retail'); const search = document.getElementById('rtSearch').value.toLowerCase(); const gender = document.getElementById('rtFilterGender').value; const stock = document.getElementById('rtFilterStock').value; if (currentArea) d = d.filter(x => getArea(x.location_name) === currentArea); if (currentStore) d = d.filter(x => x.location_name === currentStore); if (search) d = d.filter(x => (x.sku_code || '').toLowerCase().includes(search) || (x.product_name || '').toLowerCase().includes(search)); if (gender) d = d.filter(x => (x.product_name || '').toUpperCase().includes(gender)); if (stock) d = d.filter(x => { const q = x.quantity || 0; if (stock === 'high') return q > 100; if (stock === 'medium') return q >= 10 && q <= 100; if (stock === 'low') return q > 0 && q < 10; if (stock === 'zero') return q === 0; if (stock === 'negative') return q < 0; return true; }); d.sort((a, b) => { let av = a[rtSortCol] ?? '', bv = b[rtSortCol] ?? ''; if (typeof av === 'number') return rtSortDir === 'asc' ? av - bv : bv - av; return rtSortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av)); }); retailFiltered = d; const start = (rtPage - 1) * pageSize; const pd = d.slice(start, start + pageSize); document.getElementById('rtTableBody').innerHTML = pd.map(x => { const q = x.quantity || 0; let b = 'stock-zero', l = 'ZERO'; if (q < 0) { b = 'stock-negative'; l = 'MINUS'; } else if (q > 100) { b = 'stock-high'; l = 'HIGH'; } else if (q >= 10) { b = 'stock-medium'; l = 'MED'; } else if (q > 0) { b = 'stock-low'; l = 'LOW'; } return `<tr><td><strong>${x.sku_code || '-'}</strong></td><td>${x.product_name || '-'}</td><td>${x.location_name || '-'}</td><td><strong>${q.toLocaleString()}</strong></td><td><span class="stock-badge ${b}">${l}</span></td></tr>`; }).join(''); document.getElementById('rtPageInfo').textContent = `${d.length.toLocaleString()} records`; renderPagination('rt', d.length); }
+        function sortRetailTable(c) { if (rtSortCol === c) rtSortDir = rtSortDir === 'asc' ? 'desc' : 'asc'; else { rtSortCol = c; rtSortDir = 'desc'; } renderRetailTable(); }
+        function renderWarehouseStats() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'warehouse'); const t = d.reduce((s, x) => s + (x.quantity || 0), 0); const l = new Set(d.map(x => x.location_name)).size; const neg = d.filter(x => (x.quantity || 0) < 0); const nl = new Set(neg.map(x => x.location_name)).size; const np = Math.abs(neg.reduce((s, x) => s + (x.quantity || 0), 0)); document.getElementById('whStatsGrid').innerHTML = `<div class="stat-card" style="border-left:4px solid #14b8a6;"><h3>Total Stock</h3><div class="value">${t.toLocaleString()}</div></div><div class="stat-card" style="border-left:4px solid #10b981;"><h3>Warehouses</h3><div class="value">${l}</div></div><div class="stat-card clickable" style="border-left:4px solid #ef4444;" onclick="showNegativeDetails('warehouse')"><h3>Stok Minus</h3><div class="value" style="color:#dc2626;">${nl} lokasi</div><div class="sub-value">${neg.length} artikel | -${np} pairs</div></div>`; }
+        function renderWarehouseAreaTags() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'warehouse'); const as = {}; d.forEach(x => { const a = getArea(x.location_name); as[a] = (as[a] || 0) + (x.quantity || 0); }); const ac = { 'Bali': 'bali', 'Jakarta': 'jakarta', 'Jawa Timur': 'jawa-timur', 'Lombok': 'lombok' }; document.getElementById('whAreaTags').innerHTML = Object.entries(as).map(([a, s]) => `<div class="area-tag ${ac[a] || 'bali'} ${currentArea === a ? 'active' : ''}" onclick="filterByArea('${a}', 'warehouse')">${a}: ${s.toLocaleString()}</div>`).join(''); }
+        function renderWarehouseStoreGrid() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'warehouse'); const ss = {}; d.forEach(x => { if (!ss[x.location_name]) ss[x.location_name] = { stock: 0, area: getArea(x.location_name) }; ss[x.location_name].stock += x.quantity || 0; }); let stores = Object.entries(ss).sort((a, b) => b[1].stock - a[1].stock); if (currentArea) stores = stores.filter(([n, d]) => d.area === currentArea); document.getElementById('whStoreGrid').innerHTML = stores.map(([n, d]) => `<div class="store-item ${currentStore === n ? 'active' : ''}" onclick="filterByStore('${n}', 'warehouse')"><div><div class="store-name">${n}</div><div class="store-area">${d.area}</div></div><div class="store-stock">${d.stock.toLocaleString()}</div></div>`).join(''); }
+        function renderWarehouseTable() { let d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === 'warehouse'); const search = document.getElementById('whSearch').value.toLowerCase(); const gender = document.getElementById('whFilterGender').value; const stock = document.getElementById('whFilterStock').value; if (currentArea) d = d.filter(x => getArea(x.location_name) === currentArea); if (currentStore) d = d.filter(x => x.location_name === currentStore); if (search) d = d.filter(x => (x.sku_code || '').toLowerCase().includes(search) || (x.product_name || '').toLowerCase().includes(search)); if (gender) d = d.filter(x => (x.product_name || '').toUpperCase().includes(gender)); if (stock) d = d.filter(x => { const q = x.quantity || 0; if (stock === 'high') return q > 100; if (stock === 'medium') return q >= 10 && q <= 100; if (stock === 'low') return q > 0 && q < 10; if (stock === 'zero') return q === 0; if (stock === 'negative') return q < 0; return true; }); d.sort((a, b) => { let av = a[whSortCol] ?? '', bv = b[whSortCol] ?? ''; if (typeof av === 'number') return whSortDir === 'asc' ? av - bv : bv - av; return whSortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av)); }); warehouseFiltered = d; const start = (whPage - 1) * pageSize; const pd = d.slice(start, start + pageSize); document.getElementById('whTableBody').innerHTML = pd.map(x => { const q = x.quantity || 0; let b = 'stock-zero', l = 'ZERO'; if (q < 0) { b = 'stock-negative'; l = 'MINUS'; } else if (q > 100) { b = 'stock-high'; l = 'HIGH'; } else if (q >= 10) { b = 'stock-medium'; l = 'MED'; } else if (q > 0) { b = 'stock-low'; l = 'LOW'; } return `<tr><td><strong>${x.sku_code || '-'}</strong></td><td>${x.product_name || '-'}</td><td>${x.location_name || '-'}</td><td><strong>${q.toLocaleString()}</strong></td><td><span class="stock-badge ${b}">${l}</span></td></tr>`; }).join(''); document.getElementById('whPageInfo').textContent = `${d.length.toLocaleString()} records`; renderPagination('wh', d.length); }
+        function sortWarehouseTable(c) { if (whSortCol === c) whSortDir = whSortDir === 'asc' ? 'desc' : 'asc'; else { whSortCol = c; whSortDir = 'desc'; } renderWarehouseTable(); }
+        function filterByArea(a, t) { currentArea = currentArea === a ? '' : a; currentStore = ''; renderInventoryView(); }
+        function filterByStore(s, t) { currentStore = currentStore === s ? '' : s; renderInventoryView(); }
+        function showNegativeDetails(dt) { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === dt && (x.quantity || 0) < 0); const bl = {}; d.forEach(x => { if (!bl[x.location_name]) bl[x.location_name] = { area: getArea(x.location_name), articles: [], totalPairs: 0 }; bl[x.location_name].articles.push(x); bl[x.location_name].totalPairs += Math.abs(x.quantity || 0); }); const tl = Object.keys(bl).length; const ta = d.length; const tp = d.reduce((s, x) => s + Math.abs(x.quantity || 0), 0); let h = `<div class="modal-summary"><div class="modal-stat"><div class="label">Total Lokasi</div><div class="value">${tl}</div></div><div class="modal-stat"><div class="label">Total Artikel</div><div class="value">${ta}</div></div><div class="modal-stat"><div class="label">Total Pairs</div><div class="value">-${tp}</div></div></div><div class="negative-list">`; Object.entries(bl).sort((a, b) => b[1].totalPairs - a[1].totalPairs).forEach(([l, ld], i) => { h += `<div class="negative-item" id="negItem${i}"><div class="negative-item-header" onclick="toggleNegativeItem(${i})"><div class="negative-store"><span>🏪</span><span>${l}</span><span class="negative-store-area">${ld.area}</span></div><div class="negative-stats"><span class="negative-count">${ld.articles.length} artikel</span><span style="background:#fecaca;color:#991b1b;padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;">-${ld.totalPairs} pairs</span><span class="expand-icon">▼</span></div></div><div class="negative-articles"><table style="width:100%;border-collapse:collapse;margin-top:10px;"><thead><tr style="background:#fef2f2;"><th style="padding:10px;text-align:left;font-size:0.75rem;color:#991b1b;">SKU</th><th style="padding:10px;text-align:left;font-size:0.75rem;color:#991b1b;">Produk</th><th style="padding:10px;text-align:right;font-size:0.75rem;color:#991b1b;">Qty</th></tr></thead><tbody>${ld.articles.sort((a, b) => (a.quantity || 0) - (b.quantity || 0)).map(a => `<tr><td style="padding:10px;font-weight:600;">${a.sku_code}</td><td style="padding:10px;color:#6b7280;">${a.product_name || '-'}</td><td style="padding:10px;text-align:right;color:#dc2626;font-weight:700;">${a.quantity}</td></tr>`).join('')}</tbody></table></div></div>`; }); h += '</div>'; document.getElementById('negativeModalTitle').textContent = `⚠️ Stok Minus - ${dt === 'retail' ? 'Retail' : 'Warehouse'}`; document.getElementById('negativeModalBody').innerHTML = h; document.getElementById('negativeModal').classList.add('active'); }
+        function toggleNegativeItem(i) { document.getElementById(`negItem${i}`).classList.toggle('expanded'); }
+        function closeNegativeModal(e) { if (!e || e.target === document.getElementById('negativeModal')) document.getElementById('negativeModal').classList.remove('active'); }
+        function switchMaxStockTab(t) { currentMsTab = t; document.querySelectorAll('#maxstockView .tab').forEach(b => b.classList.toggle('active', b.dataset.mstype === t)); document.getElementById('msWHFilters').style.display = t === 'warehouse' ? 'block' : 'none'; document.getElementById('msFilters').style.display = t === 'retail' ? 'block' : 'none'; updateMaxStockAnalysis(); }
+        function updateStoreDropdown() { const a = document.getElementById('msFilterArea').value; const ss = document.getElementById('msFilterStore'); const stores = maxStockData.filter(m => !a || m.area === a).map(m => m.store_name).sort(); ss.innerHTML = '<option value="">Semua Store</option>' + stores.map(s => `<option value="${s}">${s}</option>`).join(''); }
+        function updateMaxStockAnalysis() { const d = inventoryData.filter(x => x.entity === currentEntity && x.location_type === currentMsTab); let fa, ffr, fs; if (currentMsTab === 'warehouse') { fa = document.getElementById('msWHFilterArea').value; ffr = document.getElementById('msWHFilterFillRate').value; } else { fa = document.getElementById('msFilterArea').value; fs = document.getElementById('msFilterStore').value; ffr = document.getElementById('msFilterFillRate').value; } const ls = {}; d.forEach(x => { ls[x.location_name] = (ls[x.location_name] || 0) + (x.quantity || 0); }); const msm = maxStockData.reduce((m, d) => { m[d.store_name] = d; return m; }, {}); let an = Object.entries(ls).map(([n, s]) => { const ms = msm[n] || { max_stock: currentMsTab === 'warehouse' ? 50000 : 1500, area: getArea(n) }; const f = ms.max_stock > 0 ? (s / ms.max_stock) * 100 : 0; return { name: n, stock: s, max: ms.max_stock, fill: f, area: ms.area || getArea(n) }; }); if (fa) an = an.filter(x => x.area === fa); if (fs) an = an.filter(x => x.name === fs); if (ffr === 'over') an = an.filter(x => x.fill > 100); else if (ffr === 'optimal') an = an.filter(x => x.fill >= 70 && x.fill <= 100); else if (ffr === 'under') an = an.filter(x => x.fill < 70); const ta = an.reduce((s, x) => s + x.stock, 0); const tm = an.reduce((s, x) => s + x.max, 0); const af = tm > 0 ? (ta / tm) * 100 : 0; const g = tm - ta; document.getElementById('msActualStock').textContent = ta.toLocaleString(); document.getElementById('msTotalMax').textContent = tm.toLocaleString(); document.getElementById('msFillRate').textContent = af.toFixed(1) + '%'; document.getElementById('msGap').textContent = g.toLocaleString(); an.sort((a, b) => b.stock - a.stock); document.getElementById('fillRateList').innerHTML = an.map(x => { let fc = 'low', pc = 'low'; if (x.fill > 100) { fc = 'over'; pc = 'over'; } else if (x.fill >= 70) { fc = 'high'; pc = 'high'; } else if (x.fill >= 50) { fc = 'medium'; pc = 'medium'; } return `<div class="store-analysis-item"><div class="store-info"><div class="name">${x.name}</div><div class="area">${x.area}</div></div><div style="text-align:right;margin-right:15px;"><div>${x.stock.toLocaleString()}</div><div style="font-size:0.75rem;color:#9ca3af;">/ ${x.max.toLocaleString()}</div></div><div class="fill-indicator"><div class="fill-bar ${fc}" style="width:${Math.min(x.fill, 100)}%"></div></div><div class="fill-percent ${pc}">${x.fill.toFixed(1)}%</div></div>`; }).join(''); const es = {}; ['DDD', 'LJBB', 'MBB', 'UBB'].forEach(e => { es[e] = inventoryData.filter(x => x.entity === e && x.location_type === currentMsTab).reduce((s, x) => s + (x.quantity || 0), 0); }); document.getElementById('entityDistribution').innerHTML = Object.entries(es).map(([e, s]) => `<div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:8px;"><span style="font-weight:600;">${e}</span><span style="font-weight:700;color:var(--primary);">${s.toLocaleString()}</span></div>`).join(''); }
+        function switchStockControlView(m) { scViewMode = m; document.getElementById('scViewSku').style.background = m === 'sku' ? '#6366f1' : 'white'; document.getElementById('scViewSku').style.color = m === 'sku' ? 'white' : '#6366f1'; document.getElementById('scViewKodeKecil').style.background = m === 'kodeKecil' ? '#6366f1' : 'white'; document.getElementById('scViewKodeKecil').style.color = m === 'kodeKecil' ? 'white' : '#6366f1'; renderStockControlView(); }
+        function renderStockControlView() { const wp = stockControlData.reduce((s, x) => s + (x.stock_wh || 0), 0); const st = stockControlData.reduce((s, x) => s + (x.stock_retail || 0), 0); document.getElementById('scWhPusat').textContent = wp.toLocaleString(); document.getElementById('scWhBali').textContent = '0'; document.getElementById('scWhJakarta').textContent = '0'; document.getElementById('scStokToko').textContent = st.toLocaleString(); renderStockControlTable(); }
+        function renderStockControlTable() { const gn = document.getElementById('scFilterGender').value; const tw = document.getElementById('scFilterTW').value; const sr = document.getElementById('scSearch').value.toLowerCase(); let d = [...stockControlData]; if (gn) d = d.filter(x => (x.gender || '').toUpperCase() === gn); if (sr) d = d.filter(x => (x.kode_kecil || '').toLowerCase().includes(sr) || (x.article || '').toLowerCase().includes(sr)); if (tw) d = d.filter(x => { const t = x.turnover_wh || 0; if (tw === 'critical') return t < 2; if (tw === 'low') return t >= 2 && t < 4; if (tw === 'normal') return t >= 4 && t < 8; if (tw === 'high') return t >= 8; return true; }); d.sort((a, b) => { let av = a[scSortCol] ?? 0, bv = b[scSortCol] ?? 0; return scSortDir === 'asc' ? av - bv : bv - av; }); scFiltered = d; const start = (scPage - 1) * pageSize; const pd = d.slice(start, start + pageSize); const hs = 'background:linear-gradient(135deg,#ec4899,#f472b6);color:white;padding:12px;font-size:0.75rem;text-align:left;cursor:pointer;'; document.getElementById('scTableHead').innerHTML = `<tr><th style="${hs}" onclick="sortScTable('kode_kecil')">KODE KECIL</th><th style="${hs}" onclick="sortScTable('article')">ARTICLE</th><th style="${hs}" onclick="sortScTable('series')">SERIES</th><th style="${hs}" onclick="sortScTable('gender')">GENDER</th><th style="${hs}text-align:right;" onclick="sortScTable('avg_sales')">AVG SALES</th><th style="${hs}text-align:right;" onclick="sortScTable('stock_wh')">STOCK WH</th><th style="${hs}text-align:right;" onclick="sortScTable('stock_retail')">STOCK TOKO</th><th style="${hs}text-align:right;" onclick="sortScTable('turnover_wh')">TW</th><th style="${hs}text-align:right;" onclick="sortScTable('turnover_retail')">TO</th></tr>`; document.getElementById('scTableBody').innerHTML = pd.map(x => { const twc = getTurnoverColor(x.turnover_wh); const toc = getTurnoverColor(x.turnover_retail); return `<tr><td><a href="#" onclick="showSkuDetail('${x.kode_kecil}'); return false;" style="color:#1f2937;text-decoration:underline;font-weight:600;">${x.kode_kecil || '-'}</a></td><td>${x.article || '-'}</td><td>${x.series || '-'}</td><td>${x.gender || '-'}</td><td style="text-align:right;">${(x.avg_sales || 0).toFixed(1)}</td><td style="text-align:right;">${(x.stock_wh || 0).toLocaleString()}</td><td style="text-align:right;">${(x.stock_retail || 0).toLocaleString()}</td><td style="text-align:right;${twc}">${x.turnover_wh ? x.turnover_wh.toFixed(1) : '-'}</td><td style="text-align:right;${toc}">${x.turnover_retail ? x.turnover_retail.toFixed(1) : '-'}</td></tr>`; }).join(''); document.getElementById('scPageInfo').textContent = `${d.length} records`; renderPagination('sc', d.length); }
+        function getTurnoverColor(v) { if (!v || v >= 999) return 'color:#6b7280;'; if (v < 2) return 'background:#fef2f2;color:#ef4444;font-weight:700;'; if (v < 4) return 'background:#fffbeb;color:#f59e0b;font-weight:700;'; if (v < 8) return 'background:#f0fdf4;color:#10b981;font-weight:700;'; return 'background:#eff6ff;color:#3b82f6;font-weight:700;'; }
+        function sortScTable(c) { if (scSortCol === c) scSortDir = scSortDir === 'asc' ? 'desc' : 'asc'; else { scSortCol = c; scSortDir = 'desc'; } renderStockControlTable(); }
+        function showSkuDetail(k) { const i = stockControlData.find(x => x.kode_kecil === k); if (!i) return; document.getElementById('skuModalTitle').textContent = `📋 Detail: ${k}`; document.getElementById('skuModalBody').innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-bottom:20px;"><div style="background:#f8fafc;padding:15px;border-radius:8px;"><div style="font-size:0.75rem;color:#6b7280;">Article</div><div style="font-weight:600;">${i.article || '-'}</div></div><div style="background:#f8fafc;padding:15px;border-radius:8px;"><div style="font-size:0.75rem;color:#6b7280;">Series</div><div style="font-weight:600;">${i.series || '-'}</div></div><div style="background:#f8fafc;padding:15px;border-radius:8px;"><div style="font-size:0.75rem;color:#6b7280;">Gender</div><div style="font-weight:600;">${i.gender || '-'}</div></div><div style="background:#f8fafc;padding:15px;border-radius:8px;"><div style="font-size:0.75rem;color:#6b7280;">Tier</div><div style="font-weight:600;">${i.tier || '-'}</div></div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;"><div style="background:#fef3c7;padding:15px;border-radius:8px;text-align:center;"><div style="font-size:0.75rem;color:#92400e;">Stock WH</div><div style="font-size:1.5rem;font-weight:700;color:#78350f;">${(i.stock_wh || 0).toLocaleString()}</div></div><div style="background:#dbeafe;padding:15px;border-radius:8px;text-align:center;"><div style="font-size:0.75rem;color:#1e40af;">Stock Retail</div><div style="font-size:1.5rem;font-weight:700;color:#1e3a8a;">${(i.stock_retail || 0).toLocaleString()}</div></div><div style="background:#d1fae5;padding:15px;border-radius:8px;text-align:center;"><div style="font-size:0.75rem;color:#065f46;">Avg Sales/Bln</div><div style="font-size:1.5rem;font-weight:700;color:#064e3b;">${(i.avg_sales || 0).toFixed(1)}</div></div></div>`; document.getElementById('skuModal').classList.add('active'); }
+        function closeSkuModal(e) { if (!e || e.target === document.getElementById('skuModal')) document.getElementById('skuModal').classList.remove('active'); }
+        async function loadSalesData() { showLoading(true); const sd = document.getElementById('salesFilterStartDate').value; const ed = document.getElementById('salesFilterEndDate').value; const st = document.getElementById('salesFilterStore').value; let p = `?select=*&order=sale_date.desc`; if (sd) p += `&sale_date=gte.${sd}`; if (ed) p += `&sale_date=lte.${ed}T23:59:59`; if (st) p += `&store_name=eq.${encodeURIComponent(st)}`; p += `&limit=5000`; salesData = await fetchSupabase('sales', p) || []; document.getElementById('salesPeriodRange').textContent = `${sd} s/d ${ed}`; const areas = [...new Set(salesData.map(x => getArea(x.store_name)))].sort(); const as = document.getElementById('salesFilterArea'); if (as.options.length <= 1) as.innerHTML = '<option value="">Semua Area</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join(''); renderSalesDashboard(); showLoading(false); }
+        function updateSalesStoresByArea() { const a = document.getElementById('salesFilterArea').value; const stores = [...new Set(salesData.filter(x => !a || getArea(x.store_name) === a).map(x => x.store_name))].sort(); document.getElementById('salesFilterStore').innerHTML = '<option value="">Semua Toko</option>' + stores.map(s => `<option value="${s}">${s}</option>`).join(''); }
+        function renderSalesDashboard() { const a = document.getElementById('salesFilterArea').value; const s = document.getElementById('salesFilterStore').value; const g = document.getElementById('salesFilterGender').value; let d = [...salesData]; if (a) d = d.filter(x => getArea(x.store_name) === a); if (s) d = d.filter(x => x.store_name === s); if (g) d = d.filter(x => (x.product_name || '').toLowerCase().includes(g.toLowerCase())); const tq = d.reduce((s, x) => s + (x.quantity || 0), 0); const tr = d.reduce((s, x) => s + (x.total || 0), 0); const tt = d.length; document.getElementById('salesSummaryCards').innerHTML = `<div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);text-align:center;"><div style="font-size:0.75rem;color:#6b7280;">Total Sales</div><div style="font-size:1.5rem;font-weight:700;color:#1f2937;">${tq.toLocaleString()}</div></div><div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);text-align:center;"><div style="font-size:0.75rem;color:#6b7280;">Revenue</div><div style="font-size:1.5rem;font-weight:700;color:#10b981;">Rp ${(tr/1000000).toFixed(1)}M</div></div><div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);text-align:center;"><div style="font-size:0.75rem;color:#6b7280;">Transactions</div><div style="font-size:1.5rem;font-weight:700;color:#6366f1;">${tt.toLocaleString()}</div></div>`; const bs = {}; d.forEach(x => { bs[x.store_name] = (bs[x.store_name] || 0) + (x.quantity || 0); }); const ts = Object.entries(bs).sort((a, b) => b[1] - a[1]).slice(0, 15); document.getElementById('salesByStoreTable').innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:10px;text-align:left;">Store</th><th style="padding:10px;text-align:right;">Sales</th></tr></thead><tbody>${ts.map(([s, q]) => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${s}</td><td style="padding:10px;text-align:right;font-weight:700;border-bottom:1px solid #e5e7eb;">${q.toLocaleString()}</td></tr>`).join('')}</tbody></table>`; const ba = {}; d.forEach(x => { const ar = getArea(x.store_name); ba[ar] = (ba[ar] || 0) + (x.quantity || 0); }); document.getElementById('salesByAreaTable').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:15px;">${Object.entries(ba).sort((a, b) => b[1] - a[1]).map(([a, q]) => `<div style="background:#f8fafc;padding:15px 25px;border-radius:8px;text-align:center;"><div style="font-size:0.85rem;color:#6b7280;">${a}</div><div style="font-size:1.3rem;font-weight:700;">${q.toLocaleString()}</div></div>`).join('')}</div>`; renderSalesTrend(d); renderSalesProduct(d); renderSalesTransactions(d); }
+        function renderSalesTrend(d) { const bd = {}; d.forEach(x => { const dy = x.sale_date?.split('T')[0] || 'Unknown'; bd[dy] = (bd[dy] || 0) + (x.quantity || 0); }); const days = Object.entries(bd).sort((a, b) => a[0].localeCompare(b[0])); document.getElementById('salesDailyTrend').innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:8px;text-align:left;">Date</th><th style="padding:8px;text-align:right;">Sales</th></tr></thead><tbody>${days.map(([d, q]) => `<tr><td style="padding:8px;border-bottom:1px solid #e5e7eb;">${d}</td><td style="padding:8px;text-align:right;font-weight:600;border-bottom:1px solid #e5e7eb;">${q.toLocaleString()}</td></tr>`).join('')}</tbody></table>`; const bw = {}; d.forEach(x => { const dt = new Date(x.sale_date); const w = `W${Math.ceil(dt.getDate() / 7)}`; bw[w] = (bw[w] || 0) + (x.quantity || 0); }); document.getElementById('salesWeekByWeek').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:10px;">${Object.entries(bw).map(([w, q]) => `<div style="background:#f8fafc;padding:12px 20px;border-radius:8px;text-align:center;"><div style="font-size:0.8rem;color:#6b7280;">${w}</div><div style="font-size:1.2rem;font-weight:700;">${q.toLocaleString()}</div></div>`).join('')}</div>`; }
+        function renderSalesProduct(d) { const bsku = {}; d.forEach(x => { if (!bsku[x.sku_code]) bsku[x.sku_code] = { name: x.product_name, qty: 0 }; bsku[x.sku_code].qty += x.quantity || 0; }); const top = Object.entries(bsku).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10); const bottom = Object.entries(bsku).sort((a, b) => a[1].qty - b[1].qty).slice(0, 10); document.getElementById('salesTopArticles').innerHTML = `<table style="width:100%;border-collapse:collapse;"><tbody>${top.map(([sku, d], i) => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;"><span style="background:#10b981;color:white;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:8px;">#${i+1}</span><strong>${sku}</strong><div style="font-size:0.75rem;color:#6b7280;">${d.name || '-'}</div></td><td style="padding:10px;text-align:right;font-weight:700;border-bottom:1px solid #e5e7eb;">${d.qty.toLocaleString()}</td></tr>`).join('')}</tbody></table>`; document.getElementById('salesSlowMoving').innerHTML = `<table style="width:100%;border-collapse:collapse;"><tbody>${bottom.map(([sku, d], i) => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;"><span style="background:#ef4444;color:white;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:8px;">#${i+1}</span><strong>${sku}</strong><div style="font-size:0.75rem;color:#6b7280;">${d.name || '-'}</div></td><td style="padding:10px;text-align:right;font-weight:700;border-bottom:1px solid #e5e7eb;">${d.qty.toLocaleString()}</td></tr>`).join('')}</tbody></table>`; const bg = { 'Men': 0, 'Ladies': 0, 'Kids': 0, 'Other': 0 }; d.forEach(x => { const n = (x.product_name || '').toLowerCase(); if (n.includes('men')) bg['Men'] += x.quantity || 0; else if (n.includes('ladies') || n.includes('women')) bg['Ladies'] += x.quantity || 0; else if (n.includes('kids') || n.includes('junior') || n.includes('baby')) bg['Kids'] += x.quantity || 0; else bg['Other'] += x.quantity || 0; }); document.getElementById('salesGenderSummary').innerHTML = Object.entries(bg).map(([g, q]) => `<div style="background:#f8fafc;padding:15px 25px;border-radius:8px;text-align:center;"><div style="font-size:0.85rem;color:#6b7280;">${g}</div><div style="font-size:1.3rem;font-weight:700;">${q.toLocaleString()}</div></div>`).join(''); }
+        function renderSalesTransactions(d) { const r = d.slice(0, 50); document.getElementById('salesRecentTransactions').innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:10px;text-align:left;">Date</th><th style="padding:10px;text-align:left;">Store</th><th style="padding:10px;text-align:left;">SKU</th><th style="padding:10px;text-align:right;">Qty</th><th style="padding:10px;text-align:right;">Total</th></tr></thead><tbody>${r.map(x => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${new Date(x.sale_date).toLocaleDateString('id-ID')}</td><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${x.store_name || '-'}</td><td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${x.sku_code || '-'}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e5e7eb;">${x.quantity || 0}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e5e7eb;">Rp ${(x.total || 0).toLocaleString()}</td></tr>`).join('')}</tbody></table>`; const bs = {}; d.forEach(x => { bs[x.store_name] = (bs[x.store_name] || 0) + (x.quantity || 0); }); const stores = Object.entries(bs).sort((a, b) => b[1] - a[1]); document.getElementById('salesSPGLeaderboard').innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:10px;text-align:left;">Rank</th><th style="padding:10px;text-align:left;">Store</th><th style="padding:10px;text-align:right;">Sales</th></tr></thead><tbody>${stores.map(([s, q], i) => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;"><span style="background:${i < 3 ? '#fbbf24' : '#e5e7eb'};padding:4px 10px;border-radius:50%;font-weight:700;">${i+1}</span></td><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${s}</td><td style="padding:10px;text-align:right;font-weight:700;border-bottom:1px solid #e5e7eb;">${q.toLocaleString()}</td></tr>`).join('')}</tbody></table>`; }
+        function switchSalesTab(t) { document.querySelectorAll('.sales-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t)); document.querySelectorAll('.sales-tab-content').forEach(c => { c.style.display = c.id === `salesTab${t.charAt(0).toUpperCase() + t.slice(1)}` ? 'block' : 'none'; }); }
+        function resetSalesFilters() { document.getElementById('salesFilterArea').value = ''; document.getElementById('salesFilterStore').value = ''; document.getElementById('salesFilterGender').value = ''; renderSalesDashboard(); }
+        function handleSKUSearchKeyup(e) { if (e.key === 'Enter') searchSKUSales(); }
+        function searchSKUSales() { const q = document.getElementById('skuSearchInput').value.toLowerCase(); if (!q) return; const r = salesData.filter(x => (x.sku_code || '').toLowerCase().includes(q) || (x.product_name || '').toLowerCase().includes(q)); const tq = r.reduce((s, x) => s + (x.quantity || 0), 0); document.getElementById('skuSearchResults').innerHTML = `<div style="background:#f8fafc;padding:15px;border-radius:8px;margin-bottom:15px;">Found <strong>${r.length}</strong> transactions | Total: <strong>${tq.toLocaleString()}</strong> units</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:10px;text-align:left;">Date</th><th style="padding:10px;text-align:left;">Store</th><th style="padding:10px;text-align:left;">SKU</th><th style="padding:10px;text-align:right;">Qty</th></tr></thead><tbody>${r.slice(0, 100).map(x => `<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${new Date(x.sale_date).toLocaleDateString('id-ID')}</td><td style="padding:10px;border-bottom:1px solid #e5e7eb;">${x.store_name}</td><td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${x.sku_code}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e5e7eb;">${x.quantity}</td></tr>`).join('')}</tbody></table>`; }
+        function renderPagination(pf, total) { const tp = Math.ceil(total / pageSize); const cp = pf === 'rt' ? rtPage : pf === 'wh' ? whPage : scPage; if (tp <= 1) { document.getElementById(`${pf}Pagination`).innerHTML = ''; return; } let h = `<button class="page-btn" onclick="goToPage('${pf}', 1)" ${cp === 1 ? 'disabled' : ''}>&laquo;</button><button class="page-btn" onclick="goToPage('${pf}', ${cp - 1})" ${cp === 1 ? 'disabled' : ''}>&lsaquo;</button>`; const start = Math.max(1, cp - 2); const end = Math.min(tp, cp + 2); for (let i = start; i <= end; i++) h += `<button class="page-btn ${i === cp ? 'active' : ''}" onclick="goToPage('${pf}', ${i})">${i}</button>`; h += `<button class="page-btn" onclick="goToPage('${pf}', ${cp + 1})" ${cp === tp ? 'disabled' : ''}>&rsaquo;</button><button class="page-btn" onclick="goToPage('${pf}', ${tp})" ${cp === tp ? 'disabled' : ''}>&raquo;</button>`; document.getElementById(`${pf}Pagination`).innerHTML = h; }
+        function goToPage(pf, p) { if (pf === 'rt') { rtPage = p; renderRetailTable(); } else if (pf === 'wh') { whPage = p; renderWarehouseTable(); } else if (pf === 'sc') { scPage = p; renderStockControlTable(); } }
     </script>
 </body>
 </html>
