@@ -1674,6 +1674,15 @@
                 indicator.style.background = '#10b981';
                 setTimeout(function() { indicator.remove(); }, 3000);
 
+                // Auto-refresh sales view if currently visible
+                var salesView = document.getElementById('salesView');
+                if (salesView && salesView.style.display !== 'none') {
+                    console.log('Auto-refreshing sales dashboard...');
+                    if (typeof renderSalesDashboard === 'function') {
+                        renderSalesDashboard();
+                    }
+                }
+
             } catch (error) {
                 salesLoadingStatus = 'error';
                 console.error('Error loading sales:', error);
@@ -4750,7 +4759,12 @@
 
         function renderSalesDashboard() {
             if (!salesDetailData || salesDetailData.length === 0) {
-                document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
+                // Check if still loading
+                if (typeof salesLoadingStatus !== 'undefined' && salesLoadingStatus === 'loading') {
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6366f1;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div>Data sales sedang dimuat di background...<br><small style="color:#9ca3af;">Silakan tunggu beberapa saat, halaman akan otomatis refresh.</small></div>';
+                } else {
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
+                }
                 return;
             }
 
