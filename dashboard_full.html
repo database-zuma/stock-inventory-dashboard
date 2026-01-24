@@ -1583,96 +1583,60 @@
             }
         }
 
-        // Load sales data in background (non-blocking)
+        // Load sales data using RPC (fast aggregation)
         var salesLoadingStatus = 'pending';
+        var salesDetailLoadingStatus = 'pending';
+
         async function loadSalesInBackground() {
             try {
                 salesLoadingStatus = 'loading';
-                console.log('Loading sales data in background...');
+                console.log('Loading sales summary via RPC...');
 
                 // Show small indicator
                 var indicator = document.createElement('div');
                 indicator.id = 'salesLoadingIndicator';
                 indicator.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#6366f1;color:white;padding:10px 20px;border-radius:8px;font-size:0.85rem;z-index:9999;box-shadow:0 4px 15px rgba(0,0,0,0.2);';
-                indicator.innerHTML = '⏳ Loading sales data...';
+                indicator.innerHTML = '⏳ Loading sales summary...';
                 document.body.appendChild(indicator);
 
-                // Load with silent=true and progress callback
-                var rawSalesData = await fetchAllPages('sales', true, function(count) {
-                    indicator.innerHTML = '⏳ Loading sales... ' + count.toLocaleString() + ' records';
+                // Use RPC function for fast aggregated data
+                var response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_sales_summary_by_sku', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                // Transform Supabase field names to expected format
-                indicator.innerHTML = '⏳ Processing sales data...';
-                salesDetailData = rawSalesData.map(function(item) {
-                    // Extract date part from datetime (2026-01-18T10:12:51 -> 2026-01-18)
-                    var rawDate = item.order_date || item.date || '';
-                    var dateOnly = rawDate.split('T')[0];
+                if (!response.ok) {
+                    throw new Error('RPC call failed: ' + response.status);
+                }
 
-                    return {
-                        // Keep original fields
-                        ...item,
-                        // Map to expected field names
-                        date: dateOnly,
-                        store: item.store_name || item.store || '',
-                        sku: (item.sku_code || item.sku || '').toUpperCase(),
-                        qty: item.quantity || item.qty || 0,
-                        gross: item.gross_sales || item.gross || 0,
-                        hpp: item.cogs || item.hpp || 0,
-                        disc_amt: item.discount_amount || item.disc_amt || 0,
-                        order_no: item.order_number || item.order_no || '',
-                        spg: item.cashier || item.spg || '',
-                        retur_qty: item.retur_qty || 0,
+                var summaryData = await response.json();
+                console.log('Sales summary loaded:', summaryData.length, 'SKUs');
+
+                // Build salesMap from RPC result
+                salesMap = {};
+                summaryData.forEach(function(item) {
+                    var sku = (item.sku_code || '').toUpperCase();
+                    if (!sku) return;
+                    salesMap[sku] = {
+                        nov: item.nov || 0,
+                        des: item.des || 0,
+                        jan: item.jan || 0,
                         total: item.total || 0,
-                        product_name: item.product_name || '',
-                        product_type: item.product_type || '',
-                        tags: item.tags || '',
-                        collection: item.collection || '',
-                        unit_price: item.unit_price || 0,
-                        discount_percent: item.discount_percent || 0,
-                        tax_amount: item.tax_amount || 0,
-                        promotion: item.promotion || ''
+                        avg: item.avg_qty || 0
                     };
                 });
 
-                // Build salesMap from salesDetailData (aggregate by SKU and month)
-                salesMap = {};
-                salesDetailData.forEach(function(item) {
-                    var sku = item.sku; // Already transformed
-                    if (!sku) return;
-
-                    if (!salesMap[sku]) {
-                        salesMap[sku] = { nov: 0, des: 0, jan: 0, total: 0 };
-                    }
-
-                    var qty = item.qty; // Already transformed
-                    var date = item.date; // Already transformed
-
-                    // Determine month from date (check month patterns)
-                    if (date.includes('-11-') || date.includes('/11/')) {
-                        salesMap[sku].nov += qty;
-                    } else if (date.includes('-12-') || date.includes('/12/')) {
-                        salesMap[sku].des += qty;
-                    } else if (date.includes('-01-') || date.includes('/01/')) {
-                        salesMap[sku].jan += qty;
-                    }
-                    salesMap[sku].total += qty;
-                });
-
-                // Calculate average
-                Object.keys(salesMap).forEach(function(sku) {
-                    var s = salesMap[sku];
-                    s.avg = Math.round((s.nov + s.des + s.jan) / 3);
-                });
-
                 salesLoadingStatus = 'done';
-                console.log('Sales data loaded:', salesDetailData.length, 'records');
                 console.log('SalesMap built with', Object.keys(salesMap).length, 'SKUs');
 
-                // Update indicator
-                indicator.innerHTML = '✅ Sales data ready! (' + salesDetailData.length.toLocaleString() + ')';
+                // Update indicator - salesMap is ready!
+                indicator.innerHTML = '✅ Sales data ready! (' + Object.keys(salesMap).length + ' SKUs)';
                 indicator.style.background = '#10b981';
-                setTimeout(function() { indicator.remove(); }, 3000);
+                setTimeout(function() { indicator.remove(); }, 2000);
 
                 // Auto-refresh sales view if currently visible
                 var salesView = document.getElementById('salesView');
@@ -1686,6 +1650,86 @@
             } catch (error) {
                 salesLoadingStatus = 'error';
                 console.error('Error loading sales:', error);
+                indicator.innerHTML = '❌ Error loading sales';
+                indicator.style.background = '#ef4444';
+                setTimeout(function() { indicator.remove(); }, 3000);
+            }
+        }
+
+        // Load detailed sales data on-demand (when user opens Sales tab)
+        async function loadSalesDetailOnDemand() {
+            if (salesDetailLoadingStatus === 'done' || salesDetailLoadingStatus === 'loading') {
+                return; // Already loaded or loading
+            }
+
+            salesDetailLoadingStatus = 'loading';
+            console.log('Loading detailed sales data on-demand...');
+
+            // Show loading in sales view
+            var salesCards = document.getElementById('salesSummaryCards');
+            if (salesCards) {
+                salesCards.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6366f1;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div>Memuat data sales detail...<br><small style="color:#9ca3af;">Mohon tunggu sebentar</small></div>';
+            }
+
+            try {
+                // Fetch sales data with pagination
+                var allSales = [];
+                var offset = 0;
+                var limit = 5000;
+
+                while (true) {
+                    var response = await fetch(SUPABASE_URL + '/rest/v1/sales?select=*&limit=' + limit + '&offset=' + offset, {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_KEY
+                        }
+                    });
+                    var data = await response.json();
+                    if (!data || data.length === 0) break;
+                    allSales = allSales.concat(data);
+                    if (data.length < limit) break;
+                    offset += limit;
+
+                    // Update loading message
+                    if (salesCards) {
+                        salesCards.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6366f1;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div>Memuat data sales... ' + allSales.length.toLocaleString() + ' records<br><small style="color:#9ca3af;">Mohon tunggu sebentar</small></div>';
+                    }
+                }
+
+                // Transform data
+                salesDetailData = allSales.map(function(item) {
+                    var rawDate = item.order_date || '';
+                    var dateOnly = rawDate.split('T')[0];
+                    return {
+                        ...item,
+                        date: dateOnly,
+                        store: item.store_name || '',
+                        sku: (item.sku_code || '').toUpperCase(),
+                        qty: item.quantity || 0,
+                        gross: item.gross_sales || 0,
+                        hpp: item.cogs || 0,
+                        disc_amt: item.discount_amount || 0,
+                        order_no: item.order_number || '',
+                        spg: item.cashier || '',
+                        retur_qty: 0,
+                        total: item.total || 0
+                    };
+                });
+
+                salesDetailLoadingStatus = 'done';
+                console.log('Sales detail loaded:', salesDetailData.length, 'records');
+
+                // Render sales dashboard
+                if (typeof renderSalesDashboard === 'function') {
+                    renderSalesDashboard();
+                }
+
+            } catch (error) {
+                salesDetailLoadingStatus = 'error';
+                console.error('Error loading sales detail:', error);
+                if (salesCards) {
+                    salesCards.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">Error memuat data sales: ' + error.message + '</div>';
+                }
             }
         }
 
@@ -4759,13 +4803,21 @@
 
         function renderSalesDashboard() {
             if (!salesDetailData || salesDetailData.length === 0) {
-                // Check if still loading
-                if (typeof salesLoadingStatus !== 'undefined' && salesLoadingStatus === 'loading') {
-                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6366f1;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div>Data sales sedang dimuat di background...<br><small style="color:#9ca3af;">Silakan tunggu beberapa saat, halaman akan otomatis refresh.</small></div>';
+                // Trigger on-demand loading
+                if (typeof salesDetailLoadingStatus !== 'undefined' && salesDetailLoadingStatus === 'pending') {
+                    // Start loading detail data
+                    if (typeof loadSalesDetailOnDemand === 'function') {
+                        loadSalesDetailOnDemand();
+                    }
+                    return;
+                } else if (typeof salesDetailLoadingStatus !== 'undefined' && salesDetailLoadingStatus === 'loading') {
+                    // Already loading, show message
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6366f1;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div>Data sales sedang dimuat...<br><small style="color:#9ca3af;">Mohon tunggu sebentar</small></div>';
+                    return;
                 } else {
-                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales.</div>';
+                    return;
                 }
-                return;
             }
 
             filteredSalesData = getFilteredSalesData();
