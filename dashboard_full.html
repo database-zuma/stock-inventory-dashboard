@@ -1597,22 +1597,55 @@
                 document.body.appendChild(indicator);
 
                 // Load with silent=true and progress callback
-                salesDetailData = await fetchAllPages('sales', true, function(count) {
+                var rawSalesData = await fetchAllPages('sales', true, function(count) {
                     indicator.innerHTML = '⏳ Loading sales... ' + count.toLocaleString() + ' records';
+                });
+
+                // Transform Supabase field names to expected format
+                indicator.innerHTML = '⏳ Processing sales data...';
+                salesDetailData = rawSalesData.map(function(item) {
+                    // Extract date part from datetime (2026-01-18T10:12:51 -> 2026-01-18)
+                    var rawDate = item.order_date || item.date || '';
+                    var dateOnly = rawDate.split('T')[0];
+
+                    return {
+                        // Keep original fields
+                        ...item,
+                        // Map to expected field names
+                        date: dateOnly,
+                        store: item.store_name || item.store || '',
+                        sku: (item.sku_code || item.sku || '').toUpperCase(),
+                        qty: item.quantity || item.qty || 0,
+                        gross: item.gross_sales || item.gross || 0,
+                        hpp: item.cogs || item.hpp || 0,
+                        disc_amt: item.discount_amount || item.disc_amt || 0,
+                        order_no: item.order_number || item.order_no || '',
+                        spg: item.cashier || item.spg || '',
+                        retur_qty: item.retur_qty || 0,
+                        total: item.total || 0,
+                        product_name: item.product_name || '',
+                        product_type: item.product_type || '',
+                        tags: item.tags || '',
+                        collection: item.collection || '',
+                        unit_price: item.unit_price || 0,
+                        discount_percent: item.discount_percent || 0,
+                        tax_amount: item.tax_amount || 0,
+                        promotion: item.promotion || ''
+                    };
                 });
 
                 // Build salesMap from salesDetailData (aggregate by SKU and month)
                 salesMap = {};
                 salesDetailData.forEach(function(item) {
-                    var sku = (item.sku || item.sku_code || '').toUpperCase();
+                    var sku = item.sku; // Already transformed
                     if (!sku) return;
 
                     if (!salesMap[sku]) {
                         salesMap[sku] = { nov: 0, des: 0, jan: 0, total: 0 };
                     }
 
-                    var qty = item.qty || item.quantity || 0;
-                    var date = item.date || item.order_date || '';
+                    var qty = item.qty; // Already transformed
+                    var date = item.date; // Already transformed
 
                     // Determine month from date (check month patterns)
                     if (date.includes('-11-') || date.includes('/11/')) {
