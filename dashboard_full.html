@@ -1612,14 +1612,14 @@
                     }
 
                     var qty = item.qty || item.quantity || 0;
-                    var date = item.date || '';
+                    var date = item.date || item.order_date || '';
 
-                    // Determine month from date
-                    if (date.includes('2024-11') || date.includes('/11/2024')) {
+                    // Determine month from date (check month patterns)
+                    if (date.includes('-11-') || date.includes('/11/')) {
                         salesMap[sku].nov += qty;
-                    } else if (date.includes('2024-12') || date.includes('/12/2024')) {
+                    } else if (date.includes('-12-') || date.includes('/12/')) {
                         salesMap[sku].des += qty;
-                    } else if (date.includes('2025-01') || date.includes('/01/2025')) {
+                    } else if (date.includes('-01-') || date.includes('/01/')) {
                         salesMap[sku].jan += qty;
                     }
                     salesMap[sku].total += qty;
