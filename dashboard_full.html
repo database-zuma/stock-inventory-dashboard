@@ -1425,7 +1425,7 @@
         async function fetchAllPages(table, silent, onProgress) {
             let allResults = [];
             let offset = 0;
-            const limit = 1000;
+            const limit = 5000;
 
             while (true) {
                 if (!silent) {
@@ -1522,36 +1522,59 @@
             try {
                 showLoadingOverlay(true, 'Connecting to Supabase...');
 
-                // Fetch products first (master data)
-                showLoadingOverlay(true, 'Loading products master data...');
-                const productsData = await fetchAllPages('products');
-                console.log('Loaded', productsData.length, 'products');
+                // Try RPC first (single call, fastest), fallback to parallel loading
+                showLoadingOverlay(true, 'Loading inventory data...');
+                var inventoryData;
+                try {
+                    // RPC: inventory+products JOIN in server (1 call instead of 2)
+                    var rpcResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_inventory_with_products?limit=50000', {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_KEY,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!rpcResponse.ok) throw new Error('RPC not available');
+                    inventoryData = await rpcResponse.json();
+                    console.log('Loaded', inventoryData.length, 'inventory records via RPC (single call)');
 
-                // Create products lookup map
-                const productsMap = {};
-                productsData.forEach(function(p) {
-                    productsMap[p.sku_code] = p;
-                });
-
-                // Fetch inventory
-                const inventoryData = await fetchAllPages('inventory');
-                console.log('Loaded', inventoryData.length, 'inventory records');
-
-                // Merge product info into inventory
-                inventoryData.forEach(function(inv) {
-                    const prod = productsMap[inv.sku_code];
-                    if (prod) {
-                        inv.product_name = prod.product_name || '';
-                        inv.kode_kecil = prod.kode_kecil || inv.sku_code.substring(0, 7);
-                        inv.size = prod.size || '';
-                        inv.category = prod.gender || '';
-                        inv.gender = prod.gender || '';
-                        inv.series = prod.series || '';
-                        inv.tipe = prod.product_type || '';
-                        inv.tier = prod.tier || '';
+                    // Map fields to expected format
+                    inventoryData.forEach(function(inv) {
+                        inv.category = inv.gender || '';
+                        inv.tipe = inv.product_type || '';
                         inv.color = '';
-                    }
-                });
+                    });
+                } catch (rpcError) {
+                    // Fallback: parallel loading
+                    console.log('RPC not available, using parallel loading...', rpcError.message);
+                    showLoadingOverlay(true, 'Loading products & inventory...');
+                    var results = await Promise.all([
+                        fetchAllPages('products'),
+                        fetchAllPages('inventory')
+                    ]);
+                    var productsData = results[0];
+                    inventoryData = results[1];
+                    console.log('Loaded', productsData.length, 'products &', inventoryData.length, 'inventory (parallel)');
+
+                    // Create products lookup map & merge
+                    var productsMap = {};
+                    productsData.forEach(function(p) { productsMap[p.sku_code] = p; });
+                    inventoryData.forEach(function(inv) {
+                        var prod = productsMap[inv.sku_code];
+                        if (prod) {
+                            inv.product_name = prod.product_name || '';
+                            inv.kode_kecil = prod.kode_kecil || inv.sku_code.substring(0, 7);
+                            inv.size = prod.size || '';
+                            inv.category = prod.gender || '';
+                            inv.gender = prod.gender || '';
+                            inv.series = prod.series || '';
+                            inv.tipe = prod.product_type || '';
+                            inv.tier = prod.tier || '';
+                            inv.color = '';
+                        }
+                    });
+                }
 
                 // Process data
                 showLoadingOverlay(true, 'Processing data...');
