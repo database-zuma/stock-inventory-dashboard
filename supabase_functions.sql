@@ -227,6 +227,19 @@ SELECT
 FROM inventory i
 LEFT JOIN products p ON i.sku_code = p.sku_code;
 
+-- 9. VIEW: Sales Summary by SKU (replaces RPC - supports pagination for >1000 SKUs)
+CREATE OR REPLACE VIEW sales_summary_by_sku AS
+SELECT
+    s.sku_code::TEXT as sku_code,
+    COALESCE(SUM(CASE WHEN EXTRACT(MONTH FROM s.order_date::timestamp) = 11 THEN s.quantity ELSE 0 END), 0)::BIGINT as nov,
+    COALESCE(SUM(CASE WHEN EXTRACT(MONTH FROM s.order_date::timestamp) = 12 THEN s.quantity ELSE 0 END), 0)::BIGINT as des,
+    COALESCE(SUM(CASE WHEN EXTRACT(MONTH FROM s.order_date::timestamp) = 1 THEN s.quantity ELSE 0 END), 0)::BIGINT as jan,
+    COALESCE(SUM(s.quantity), 0)::BIGINT as total,
+    COALESCE(ROUND(SUM(s.quantity)::numeric / 3), 0)::BIGINT as avg_qty
+FROM sales s
+WHERE s.sku_code IS NOT NULL AND s.sku_code != ''
+GROUP BY s.sku_code;
+
 -- Grant execute permissions to anon and authenticated roles
 GRANT EXECUTE ON FUNCTION get_sales_summary_by_sku() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_sales_by_store_summary() TO anon, authenticated;
@@ -236,3 +249,4 @@ GRANT EXECUTE ON FUNCTION get_top_products_summary(INT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_sales_filtered(TEXT, TEXT, TEXT, INT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_sales_daily_trend() TO anon, authenticated;
 GRANT SELECT ON inventory_full TO anon, authenticated;
+GRANT SELECT ON sales_summary_by_sku TO anon, authenticated;

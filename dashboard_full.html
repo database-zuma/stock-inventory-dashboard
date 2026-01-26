@@ -1597,14 +1597,14 @@
             }
         }
 
-        // Load sales data using RPC (fast aggregation)
+        // Load sales data using VIEW (supports pagination for all data)
         var salesLoadingStatus = 'pending';
         var salesDetailLoadingStatus = 'pending';
 
         async function loadSalesInBackground() {
             try {
                 salesLoadingStatus = 'loading';
-                console.log('Loading sales summary via RPC...');
+                console.log('Loading sales summary via VIEW...');
 
                 // Show small indicator
                 var indicator = document.createElement('div');
@@ -1613,21 +1613,10 @@
                 indicator.innerHTML = '⏳ Loading sales summary...';
                 document.body.appendChild(indicator);
 
-                // Use RPC function for fast aggregated data
-                var response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_sales_summary_by_sku', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_KEY,
-                        'Content-Type': 'application/json'
-                    }
+                // Use VIEW with pagination (supports >1000 SKUs)
+                var summaryData = await fetchAllPages('sales_summary_by_sku', true, function(count) {
+                    indicator.innerHTML = '⏳ Loading sales summary... ' + count.toLocaleString() + ' SKUs';
                 });
-
-                if (!response.ok) {
-                    throw new Error('RPC call failed: ' + response.status);
-                }
-
-                var summaryData = await response.json();
                 console.log('Sales summary loaded:', summaryData.length, 'SKUs');
 
                 // Build salesMap from RPC result
