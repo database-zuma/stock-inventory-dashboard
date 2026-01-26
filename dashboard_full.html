@@ -1522,22 +1522,13 @@
             try {
                 showLoadingOverlay(true, 'Connecting to Supabase...');
 
-                // Try RPC first (single call, fastest), fallback to parallel loading
+                // Try inventory_full VIEW first (pre-joined, 1 query instead of 2)
+                // Fallback to parallel loading if view not available
                 showLoadingOverlay(true, 'Loading inventory data...');
                 var inventoryData;
                 try {
-                    // RPC: inventory+products JOIN in server (1 call instead of 2)
-                    var rpcResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_inventory_with_products?limit=50000', {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': 'Bearer ' + SUPABASE_KEY,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (!rpcResponse.ok) throw new Error('RPC not available');
-                    inventoryData = await rpcResponse.json();
-                    console.log('Loaded', inventoryData.length, 'inventory records via RPC (single call)');
+                    inventoryData = await fetchAllPages('inventory_full');
+                    console.log('Loaded', inventoryData.length, 'records via inventory_full view');
 
                     // Map fields to expected format
                     inventoryData.forEach(function(inv) {
@@ -1545,9 +1536,9 @@
                         inv.tipe = inv.product_type || '';
                         inv.color = '';
                     });
-                } catch (rpcError) {
-                    // Fallback: parallel loading
-                    console.log('RPC not available, using parallel loading...', rpcError.message);
+                } catch (viewError) {
+                    // Fallback: parallel loading products + inventory
+                    console.log('View not available, using parallel loading...', viewError.message);
                     showLoadingOverlay(true, 'Loading products & inventory...');
                     var results = await Promise.all([
                         fetchAllPages('products'),

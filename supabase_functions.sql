@@ -207,44 +207,25 @@ BEGIN
 END;
 $$;
 
--- 8. Inventory with Products JOIN (single call instead of 2 separate loads)
--- Returns inventory joined with product master data
-CREATE OR REPLACE FUNCTION get_inventory_with_products()
-RETURNS TABLE (
-    sku_code TEXT,
-    quantity INT,
-    entity TEXT,
-    location_type TEXT,
-    location_name TEXT,
-    product_name TEXT,
-    kode_kecil TEXT,
-    size TEXT,
-    gender TEXT,
-    series TEXT,
-    product_type TEXT,
-    tier TEXT
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        i.sku_code::TEXT,
-        i.quantity,
-        i.entity::TEXT,
-        i.location_type::TEXT,
-        i.location_name::TEXT,
-        COALESCE(p.product_name, '')::TEXT as product_name,
-        COALESCE(p.kode_kecil, LEFT(i.sku_code::TEXT, 7))::TEXT as kode_kecil,
-        COALESCE(p.size, '')::TEXT as size,
-        COALESCE(p.gender, '')::TEXT as gender,
-        COALESCE(p.series, '')::TEXT as series,
-        COALESCE(p.product_type, '')::TEXT as product_type,
-        COALESCE(p.tier, '')::TEXT as tier
-    FROM inventory i
-    LEFT JOIN products p ON i.sku_code = p.sku_code;
-END;
-$$;
+-- 8. VIEW: Inventory with Products JOIN (queryable with pagination like a table)
+-- This replaces the RPC function - views support pagination via PostgREST
+CREATE OR REPLACE VIEW inventory_full AS
+SELECT
+    i.id,
+    i.sku_code,
+    i.quantity,
+    i.entity,
+    i.location_type,
+    i.location_name,
+    COALESCE(p.product_name, '') as product_name,
+    COALESCE(p.kode_kecil, LEFT(i.sku_code::TEXT, 7)) as kode_kecil,
+    COALESCE(p.size, '') as size,
+    COALESCE(p.gender, '') as gender,
+    COALESCE(p.series, '') as series,
+    COALESCE(p.product_type, '') as product_type,
+    COALESCE(p.tier, '') as tier
+FROM inventory i
+LEFT JOIN products p ON i.sku_code = p.sku_code;
 
 -- Grant execute permissions to anon and authenticated roles
 GRANT EXECUTE ON FUNCTION get_sales_summary_by_sku() TO anon, authenticated;
@@ -254,4 +235,4 @@ GRANT EXECUTE ON FUNCTION get_sales_by_spg_summary() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_top_products_summary(INT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_sales_filtered(TEXT, TEXT, TEXT, INT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_sales_daily_trend() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_inventory_with_products() TO anon, authenticated;
+GRANT SELECT ON inventory_full TO anon, authenticated;
