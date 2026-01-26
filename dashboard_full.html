@@ -1625,11 +1625,11 @@
                     var sku = (item.sku_code || '').toUpperCase();
                     if (!sku) return;
                     salesMap[sku] = {
-                        nov: item.nov || 0,
-                        des: item.des || 0,
+                        nov: 0,
+                        des: 0,
                         jan: item.jan || 0,
                         total: item.total || 0,
-                        avg: item.avg_qty || 0
+                        avg: item.avg_qty || item.jan || 0
                     };
                 });
 
