@@ -464,6 +464,115 @@
         .summary-card .label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #1f2937; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #9ca3af; margin-top: 4px; }
+
+        /* ==================== SIDEBAR LAYOUT ==================== */
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+        .sidebar {
+            width: 220px;
+            min-width: 220px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            padding: 20px 15px;
+            position: sticky;
+            top: 80px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        .sidebar-title {
+            color: #9ca3af;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 5px;
+        }
+        .sidebar .view-toggle {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: transparent;
+            padding: 0;
+        }
+        .sidebar .view-btn {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            color: #d1d5db;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar .view-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .sidebar .view-btn.active {
+            background: var(--bg-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .sidebar .entity-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar .entity-pill {
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            justify-content: space-between;
+        }
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            max-width: calc(100% - 220px);
+            overflow-x: hidden;
+        }
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+                padding: 15px;
+            }
+            .sidebar .view-toggle {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .sidebar .view-btn {
+                width: auto;
+                flex: 1;
+                min-width: 150px;
+            }
+            .sidebar .entity-pills {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .main-content {
+                max-width: 100%;
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -489,22 +598,30 @@
         </div>
     </div>
 
-    <div class="container">
-        <!-- Toggle View Dashboard -->
-        <div class="view-toggle">
-            <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
-                📊 Stock Inventory
-            </button>
-            <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
-                📈 Max Stock Analysis
-            </button>
-            <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
-                📋 Control Stock
-            </button>
-            <button class="view-btn" data-view="sales" onclick="switchView('sales')">
-                💰 Sales
-            </button>
+    <div class="main-layout">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Menu</div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
+                        📊 Stock Inventory
+                    </button>
+                    <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
+                        📈 Max Stock
+                    </button>
+                    <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
+                        📋 Control Stock
+                    </button>
+                    <button class="view-btn" data-view="sales" onclick="switchView('sales')">
+                        💰 Sales
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
 
         <!-- ==================== INVENTORY VIEW ==================== -->
         <div class="view-container active" id="inventoryView">
@@ -6297,6 +6414,9 @@
             }
         }
     </style>
+
+        </div> <!-- End main-content -->
+    </div> <!-- End main-layout -->
 
     <!-- Chat Button -->
     <button class="chat-widget-btn" onclick="toggleChatWidget()" title="ZUMA AI Assistant">
