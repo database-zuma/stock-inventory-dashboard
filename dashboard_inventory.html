@@ -1941,15 +1941,29 @@
             });
         }
 
+        // Normalize raw API area values to canonical display names
+        function normalizeArea(rawArea) {
+            if (!rawArea) return 'Jawa Timur';
+            const a = rawArea.toLowerCase().trim();
+            if (a.includes('bali') || a.includes('whb')) return 'Bali';
+            if (a.includes('jakarta')) return 'Jakarta';
+            if (a.includes('jatim') || a.includes('jawa timur') || a === 'whs') return 'Jawa Timur';
+            if (a.includes('batam')) return 'Batam';
+            if (a.includes('lombok')) return 'Lombok';
+            if (a.includes('sulawesi') || a.includes('manado')) return 'Sulawesi';
+            if (a.includes('sumatra') || a.includes('sumatera')) return 'Sumatera';
+            return 'Jawa Timur'; // Online, Unknown, Wholesale, etc.
+        }
+
         function getAreaFromStore(storeName) {
             const s = storeName.toLowerCase().trim();
 
             // 1. Cek exact match di storeAreaMap (dari Master Store/Warehouse)
-            if (storeAreaMap[s]) return storeAreaMap[s];
+            if (storeAreaMap[s]) return normalizeArea(storeAreaMap[s]);
 
             // 2. Cek partial match di storeAreaMap
             for (const [key, area] of Object.entries(storeAreaMap)) {
-                if (s.includes(key) || key.includes(s)) return area;
+                if (s.includes(key) || key.includes(s)) return normalizeArea(area);
             }
 
             // 3. Fallback untuk warehouse - detect area from warehouse name
@@ -2902,7 +2916,7 @@
                 function getWarehouseArea(whName) {
                     if (!whName) return 'Jawa Timur';
                     var whLower = whName.toLowerCase();
-                    if (storeAreaMap[whLower]) return storeAreaMap[whLower];
+                    if (storeAreaMap[whLower]) return normalizeArea(storeAreaMap[whLower]);
                     if (whLower.indexOf('bali') >= 0 || whLower.indexOf('gatsu') >= 0) return 'Bali';
                     if (whLower.indexOf('jakarta') >= 0 || whLower.indexOf('pluit') >= 0) return 'Jakarta';
                     if (whLower.indexOf('pusat') >= 0) return 'Jawa Timur';
@@ -2952,6 +2966,9 @@
                                 whTiers[whName][tier] = whTiers[whName][tier] + stock;
 
                                 // Track per area
+                                // Guard: init area entry if not present (handles unexpected area values)
+                                if (!areaStock[area]) { areaStock[area] = 0; areaTiers[area] = {}; areaEntityStock[area] = {}; }
+
                                 areaStock[area] = areaStock[area] + stock;
                                 if (!areaTiers[area][tier]) areaTiers[area][tier] = 0;
                                 areaTiers[area][tier] = areaTiers[area][tier] + stock;
@@ -3975,9 +3992,9 @@
             // Helper function to get sales for SKU
             function getSales(sku) {
                 const skuUpper = (sku || '').toUpperCase();
-                const s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
-                const avg = (s.nov + s.des + s.jan) / 3;
-                return { nov: s.nov, des: s.des, jan: s.jan, avg: avg };
+                const s = salesMap[skuUpper] || {};
+                const avg = ((s.nov || 0) + (s.des || 0) + (s.jan || 0)) / 3;
+                return { nov: (s.nov || 0), des: (s.des || 0), jan: (s.jan || 0), avg: avg };
             }
 
             // Helper function to get sales for item (handles both modes)
