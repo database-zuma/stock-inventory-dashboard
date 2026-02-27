@@ -1913,7 +1913,7 @@
                     if (item.store_stock) {
                         Object.entries(item.store_stock).forEach(([loc, stock]) => {
                             if (getAreaFromStore(loc) === areaFilter) {
-                                areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                                areaData[loc] = (areaData[loc] || 0) + Math.max(0, stock);
                             }
                         });
                     }
