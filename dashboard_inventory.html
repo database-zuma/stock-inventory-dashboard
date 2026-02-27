@@ -2274,7 +2274,7 @@
                 // Filter: hanya item yang punya stock di area ini (stock !== 0)
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.entries(item.store_stock).some(([wh, stock]) => getAreaFromStore(wh) === whArea && stock !== 0);
+                    return Object.entries(item.store_stock).some(([wh, stock]) => !isExcludedLocation(wh) && getAreaFromStore(wh) === whArea && stock !== 0);
                 });
             }
 
@@ -2286,11 +2286,15 @@
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
                 }
-                groupedMap[kk].total += item.total || 0;
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, qty]) => {
-                        groupedMap[kk].store_stock[wh] = (groupedMap[kk].store_stock[wh] || 0) + qty;
+                        if (!isExcludedLocation(wh)) {
+                            groupedMap[kk].total += qty || 0;
+                            groupedMap[kk].store_stock[wh] = (groupedMap[kk].store_stock[wh] || 0) + qty;
+                        }
                     });
+                } else {
+                    groupedMap[kk].total += item.total || 0;
                 }
             });
             data = Object.values(groupedMap);
@@ -2401,7 +2405,7 @@
             whData.forEach(item => {
                 if (item.store_stock) {
                     Object.keys(item.store_stock).forEach(wh => {
-                        areas.add(getAreaFromStore(wh));
+                        if (!isExcludedLocation(wh)) areas.add(getAreaFromStore(wh));
                     });
                 }
             });
@@ -2422,7 +2426,7 @@
             whData.forEach(item => {
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, stock]) => {
-                        if (!whArea || getAreaFromStore(wh) === whArea) {
+                        if (!isExcludedLocation(wh) && (!whArea || getAreaFromStore(wh) === whArea)) {
                             if (!whStock[wh]) whStock[wh] = 0;
                             whStock[wh] += stock || 0;
                         }
@@ -2480,6 +2484,17 @@
             return upper.includes('WAREHOUSE') || upper.includes('GUDANG') || upper.includes('BOX') ||
                    upper.includes('PROTOL') || upper.includes('REJECT') || upper.includes('WH ') ||
                    upper.startsWith('WH') || upper.includes('PUSAT');
+        }
+
+        function isExcludedLocation(name) {
+            const s = (name || '').toLowerCase().trim();
+            const EXCLUDED = [
+                'warehouse online',
+                'transit (aol system)',
+                'utama',
+                'disney pcm surabaya'
+            ];
+            return EXCLUDED.some(ex => s === ex);
         }
 
         function updateTableAreaDropdown() {
