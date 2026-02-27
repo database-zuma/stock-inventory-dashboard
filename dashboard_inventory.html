@@ -2524,6 +2524,9 @@
             if (currentEntity === 'DDD') {
                 if (s === 'warehouse bali' || s === 'warehouse palembang') return true;
             }
+            // Also exclude stores whose area is mapped to any konsinyasi area
+            const mappedArea = (storeAreaMap[s] || '').toLowerCase();
+            if (mappedArea.includes('konsinyasi')) return true;
             return false;
         }
 
