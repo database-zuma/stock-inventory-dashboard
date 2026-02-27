@@ -1781,7 +1781,7 @@
                     if (item.store_stock) {
                         Object.entries(item.store_stock).forEach(([loc, stock]) => {
                             if (getAreaFromStore(loc) === areaFilter) {
-                                areaData[areaFilter] = (areaData[areaFilter] || 0) + Math.max(0, stock);
+                                areaData[loc] = (areaData[loc] || 0) + Math.max(0, stock);
                             }
                         });
                     }
@@ -1827,6 +1827,17 @@
             });
 
             if (rtAreaChart) rtAreaChart.destroy();
+            // Update chart title dynamically based on filter
+            const areaChartTitle = document.getElementById('rtAreaChart').closest('.chart-card').querySelector('h3');
+            if (areaChartTitle) {
+                if (areaFilter) {
+                    areaChartTitle.textContent = '📈 Stock per Store (' + areaFilter + ')';
+                } else if (locationFilter) {
+                    areaChartTitle.textContent = '📈 Stock per Area (Filtered)';
+                } else {
+                    areaChartTitle.textContent = '📈 Stock per Area';
+                }
+            }
             rtAreaChart = new Chart(document.getElementById('rtAreaChart'), {
                 type: 'bar',
                 data: {
