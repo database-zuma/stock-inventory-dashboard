@@ -2638,7 +2638,7 @@
                             if (!exists) {
                                 minusByLocation[storeName].articles.push({
                                     sku: item.sku,
-                                    kode: item.kode || item.sku,
+                                    kode: item.kode_kecil || item.kode || item.sku,
                                     name: item.name || '-',
                                     stock: stock
                                 });
@@ -2657,7 +2657,7 @@
                     }
                     minusByLocation[locName].articles.push({
                                     sku: item.sku,
-                                    kode: item.kode || item.sku,
+                                    kode: item.kode_kecil || item.kode || item.sku,
                         name: item.name || '-',
                         stock: item.total
                     });
