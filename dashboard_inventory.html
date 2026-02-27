@@ -353,7 +353,7 @@
             padding: 10px 12px; border-bottom: 1px solid #fee2e2; font-size: 0.85rem;
         }
         .articles-table tr:hover { background: #fef2f2; }
-        .articles-table .sku { font-weight: 600; color: #1f2937; }
+        .articles-table .sku { font-weight: 600; color: #1f2937; text-transform: uppercase; }
         .articles-table .name { color: #6b7280; }
         .articles-table .stock { color: #dc2626; font-weight: 700; text-align: right; }
 
@@ -4294,7 +4294,7 @@
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;">' + item.sku + '</td>' +
+                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + item.sku + '</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
                         '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
@@ -5687,7 +5687,7 @@
                 recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.store || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.spg || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;">' + (item.order_no || '-') + '</td>';
-                recentHtml += '<td style="padding:6px;">' + (item.sku || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;text-transform:uppercase;">' + (item.sku || '-') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total_before_tax || 0).toLocaleString('id-ID') + '</td>';
