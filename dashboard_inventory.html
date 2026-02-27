@@ -2638,6 +2638,7 @@
                             if (!exists) {
                                 minusByLocation[storeName].articles.push({
                                     sku: item.sku,
+                                    kode: item.kode || item.sku,
                                     name: item.name || '-',
                                     stock: stock
                                 });
@@ -2655,7 +2656,8 @@
                         minusByLocation[locName] = { area: 'Warehouse', articles: [], totalPairs: 0 };
                     }
                     minusByLocation[locName].articles.push({
-                        sku: item.sku,
+                                    sku: item.sku,
+                                    kode: item.kode || item.sku,
                         name: item.name || '-',
                         stock: item.total
                     });
@@ -2715,7 +2717,7 @@
                                 <table class="articles-table">
                                     <thead>
                                         <tr>
-                                            <th>SKU</th>
+                                            <th>Kode Barang</th>
                                             <th>Nama Barang</th>
                                             <th style="text-align:right;">Minus on Hand</th>
                                         </tr>
@@ -2729,7 +2731,7 @@
                     locData.articles.forEach(article => {
                         html += `
                             <tr>
-                                <td class="sku">${article.sku}</td>
+                                <td class="sku">${article.kode}</td>
                                 <td class="name">${article.name.length > 40 ? article.name.substring(0, 40) + '...' : article.name}</td>
                                 <td class="stock">${article.stock} pairs</td>
                             </tr>
