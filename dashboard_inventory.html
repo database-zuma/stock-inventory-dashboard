@@ -3673,9 +3673,9 @@
 
             // Build modal content
             let html = `<div style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px;">
-                <strong>Kode Kecil:</strong> ${kodeKecil} |
+                <strong>Kode Besar:</strong> <span style="font-size:1.05em; color:#1e3a5f; font-weight:700;">${kodeKecil}</span> |
                 <strong>Assortment:</strong> ${assortment} |
-                <strong>Total SKU:</strong> ${skuItems.length}
+                <strong>Total Kode Kecil:</strong> ${skuItems.length}
                 ${locationFilter ? ' | <strong>' + locationLabel + ':</strong> ' + locationFilter : ''}
             </div>`;
 
@@ -3683,7 +3683,7 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                     <thead style="position: sticky; top: 0; background: #1e3a5f; color: white;">
                         <tr>
-                            <th style="padding: 10px; text-align: left;">SKU</th>
+                            <th style="padding: 10px; text-align: left;">Kode Kecil</th>
                             <th style="padding: 10px; text-align: left;">Nama Barang</th>
                             <th style="padding: 10px; text-align: center;">Asst</th>
                             <th style="padding: 10px; text-align: right;">Qty</th>
@@ -3717,7 +3717,7 @@
                 </table>
             </div>`;
 
-            document.getElementById('skuModalTitle').textContent = '📋 Detail SKU: ' + kodeKecil;
+            document.getElementById('skuModalTitle').textContent = '📋 Detail Kode Besar: ' + kodeKecil;
             document.getElementById('skuModalBody').innerHTML = html;
             document.getElementById('skuModal').classList.add('active');
             document.body.style.overflow = 'hidden';
