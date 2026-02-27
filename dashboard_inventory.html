@@ -2512,9 +2512,10 @@
                 'transit (aol system)',
                 'utama',
                 'disney pcm surabaya',
-                'konsiyasi bali'
+                'konsinyasi bali'
             ];
             if (EXCLUDED.some(ex => s === ex)) return true;
+            if (s.includes('konsinyasi')) return true;
             // DDD-specific: only Gatsu variants for Bali, no plain 'Warehouse Bali' or 'Warehouse Palembang'
             if (currentEntity === 'DDD') {
                 if (s === 'warehouse bali' || s === 'warehouse palembang') return true;
@@ -2531,7 +2532,7 @@
             rtData.forEach(item => {
                 if (item.store_stock) {
                     Object.keys(item.store_stock).forEach(store => {
-                        if (!isWarehouseLocation(store)) {
+                        if (!isWarehouseLocation(store) && !isExcludedLocation(store)) {
                             const area = getAreaFromStore(store);
                             if (area && area !== 'Warehouse') areas.add(area);
                         }
