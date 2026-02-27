@@ -367,11 +367,11 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            background: white;
-            padding: 14px 10px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,42,58,0.06), 0 4px 16px rgba(0,42,58,0.04);
-            border: 1px solid #e8eef3;
+            background: linear-gradient(180deg, #002A3A 0%, #003d54 100%);
+            padding: 16px 10px;
+            border-radius: 14px;
+            box-shadow: 0 4px 24px rgba(0,42,58,0.25);
+            border: none;
             width: 200px;
             min-width: 200px;
             margin-right: 20px;
@@ -392,13 +392,14 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: 'Poppins', sans-serif; color: #64748b;
+            font-family: 'Poppins', sans-serif;
+            color: rgba(255,255,255,0.65);
             display: flex; align-items: center; gap: 8px;
             width: 100%;
             text-align: left;
         }
-        .view-btn:hover { background: #f0fafa; color: #002A3A; }
-        .view-btn.active { background: linear-gradient(135deg, #00E273 0%, #00c464 100%); color: white; box-shadow: 0 2px 8px rgba(0,226,115,0.25); }
+        .view-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.95); }
+        .view-btn.active { background: rgba(0,226,115,0.18); color: #00E273; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(0,226,115,0.3); }
         .view-container { display: none; }
         .view-container.active { display: block; }
 
@@ -497,10 +498,10 @@
         .summary-card .label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
-        .entity-toggle-bar { display:flex; flex-direction:column; gap:3px; margin:2px 0 4px 0; padding:8px; background:#f8fafc; border-radius:8px; border-left:3px solid #00E273; }
-        .entity-toggle-btn { padding:6px 12px; border:1.5px solid #e2e8f0; border-radius:6px; background:white; color:#64748b; font-weight:600; font-size:0.76rem; cursor:pointer; transition:all 0.15s ease; text-align:left; width:100%; }
-        .entity-toggle-btn:hover { border-color:#00B4CC; color:#002A3A; background:#f0fafa; }
-        .entity-toggle-btn.active { background:#002A3A; border-color:#002A3A; color:white; box-shadow:0 2px 6px rgba(0,42,58,0.15); }
+        .entity-toggle-bar { display:flex; flex-direction:column; gap:3px; margin:2px 0 4px 0; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid rgba(0,226,115,0.5); }
+        .entity-toggle-btn { padding:6px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:transparent; color:rgba(255,255,255,0.55); font-weight:600; font-size:0.76rem; cursor:pointer; transition:all 0.15s ease; text-align:left; width:100%; }
+        .entity-toggle-btn:hover { border-color:rgba(0,226,115,0.4); color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.06); }
+        .entity-toggle-btn.active { background:rgba(0,226,115,0.2); border-color:rgba(0,226,115,0.5); color:#00E273; font-weight:700; }
     </style>
 </head>
 <body>
@@ -523,6 +524,7 @@
         <div class="dashboard-body">
         <!-- Toggle View Dashboard -->
         <div class="view-toggle">
+            <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;padding:0 6px 8px 6px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:4px;">NAVIGASI</div>
             <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
                 📊 Stock Inventory
             </button>
