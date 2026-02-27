@@ -2618,17 +2618,18 @@
             return '<span class="stock-badge stock-medium">Normal</span>';
         }
 
-        function exportData() {
-            if (!filteredData.length) { alert('Tidak ada data'); return; }
+        function exportData(type) {
+            const data = (type === 'warehouse') ? (whFilteredData || []) : (rtFilteredData || []);
+            if (!data.length) { alert('Tidak ada data'); return; }
             const headers = ['Kode Kecil', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Total Stock'];
-            const csv = [headers.join(','), ...filteredData.map(i => [
-                i.kode_kecil || '', i.gender || '', i.series || '', i.tipe || '', `"${(i.name || '').replace(/"/g, '""')}"`, i.tier || '', i.total
+            const csv = [headers.join(','), ...data.map(i => [
+                (i.kode || i.kode_kecil || ''), i.gender || '', i.series || '', i.tipe || '', `"${(i.name || '').replace(/"/g, '""')}"`, i.tier || '', i.total
             ].join(','))].join('\n');
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `stock_${currentEntity}_${currentType}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `stock_${currentEntity}_${type}_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
