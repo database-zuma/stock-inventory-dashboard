@@ -2128,7 +2128,15 @@
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
                 }
-                groupedMap[kk].total += item.total || 0;
+                if (tableArea && item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, qty]) => {
+                        if (!isWarehouseLocation(store) && getAreaFromStore(store) === tableArea) {
+                            groupedMap[kk].total += qty || 0;
+                        }
+                    });
+                } else {
+                    groupedMap[kk].total += item.total || 0;
+                }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, qty]) => {
                         groupedMap[kk].store_stock[store] = (groupedMap[kk].store_stock[store] || 0) + qty;
