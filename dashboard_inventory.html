@@ -352,17 +352,45 @@
         .articles-table .name { color: #6b7280; }
         .articles-table .stock { color: #dc2626; font-weight: 700; text-align: right; }
 
+        /* Sidebar + Dashboard Body Layout */
+        .dashboard-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+        }
         /* Toggle View Dashboard */
         .view-toggle {
-            display: flex; gap: 8px; background: var(--card-bg);
-            padding: 6px; border-radius: 14px; box-shadow: var(--shadow);
-            width: fit-content; margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--card-bg);
+            padding: 12px 8px;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            width: 200px;
+            min-width: 200px;
+            margin-right: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        .view-content-area {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
         }
         .view-btn {
-            padding: 12px 24px; border: none; background: transparent; border-radius: 10px;
-            font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif; color: #6b7280;
             display: flex; align-items: center; gap: 8px;
+            width: 100%;
+            text-align: left;
         }
         .view-btn:hover { background: #f3f4f6; }
         .view-btn.active { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; }
@@ -490,6 +518,7 @@
     </div>
 
     <div class="container">
+        <div class="dashboard-body">
         <!-- Toggle View Dashboard -->
         <div class="view-toggle">
             <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
@@ -504,7 +533,8 @@
             <button class="view-btn" data-view="sales" onclick="switchView('sales')">
                 💰 Sales
             </button>
-        </div>
+        </div><!-- end view-toggle -->
+        <div class="view-content-area">
 
         <!-- ==================== INVENTORY VIEW ==================== -->
         <div class="view-container active" id="inventoryView">
@@ -1331,8 +1361,10 @@
 
             </div>
         </div> <!-- End salesView -->
+        </div><!-- end view-content-area -->
+        </div><!-- end dashboard-body -->
 
-    </div>
+    </div><!-- end container -->
 
     <!-- Modal Minus on Hand Detail -->
     <div class="modal-overlay" id="negativeModal" onclick="closeNegativeModal(event)">
