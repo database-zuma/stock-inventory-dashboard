@@ -1591,6 +1591,7 @@
                     populateMSFilters();
                 }
                 updateMaxStockAnalysis();
+            }
         }
 
         function switchTab(type) {
@@ -2761,7 +2762,6 @@
                         alert('Error: ' + e.message);
                     }
                 }, 100);
-            }
             } else if (view === 'stockcontrol') {
                 setTimeout(function() {
                     try {
