@@ -4405,6 +4405,16 @@
         function getAreaFromStore(storeName) {
             if (!storeName) return 'Unknown';
             const s = storeName.toLowerCase().trim();
+            const upper = storeName.toUpperCase();
+
+            // 0. FIRST: for warehouse locations, detect area by keyword
+            //    (must be BEFORE storeAreaMap to avoid wrong partial matches)
+            if (upper.includes('WAREHOUSE') || upper.includes('GUDANG')) {
+                if (upper.includes('BALI') || upper.includes('GATSU')) return 'Bali';
+                if (upper.includes('JAKARTA') || upper.includes('PLUIT')) return 'Jakarta';
+                if (upper.includes('PUSAT')) return 'Jawa Timur';
+                return 'Jawa Timur'; // Default warehouse to Jawa Timur
+            }
 
             // 1. Try exact match in storeAreaMap
             if (storeAreaMap[s]) return storeAreaMap[s];
