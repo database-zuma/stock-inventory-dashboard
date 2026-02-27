@@ -2003,17 +2003,10 @@
 
         function getAreaFromStore(storeName) {
             const s = storeName.toLowerCase().trim();
-
-            // 1. Cek exact match di storeAreaMap (dari Master Store/Warehouse)
-            if (storeAreaMap[s]) return normalizeArea(storeAreaMap[s]);
-
-            // 2. Cek partial match di storeAreaMap
-            for (const [key, area] of Object.entries(storeAreaMap)) {
-                if (s.includes(key) || key.includes(s)) return normalizeArea(area);
-            }
-
-            // 3. Fallback untuk warehouse - detect area from warehouse name
             const upper = storeName.toUpperCase();
+
+            // 1. FIRST: for warehouse locations, detect area by keyword
+            //    (must be BEFORE storeAreaMap to avoid wrong partial matches)
             if (upper.includes('WAREHOUSE') || upper.includes('GUDANG')) {
                 // WHB - Warehouse Bali
                 if (upper.includes('BALI') || upper.includes('GATSU')) return 'Bali';
@@ -2022,6 +2015,14 @@
                 // WHS - Warehouse Pusat (Jawa Timur)
                 if (upper.includes('PUSAT')) return 'Jawa Timur';
                 return 'Jawa Timur'; // Default warehouse to Jawa Timur
+            }
+
+            // 2. Cek exact match di storeAreaMap (dari Master Store/Warehouse)
+            if (storeAreaMap[s]) return normalizeArea(storeAreaMap[s]);
+
+            // 3. Cek partial match di storeAreaMap
+            for (const [key, area] of Object.entries(storeAreaMap)) {
+                if (s.includes(key) || key.includes(s)) return normalizeArea(area);
             }
 
             // 4. Default ke Bali
