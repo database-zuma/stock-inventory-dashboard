@@ -2106,10 +2106,10 @@
                 });
             }
 
-            // Group by kode_kecil
+            // Group by kode (base article = kode kecil)
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode_kecil || '').toUpperCase();
+                const kk = (item.kode || item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
@@ -2181,7 +2181,7 @@
                     if (tableStore && item.store_stock) {
                         displayStock = item.store_stock[tableStore] || 0;
                     }
-                    const kodeKecil = item.kode_kecil || '-';
+                    const kodeKecil = item.kode || item.kode_kecil || '-';
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'retail'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -2256,10 +2256,10 @@
                 });
             }
 
-            // Group by kode_kecil
+            // Group by kode (base article = kode kecil)
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode_kecil || '').toUpperCase();
+                const kk = (item.kode || item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
@@ -2331,7 +2331,7 @@
                     if (whWarehouse && item.store_stock) {
                         displayStock = item.store_stock[whWarehouse] || 0;
                     }
-                    const kodeKecil = item.kode_kecil || '-';
+                    const kodeKecil = item.kode || item.kode_kecil || '-';
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'warehouse'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -3641,27 +3641,29 @@
                 locationLabel = 'Store';
             }
 
-            // Find all unique SKUs with this kode_kecil
-            const skuMap = {};
+            // Find all kode besar variants for this kode kecil (base article)
+            const kodeBesarMap = {};
             data.forEach(item => {
-                if ((item.kode_kecil || '').toUpperCase() === kodeKecil.toUpperCase()) {
-                    const sku = item.sku;
-                    if (!skuMap[sku]) {
-                        let qty = item.total;
-                        if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
-                            qty = item.store_stock[locationFilter];
-                        }
-                        skuMap[sku] = {
-                            sku: sku,
+                if ((item.kode || item.kode_kecil || '').toUpperCase() === kodeKecil.toUpperCase()) {
+                    const kb = item.kode_kecil || item.sku;
+                    let qty = item.total;
+                    if (locationFilter && item.store_stock && item.store_stock[locationFilter] !== undefined) {
+                        qty = item.store_stock[locationFilter];
+                    }
+                    if (!kodeBesarMap[kb]) {
+                        kodeBesarMap[kb] = {
+                            kodeBesar: kb,
                             name: item.name || '-',
                             qty: qty
                         };
+                    } else {
+                        kodeBesarMap[kb].qty += qty;
                     }
                 }
             });
 
-            // Convert to array and sort by SKU (alphabetically)
-            const skuItems = Object.values(skuMap).sort((a, b) => a.sku.localeCompare(b.sku));
+            // Convert to array and sort by kode besar (alphabetically)
+            const skuItems = Object.values(kodeBesarMap).sort((a, b) => a.kodeBesar.localeCompare(b.kodeBesar));
 
             if (!skuItems.length) {
                 alert('Data tidak ditemukan');
@@ -3673,9 +3675,9 @@
 
             // Build modal content
             let html = `<div style="margin-bottom: 15px; padding: 10px; background: #f0f9ff; border-radius: 8px;">
-                <strong>Kode Besar:</strong> <span style="font-size:1.05em; color:#1e3a5f; font-weight:700;">${kodeKecil}</span> |
+                <strong>Kode Kecil:</strong> <span style="font-size:1.05em; color:#1e3a5f; font-weight:700;">${kodeKecil}</span> |
                 <strong>Assortment:</strong> ${assortment} |
-                <strong>Total Kode Kecil:</strong> ${skuItems.length}
+                <strong>Total Kode Besar:</strong> ${skuItems.length}
                 ${locationFilter ? ' | <strong>' + locationLabel + ':</strong> ' + locationFilter : ''}
             </div>`;
 
@@ -3683,7 +3685,7 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                     <thead style="position: sticky; top: 0; background: #1e3a5f; color: white;">
                         <tr>
-                            <th style="padding: 10px; text-align: left;">Kode Kecil</th>
+                            <th style="padding: 10px; text-align: left;">Kode Besar</th>
                             <th style="padding: 10px; text-align: left;">Nama Barang</th>
                             <th style="padding: 10px; text-align: center;">Asst</th>
                             <th style="padding: 10px; text-align: right;">Qty</th>
@@ -3698,7 +3700,7 @@
                 const qtyColor = item.qty < 0 ? 'color: #dc2626;' : '';
                 const asstCount = getAssortmentByIndex(idx, assortment);
                 html += `<tr style="background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
-                    <td style="padding: 8px 10px; font-weight: 500;">${item.sku}</td>
+                    <td style="padding: 8px 10px; font-weight: 500;">${item.kodeBesar}</td>
                     <td style="padding: 8px 10px;">${item.name}</td>
                     <td style="padding: 8px 10px; text-align: center; font-weight: 600; color: #6366f1;">${asstCount}</td>
                     <td style="padding: 8px 10px; text-align: right; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
@@ -3717,7 +3719,7 @@
                 </table>
             </div>`;
 
-            document.getElementById('skuModalTitle').textContent = '📋 Detail Kode Besar: ' + kodeKecil;
+            document.getElementById('skuModalTitle').textContent = '📋 Detail Kode Kecil: ' + kodeKecil;
             document.getElementById('skuModalBody').innerHTML = html;
             document.getElementById('skuModal').classList.add('active');
             document.body.style.overflow = 'hidden';
