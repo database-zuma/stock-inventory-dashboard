@@ -2127,7 +2127,7 @@
                 // Filter: hanya item yang punya stock di area ini (stock !== 0)
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.entries(item.store_stock).some(([store, stock]) => !isWarehouseLocation(store) && getAreaFromStore(store) === tableArea && stock !== 0);
+                    return Object.entries(item.store_stock).some(([store, stock]) => !isWarehouseLocation(store) && !isExcludedLocation(store) && getAreaFromStore(store) === tableArea && stock !== 0);
                 });
             }
 
@@ -2141,16 +2141,24 @@
                 }
                 if (tableArea && item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, qty]) => {
-                        if (!isWarehouseLocation(store) && getAreaFromStore(store) === tableArea) {
+                        if (!isWarehouseLocation(store) && !isExcludedLocation(store) && getAreaFromStore(store) === tableArea) {
                             groupedMap[kk].total += qty || 0;
                         }
                     });
                 } else {
-                    groupedMap[kk].total += item.total || 0;
+                    if (item.store_stock) {
+                        Object.entries(item.store_stock).forEach(([store, qty]) => {
+                            if (!isWarehouseLocation(store) && !isExcludedLocation(store))
+                                groupedMap[kk].total += qty || 0;
+                        });
+                    } else {
+                        groupedMap[kk].total += item.total || 0;
+                    }
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, qty]) => {
-                        groupedMap[kk].store_stock[store] = (groupedMap[kk].store_stock[store] || 0) + qty;
+                        if (!isExcludedLocation(store))
+                            groupedMap[kk].store_stock[store] = (groupedMap[kk].store_stock[store] || 0) + qty;
                     });
                 }
             });
@@ -2503,7 +2511,8 @@
                 'warehouse online',
                 'transit (aol system)',
                 'utama',
-                'disney pcm surabaya'
+                'disney pcm surabaya',
+                'konsiyasi bali'
             ];
             if (EXCLUDED.some(ex => s === ex)) return true;
             // DDD-specific: only Gatsu variants for Bali, no plain 'Warehouse Bali' or 'Warehouse Palembang'
