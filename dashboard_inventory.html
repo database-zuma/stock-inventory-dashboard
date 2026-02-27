@@ -2617,6 +2617,16 @@
                 data = getData();
             }
 
+            // Get active area filter to match what user has selected
+            let activeAreaFilter = '';
+            if (dataType === 'retail') {
+                const el = document.getElementById('tableFilterArea');
+                if (el) activeAreaFilter = el.value;
+            } else if (dataType === 'warehouse') {
+                const el = document.getElementById('whFilterArea');
+                if (el) activeAreaFilter = el.value;
+            }
+
             // Kumpulkan data minus per store/warehouse
             const minusByLocation = {};
             let totalMinusItems = 0;
@@ -2626,6 +2636,7 @@
                 // Check per-store stock minus (prioritas)
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([storeName, stock]) => {
+                        if (activeAreaFilter && getAreaFromStore(storeName) !== activeAreaFilter) return;
                         if (stock < 0) {
                             if (!minusByLocation[storeName]) {
                                 minusByLocation[storeName] = {
