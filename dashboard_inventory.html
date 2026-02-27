@@ -2274,7 +2274,7 @@
                 // Filter: hanya item yang punya stock di area ini (stock !== 0)
                 data = data.filter(item => {
                     if (!item.store_stock) return false;
-                    return Object.entries(item.store_stock).some(([wh, stock]) => !isExcludedLocation(wh) && getAreaFromStore(wh) === whArea && stock !== 0);
+                    return Object.entries(item.store_stock).some(([wh, stock]) => isWarehouseLocation(wh) && !isExcludedLocation(wh) && getAreaFromStore(wh) === whArea && stock !== 0);
                 });
             }
 
@@ -2288,7 +2288,7 @@
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, qty]) => {
-                        if (!isExcludedLocation(wh)) {
+                        if (isWarehouseLocation(wh) && !isExcludedLocation(wh)) {
                             groupedMap[kk].total += qty || 0;
                             groupedMap[kk].store_stock[wh] = (groupedMap[kk].store_stock[wh] || 0) + qty;
                         }
@@ -2405,7 +2405,7 @@
             whData.forEach(item => {
                 if (item.store_stock) {
                     Object.keys(item.store_stock).forEach(wh => {
-                        if (!isExcludedLocation(wh)) areas.add(getAreaFromStore(wh));
+                        if (isWarehouseLocation(wh) && !isExcludedLocation(wh)) areas.add(getAreaFromStore(wh));
                     });
                 }
             });
@@ -2426,7 +2426,7 @@
             whData.forEach(item => {
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, stock]) => {
-                        if (!isExcludedLocation(wh) && (!whArea || getAreaFromStore(wh) === whArea)) {
+                        if (isWarehouseLocation(wh) && !isExcludedLocation(wh) && (!whArea || getAreaFromStore(wh) === whArea)) {
                             if (!whStock[wh]) whStock[wh] = 0;
                             whStock[wh] += stock || 0;
                         }
@@ -2494,7 +2494,12 @@
                 'utama',
                 'disney pcm surabaya'
             ];
-            return EXCLUDED.some(ex => s === ex);
+            if (EXCLUDED.some(ex => s === ex)) return true;
+            // DDD-specific: only Gatsu variants for Bali, no plain 'Warehouse Bali' or 'Warehouse Palembang'
+            if (currentEntity === 'DDD') {
+                if (s === 'warehouse bali' || s === 'warehouse palembang') return true;
+            }
+            return false;
         }
 
         function updateTableAreaDropdown() {
