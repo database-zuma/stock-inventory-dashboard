@@ -492,8 +492,8 @@
         .summary-card .label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #1f2937; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #9ca3af; margin-top: 4px; }
-        .entity-toggle-bar { display:flex; gap:8px; margin:10px 0 0 0; align-items:center; }
-        .entity-toggle-btn { padding:5px 18px; border:2px solid #d1d5db; border-radius:20px; background:white; color:#374151; font-weight:700; font-size:0.85rem; cursor:pointer; transition:all 0.2s; letter-spacing:0.5px; }
+        .entity-toggle-bar { display:flex; flex-wrap:wrap; gap:5px; margin:6px 0 2px 8px; padding:8px 6px; background:#f0fdf4; border-radius:8px; border-left:3px solid #10b981; }
+        .entity-toggle-btn { padding:3px 10px; border:1.5px solid #d1d5db; border-radius:10px; background:white; color:#374151; font-weight:700; font-size:0.75rem; cursor:pointer; transition:all 0.2s; }
         .entity-toggle-btn:hover { border-color:#002A3A; color:#002A3A; }
         .entity-toggle-btn.active { background:#002A3A; border-color:#002A3A; color:white; }
     </style>
@@ -521,6 +521,12 @@
             <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
                 📊 Stock Inventory
             </button>
+            <div class="entity-toggle-bar" id="entityToggleBar">
+                <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">DDD</button>
+                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">LJBB</button>
+                <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">MBB</button>
+                <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">UBB</button>
+            </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
             </button>
@@ -531,13 +537,6 @@
                 💰 Sales
             </button>
         </div><!-- end view-toggle -->
-        <!-- Entity Toggle Bar -->
-        <div class="entity-toggle-bar">
-            <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">DDD</button>
-            <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">LJBB</button>
-            <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">MBB</button>
-            <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">UBB</button>
-        </div><!-- end entity-toggle-bar -->
         <div class="view-content-area">
 
         <!-- ==================== INVENTORY VIEW ==================== -->
