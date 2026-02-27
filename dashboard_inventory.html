@@ -2044,7 +2044,7 @@
             var stores = storesData[currentType] || [];
             const areas = new Set();
 
-            stores.forEach(s => areas.add(getAreaFromStore(s.name)));
+            stores.forEach(s => { if (!isWarehouseLocation(s.name) && !isExcludedLocation(s.name)) areas.add(getAreaFromStore(s.name)); });
 
             const areaColors = {
                 'Bali': 'bali', 'Jakarta': 'jakarta', 'Jawa Timur': 'jawa-timur',
@@ -2075,9 +2075,9 @@
                 }
             });
 
-            let filteredStores = stores;
+            let filteredStores = stores.filter(s => !isWarehouseLocation(s.name) && !isExcludedLocation(s.name));
             if (currentArea) {
-                filteredStores = stores.filter(s => getAreaFromStore(s.name) === currentArea);
+                filteredStores = filteredStores.filter(s => getAreaFromStore(s.name) === currentArea);
             }
 
             const storeHtml = filteredStores.slice(0, 30).map(s => {
