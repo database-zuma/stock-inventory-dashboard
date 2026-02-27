@@ -1587,8 +1587,10 @@
 
             // Update Max Stock Analysis jika view aktif
             if (currentView === 'maxstock') {
+                if (currentMSType === 'retail') {
+                    populateMSFilters();
+                }
                 updateMaxStockAnalysis();
-            }
         }
 
         function switchTab(type) {
@@ -2750,12 +2752,16 @@
             if (view === 'maxstock') {
                 setTimeout(function() {
                     try {
+                        if (currentMSType === 'retail') {
+                            populateMSFilters();
+                        }
                         updateMaxStockAnalysis();
                     } catch(e) {
                         console.error('Error updateMaxStockAnalysis:', e);
                         alert('Error: ' + e.message);
                     }
                 }, 100);
+            }
             } else if (view === 'stockcontrol') {
                 setTimeout(function() {
                     try {
