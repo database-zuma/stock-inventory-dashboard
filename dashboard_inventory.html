@@ -1417,6 +1417,7 @@
                                     <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Gender</th>
                                     <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Series</th>
                                     <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Tier</th>
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Kode</th>
                                     <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Artikel</th>
                                     <th style="padding:10px 12px; text-align:right; white-space:nowrap;">Target</th>
                                     <th style="padding:10px 12px; text-align:right; white-space:nowrap;">On Hand</th>
@@ -6930,7 +6931,7 @@
 
                     if (filterStatus && status !== filterStatus) return;
 
-                    rows.push({ store, area, gender: info.gender, series: info.series, tier: info.tier, article, target, onHand, gap, status });
+                    rows.push({ store, area, gender: info.gender, series: info.series, tier: info.tier, kode: info.kode || '', article, target, onHand, gap, status });
                 });
             });
 
@@ -6948,6 +6949,7 @@
                     <td style="padding:8px 12px; white-space:nowrap;">${r.gender}</td>
                     <td style="padding:8px 12px; white-space:nowrap;">${r.series}</td>
                     <td style="padding:8px 12px; text-align:center;">${r.tier}</td>
+                    <td style="padding:8px 12px; font-family:monospace; font-size:0.8rem; white-space:nowrap;">${r.kode}</td>
                     <td style="padding:8px 12px;">${r.article}</td>
                     <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.target}</td>
                     <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.onHand}</td>
@@ -6955,6 +6957,7 @@
                     <td style="padding:8px 12px; text-align:center; white-space:nowrap;">${statusLabel[r.status]}</td>
                 </tr>
             `).join('');
+
 
             document.getElementById('pgRowCount').textContent = `${rows.length} rows`;
         }
@@ -6985,7 +6988,7 @@
                 }
             });
 
-            const headers = ['Store', 'Area', 'Gender', 'Series', 'Tier', 'Artikel', 'Target', 'On Hand', 'Gap', 'Status'];
+            const headers = ['Store', 'Area', 'Gender', 'Series', 'Tier', 'Kode', 'Artikel', 'Target', 'On Hand', 'Gap', 'Status'];
             const allRows = [];
             Object.entries(planogramMap).forEach(([store, articles]) => {
                 if (isExcludedLocation(store)) return;
@@ -7001,7 +7004,7 @@
                     const gap = onHand - target;
                     let status = gap < 0 ? 'Under' : gap > target * 0.2 ? 'Over' : 'OK';
                     if (filterStatus && status.toLowerCase() !== filterStatus) return;
-                    allRows.push([store, area || '', info.gender, info.series, info.tier, article, target, onHand, gap, status]);
+                    allRows.push([store, area || '', info.gender, info.series, info.tier, info.kode || '', article, target, onHand, gap, status]);
                 });
             });
             allRows.sort((a, b) => a[0].localeCompare(b[0], 'id') || a[5].localeCompare(b[5], 'id'));
