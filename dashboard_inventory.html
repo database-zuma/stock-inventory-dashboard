@@ -2630,7 +2630,7 @@
                 ? document.getElementById('tableFilterArea').value
                 : document.getElementById('whFilterArea').value;
 
-            const headers = ['Kode Barang', 'Kode Kecil', 'Kode Mix', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Area', 'Store', 'Stock'];
+            const headers = ['Area', 'Store', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Stock'];
             const rows = [];
             data.forEach(item => {
                 const kodeBarang = (item.kode || '').toUpperCase();
@@ -2659,10 +2659,10 @@
                     // Sort A→Z by store
                     entries.sort((a, b) => a.store.localeCompare(b.store, 'id'));
                     entries.forEach(({ store, stock, area }) => {
-                        rows.push([kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, area, `"${store}"`, stock].join(','));
+                        rows.push([area, `"${store}"`, kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, stock].join(','));
                     });
                 } else {
-                    rows.push([kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, '', '', item.total].join(','));
+                    rows.push(['', '', kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, item.total].join(','));
                 }
             });
 
