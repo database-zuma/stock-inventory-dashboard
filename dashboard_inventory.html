@@ -2622,27 +2622,47 @@
             const data = (type === 'warehouse') ? (whFilteredData || []) : (rtFilteredData || []);
             if (!data.length) { alert('Tidak ada data'); return; }
 
-            const headers = ['Kode Kecil', 'Kode Barang', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Area', 'Store', 'Stock'];
+            // Baca filter aktif
+            const tableStore = type === 'retail'
+                ? document.getElementById('tableFilterStore').value
+                : document.getElementById('whFilterWarehouse').value;
+            const tableArea = type === 'retail'
+                ? document.getElementById('tableFilterArea').value
+                : document.getElementById('whFilterArea').value;
+
+            const headers = ['Kode Barang', 'Kode Kecil', 'Kode Mix', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Area', 'Store', 'Stock'];
             const rows = [];
             data.forEach(item => {
-                const kodeKecil = (item.kode || item.kode_kecil || '').toUpperCase();
-                const kodeBesar = (item.sku || '').toUpperCase();
+                const kodeBarang = (item.kode || '').toUpperCase();
+                const kodeKecil  = (item.kode_kecil || '').toUpperCase();
+                const kodeMix    = (item.sku || '').toUpperCase();
                 const gender = item.gender || '';
                 const series = item.series || '';
-                const tipe = item.tipe || '';
-                const nama = `"${(item.name || '').replace(/"/g, '""')}"`;
-                const tier = item.tier || '';
+                const tipe   = item.tipe || '';
+                const nama   = `"${(item.name || '').replace(/"/g, '""')}"`;
+                const tier   = item.tier || '';
+
                 if (item.store_stock) {
+                    // Kumpulkan dulu, lalu sort ascending by store name
+                    const entries = [];
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         if (stock === 0) return;
                         if (isExcludedLocation(store)) return;
                         if (type === 'retail' && isWarehouseLocation(store)) return;
                         if (type === 'warehouse' && !isWarehouseLocation(store)) return;
-                        const area = getAreaFromStore(store);
-                        rows.push([kodeKecil, kodeBesar, gender, series, tipe, nama, tier, area, `"${store}"`, stock].join(','));
+                        // Ikuti filter store
+                        if (tableStore && store !== tableStore) return;
+                        // Ikuti filter area
+                        if (tableArea && getAreaFromStore(store) !== tableArea) return;
+                        entries.push({ store, stock, area: getAreaFromStore(store) });
+                    });
+                    // Sort A→Z by store
+                    entries.sort((a, b) => a.store.localeCompare(b.store, 'id'));
+                    entries.forEach(({ store, stock, area }) => {
+                        rows.push([kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, area, `"${store}"`, stock].join(','));
                     });
                 } else {
-                    rows.push([kodeKecil, kodeBesar, gender, series, tipe, nama, tier, '', '', item.total].join(','));
+                    rows.push([kodeBarang, kodeKecil, kodeMix, gender, series, tipe, nama, tier, '', '', item.total].join(','));
                 }
             });
 
