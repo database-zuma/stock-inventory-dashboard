@@ -2630,7 +2630,7 @@
                 ? document.getElementById('tableFilterArea').value
                 : document.getElementById('whFilterArea').value;
 
-            const headers = ['Store', 'Area', 'Kode Barang', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Stock'];
+            const headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Stock'];
             const allRows = [];
 
             data.forEach(item => {
@@ -2670,7 +2670,7 @@
                 const wb = XLSX.utils.book_new();
 
                 const semuaData = [headers].concat(allRows.map(r =>
-                    [r.store, r.area, r.kodeBarang, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.stock]
+                    [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.stock]
                 ));
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(semuaData), 'SEMUA');
 
@@ -2682,7 +2682,7 @@
                 });
                 Object.keys(storeMap).sort((a, b) => a.localeCompare(b, 'id')).forEach(storeName => {
                     const sheetData = [headers].concat(storeMap[storeName].map(r =>
-                        [r.store, r.area, r.kodeBarang, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.stock]
+                        [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.stock]
                     ));
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetData), storeName.substring(0, 31));
                 });
@@ -2690,7 +2690,7 @@
                 XLSX.writeFile(wb, `stock_${currentEntity}_${type}_${new Date().toISOString().split('T')[0]}.xlsx`);
             } else {
                 const csvRows = allRows.map(r => [
-                    `"${r.store}"`, r.area, r.kodeBarang, r.kodeMix,
+                    `"${r.store}"`, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix,
                     `"${r.nama.replace(/"/g, '""')}"`, r.gender, r.series, r.tipe, r.tier, r.stock
                 ].join(','));
                 const csv = [headers.join(','), ...csvRows].join('\n');
