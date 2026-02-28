@@ -549,6 +549,9 @@
             <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
                 📋 Control Stock
             </button>
+            <button class="view-btn" data-view="plano" onclick="switchView('plano')">
+                📐 Planogram Gap
+            </button>
             <button class="view-btn" data-view="sales" onclick="switchView('sales')">
                 💰 Sales
             </button>
@@ -1364,6 +1367,70 @@
 
             </div>
         </div> <!-- End salesView -->
+
+        <!-- ==================== PLANOGRAM GAP VIEW ==================== -->
+        <div class="view-container" id="planoView">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #16a34a; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
+                <!-- Header -->
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #16a34a;">
+                    <div style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%); color:white; padding:10px 20px; border-radius:10px; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                        📐 PLANOGRAM GAP
+                    </div>
+                    <span style="color:#15803d; font-size:0.9rem;">On Hand vs Target Planogram per Toko</span>
+                    <button onclick="exportPlanogramData()" style="margin-left:auto; background:linear-gradient(135deg,#16a34a,#15803d); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">📥 Export XLSX</button>
+                </div>
+                <!-- Filters -->
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; align-items:center;">
+                    <select id="pgFilterStore" onchange="renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:180px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Store</option>
+                    </select>
+                    <select id="pgFilterArea" onchange="populatePgStoreDropdown(); renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:120px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Area</option>
+                    </select>
+                    <select id="pgFilterGender" onchange="renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:100px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Gender</option>
+                        <option>BOYS</option><option>GIRLS</option><option>MEN</option><option>WOMEN</option><option>BABY</option>
+                    </select>
+                    <select id="pgFilterSeries" onchange="renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:120px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Series</option>
+                    </select>
+                    <select id="pgFilterTier" onchange="renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:90px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Tier</option>
+                        <option>1</option><option>2</option><option>3</option><option>4</option>
+                    </select>
+                    <select id="pgFilterStatus" onchange="renderPlanogramTable()" style="font-size:0.85rem; padding:8px 12px; min-width:120px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="">Semua Status</option>
+                        <option value="under">🔴 Under</option>
+                        <option value="ok">🟢 OK</option>
+                        <option value="over">🟡 Over</option>
+                    </select>
+                    <span id="pgRowCount" style="font-size:0.85rem; color:#6b7280; margin-left:auto;"></span>
+                </div>
+                <!-- Table -->
+                <div style="background:white; border-radius:12px; overflow:hidden;">
+                    <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%); color:white; position:sticky; top:0; z-index:2;">
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Store</th>
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Area</th>
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Gender</th>
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Series</th>
+                                    <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Tier</th>
+                                    <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Artikel</th>
+                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">Target</th>
+                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">On Hand</th>
+                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">Gap</th>
+                                    <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pgTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End planoView -->
         </div><!-- end view-content-area -->
         </div><!-- end dashboard-body -->
 
@@ -1435,6 +1502,7 @@
         let storeAreaMap = {};
         let maxStockMap = {};
         let assortmentMap = {};
+        let planogramMap = {};
         let salesMap = {};
         let salesDetailData = [];
         let targetData = {};
@@ -1533,7 +1601,7 @@
             const loadingEl = document.getElementById('api-loading-overlay');
             if (loadingEl) loadingEl.style.display = 'flex';
             try {
-                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, salesDetailFetch, targetsData, assortmentData] = await Promise.all([
+                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, salesDetailFetch, targetsData, assortmentData, planogramData] = await Promise.all([
                     fetchAPI('/api/stock'),
                     fetchAPI('/api/stores'),
                     fetchAPI('/api/store-areas'),
@@ -1542,6 +1610,7 @@
                     fetchAPI('/api/sales/detail'),
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
+                    fetchAPI('/api/planogram'),
                 ]);
                 allData = stockData;
                 // Update 'Data per' date from API metadata
@@ -1559,6 +1628,7 @@
                 salesDetailData = salesDetailFetch;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
+                planogramMap = planogramData;
                 buildDerivedMaps();
             } catch (err) {
                 console.error('Failed to load dashboard data:', err);
@@ -2944,6 +3014,14 @@
                     } catch(e) {
                         console.error('Error initStockControl:', e);
                         alert('Error: ' + e.message);
+                    }
+                }, 100);
+            } else if (view === 'plano') {
+                setTimeout(function() {
+                    try {
+                        initPlanogramGap();
+                    } catch(e) {
+                        console.error('Error initPlanogramGap:', e);
                     }
                 }, 100);
             }
@@ -6770,6 +6848,179 @@
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => { dashboardContextSent = false; });
         });
+
+        // ==================== PLANOGRAM GAP FUNCTIONS ====================
+        let pgInitialized = false;
+
+        function initPlanogramGap() {
+            if (!pgInitialized) {
+                populatePgAreaDropdown();
+                populatePgSeriesDropdown();
+                pgInitialized = true;
+            }
+            renderPlanogramTable();
+        }
+
+        function populatePgAreaDropdown() {
+            const sel = document.getElementById('pgFilterArea');
+            const areas = [...new Set(Object.keys(planogramMap).map(s => getAreaFromStore(s)).filter(Boolean))].sort();
+            sel.innerHTML = '<option value="">Semua Area</option>' + areas.map(a => `<option>${a}</option>`).join('');
+        }
+
+        function populatePgStoreDropdown() {
+            const area = document.getElementById('pgFilterArea').value;
+            const sel = document.getElementById('pgFilterStore');
+            let stores = Object.keys(planogramMap).sort();
+            if (area) stores = stores.filter(s => getAreaFromStore(s) === area);
+            sel.innerHTML = '<option value="">Semua Store</option>' + stores.map(s => `<option>${s}</option>`).join('');
+        }
+
+        function populatePgSeriesDropdown() {
+            const seriesSet = new Set();
+            Object.values(planogramMap).forEach(articles => {
+                Object.values(articles).forEach(info => { if (info.series) seriesSet.add(info.series); });
+            });
+            const sel = document.getElementById('pgFilterSeries');
+            sel.innerHTML = '<option value="">Semua Series</option>' + [...seriesSet].sort().map(s => `<option>${s}</option>`).join('');
+        }
+
+        function renderPlanogramTable() {
+            const filterStore  = document.getElementById('pgFilterStore').value;
+            const filterArea   = document.getElementById('pgFilterArea').value;
+            const filterGender = document.getElementById('pgFilterGender').value;
+            const filterSeries = document.getElementById('pgFilterSeries').value;
+            const filterTier   = document.getElementById('pgFilterTier').value;
+            const filterStatus = document.getElementById('pgFilterStatus').value;
+
+            // Build article→onhand map from raw retail stock
+            const entityData = allData[currentEntity] || {};
+            const rawRetail = entityData.retail || [];
+            // article name → store → total on hand (sum all sizes)
+            const stockByArticleStore = {};
+            rawRetail.forEach(item => {
+                const name = item.name || '';
+                if (!name) return;
+                if (!stockByArticleStore[name]) stockByArticleStore[name] = {};
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, qty]) => {
+                        if (isExcludedLocation(store) || isWarehouseLocation(store)) return;
+                        stockByArticleStore[name][store] = (stockByArticleStore[name][store] || 0) + (qty || 0);
+                    });
+                }
+            });
+
+            const rows = [];
+            Object.entries(planogramMap).forEach(([store, articles]) => {
+                if (isExcludedLocation(store)) return;
+                if (filterStore && store !== filterStore) return;
+                const area = getAreaFromStore(store);
+                if (filterArea && area !== filterArea) return;
+
+                Object.entries(articles).forEach(([article, info]) => {
+                    if (filterGender && info.gender !== filterGender) return;
+                    if (filterSeries && info.series !== filterSeries) return;
+                    if (filterTier && info.tier !== filterTier) return;
+
+                    const target = info.target || 0;
+                    const onHand = (stockByArticleStore[article] || {})[store] || 0;
+                    const gap = onHand - target;
+                    let status = 'ok';
+                    if (gap < 0) status = 'under';
+                    else if (gap > target * 0.2) status = 'over';
+
+                    if (filterStatus && status !== filterStatus) return;
+
+                    rows.push({ store, area, gender: info.gender, series: info.series, tier: info.tier, article, target, onHand, gap, status });
+                });
+            });
+
+            rows.sort((a, b) => a.store.localeCompare(b.store, 'id') || a.article.localeCompare(b.article, 'id'));
+
+            const statusLabel = { under: '🔴 Under', ok: '🟢 OK', over: '🟡 Over' };
+            const statusBg = { under: '#fef2f2', ok: '#f0fdf4', over: '#fefce8' };
+            const gapColor = { under: '#dc2626', ok: '#16a34a', over: '#ca8a04' };
+
+            const tbody = document.getElementById('pgTableBody');
+            tbody.innerHTML = rows.map(r => `
+                <tr style="border-bottom:1px solid #f3f4f6; background:${statusBg[r.status]};">
+                    <td style="padding:8px 12px; font-weight:600; white-space:nowrap;">${r.store}</td>
+                    <td style="padding:8px 12px; color:#6b7280; white-space:nowrap;">${r.area || '-'}</td>
+                    <td style="padding:8px 12px; white-space:nowrap;">${r.gender}</td>
+                    <td style="padding:8px 12px; white-space:nowrap;">${r.series}</td>
+                    <td style="padding:8px 12px; text-align:center;">${r.tier}</td>
+                    <td style="padding:8px 12px;">${r.article}</td>
+                    <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.target}</td>
+                    <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.onHand}</td>
+                    <td style="padding:8px 12px; text-align:right; font-weight:700; color:${gapColor[r.status]};">${r.gap >= 0 ? '+' : ''}${r.gap}</td>
+                    <td style="padding:8px 12px; text-align:center; white-space:nowrap;">${statusLabel[r.status]}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('pgRowCount').textContent = `${rows.length} rows`;
+        }
+
+        function exportPlanogramData() {
+            const tbody = document.getElementById('pgTableBody');
+            if (!tbody || !tbody.rows.length) { alert('Tidak ada data'); return; }
+
+            const filterStore  = document.getElementById('pgFilterStore').value;
+            const filterArea   = document.getElementById('pgFilterArea').value;
+            const filterGender = document.getElementById('pgFilterGender').value;
+            const filterSeries = document.getElementById('pgFilterSeries').value;
+            const filterTier   = document.getElementById('pgFilterTier').value;
+            const filterStatus = document.getElementById('pgFilterStatus').value;
+
+            const entityData = allData[currentEntity] || {};
+            const rawRetail = entityData.retail || [];
+            const stockByArticleStore = {};
+            rawRetail.forEach(item => {
+                const name = item.name || '';
+                if (!name) return;
+                if (!stockByArticleStore[name]) stockByArticleStore[name] = {};
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, qty]) => {
+                        if (isExcludedLocation(store) || isWarehouseLocation(store)) return;
+                        stockByArticleStore[name][store] = (stockByArticleStore[name][store] || 0) + (qty || 0);
+                    });
+                }
+            });
+
+            const headers = ['Store', 'Area', 'Gender', 'Series', 'Tier', 'Artikel', 'Target', 'On Hand', 'Gap', 'Status'];
+            const allRows = [];
+            Object.entries(planogramMap).forEach(([store, articles]) => {
+                if (isExcludedLocation(store)) return;
+                if (filterStore && store !== filterStore) return;
+                const area = getAreaFromStore(store);
+                if (filterArea && area !== filterArea) return;
+                Object.entries(articles).forEach(([article, info]) => {
+                    if (filterGender && info.gender !== filterGender) return;
+                    if (filterSeries && info.series !== filterSeries) return;
+                    if (filterTier && info.tier !== filterTier) return;
+                    const target = info.target || 0;
+                    const onHand = (stockByArticleStore[article] || {})[store] || 0;
+                    const gap = onHand - target;
+                    let status = gap < 0 ? 'Under' : gap > target * 0.2 ? 'Over' : 'OK';
+                    if (filterStatus && status.toLowerCase() !== filterStatus) return;
+                    allRows.push([store, area || '', info.gender, info.series, info.tier, article, target, onHand, gap, status]);
+                });
+            });
+            allRows.sort((a, b) => a[0].localeCompare(b[0], 'id') || a[5].localeCompare(b[5], 'id'));
+
+            if (typeof XLSX !== 'undefined') {
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...allRows]);
+                XLSX.utils.book_append_sheet(wb, ws, 'Planogram Gap');
+                XLSX.writeFile(wb, `planogram_gap_${currentEntity}_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } else {
+                const csv = [headers, ...allRows].map(r => r.join(',')).join('\n');
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `planogram_gap_${currentEntity}_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+        }
+
     </script>
 </body>
 </html>
