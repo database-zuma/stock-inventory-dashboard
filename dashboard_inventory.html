@@ -2620,8 +2620,9 @@
         }
 
         function exportData(type) {
-            const data = (type === 'warehouse') ? (whFilteredData || []) : (rtFilteredData || []);
-            if (!data.length) { alert('Tidak ada data'); return; }
+            var entityData = allData[currentEntity] || {};
+            var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            if (!rawData.length) { alert('Tidak ada data'); return; }
 
             const tableStore = type === 'retail'
                 ? document.getElementById('tableFilterStore').value
@@ -2629,6 +2630,33 @@
             const tableArea = type === 'retail'
                 ? document.getElementById('tableFilterArea').value
                 : document.getElementById('whFilterArea').value;
+            const filterGender = type === 'retail'
+                ? document.getElementById('rtFilterGender').value
+                : document.getElementById('whFilterGender').value;
+            const filterTier = type === 'retail'
+                ? document.getElementById('tableFilterTier').value
+                : document.getElementById('whFilterTier').value;
+            const filterSeries = type === 'retail'
+                ? document.getElementById('rtFilterSeries').value
+                : document.getElementById('whFilterSeries').value;
+
+            // Apply same filters as applyRetailFilters/applyWarehouseFilters — WITHOUT group-by
+            let data = rawData;
+            if (filterGender) data = data.filter(item => (item.gender || '').toUpperCase().includes(filterGender.toUpperCase()));
+            if (filterTier)   data = data.filter(item => (item.tier || '') === filterTier);
+            if (filterSeries) data = data.filter(item => (item.series || '').includes(filterSeries) || (item.name || '').toUpperCase().includes(filterSeries));
+            if (tableStore) {
+                data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined && item.store_stock[tableStore] !== 0);
+            } else if (tableArea) {
+                data = data.filter(item => {
+                    if (!item.store_stock) return false;
+                    if (type === 'warehouse') {
+                        return Object.entries(item.store_stock).some(([wh, stock]) => isWarehouseLocation(wh) && !isExcludedLocation(wh) && getAreaFromStore(wh) === tableArea && stock !== 0);
+                    } else {
+                        return Object.entries(item.store_stock).some(([store, stock]) => !isWarehouseLocation(store) && !isExcludedLocation(store) && getAreaFromStore(store) === tableArea && stock !== 0);
+                    }
+                });
+            }
 
             const headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Stock'];
             const allRows = [];
@@ -2637,11 +2665,11 @@
                 const kodeBarang = (item.kode_kecil || '').toUpperCase();
                 const kodeKecil  = (item.kode || '').toUpperCase();
                 const kodeMix    = (item.sku || '').toUpperCase();
-                const gender = item.gender || '';
-                const series = item.series || '';
-                const tipe   = item.tipe || '';
-                const nama   = item.name || '';
-                const tier   = item.tier || '';
+                const gender2 = item.gender || '';
+                const series2 = item.series || '';
+                const tipe    = item.tipe || '';
+                const nama    = item.name || '';
+                const tier2   = item.tier || '';
 
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
@@ -2652,10 +2680,8 @@
                         if (tableStore && store !== tableStore) return;
                         if (tableArea && getAreaFromStore(store) !== tableArea) return;
                         const area = getAreaFromStore(store);
-                        allRows.push({ store, area, kodeBarang, kodeKecil, kodeMix, nama, gender, series, tipe, tier, stock });
+                        allRows.push({ store, area, kodeBarang, kodeKecil, kodeMix, nama, gender: gender2, series: series2, tipe, tier: tier2, stock });
                     });
-                } else {
-                    allRows.push({ store: '', area: '', kodeBarang, kodeKecil, kodeMix, nama, gender, series, tipe, tier, stock: item.total });
                 }
             });
 
@@ -2668,7 +2694,6 @@
 
             if (typeof XLSX !== 'undefined') {
                 const wb = XLSX.utils.book_new();
-
                 const semuaData = [headers].concat(allRows.map(r =>
                     [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.stock]
                 ));
@@ -2686,7 +2711,6 @@
                     ));
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetData), storeName.substring(0, 31));
                 });
-
                 XLSX.writeFile(wb, `stock_${currentEntity}_${type}_${new Date().toISOString().split('T')[0]}.xlsx`);
             } else {
                 const csvRows = allRows.map(r => [
