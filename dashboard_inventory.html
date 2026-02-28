@@ -2621,11 +2621,33 @@
         function exportData(type) {
             const data = (type === 'warehouse') ? (whFilteredData || []) : (rtFilteredData || []);
             if (!data.length) { alert('Tidak ada data'); return; }
-            const headers = ['Kode Kecil', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Total Stock'];
-            const csv = [headers.join(','), ...data.map(i => [
-                (i.kode || i.kode_kecil || ''), i.gender || '', i.series || '', i.tipe || '', `"${(i.name || '').replace(/"/g, '""')}"`, i.tier || '', i.total
-            ].join(','))].join('\n');
 
+            const headers = ['Kode Kecil', 'Kode Barang', 'Gender', 'Series', 'Tipe', 'Nama Barang', 'Tier', 'Area', 'Store', 'Stock'];
+            const rows = [];
+            data.forEach(item => {
+                const kodeKecil = (item.kode || item.kode_kecil || '').toUpperCase();
+                const kodeBesar = (item.sku || '').toUpperCase();
+                const gender = item.gender || '';
+                const series = item.series || '';
+                const tipe = item.tipe || '';
+                const nama = `"${(item.name || '').replace(/"/g, '""')}"`;
+                const tier = item.tier || '';
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        if (stock === 0) return;
+                        if (isExcludedLocation(store)) return;
+                        if (type === 'retail' && isWarehouseLocation(store)) return;
+                        if (type === 'warehouse' && !isWarehouseLocation(store)) return;
+                        const area = getAreaFromStore(store);
+                        rows.push([kodeKecil, kodeBesar, gender, series, tipe, nama, tier, area, `"${store}"`, stock].join(','));
+                    });
+                } else {
+                    rows.push([kodeKecil, kodeBesar, gender, series, tipe, nama, tier, '', '', item.total].join(','));
+                }
+            });
+
+            if (!rows.length) { alert('Tidak ada data dengan stock > 0'); return; }
+            const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
