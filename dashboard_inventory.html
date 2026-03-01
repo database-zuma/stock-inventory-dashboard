@@ -4998,6 +4998,18 @@
                     const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
+                
+                // Filter by channel (Retail/Consig/Wholesale/Online)
+                const channelMap = {
+                    'retail': 'retail',
+                    'consig': 'non-retail',
+                    'wholesale': 'wholesale',
+                    'online': 'event'
+                };
+                const targetChannel = channelMap[currentSalesSubTab] || 'retail';
+                const itemChannel = (item.channel || 'retail').toLowerCase();
+                if (itemChannel !== targetChannel) return false;
+                
                 return true;
             });
         }
@@ -6346,8 +6358,11 @@
             const subTabContent = document.getElementById('salesSubTab' + subTab.charAt(0).toUpperCase() + subTab.slice(1));
             if (subTabContent) subTabContent.style.display = 'block';
             
-            // Re-render charts for the selected tab
+            // Re-filter and re-render charts for the selected channel
             setTimeout(() => {
+                filteredSalesData = getFilteredSalesData();
+                renderSalesSummaryCards();
+                renderSalesPerformance();
                 if (subTab === 'retail') {
                     renderSalesSPGChart();
                     renderSalesByHourChart();
