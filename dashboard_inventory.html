@@ -1788,7 +1788,7 @@
                     fetchAPI('/api/store-areas'),
                     fetchAPI('/api/max-stock'),
                     fetchAPI('/api/sales/aggregate'),
-                    fetchAPI('/api/sales/detail'),
+                    fetchAPI('/api/sales/detail?months=2'),
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
                     fetchAPI('/api/planogram'),
@@ -6354,7 +6354,7 @@
             // Load channel-specific data from API (cached)
             if (!salesChannelCache[subTab]) {
                 try {
-                    salesChannelCache[subTab] = await fetchAPI('/api/sales/detail?channel=' + subTab);
+                    salesChannelCache[subTab] = await fetchAPI('/api/sales/detail?channel=' + subTab + '&months=2');
                 } catch(e) {
                     salesChannelCache[subTab] = [];
                 }
