@@ -4981,9 +4981,22 @@
             const gender = document.getElementById('salesFilterGender').value;
             const series = document.getElementById('salesFilterSeries').value;
 
+            // Channel mapping per sub-tab
+            const channelMap = {
+                'retail': ['retail'],
+                'consig': ['non-retail'],
+                'wholesale': ['wholesale'],
+                'online': ['event', 'online']
+            };
+            const activeChannels = channelMap[currentSalesSubTab] || ['retail'];
+
             return salesDetailData.filter(item => {
                 // Include ALL items (sandal + non-sandal) for sales calculation
                 if (!item.sku) return false;
+
+                // Filter by channel (sub-tab)
+                const itemChannel = (item.channel || 'retail').toLowerCase();
+                if (!activeChannels.includes(itemChannel)) return false;
 
                 if (startDate && item.date < startDate) return false;
                 if (endDate && item.date > endDate) return false;
@@ -6346,13 +6359,13 @@
             const subTabContent = document.getElementById('salesSubTab' + subTab.charAt(0).toUpperCase() + subTab.slice(1));
             if (subTabContent) subTabContent.style.display = 'block';
             
-            // Re-render charts for the selected tab
-            setTimeout(() => {
-                if (subTab === 'retail') {
-                    renderSalesSPGChart();
-                    renderSalesByHourChart();
-                }
-            }, 100);
+            // Re-render dashboard with new channel filter
+            filteredSalesData = getFilteredSalesData();
+            renderSalesSummaryCards();
+            renderSalesByStore();
+            renderSalesSPG();
+            renderSalesByHourChart();
+            renderSalesSPGChart();
         }
 
         // Strip kode kecil from SKU (remove Z{number} suffix and lowercase)
@@ -6464,19 +6477,13 @@
                 byHour[h] = { qty: 0, total: 0, count: 0 };
             }
 
-            // Parse date and extract hour
+            // Use hour field from API (WIB timezone, pre-computed server-side)
             data.forEach(item => {
-                if (!item.date) return;
-                const dateStr = item.date;
-                // Format: "2026-01-19 10:04:39"
-                const timeMatch = dateStr.match(/(\d{2}):\d{2}:/);
-                if (timeMatch) {
-                    const hour = parseInt(timeMatch[1]);
-                    if (byHour[hour] !== undefined) {
-                        byHour[hour].qty += item.qty || 0;
-                        byHour[hour].total += item.total || 0;
-                        byHour[hour].count++;
-                    }
+                const hour = typeof item.hour === 'number' ? item.hour : parseInt(item.hour || 0);
+                if (byHour[hour] !== undefined) {
+                    byHour[hour].qty += item.qty || 0;
+                    byHour[hour].total += item.total || 0;
+                    byHour[hour].count++;
                 }
             });
 
