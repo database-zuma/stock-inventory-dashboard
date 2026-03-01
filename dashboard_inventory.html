@@ -1807,6 +1807,7 @@
                 maxStockMap = maxStockData;
                 salesMap = salesAggData;
                 salesDetailData = salesDetailFetch;
+                salesChannelCache['retail'] = salesDetailFetch;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
                 planogramMap = planogramData;
@@ -5000,17 +5001,6 @@
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
                 
-                // Filter by channel (Retail/Consig/Wholesale/Online)
-                const channelMap = {
-                    'retail': 'retail',
-                    'consig': 'non-retail',
-                    'wholesale': 'wholesale',
-                    'online': 'event'
-                };
-                const targetChannel = channelMap[currentSalesSubTab] || 'retail';
-                const itemChannel = (item.channel || 'retail').toLowerCase();
-                if (itemChannel !== targetChannel) return false;
-                
                 return true;
             });
         }
@@ -6348,7 +6338,9 @@
 
         // Switch sub-tabs for sales (Retail/Consig/Wholesale/Online)
         let currentSalesSubTab = 'retail';
-        function switchSalesSubTab(subTab) {
+        const salesChannelCache = {};
+
+        async function switchSalesSubTab(subTab) {
             currentSalesSubTab = subTab;
             document.querySelectorAll('[data-sub-tab]').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.subTab === subTab);
@@ -6358,17 +6350,23 @@
             });
             const subTabContent = document.getElementById('salesSubTab' + subTab.charAt(0).toUpperCase() + subTab.slice(1));
             if (subTabContent) subTabContent.style.display = 'block';
-            
-            // Re-filter and re-render charts for the selected channel
-            setTimeout(() => {
-                filteredSalesData = getFilteredSalesData();
-                renderSalesSummaryCards();
-                renderSalesPerformance();
-                if (subTab === 'retail') {
-                    renderSalesSPGChart();
-                    renderSalesByHourChart();
+
+            // Load channel-specific data from API (cached)
+            if (!salesChannelCache[subTab]) {
+                try {
+                    salesChannelCache[subTab] = await fetchAPI('/api/sales/detail?channel=' + subTab);
+                } catch(e) {
+                    salesChannelCache[subTab] = [];
                 }
-            }, 100);
+            }
+            salesDetailData = salesChannelCache[subTab];
+
+            filteredSalesData = getFilteredSalesData();
+            renderSalesSummaryCards();
+            renderSalesByStore();
+            renderSalesSPG();
+            renderSalesByHourChart();
+            renderSalesSPGChart();
         }
 
         // Strip kode kecil from SKU (remove Z{number} suffix and lowercase)
