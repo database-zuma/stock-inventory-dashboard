@@ -1452,21 +1452,25 @@
 
                 <!-- Summary Cards -->
                 <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:140px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #f59e0b;">
+                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #f59e0b;">
                         <div style="font-size:0.75rem; color:#92400e;">Surplus SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#f59e0b;" id="rdSurplusCount">-</div>
                     </div>
-                    <div style="flex:1; min-width:140px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #ef4444;">
+                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #ef4444;">
                         <div style="font-size:0.75rem; color:#991b1b;">Deficit SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#ef4444;" id="rdDeficitCount">-</div>
                     </div>
-                    <div style="flex:1; min-width:140px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #22c55e;">
+                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #22c55e;">
                         <div style="font-size:0.75rem; color:#166534;">OK SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#22c55e;" id="rdOkCount">-</div>
                     </div>
-                    <div style="flex:1; min-width:140px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #6366f1;">
-                        <div style="font-size:0.75rem; color:#4338ca;">Transfer Recs</div>
-                        <div style="font-size:1.3rem; font-weight:700; color:#6366f1;" id="rdTransferCount">-</div>
+                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #1d4ed8;">
+                        <div style="font-size:0.75rem; color:#1e3a8a;">WH Protol → Store</div>
+                        <div style="font-size:1.3rem; font-weight:700; color:#1d4ed8;" id="rdProtolTransferCount">-</div>
+                    </div>
+                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #7c3aed;">
+                        <div style="font-size:0.75rem; color:#5b21b6;">Perlu RO Box</div>
+                        <div style="font-size:1.3rem; font-weight:700; color:#7c3aed;" id="rdRoBoxCount">-</div>
                     </div>
                 </div>
 
@@ -6629,7 +6633,8 @@
                 document.getElementById('rdSurplusCount').textContent = formatNum(rdData.summary.surplus_count);
                 document.getElementById('rdDeficitCount').textContent = formatNum(rdData.summary.deficit_count);
                 document.getElementById('rdOkCount').textContent = formatNum(rdData.summary.ok_count);
-                document.getElementById('rdTransferCount').textContent = formatNum(rdData.summary.transfer_count);
+                document.getElementById('rdProtolTransferCount').textContent = formatNum(rdData.summary.protol_transfer_count || 0);
+                document.getElementById('rdRoBoxCount').textContent = formatNum(rdData.summary.ro_box_count || 0);
                 populateRdFilters();
                 renderRdTable();
             } catch(e) {
@@ -6721,18 +6726,39 @@
                 const display = rows.slice(0, limit);
                 let html = '';
                 display.forEach(function(r) {
-                    const isHigh = r.priority === 'High';
-                    const priBadge = isHigh ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.8rem;">High</span>'
+                    var isHigh = r.priority === 'High';
+                    var priBadge = isHigh ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.8rem;">High</span>'
                         : '<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Normal</span>';
-                    html += '<tr style="' + (isHigh ? 'font-weight:500;' : '') + '">' +
+                    // Visual style by source_type
+                    var rowBg = '#fff'; var borderLeft = '3px solid #f59e0b';
+                    var typeBadge = '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Surplus → WH</span>';
+                    if (r.source_type === 'WH Protol \u2192 Store' || r.source_type === 'WH Protol → Store') {
+                        rowBg = '#eff6ff'; borderLeft = '3px solid #1d4ed8';
+                        typeBadge = '<span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Protol → Store</span>';
+                    } else if (r.source_type === 'RO Box') {
+                        rowBg = '#f5f3ff'; borderLeft = '3px solid #7c3aed';
+                        typeBadge = '<span style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">RO Box</span>';
+                    }
+                    // Ukuran: RO Box shows assortment breakdown
+                    var ukuranDisplay = r.ukuran || '-';
+                    if (r.source_type === 'RO Box' && r.assortment && typeof r.assortment === 'object') {
+                        var parts = []; Object.keys(r.assortment).forEach(function(k) { parts.push(k + ':' + r.assortment[k]); });
+                        ukuranDisplay = '<span style="font-size:0.75rem;color:#6b21a8;">' + parts.join(' \u00b7 ') + '</span>';
+                    }
+                    // Qty: RO Box shows box + est pairs
+                    var qtyDisplay = '' + r.qty;
+                    if (r.source_type === 'RO Box') {
+                        qtyDisplay = r.qty + ' box (~' + (r.qty_pairs_est || r.qty * 12) + ' prs)';
+                    }
+                    html += '<tr style="background:' + rowBg + ';border-left:' + borderLeft + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.dari + '</td>' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.ke + '</td>' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.kode_kecil + '</td>' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.artikel + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + r.ukuran + '</td>' +
+                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + ukuranDisplay + '</td>' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + (r.version || '-') + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">' + r.qty + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.source_type + '</td>' +
+                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">' + qtyDisplay + '</td>' +
+                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + typeBadge + '</td>' +
                         '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
                         '</tr>';
                 });
@@ -6776,11 +6802,25 @@
             const detailHeaders = ['Store','Kode Mix','Artikel','Gender','Series','Tipe','Tier','Ukuran','Target','On Hand','Gap','Status','Util %'];
             const detailRows = detail.map(r => [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : '']);
 
-            // Transfer sheet
+            // Transfer sheet (Surplus + Protol only — no RO Box)
             let transfers = rdData.transfers;
             if (fStore) transfers = transfers.filter(r => r.dari === fStore || r.ke === fStore);
+            const nonRoBox = transfers.filter(r => r.source_type !== 'RO Box');
+            const roBoxItems = transfers.filter(r => r.source_type === 'RO Box');
+
             const transferHeaders = ['Dari','Ke','Kode Mix','Kode Kecil','Artikel','Ukuran','Version','Qty','Source Type','Priority'];
-            const transferRows = transfers.map(r => [r.dari, r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.ukuran, r.version||'', r.qty, r.source_type, r.priority]);
+            const transferRows = nonRoBox.map(r => [r.dari, r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.ukuran, r.version||'', r.qty, r.source_type, r.priority]);
+
+            // RO Box sheet
+            const roHeaders = ['Store','Kode Mix','Kode Kecil','Artikel','Version','Qty (Box)','Est. Pairs','Assortment Detail','Priority'];
+            const roData = roBoxItems.map(r => {
+                var assortStr = '';
+                if (r.assortment && typeof r.assortment === 'object') {
+                    var parts = []; Object.keys(r.assortment).forEach(function(k) { parts.push(k + ':' + r.assortment[k]); });
+                    assortStr = parts.join(', ');
+                }
+                return [r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.version||'', r.qty, r.qty_pairs_est || (r.qty * 12), assortStr, r.priority];
+            });
 
             if (typeof XLSX !== 'undefined') {
                 const wb = XLSX.utils.book_new();
@@ -6788,6 +6828,10 @@
                 XLSX.utils.book_append_sheet(wb, ws1, 'Detail');
                 const ws2 = XLSX.utils.aoa_to_sheet([transferHeaders, ...transferRows]);
                 XLSX.utils.book_append_sheet(wb, ws2, 'Transfer Recommendation');
+                if (roData.length > 0) {
+                    const ws3 = XLSX.utils.aoa_to_sheet([roHeaders, ...roData]);
+                    XLSX.utils.book_append_sheet(wb, ws3, 'RO Box');
+                }
                 XLSX.writeFile(wb, 'redistribusi_jatim_' + (rdData.snapshot_date || 'export') + '.xlsx');
             } else {
                 alert('SheetJS not loaded — cannot export');
