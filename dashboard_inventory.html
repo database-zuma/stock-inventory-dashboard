@@ -6628,7 +6628,7 @@
             const body = document.getElementById('rdDetailBody');
             body.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#9ca3af;"><div style="animation:spin 1s linear infinite;display:inline-block;width:24px;height:24px;border:3px solid #db2777;border-top-color:transparent;border-radius:50%;"></div><br>Loading redistribusi data...</td></tr>';
             try {
-                rdData = await fetchAPI('/api/redistribution');
+                rdData = await fetchAPI('/api/redistribution?t=' + Date.now());
                 document.getElementById('rdSnapshotLabel').textContent = 'Snapshot: ' + (rdData.snapshot_date || '-');
                 document.getElementById('rdSurplusCount').textContent = formatNum(rdData.summary.surplus_count);
                 document.getElementById('rdDeficitCount').textContent = formatNum(rdData.summary.deficit_count);
