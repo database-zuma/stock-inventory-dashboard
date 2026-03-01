@@ -1589,18 +1589,19 @@
                     </div>
                     <div style="background:white; border-radius:12px; overflow:hidden;">
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                            <table style="width:auto; border-collapse:collapse; font-size:0.85rem;">
+                            <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;">
                                 <thead>
                                     <tr style="background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%); color:white; position:sticky; top:0; z-index:2;">
-                                        <th style="padding:7px 10px; text-align:center; white-space:nowrap; min-width:80px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
-                                        <th style="padding:7px 10px; text-align:left;   white-space:nowrap; min-width:90px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Dari</th>
-                                        <th style="padding:7px 10px; text-align:left;   white-space:nowrap; min-width:100px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ke</th>
-                                        <th style="padding:7px 10px; text-align:left;   white-space:nowrap; min-width:75px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Kecil</th>
-                                        <th style="padding:7px 10px; text-align:left;   min-width:130px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Artikel</th>
-                                        <th style="padding:7px 10px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ukuran / Assortment</th>
-                                        <th style="padding:7px 10px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
-                                        <th style="padding:7px 10px; text-align:right;  white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
-                                        <th style="padding:7px 10px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Priority</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
+                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Asal</th>
+                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tujuan</th>
+                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Kecil</th>
+                                        <th style="padding:4px 6px; text-align:left; min-width:90px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Artikel</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ukuran</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
+                                        <th style="padding:4px 6px; text-align:right; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Priority</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rdTransferBody"></tbody>
@@ -4981,22 +4982,9 @@
             const gender = document.getElementById('salesFilterGender').value;
             const series = document.getElementById('salesFilterSeries').value;
 
-            // Channel mapping per sub-tab
-            const channelMap = {
-                'retail': ['retail'],
-                'consig': ['non-retail'],
-                'wholesale': ['wholesale'],
-                'online': ['event', 'online']
-            };
-            const activeChannels = channelMap[currentSalesSubTab] || ['retail'];
-
             return salesDetailData.filter(item => {
                 // Include ALL items (sandal + non-sandal) for sales calculation
                 if (!item.sku) return false;
-
-                // Filter by channel (sub-tab)
-                const itemChannel = (item.channel || 'retail').toLowerCase();
-                if (!activeChannels.includes(itemChannel)) return false;
 
                 if (startDate && item.date < startDate) return false;
                 if (endDate && item.date > endDate) return false;
@@ -5011,6 +4999,18 @@
                     const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
+                
+                // Filter by channel (Retail/Consig/Wholesale/Online)
+                const channelMap = {
+                    'retail': 'retail',
+                    'consig': 'non-retail',
+                    'wholesale': 'wholesale',
+                    'online': 'event'
+                };
+                const targetChannel = channelMap[currentSalesSubTab] || 'retail';
+                const itemChannel = (item.channel || 'retail').toLowerCase();
+                if (itemChannel !== targetChannel) return false;
+                
                 return true;
             });
         }
@@ -6359,13 +6359,16 @@
             const subTabContent = document.getElementById('salesSubTab' + subTab.charAt(0).toUpperCase() + subTab.slice(1));
             if (subTabContent) subTabContent.style.display = 'block';
             
-            // Re-render dashboard with new channel filter
-            filteredSalesData = getFilteredSalesData();
-            renderSalesSummaryCards();
-            renderSalesByStore();
-            renderSalesSPG();
-            renderSalesByHourChart();
-            renderSalesSPGChart();
+            // Re-filter and re-render charts for the selected channel
+            setTimeout(() => {
+                filteredSalesData = getFilteredSalesData();
+                renderSalesSummaryCards();
+                renderSalesPerformance();
+                if (subTab === 'retail') {
+                    renderSalesSPGChart();
+                    renderSalesByHourChart();
+                }
+            }, 100);
         }
 
         // Strip kode kecil from SKU (remove Z{number} suffix and lowercase)
@@ -6477,13 +6480,19 @@
                 byHour[h] = { qty: 0, total: 0, count: 0 };
             }
 
-            // Use hour field from API (WIB timezone, pre-computed server-side)
+            // Parse date and extract hour
             data.forEach(item => {
-                const hour = typeof item.hour === 'number' ? item.hour : parseInt(item.hour || 0);
-                if (byHour[hour] !== undefined) {
-                    byHour[hour].qty += item.qty || 0;
-                    byHour[hour].total += item.total || 0;
-                    byHour[hour].count++;
+                if (!item.date) return;
+                const dateStr = item.date;
+                // Format: "2026-01-19 10:04:39"
+                const timeMatch = dateStr.match(/(\d{2}):\d{2}:/);
+                if (timeMatch) {
+                    const hour = parseInt(timeMatch[1]);
+                    if (byHour[hour] !== undefined) {
+                        byHour[hour].qty += item.qty || 0;
+                        byHour[hour].total += item.total || 0;
+                        byHour[hour].count++;
+                    }
                 }
             });
 
@@ -7018,15 +7027,16 @@
 
                 document.getElementById('rdRowCount').textContent = formatNum(rows.length) + ' transfers';
                 const tbody = document.getElementById('rdTransferBody');
-                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
+                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
 
                 // Group by source_type — urutan: WH Protol→Store, RO Box, Surplus→WH
                 var groups = [
                     { key: 'WH Protol \u2192 Store', label: 'RO Protol', sectionLabel: 'Restock dari WH Protol \u2192 Toko',  color: '#1d4ed8', bg: '#dbeafe' },
                     { key: 'RO Box',                  label: 'RO Box',    sectionLabel: 'Order Baru (RO Box) \u2192 Toko',      color: '#7c3aed', bg: '#ede9fe' },
-                    { key: 'Store Surplus \u2192 WH', label: 'Mutasi ke WH', sectionLabel: 'Mutasi ke WH \u2014 Toko \u2192 WH Pusat', color: '#d97706', bg: '#fef3c7' },
+                    { key: 'Store Surplus \u2192 WH', label: 'Mutasi ke WH', sectionLabel: 'Mutasi ke WH \u2014 Toko \u2192 WH Protol', color: '#d97706', bg: '#fef3c7' },
                 ];
                 groups.forEach(function(g) { g.rows = []; });
+                var tierMap = {}; rdData.detail.forEach(function(d) { if (d.kode_mix) tierMap[d.kode_mix] = d.tier || '-'; });
                 rows.forEach(function(r) {
                     var st = r.source_type || '';
                     var grp = groups.find(function(g) { return st === g.key; });
@@ -7048,40 +7058,41 @@
                     if (!grp.rows.length) return;
                     // Section header
                     html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
-                        '<td colspan="9" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
+                        '<td colspan="10" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         grp.sectionLabel + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
                         '</td></tr>';
                     var display = (grp.key === 'Store Surplus \u2192 WH') ? grp.rows.slice(0, surplusLimit) : grp.rows;
                     display.forEach(function(r) {
                         var isHigh = r.priority === 'High';
                         var priBadge = isHigh
-                            ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.78rem;">High</span>'
-                            : '<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;">Normal</span>';
-                        var typeBadge = '<span style="background:' + grp.color + ';color:#fff;padding:3px 10px;border-radius:4px;font-size:0.78rem;font-weight:600;white-space:nowrap;display:inline-block;">' + grp.label + '</span>';
+                            ? '<span style="background:#ef4444;color:#fff;padding:1px 5px;border-radius:4px;font-weight:600;font-size:0.72rem;">High</span>'
+                            : '<span style="background:#6b7280;color:#fff;padding:1px 5px;border-radius:4px;font-size:0.72rem;">Normal</span>';
+                        var typeBadge = '<span style="background:' + grp.color + ';color:#fff;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;white-space:nowrap;display:inline-block;">' + grp.label + '</span>';
                         // Ukuran / Assortment
                         var ukuranDisplay = r.ukuran || '-';
                         if (r.source_type === 'RO Box' && r.assortment && typeof r.assortment === 'object') {
                             var parts = [];
                             Object.keys(r.assortment).forEach(function(k) { parts.push('<b>' + k + '</b>\u202f' + r.assortment[k] + 'pcs'); });
-                            ukuranDisplay = '<span style="font-size:0.75rem;color:#6b21a8;white-space:nowrap;">' + parts.join(' \u00b7 ') + '</span>';
+                            ukuranDisplay = '<span style="font-size:0.72rem;color:#6b21a8;line-height:1.5;">' + parts.join('<br>') + '</span>';
                         }
                         // Qty
                         var qtyDisplay = '' + r.qty;
                         if (r.source_type === 'RO Box') { qtyDisplay = r.qty + ' box'; }
                         html += '<tr style="background:#fff;border-left:3px solid ' + grp.color + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;">' + typeBadge + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:nowrap;color:#374151;font-size:0.83rem;">' + (r.source_type === 'RO Box' ? 'WH Pusat' : cleanLoc(r.dari)) + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:nowrap;color:#374151;font-size:0.83rem;">' + cleanLoc(r.ke) + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;color:#6b7280;">' + r.kode_kecil + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;">' + r.artikel + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;">' + ukuranDisplay + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;color:#9ca3af;">' + (r.version || '-') + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:right;font-weight:700;color:' + grp.color + ';">' + qtyDisplay + '</td>' +
-                            '<td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + typeBadge + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#374151;font-size:0.79rem;">' + (r.source_type === 'RO Box' ? 'WH Pusat' : cleanLoc(r.dari)) + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#374151;font-size:0.79rem;">' + (r.source_type === 'Store Surplus \u2192 WH' ? 'WH Protol' : cleanLoc(r.ke)) + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;font-family:monospace;font-size:0.76rem;color:#6b7280;">' + r.kode_kecil + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;">' + r.artikel + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;font-size:0.76rem;color:#6b7280;">' + (tierMap[r.kode_mix] || '-') + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;max-width:70px;">' + ukuranDisplay + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;color:#9ca3af;">' + (r.version || '-') + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:right;font-weight:700;color:' + grp.color + ';">' + qtyDisplay + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
                             '</tr>';
                     });
                     if (grp.key === 'Store Surplus \u2192 WH' && grp.rows.length > surplusLimit) {
-                        html += '<tr><td colspan="9" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
+                        html += '<tr><td colspan="10" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
                     }
                 });
                 tbody.innerHTML = html;
