@@ -10,3 +10,4 @@ inventory_data.json
 # Temporary files
 *.tmp
 *.bak
+.vercel
