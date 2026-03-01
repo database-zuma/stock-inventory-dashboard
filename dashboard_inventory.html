@@ -6722,47 +6722,62 @@
                 const tbody = document.getElementById('rdTransferBody');
                 if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
 
-                const limit = 500;
-                const display = rows.slice(0, limit);
-                let html = '';
-                display.forEach(function(r) {
-                    var isHigh = r.priority === 'High';
-                    var priBadge = isHigh ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.8rem;">High</span>'
-                        : '<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Normal</span>';
-                    // Visual style by source_type
-                    var rowBg = '#fff'; var borderLeft = '3px solid #f59e0b';
-                    var typeBadge = '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Surplus → WH</span>';
-                    if (r.source_type === 'WH Protol \u2192 Store' || r.source_type === 'WH Protol → Store') {
-                        rowBg = '#eff6ff'; borderLeft = '3px solid #1d4ed8';
-                        typeBadge = '<span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Protol → Store</span>';
-                    } else if (r.source_type === 'RO Box') {
-                        rowBg = '#f5f3ff'; borderLeft = '3px solid #7c3aed';
-                        typeBadge = '<span style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;">RO Box</span>';
-                    }
-                    // Ukuran: RO Box shows assortment breakdown
-                    var ukuranDisplay = r.ukuran || '-';
-                    if (r.source_type === 'RO Box' && r.assortment && typeof r.assortment === 'object') {
-                        var parts = []; Object.keys(r.assortment).forEach(function(k) { parts.push(k + ':' + r.assortment[k]); });
-                        ukuranDisplay = '<span style="font-size:0.75rem;color:#6b21a8;">' + parts.join(' \u00b7 ') + '</span>';
-                    }
-                    // Qty: RO Box shows box + est pairs
-                    var qtyDisplay = '' + r.qty;
-                    if (r.source_type === 'RO Box') {
-                        qtyDisplay = r.qty + ' box (~' + (r.qty_pairs_est || r.qty * 12) + ' prs)';
-                    }
-                    html += '<tr style="background:' + rowBg + ';border-left:' + borderLeft + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.dari + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.ke + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.kode_kecil + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.artikel + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + ukuranDisplay + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + (r.version || '-') + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">' + qtyDisplay + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + typeBadge + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
-                        '</tr>';
+                // Group by source_type, ordered: WH Protol→Store, RO Box, Surplus→WH
+                var groups = [
+                    { key: 'WH Protol → Store', label: 'WH Protol → Store', color: '#1d4ed8', bg: '#dbeafe' },
+                    { key: 'RO Box',              label: 'RO Box',              color: '#7c3aed', bg: '#ede9fe' },
+                    { key: 'Store Surplus → WH', label: 'Store Surplus → WH', color: '#d97706', bg: '#fef3c7' },
+                ];
+                groups.forEach(function(g) { g.rows = []; });
+                rows.forEach(function(r) {
+                    var st = r.source_type || '';
+                    var grp = groups.find(function(g) { return st === g.key; });
+                    if (!grp) grp = groups[2];
+                    grp.rows.push(r);
                 });
-                if (rows.length > limit) html += '<tr><td colspan="9" style="text-align:center;padding:12px;color:#9ca3af;font-style:italic;">Showing ' + limit + ' of ' + rows.length + ' transfers. Use filters.</td></tr>';
+
+                var surplusLimit = 300;
+                var html = '';
+                groups.forEach(function(grp) {
+                    if (!grp.rows.length) return;
+                    // Section header row
+                    html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
+                        '<td colspan="9" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;letter-spacing:0.01em;">' +
+                        grp.label + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
+                        '</td></tr>';
+                    var display = (grp.key === 'Store Surplus → WH') ? grp.rows.slice(0, surplusLimit) : grp.rows;
+                    display.forEach(function(r) {
+                        var isHigh = r.priority === 'High';
+                    var priBadge = isHigh ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.8rem;">High</span>'
+                            : '<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Normal</span>';
+                        var typeBadge = '<span style="background:' + grp.color + ';color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;white-space:nowrap;">' + grp.label + '</span>';
+                        // Ukuran: RO Box shows assortment breakdown
+                        var ukuranDisplay = r.ukuran || '-';
+                        if (r.source_type === 'RO Box' && r.assortment && typeof r.assortment === 'object') {
+                            var parts = []; Object.keys(r.assortment).forEach(function(k) { parts.push(k + ':' + r.assortment[k]); });
+                            ukuranDisplay = '<span style="font-size:0.75rem;color:#6b21a8;">' + parts.join(' · ') + '</span>';
+                        }
+                        // Qty: RO Box shows box + est pairs
+                        var qtyDisplay = '' + r.qty;
+                        if (r.source_type === 'RO Box') {
+                            qtyDisplay = r.qty + ' box (~' + (r.qty_pairs_est || r.qty * 12) + ' prs)';
+                        }
+                        html += '<tr style="background:#fff;border-left:3px solid ' + grp.color + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.dari + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;">' + r.ke + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.kode_kecil + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + r.artikel + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + ukuranDisplay + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + (r.version || '-') + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">' + qtyDisplay + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + typeBadge + '</td>' +
+                            '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
+                            '</tr>';
+                    });
+                    if (grp.key === 'Store Surplus → WH' && grp.rows.length > surplusLimit) {
+                        html += '<tr><td colspan="9" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
+                    }
+                });
                 tbody.innerHTML = html;
             }
         }
