@@ -1235,24 +1235,72 @@
                     </div>
 
                     <!-- Consig Sub-tab -->
-                    <div id="salesSubTabConsig" class="sales-sub-tab-content" style="display:none;text-align:center;padding:40px;">
-                        <div style="font-size:5rem;margin-bottom:20px;">📦</div>
-                        <p style="font-size:1.1rem;color:#6b7280;font-weight:500;">Data consig belum tersedia</p>
-                        <p style="font-size:0.9rem;color:#9ca3af;margin-top:10px;">Silakan hubungi tim operations untuk informasi lebih lanjut</p>
+                    <div id="salesSubTabConsig" class="sales-sub-tab-content" style="display:none;">
+                    </div>
+                    </div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by SPG</h4>
+                                <canvas id="spgBarChart" style="max-height:400px;"></canvas>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">⏰ Sales by Hour</h4>
+                            <canvas id="salesByHourChart" style="max-height:300px;"></canvas>
+                        </div>
+                        <div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Gap to Target (Need Action)</h4>
+                            <div id="salesGapAnalysis" style="max-height:400px;overflow-y:auto;"></div>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
+                            <div id="salesByAreaTable"></div>
+                        </div>
                     </div>
 
                     <!-- Wholesale Sub-tab -->
-                    <div id="salesSubTabWholesale" class="sales-sub-tab-content" style="display:none;text-align:center;padding:40px;">
-                        <div style="font-size:5rem;margin-bottom:20px;">🏭</div>
-                        <p style="font-size:1.1rem;color:#6b7280;font-weight:500;">Data wholesale belum tersedia</p>
-                        <p style="font-size:0.9rem;color:#9ca3af;margin-top:10px;">Silakan hubungi tim operations untuk informasi lebih lanjut</p>
+                    <div id="salesSubTabWholesale" class="sales-sub-tab-content" style="display:none;">
+                    </div>
+                    </div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by SPG</h4>
+                                <canvas id="spgBarChart" style="max-height:400px;"></canvas>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">⏰ Sales by Hour</h4>
+                            <canvas id="salesByHourChart" style="max-height:300px;"></canvas>
+                        </div>
+                        <div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Gap to Target (Need Action)</h4>
+                            <div id="salesGapAnalysis" style="max-height:400px;overflow-y:auto;"></div>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
+                            <div id="salesByAreaTable"></div>
+                        </div>
                     </div>
 
                     <!-- Online Sub-tab -->
-                    <div id="salesSubTabOnline" class="sales-sub-tab-content" style="display:none;text-align:center;padding:40px;">
-                        <div style="font-size:5rem;margin-bottom:20px;">🌐</div>
-                        <p style="font-size:1.1rem;color:#6b7280;font-weight:500;">Data online belum tersedia</p>
-                        <p style="font-size:0.9rem;color:#9ca3af;margin-top:10px;">Silakan hubungi tim operations untuk informasi lebih lanjut</p>
+                    <div id="salesSubTabOnline" class="sales-sub-tab-content" style="display:none;">
+                    </div>
+                    </div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by SPG</h4>
+                                <canvas id="spgBarChart" style="max-height:400px;"></canvas>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">⏰ Sales by Hour</h4>
+                            <canvas id="salesByHourChart" style="max-height:300px;"></canvas>
+                        </div>
+                        <div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Gap to Target (Need Action)</h4>
+                            <div id="salesGapAnalysis" style="max-height:400px;overflow-y:auto;"></div>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
+                            <div id="salesByAreaTable"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -6348,8 +6396,9 @@
             document.querySelectorAll('.sales-sub-tab-content').forEach(content => {
                 content.style.display = 'none';
             });
-            const subTabContent = document.getElementById('salesSubTab' + subTab.charAt(0).toUpperCase() + subTab.slice(1));
-            if (subTabContent) subTabContent.style.display = 'block';
+            // Always show salesSubTabRetail div (all charts render there)
+            // Other sub-tab divs are empty placeholders for tab switching only
+            document.getElementById('salesSubTabRetail').style.display = 'block';
 
             // Load channel-specific data from API (cached)
             if (!salesChannelCache[subTab]) {
