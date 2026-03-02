@@ -7106,18 +7106,20 @@
             const detailHeaders = ['Store','Kode Mix','Artikel','Gender','Series','Tipe','Tier','Ukuran','Target','On Hand','Gap','Status','Util %'];
             const detailRows = detail.map(r => [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : '']);
 
-            // Transfer sheet (Surplus + Protol only — no RO Box)
+            // Split transfers by type
             let transfers = rdData.transfers;
             if (fStore) transfers = transfers.filter(r => r.dari === fStore || r.ke === fStore);
-            const nonRoBox = transfers.filter(r => r.source_type !== 'RO Box');
-            const roBoxItems = transfers.filter(r => r.source_type === 'RO Box');
+            const roProtolItems = transfers.filter(r => r.source_type === 'WH Protol \u2192 Store');
+            const roBoxItems    = transfers.filter(r => r.source_type === 'RO Box');
+            const mutasiItems   = transfers.filter(r => r.source_type === 'Store Surplus \u2192 WH');
 
-            const transferHeaders = ['Dari','Ke','Kode Mix','Kode Kecil','Artikel','Ukuran','Version','Qty','Source Type','Priority'];
-            const transferRows = nonRoBox.map(r => [r.dari, r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.ukuran, r.version||'', r.qty, r.source_type, r.priority]);
+            // RO Protol rows
+            const roProtolHeaders = ['Asal', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
+            const roProtolRows = roProtolItems.map(r => [r.dari||'-', r.ke||'-', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
 
-            // RO Box sheet
-            const roHeaders = ['Store','Kode Mix','Kode Kecil','Artikel','Version','Qty (Box)','Est. Pairs','Assortment Detail','Priority'];
-            const roData = roBoxItems.map(r => {
+            // RO Box rows
+            const roBoxHeaders = ['Toko Tujuan', 'Kode Mix', 'Kode Kecil', 'Artikel', 'Version', 'Qty (Box)', 'Est. Pairs', 'Assortment Detail', 'Priority'];
+            const roBoxRows = roBoxItems.map(function(r) {
                 var assortStr = '';
                 if (r.assortment && typeof r.assortment === 'object') {
                     var parts = []; Object.keys(r.assortment).forEach(function(k) { parts.push(k + ':' + r.assortment[k]); });
@@ -7126,10 +7128,14 @@
                 return [r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.version||'', r.qty, r.qty_pairs_est || (r.qty * 12), assortStr, r.priority];
             });
 
+            // Mutasi ke WH rows
+            const mutasiHeaders = ['Asal (Toko)', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
+            const mutasiRows = mutasiItems.map(r => [r.dari||'-', r.ke||'WH Protol', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
+
             if (typeof XLSX !== 'undefined') {
                 const wb = XLSX.utils.book_new();
 
-                // Sheet 1: Summary (semua store, semua baris)
+                // Sheet 1: SUMMARY (semua store, semua baris)
                 const wsSummary = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
                 XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
 
@@ -7144,24 +7150,31 @@
                         return [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
                     });
                     const ws = XLSX.utils.aoa_to_sheet([detailHeaders, ...rows]);
-                    // Excel sheet name: max 31 chars, no special chars
                     const sheetName = store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31);
                     XLSX.utils.book_append_sheet(wb, ws, sheetName);
                 });
 
-                // Transfer Recommendation sheet
-                const ws2 = XLSX.utils.aoa_to_sheet([transferHeaders, ...transferRows]);
-                XLSX.utils.book_append_sheet(wb, ws2, 'Transfer Rec');
+                // RO Protol sheet
+                if (roProtolRows.length > 0) {
+                    const wsProtol = XLSX.utils.aoa_to_sheet([roProtolHeaders, ...roProtolRows]);
+                    XLSX.utils.book_append_sheet(wb, wsProtol, 'RO Protol');
+                }
 
                 // RO Box sheet
-                if (roData.length > 0) {
-                    const ws3 = XLSX.utils.aoa_to_sheet([roHeaders, ...roData]);
-                    XLSX.utils.book_append_sheet(wb, ws3, 'RO Box');
+                if (roBoxRows.length > 0) {
+                    const wsBox = XLSX.utils.aoa_to_sheet([roBoxHeaders, ...roBoxRows]);
+                    XLSX.utils.book_append_sheet(wb, wsBox, 'RO Box');
+                }
+
+                // Mutasi ke WH sheet
+                if (mutasiRows.length > 0) {
+                    const wsMutasi = XLSX.utils.aoa_to_sheet([mutasiHeaders, ...mutasiRows]);
+                    XLSX.utils.book_append_sheet(wb, wsMutasi, 'Mutasi ke WH');
                 }
 
                 XLSX.writeFile(wb, 'stock_redistribution_' + (rdData.snapshot_date || 'export') + '.xlsx');
             } else {
-                alert('SheetJS not loaded — cannot export');
+                alert('SheetJS not loaded \u2014 cannot export');
             }
         }
     </script>
