@@ -5805,7 +5805,11 @@
                 if (nsArr.length === 0) {
                     nsEl.innerHTML = '<div style="padding:12px;color:#6b7280;font-size:0.85rem;">Tidak ada data</div>';
                 } else {
-                    let nsHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+                    const nsStart = document.getElementById('salesFilterStartDate')?.value || '';
+                    const nsEnd   = document.getElementById('salesFilterEndDate')?.value || '';
+                    const nsPeriod = nsStart && nsEnd ? nsStart + ' s/d ' + nsEnd : nsStart || nsEnd || 'periode aktif';
+                    let nsHtml = '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:6px;">Periode: ' + nsPeriod + '</div>';
+                    nsHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
                     nsHtml += '<thead><tr style="background:#374151;color:white;"><th style="text-align:left;padding:6px;">Item</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
                     nsArr.forEach(ns => {
                         nsHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -6390,6 +6394,9 @@
                 genderByArea[area][gender].sales += item.total || 0;
                 genderByArea[area][gender].qty += item.qty || 0;
             });
+
+            // Define genders based on what's actually in filteredSalesData
+            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g => byGender[g] && byGender[g].sales > 0);
 
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             areaHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
