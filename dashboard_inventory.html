@@ -1369,7 +1369,7 @@
                     </div>
                     <!-- Non-Sandal Items (shopbag, paperbag, inbox, gwp) -->
                     <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🛍️ Non-Sandal Items (Shopbag, Paperbag, Inbox, GWP)</h4>
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🛍️ Non-Sandal Items (Shopbag, Paperbag, Inbox)</h4>
                         <div id="salesNonSandal" style="max-height:300px;overflow-y:auto;"></div>
                     </div>
                     <!-- Gender Sales Summary -->
@@ -1844,7 +1844,7 @@
                     // Determine year: if month > today's month, it's previous year
                     const yr = mo > today.getMonth() + 1 ? today.getFullYear() - 1 : today.getFullYear();
                     return yr + '-' + String(mo).padStart(2, '0');
-                }).filter(Boolean).sort();
+                }).filter(Boolean).filter(m => m >= '2026-01').sort();
                 buildDerivedMaps();
             } catch (err) {
                 console.error('Failed to load dashboard data:', err);
@@ -6268,7 +6268,7 @@
                 recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.store || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.spg || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;">' + (item.order_no || '-') + '</td>';
-                recentHtml += '<td style="padding:6px;text-transform:uppercase;">' + (getKodeBesar(item.sku) || '-') + '</td>';
+                recentHtml += '<td style="padding:6px;text-transform:uppercase;">' + (item.sku || '-').toUpperCase() + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total_before_tax || 0).toLocaleString('id-ID') + '</td>';
@@ -6534,7 +6534,9 @@
 
         function renderWeeklyGenderChart() {
             // Independent of main date filter — uses salesDetailData filtered by pill selection
-            const sourceData = salesDetailData || [];
+            const sourceData = (weeklySelectedMonth && salesDetailByMonth[weeklySelectedMonth] && salesDetailByMonth[weeklySelectedMonth].length > 0)
+                ? salesDetailByMonth[weeklySelectedMonth]
+                : (salesDetailData || []);
             const filteredForWeekly = weeklySelectedMonth
                 ? sourceData.filter(item => {
                     if (!item.date) return false;
@@ -6772,6 +6774,60 @@
             }
         }
 
+        // ── Aggregate flat detail array → channel summary format ─────────────
+        function aggregateChannelData(rows, channel) {
+            if (!Array.isArray(rows) || rows.length === 0) {
+                return { summary: {}, top_products: [], monthly_trend: [], breakdown: [], breakdown_type: 'toko' };
+            }
+            const totalRevenue = rows.reduce((s, r) => s + (r.total || 0), 0);
+            const totalPairs   = rows.reduce((s, r) => s + (r.qty   || 0), 0);
+            const dates        = rows.map(r => r.date).filter(Boolean).sort();
+            const dateFrom     = dates[0] || '-';
+            const dateTo       = dates[dates.length - 1] || '-';
+            const dayCount     = dateFrom !== '-' ? Math.max(1, (new Date(dateTo) - new Date(dateFrom)) / 86400000 + 1) : 1;
+
+            // Top products (by SKU / kode_kecil grouped)
+            const prodMap = {};
+            rows.forEach(r => {
+                const key = (r.kode_kecil || r.sku || '').toUpperCase();
+                if (!key) return;
+                if (!prodMap[key]) prodMap[key] = { product_name: r.product_name || key, series: r.collection || '', tier: '', pairs: 0, revenue: 0 };
+                prodMap[key].pairs   += r.qty   || 0;
+                prodMap[key].revenue += r.total || 0;
+            });
+            const top_products = Object.values(prodMap).sort((a,b) => b.revenue - a.revenue).slice(0, 20);
+
+            // Monthly trend
+            const monthMap = {};
+            const ID_MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            rows.forEach(r => {
+                if (!r.date) return;
+                const mk = r.date.slice(0, 7);
+                if (!monthMap[mk]) monthMap[mk] = { month_label: ID_MONTHS[parseInt(mk.slice(5))-1] + ' ' + mk.slice(0,4), pairs: 0, revenue: 0 };
+                monthMap[mk].pairs   += r.qty   || 0;
+                monthMap[mk].revenue += r.total || 0;
+            });
+            const monthly_trend = Object.keys(monthMap).sort().map(k => monthMap[k]);
+
+            // Breakdown by store
+            const storeMap = {};
+            rows.forEach(r => {
+                const s = r.store || 'Unknown';
+                if (!storeMap[s]) storeMap[s] = { name: s, pairs: 0, revenue: 0 };
+                storeMap[s].pairs   += r.qty   || 0;
+                storeMap[s].revenue += r.total || 0;
+            });
+            const breakdown = Object.values(storeMap).sort((a,b) => b.revenue - a.revenue).slice(0, 20);
+
+            return {
+                summary: { total_revenue: totalRevenue, total_pairs: totalPairs, avg_daily_revenue: totalRevenue / dayCount, date_from: dateFrom, date_to: dateTo },
+                top_products,
+                monthly_trend,
+                breakdown,
+                breakdown_type: 'toko'
+            };
+        }
+
         // ── Sales Channel (Consig / Wholesale / Online) ──────────────────────────
         const salesChannelData = {};
 
@@ -6794,7 +6850,9 @@
             }
 
             try {
-                const data = await fetchAPI('/api/sales/channel?channel=' + channel + '&months=3');
+                const rawData = await fetchAPI('/api/sales/detail?channel=' + channel + '&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
+                // Transform flat array to aggregated format expected by renderSalesChannel
+                const data = aggregateChannelData(rawData, channel);
                 salesChannelData[channel] = data;
                 renderSalesChannel(channel, data);
             } catch(e) {
