@@ -5135,15 +5135,15 @@
                 }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
-            storeHtml += '<th style="text-align:center;padding:6px;color:#374151;background:#f8fafc;width:40px;">No</th>';
-            storeHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
-            storeHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Area</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Target</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Achv</th>';
+            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:40px;">No</th>';
+            storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
+            storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Achv</th>';
             storeHtml += '</tr></thead><tbody>';
             storeArr.forEach((s, i) => {
                 const achvColor = s.achv >= 100 ? '#10b981' : s.achv >= 80 ? '#f59e0b' : '#ef4444';
@@ -5315,7 +5315,7 @@
             })).sort((a, b) => a.date.localeCompare(b.date));
 
             let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Trx</th></tr></thead><tbody>';
+            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
                 dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;color:#374151;">' + d.date + ' (' + dayName + ')</td>';
@@ -5612,7 +5612,7 @@
 
             // Top 5
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Artikel</th><th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Nama Barang</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th><th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Sales</th></tr></thead><tbody>';
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Artikel</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 5).forEach((a, i) => {
                 const productName = articleNameMap[a.article.toUpperCase()] || a.category || '-';
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
@@ -5680,14 +5680,14 @@
             const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
 
             let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            catHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Gender</th>';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Series</th>';
-            catHtml += '<th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Tipe</th>';
-            catHtml += '<th style="text-align:left;padding:8px;width:120px;color:#374151;background:#f8fafc;">Share</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Sales</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Qty</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">%</th>';
+            catHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Gender</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Series</th>';
+            catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Tipe</th>';
+            catHtml += '<th style="text-align:left;padding:8px;width:120px;color:white;background:#002A3A;">Share</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th>';
+            catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">%</th>';
             catHtml += '</tr></thead><tbody>';
 
             let currentGender = '';
@@ -5721,7 +5721,7 @@
                 catHtml += '<td style="padding:8px;">' + tipeDisplay + '</td>';
                 catHtml += '<td style="padding:8px;"><div style="height:16px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div></div></td>';
                 catHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
-                catHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="text-align:right;padding:8px;color:white;">' + c.qty.toLocaleString('id-ID') + '</td>';
                 catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
                 catHtml += '</tr>';
             });
@@ -5758,13 +5758,13 @@
 
             // Clean table layout for Tier Performance
             let tierHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">';
-            tierHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
-            tierHtml += '<th style="text-align:left;padding:10px;color:#374151;background:#f8fafc;">Tier</th>';
-            tierHtml += '<th style="text-align:left;padding:10px;color:#374151;background:#f8fafc;width:200px;">Share</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Sales</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Qty</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">Trx</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:#374151;background:#f8fafc;">%</th>';
+            tierHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;">Tier</th>';
+            tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;width:200px;">Share</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Sales</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Qty</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Trx</th>';
+            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">%</th>';
             tierHtml += '</tr></thead><tbody>';
 
             tierArr.forEach(t => {
@@ -5980,13 +5980,13 @@
             const allStores = storeAchArr.sort((a, b) => a.achievement - b.achievement);
 
             let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            gapHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
-            gapHtml += '<th style="text-align:center;padding:6px;color:#374151;background:#f8fafc;width:40px;">No</th>';
-            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
-            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Area</th>';
-            gapHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Gap/Surplus</th>';
-            gapHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Achv %</th>';
-            gapHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Status</th>';
+            gapHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            gapHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:40px;">No</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
+            gapHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Gap/Surplus</th>';
+            gapHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Achv %</th>';
+            gapHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Status</th>';
             gapHtml += '</tr></thead><tbody>';
             allStores.forEach((s, idx) => {
                 let status, rowBg, gapText, gapColor;
@@ -6045,17 +6045,17 @@
             }).slice(0, 500);
 
             let recentHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;">';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Tanggal</th>';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Toko</th>';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SPG</th>';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">Order</th>';
-            recentHtml += '<th style="text-align:left;padding:6px;color:#374151;background:#f8fafc;">SKU</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Qty</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Price</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Total</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;">Tax</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:#374151;background:#f8fafc;font-weight:700;">Sales</th>';
+            recentHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">SPG</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Order</th>';
+            recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">SKU</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Price</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Total</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Tax</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;font-weight:700;">Sales</th>';
             recentHtml += '</tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -6215,7 +6215,7 @@
             );
 
             let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            weeklyHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Week</th>';
+            weeklyHtml += '<thead><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;">Week</th>';
             genders.forEach(g => {
                 weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
                 weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#6b7280;">Growth</th>';
@@ -6251,11 +6251,11 @@
             });
 
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            areaHtml += '<thead><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;">Area</th>';
+            areaHtml += '<thead><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;">Area</th>';
             genders.forEach(g => {
                 areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
             });
-            areaHtml += '<th style="text-align:right;padding:8px;color:#374151;">Total</th></tr></thead><tbody>';
+            areaHtml += '<th style="text-align:right;padding:8px;color:white;">Total</th></tr></thead><tbody>';
 
             Object.entries(genderByArea).sort((a, b) => {
                 const totalA = Object.values(a[1]).reduce((sum, v) => sum + v.sales, 0);
@@ -6294,11 +6294,11 @@
             });
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Toko</th><th style="text-align:left;padding:8px;color:#374151;background:#f8fafc;">Area</th>';
+            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             genders.forEach(g => {
                 storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';background:#f8fafc;">' + g + '</th>';
             });
-            storeHtml += '<th style="text-align:right;padding:8px;color:#374151;background:#f8fafc;">Total</th><th style="text-align:center;padding:8px;color:#374151;background:#f8fafc;">Dominant</th></tr></thead><tbody>';
+            storeHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Total</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Dominant</th></tr></thead><tbody>';
 
             Object.entries(genderByStore).sort((a, b) => {
                 const totalA = Object.entries(a[1]).filter(([k, _]) => k !== 'area').reduce((sum, [_, v]) => sum + (v.sales || 0), 0);
