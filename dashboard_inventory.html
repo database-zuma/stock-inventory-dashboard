@@ -1236,15 +1236,14 @@
                         <!-- Row 4: Sales by Day -->
                         <div style="margin-bottom:24px;">
                             <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
-                            <div id="perfDayMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
-                            <div id="perfDayWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
+                            <div id="perfDayFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"></div>
                             <div id="salesWeeklySummary"></div>
                         </div>
 
                         <!-- Row 5: Sales by Week -->
                         <div style="margin-bottom:24px;">
                             <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
-                            <div id="perfWkMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
+                            <div id="perfWkFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"></div>
                             <div id="salesWeekByWeek"></div>
                         </div>
 
@@ -1252,14 +1251,12 @@
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <div>
                                 <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
-                                <div id="perfAreaMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
-                                <div id="perfAreaWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"></div>
+                                <div id="perfAreaFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"></div>
                                 <div id="salesAreaTrend"></div>
                             </div>
                             <div>
                                 <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
-                                <div id="perfGenderMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
-                                <div id="perfGenderWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"></div>
+                                <div id="perfGenderFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"></div>
                                 <div id="salesGenderTrend"></div>
                             </div>
                         </div>
@@ -5286,7 +5283,7 @@
         }
 
         function renderSalesAreaTrend() {
-            renderChartPills('perfAreaMonthPills', 'perfAreaWeekPills', perfAreaMonth, perfAreaWeek, 'setPerfAreaMonth', 'setPerfAreaWeek');
+            renderChartDropdowns('perfAreaFilter', perfAreaYear, perfAreaMonth, perfAreaWeek, 'setPerfAreaYear', 'setPerfAreaMonth', 'setPerfAreaWeek');
             var data = getChartData(perfAreaMonth, perfAreaWeek);
 
             // Area colors
@@ -5425,7 +5422,7 @@
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
             // Sales by Day — per-chart filter
-            renderChartPills('perfDayMonthPills', 'perfDayWeekPills', perfDayMonth, perfDayWeek, 'setPerfDayMonth', 'setPerfDayWeek');
+            renderChartDropdowns('perfDayFilter', perfDayYear, perfDayMonth, perfDayWeek, 'setPerfDayYear', 'setPerfDayMonth', 'setPerfDayWeek');
             var weekFilter = perfDayWeek || 'all';
             var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
             var dayNamesFull = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -5586,7 +5583,7 @@
             document.getElementById('salesWeeklySummary').innerHTML = weeklyHtml;
 
             // Week by Week Trend — per-chart filter
-            renderChartPills('perfWkMonthPills', null, perfWkMonth, null, 'setPerfWkMonth', null);
+            renderChartDropdowns('perfWkFilter', perfWkYear, perfWkMonth, null, 'setPerfWkYear', 'setPerfWkMonth', null);
             const byWeek = {};
             wkData.forEach(item => {
                 const date = new Date(item.date);
@@ -6207,7 +6204,7 @@
         }
 
         function renderSalesGenderTrend() {
-            renderChartPills('perfGenderMonthPills', 'perfGenderWeekPills', perfGenderMonth, perfGenderWeek, 'setPerfGenderMonth', 'setPerfGenderWeek');
+            renderChartDropdowns('perfGenderFilter', perfGenderYear, perfGenderMonth, perfGenderWeek, 'setPerfGenderYear', 'setPerfGenderMonth', 'setPerfGenderWeek');
             var data = getChartData(perfGenderMonth, perfGenderWeek);
 
             // Gender colors
@@ -6408,44 +6405,51 @@
             document.getElementById('salesGenderByStore').innerHTML = storeHtml;
         }
 
-        // ── Month pills for Weekly Gender Growth ────────────────────────────────
+        // ── Month dropdown for Weekly Gender Growth ────────────────────────────────
+        let weeklySelectedYear = null;
         function renderWeeklyMonthPills() {
-            const pillsContainer = document.getElementById('weeklyMonthPills');
-            if (!pillsContainer) return;
-
-            // Use salesAvailableMonths (from aggregate) if available, fallback to salesDetailData
-            const months = (salesAvailableMonths.length > 0)
+            const el = document.getElementById('weeklyMonthPills');
+            if (!el) return;
+            const ds = 'padding:4px 10px;border-radius:6px;border:1px solid #d1d5db;font-size:0.8rem;color:#374151;background:white;cursor:pointer;outline:none;';
+            const allMonths = salesAvailableMonths.length > 0
                 ? salesAvailableMonths
                 : [...new Set((salesDetailData||[]).filter(x=>x.date).map(x=>x.date.slice(0,7)))].sort();
-            const monthSet = {};
-            months.forEach(key => {
-                const d = new Date(key + '-01');
-                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-            });
-            if (months.length === 0) { pillsContainer.innerHTML = ''; return; }
-
-            // Default: select the latest month if none selected yet
-            if (!weeklySelectedMonth || !monthSet[weeklySelectedMonth]) {
-                weeklySelectedMonth = months[months.length - 1];
+            if (allMonths.length === 0) { el.innerHTML = ''; return; }
+            // Default: latest month
+            if (!weeklySelectedMonth || !allMonths.includes(weeklySelectedMonth)) {
+                weeklySelectedMonth = allMonths[allMonths.length - 1];
+                weeklySelectedYear = weeklySelectedMonth.slice(0,4);
             }
-
-            let pillHtml = '';
-            months.forEach(key => {
-                const isActive = key === weeklySelectedMonth;
-                pillHtml += '<button onclick="setWeeklyMonth(\'' + key + '\')" style="'
-                    + 'padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1.5px solid '
-                    + (isActive ? '#002A3A' : '#d1d5db') + ';background:'
-                    + (isActive ? '#002A3A' : 'white') + ';color:'
-                    + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;">'
-                    + monthSet[key] + '</button>';
+            const years = [...new Set(allMonths.map(m=>m.slice(0,4)))].sort();
+            const effYear = weeklySelectedYear || weeklySelectedMonth.slice(0,4);
+            const monthsShown = allMonths.filter(m => m.startsWith(effYear));
+            let h = '<div style="display:flex;align-items:center;gap:8px;">';
+            h += `<select onchange="setWeeklyYear(this.value)" style="${ds}">`;
+            years.forEach(y => { h += `<option value="${y}"${effYear===y?' selected':''}>${y}</option>`; });
+            h += '</select>';
+            h += `<select onchange="setWeeklyMonth(this.value)" style="${ds}">`;
+            monthsShown.forEach(m => {
+                const mo = parseInt(m.slice(5))-1;
+                h += `<option value="${m}"${m===weeklySelectedMonth?' selected':''}>${_DD_MONTH_NAMES[mo]}</option>`;
             });
-            pillsContainer.innerHTML = pillHtml;
+            h += '</select></div>';
+            el.innerHTML = h;
+        }
+
+        function setWeeklyYear(y) {
+            weeklySelectedYear = y;
+            const allMonths = salesAvailableMonths.length > 0 ? salesAvailableMonths : [];
+            const monthsForYear = allMonths.filter(m=>m.startsWith(y));
+            if (monthsForYear.length) weeklySelectedMonth = monthsForYear[monthsForYear.length-1];
+            renderWeeklyGenderChart();
+            renderWeeklyMonthPills();
         }
 
         function setWeeklyMonth(monthKey) {
             weeklySelectedMonth = monthKey;
-            renderWeeklyGenderChart();
-            renderWeeklyMonthPills();
+            weeklySelectedYear = monthKey ? monthKey.slice(0,4) : weeklySelectedYear;
+            if (monthKey) loadPerfMonth(monthKey).then(()=>{ renderWeeklyGenderChart(); renderWeeklyMonthPills(); });
+            else { renderWeeklyGenderChart(); renderWeeklyMonthPills(); }
         }
 
         function renderWeeklyGenderChart() {
@@ -6577,61 +6581,63 @@
                 + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;';
         }
 
-        // Generic per-chart pill renderer — months from salesAvailableMonths (all months from aggregate)
-        function renderChartPills(monthElId, weekElId, selectedMonth, selectedWeek, setMonthFn, setWeekFn) {
-            const monthEl = document.getElementById(monthElId);
-            if (!monthEl) return;
+        // Per-chart year state (controls which months show in month dropdown)
+        let perfDayYear = null, perfWkYear = null, perfAreaYear = null, perfGenderYear = null;
 
-            // Use salesAvailableMonths (from aggregate, all months) as source of truth
-            const months = (salesAvailableMonths.length > 0)
+        // Dropdown filter renderer — year + month + optional week
+        const _DD_MONTH_NAMES = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        function renderChartDropdowns(containerId, selectedYear, selectedMonth, selectedWeek, yearFn, monthFn, weekFn) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const ds = 'padding:4px 10px;border-radius:6px;border:1px solid #d1d5db;font-size:0.8rem;color:#374151;background:white;cursor:pointer;outline:none;';
+            const allMonths = salesAvailableMonths.length > 0
                 ? salesAvailableMonths
-                : [...new Set((salesDetailData || []).filter(x=>x.date).map(x=>x.date.slice(0,7)))].sort();
-            const monthSet = {};
-            months.forEach(key => {
-                const d = new Date(key + '-01');
-                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                : [...new Set((salesDetailData||[]).filter(x=>x.date).map(x=>x.date.slice(0,7)))].sort();
+            const years = [...new Set(allMonths.map(m => m.slice(0,4)))].sort();
+            // Effective year from selectedMonth or selectedYear
+            const effYear = selectedMonth ? selectedMonth.slice(0,4) : (selectedYear || null);
+            const monthsShown = effYear ? allMonths.filter(m => m.startsWith(effYear)) : allMonths;
+            let h = '<div style="display:flex;align-items:center;gap:8px;">';
+            // Year dropdown
+            h += `<select onchange="${yearFn}(this.value||null)" style="${ds}">`;
+            h += '<option value="">Tahun</option>';
+            years.forEach(y => { h += `<option value="${y}"${effYear===y?' selected':''}>${y}</option>`; });
+            h += '</select>';
+            // Month dropdown
+            h += `<select onchange="${monthFn}(this.value||null)" style="${ds}">`;
+            h += '<option value="">Semua Bulan</option>';
+            monthsShown.forEach(m => {
+                const mo = parseInt(m.slice(5)) - 1;
+                h += `<option value="${m}"${m===selectedMonth?' selected':''}>${_DD_MONTH_NAMES[mo]}</option>`;
             });
-
-            let mHtml = '<span style="font-size:0.7rem;color:#6b7280;margin-right:3px;">Bulan:</span>';
-            mHtml += '<button onclick="' + setMonthFn + '(null)" style="' + _pillStyle(!selectedMonth, '#002A3A') + '">Semua</button>';
-            months.forEach(key => {
-                mHtml += '<button onclick="' + setMonthFn + '(\'' + key + '\')" style="' + _pillStyle(key === selectedMonth, '#002A3A') + '">' + monthSet[key] + '</button>';
-            });
-            monthEl.innerHTML = mHtml;
-
-            // Week pills (only if a month is selected, only if weekElId is provided)
-            const weekEl = weekElId ? document.getElementById(weekElId) : null;
-            if (!weekEl) return;
-            if (!selectedMonth) { weekEl.innerHTML = ''; return; }
-
-            const weekCounts = {};
-            (salesDetailData || []).forEach(item => {
-                if (!item.date) return;
-                const d = new Date(item.date);
-                if (isNaN(d)) return;
-                if (d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') !== selectedMonth) return;
-                const wk = 'W' + Math.ceil(d.getDate() / 7);
-                weekCounts[wk] = (weekCounts[wk] || 0) + 1;
-            });
-            const weeks = Object.keys(weekCounts).sort();
-
-            let wHtml = '<span style="font-size:0.7rem;color:#6b7280;margin-right:3px;">Minggu:</span>';
-            wHtml += '<button onclick="' + setWeekFn + '(null)" style="' + _pillStyle(!selectedWeek, '#6366f1') + '">Semua</button>';
-            weeks.forEach(wk => {
-                wHtml += '<button onclick="' + setWeekFn + '(\'' + wk + '\')" style="' + _pillStyle(wk === selectedWeek, '#6366f1') + '">' + wk + '</button>';
-            });
-            weekEl.innerHTML = wHtml;
+            h += '</select>';
+            // Week dropdown (only if weekFn provided AND month selected)
+            if (weekFn && selectedMonth) {
+                const mdata = salesDetailByMonth[selectedMonth] || (salesDetailData||[]).filter(x=>x.date&&x.date.startsWith(selectedMonth));
+                const wks = [...new Set(mdata.map(x=>{const d=new Date(x.date);return isNaN(d)?null:'W'+Math.ceil(d.getDate()/7);}).filter(Boolean))].sort();
+                if (wks.length) {
+                    h += `<select onchange="${weekFn}(this.value||null)" style="${ds}">`;
+                    h += '<option value="">Semua Minggu</option>';
+                    wks.forEach(w => { h += `<option value="${w}"${w===selectedWeek?' selected':''}>${w}</option>`; });
+                    h += '</select>';
+                }
+            }
+            h += '</div>';
+            el.innerHTML = h;
         }
 
         // Per-chart set functions — lazy-load month data before rendering
-        function setPerfDayMonth(m) { perfDayMonth = m; perfDayWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
+        function setPerfDayYear(y)  { perfDayYear = y; perfDayMonth = null; perfDayWeek = null; renderSalesTrend(); }
+        function setPerfDayMonth(m) { perfDayMonth = m; perfDayWeek = null; perfDayYear = m ? m.slice(0,4) : perfDayYear; if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
         function setPerfDayWeek(w)  { perfDayWeek = w;  renderSalesTrend(); }
-        function setPerfWkMonth(m)  { perfWkMonth = m;  if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
-        function setPerfAreaMonth(m) { perfAreaMonth = m; perfAreaWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesAreaTrend()); else renderSalesAreaTrend(); }
-        function setPerfAreaWeek(w)  { perfAreaWeek = w;  renderSalesAreaTrend(); }
-        function setPerfGenderMonth(m) { perfGenderMonth = m; perfGenderWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesGenderTrend()); else renderSalesGenderTrend(); }
-        function setPerfGenderWeek(w)  { perfGenderWeek = w;  renderSalesGenderTrend(); }
-
+        function setPerfWkYear(y)   { perfWkYear = y;  perfWkMonth = null; renderSalesTrend(); }
+        function setPerfWkMonth(m)  { perfWkMonth = m; perfWkYear = m ? m.slice(0,4) : perfWkYear; if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
+        function setPerfAreaYear(y) { perfAreaYear = y; perfAreaMonth = null; perfAreaWeek = null; renderSalesAreaTrend(); }
+        function setPerfAreaMonth(m){ perfAreaMonth = m; perfAreaWeek = null; perfAreaYear = m ? m.slice(0,4) : perfAreaYear; if (m) loadPerfMonth(m).then(()=>renderSalesAreaTrend()); else renderSalesAreaTrend(); }
+        function setPerfAreaWeek(w) { perfAreaWeek = w; renderSalesAreaTrend(); }
+        function setPerfGenderYear(y){ perfGenderYear = y; perfGenderMonth = null; perfGenderWeek = null; renderSalesGenderTrend(); }
+        function setPerfGenderMonth(m){ perfGenderMonth = m; perfGenderWeek = null; perfGenderYear = m ? m.slice(0,4) : perfGenderYear; if (m) loadPerfMonth(m).then(()=>renderSalesGenderTrend()); else renderSalesGenderTrend(); }
+        function setPerfGenderWeek(w){ perfGenderWeek = w; renderSalesGenderTrend(); }
         function switchSalesTab(tab) {
             currentSalesTab = tab;
             document.querySelectorAll('.sales-tab-btn').forEach(btn => {
