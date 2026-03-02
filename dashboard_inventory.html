@@ -7128,14 +7128,37 @@
 
             if (typeof XLSX !== 'undefined') {
                 const wb = XLSX.utils.book_new();
-                const ws1 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
-                XLSX.utils.book_append_sheet(wb, ws1, 'Detail');
+
+                // Sheet 1: Summary (semua store, semua baris)
+                const wsSummary = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+                XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
+
+                // Per-store detail sheets
+                const storeGroups = {};
+                detail.forEach(function(r) {
+                    if (!storeGroups[r.store]) storeGroups[r.store] = [];
+                    storeGroups[r.store].push(r);
+                });
+                Object.keys(storeGroups).sort().forEach(function(store) {
+                    const rows = storeGroups[store].map(function(r) {
+                        return [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
+                    });
+                    const ws = XLSX.utils.aoa_to_sheet([detailHeaders, ...rows]);
+                    // Excel sheet name: max 31 chars, no special chars
+                    const sheetName = store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31);
+                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                });
+
+                // Transfer Recommendation sheet
                 const ws2 = XLSX.utils.aoa_to_sheet([transferHeaders, ...transferRows]);
-                XLSX.utils.book_append_sheet(wb, ws2, 'Transfer Recommendation');
+                XLSX.utils.book_append_sheet(wb, ws2, 'Transfer Rec');
+
+                // RO Box sheet
                 if (roData.length > 0) {
                     const ws3 = XLSX.utils.aoa_to_sheet([roHeaders, ...roData]);
                     XLSX.utils.book_append_sheet(wb, ws3, 'RO Box');
                 }
+
                 XLSX.writeFile(wb, 'stock_redistribution_' + (rdData.snapshot_date || 'export') + '.xlsx');
             } else {
                 alert('SheetJS not loaded — cannot export');
