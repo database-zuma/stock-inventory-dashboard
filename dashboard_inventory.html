@@ -1705,7 +1705,7 @@
                 const sku = item.sku ? item.sku.toUpperCase() : '';
                 if (sku) {
                     const article = sku.replace(/Z\d{2,3}$/, '');       // e.g. M1AZSPV207
-                    const articleNoAZ = article.replace(/AZ/g, '');    // e.g. M1SPV207 (matches sales kode)
+                    const articleNoAZ = article.replace(/AZ\d{0,3}/g, ''); // e.g. M1AZSPV207→M1SPV207, L2AZ37ST1→L2ST1
                     if (item.tier && item.tier !== '-') { skuTierMap[sku] = item.tier; skuTierMap[article] = item.tier; skuTierMap[articleNoAZ] = item.tier; }
                     if (item.series && item.series !== '-') { skuSeriesMap[sku] = item.series; skuSeriesMap[article] = item.series; skuSeriesMap[articleNoAZ] = item.series; }
                     if (item.tipe && item.tipe !== '-') { skuTipeMap[sku] = item.tipe; skuTipeMap[article] = item.tipe; skuTipeMap[articleNoAZ] = item.tipe; }
@@ -1715,7 +1715,7 @@
                 const kode = item.kode_kecil ? item.kode_kecil.toUpperCase() : '';
                 if (kode) {
                     // kode_kecil with size: 'l1azspv207z36' → strip size → 'L1AZSPV207' → strip AZ → 'L1SPV207' (matches sales kode)
-                    const kodeArticle = kode.replace(/Z\d{2,3}$/i, '').replace(/AZ/g, '');
+                    const kodeArticle = kode.replace(/Z\d{2,3}$/i, '').replace(/AZ\d{0,3}/g, '');
                     if (kodeArticle && item.name && item.name !== '-') {
                         if (!articleNameMap[kodeArticle]) articleNameMap[kodeArticle] = item.name;
                     }
@@ -5667,14 +5667,13 @@
             data.forEach(item => {
                 const sku = item.sku || '';
                 const skuUpper = sku.toUpperCase();
-                // Strip size suffix (Z42, Z39 dll) lalu strip AZ infix → dapat kode kecil tanpa ukuran
-                // Retail SKU: M1SPVPV207Z42 → M1SPVPV207 → M1SPVPV207 (tidak ada AZ)
-                // Non-retail SKU: E2AZ39EA7 (sudah tanpa size) → strip AZ → E239EA7
-                // Prioritas: pakai item.kode_kecil dari API (paling clean), fallback ke derivasi dari SKU
-                const skuNoSize = skuUpper.replace(/Z\d{2,3}$/, '');
+                // Strip AZ+ukuran embedded dari SKU format iSeller: L2AZ37ST1 → L2ST1, E2AZ39EA7 → E2EA7
+                // Format: [gender][model]AZ[size][series][nomor] → strip AZ\d{2}
+                const skuNoSize = skuUpper.replace(/Z\d{2,3}$/, '');  // strip size suffix dulu kalau ada
+                const stripAZ = s => s.replace(/AZ\d{2,3}/g, '');     // strip AZ+angka: AZ37, AZ39, AZ42 dll
                 const article = item.kode_kecil
-                    ? item.kode_kecil.toUpperCase().replace(/AZ/g, '')
-                    : skuNoSize.replace(/AZ/g, '');
+                    ? stripAZ(item.kode_kecil.toUpperCase())
+                    : stripAZ(skuNoSize);
                 if (!article) return;
                 // Skip non-sandal items for Top Selling
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
@@ -6337,8 +6336,17 @@
                 weeks.some(w => weeklyByGender[w] && weeklyByGender[w][g])
             );
 
-            let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Week</th>';
+            // Build subtitle: list unique months covered e.g. "Februari 2026" or "Jan – Feb 2026"
+            const monthsInData = [...new Set(weeks.map(w => {
+                const parts = w.split(' '); // ['W2', 'Feb'] or 'W2 Feb'
+                return parts.slice(1).join(' '); // 'Feb' or 'Feb 2026'
+            }))];
+            const periodLabel = monthsInData.length === 1
+                ? monthsInData[0]
+                : monthsInData[0] + ' – ' + monthsInData[monthsInData.length - 1];
+            let weeklyHtml = '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:6px;">Periode: <strong style="color:#374151;">' + periodLabel + '</strong> &nbsp;(minggu dalam bulan)</div>';
+            weeklyHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Minggu</th>';
             genders.forEach(g => {
                 weeklyHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
                 weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#a5f3d0;background:#002A3A;">Growth</th>';
