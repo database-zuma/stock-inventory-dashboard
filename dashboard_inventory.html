@@ -4873,9 +4873,9 @@
             if (!dateStr) return 0;
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return 0;
-            const firstDay = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
-            return Math.ceil((days + firstDay.getDay() + 1) / 7);
+            // Week of month (1-5), not week of year
+            const day = date.getDate();
+            return Math.ceil(day / 7);
         }
 
         function initSalesFilters() {
@@ -5611,12 +5611,14 @@
             })).sort((a, b) => b.qty - a.qty);
 
             // Top 5
+            // Top 10
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Artikel</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
-            articleArr.slice(0, 5).forEach((a, i) => {
-                const productName = articleNameMap[a.article.toUpperCase()] || a.category || '-';
-                topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
-                topHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + productName + '</td>';
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
+            articleArr.slice(0, 10).forEach((a, i) => {
+                const productName = articleNameMap[a.article.toUpperCase()] || '';
+                const displayName = productName && productName !== '-' ? productName : a.article;
+                topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
+                topHtml += '<td style="padding:6px;font-weight:500;">' + displayName + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + a.qty + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
@@ -5624,12 +5626,14 @@
             document.getElementById('salesTopArticles').innerHTML = topHtml;
 
             // Bottom 5 (slow moving)
+            // Bottom 10 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#fef2f2;"><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Artikel</th><th style="text-align:left;padding:6px;color:#991b1b;background:#fef2f2;">Nama Barang</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Qty</th><th style="text-align:right;padding:6px;color:#991b1b;background:#fef2f2;">Sales</th></tr></thead><tbody>';
-            articleArr.slice(-5).reverse().forEach((a, i) => {
-                const productName = articleNameMap[a.article.toUpperCase()] || a.category || '-';
-                slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="padding:6px;">' + (i+1) + '. ' + a.article + '</td>';
-                slowHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + productName + '</td>';
+            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
+            articleArr.slice(-10).reverse().forEach((a, i) => {
+                const productName = articleNameMap[a.article.toUpperCase()] || '';
+                const displayName = productName && productName !== '-' ? productName : a.article;
+                slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
+                slowHtml += '<td style="padding:6px;font-weight:500;">' + displayName + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
@@ -5643,8 +5647,8 @@
                 const skuUpper = sku.toUpperCase();
                 const gender = getGenderFromSKU(sku);
 
-                // Get series and tipe from stock data mapping (from Master Produk)
-                const series = skuSeriesMap[skuUpper] || '-';
+                // Get series and tipe — fallback to item.collection (direct from sales API)
+                const series = skuSeriesMap[skuUpper] || item.collection || '-';
                 const tipe = skuTipeMap[skuUpper] || '-';
 
                 // Group by Gender > Series
@@ -5732,8 +5736,8 @@
             const byTier = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                // Get tier from skuTierMap (built from allData stock)
-                const tier = skuTierMap[sku.toUpperCase()] || '-';
+                // Get tier — fallback to item.tier direct from sales data
+                const tier = skuTierMap[sku.toUpperCase()] || item.tier || '-';
                 if (!byTier[tier]) byTier[tier] = { sales: 0, qty: 0, trx: new Set() };
                 byTier[tier].sales += item.total || 0;
                 byTier[tier].qty += item.qty || 0;
@@ -6215,10 +6219,10 @@
             );
 
             let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            weeklyHtml += '<thead><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;">Week</th>';
+            weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Week</th>';
             genders.forEach(g => {
-                weeklyHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
-                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#6b7280;">Growth</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#a5f3d0;background:#002A3A;">Growth</th>';
             });
             weeklyHtml += '</tr></thead><tbody>';
 
@@ -6251,11 +6255,11 @@
             });
 
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            areaHtml += '<thead><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;">Area</th>';
+            areaHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             genders.forEach(g => {
-                areaHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';">' + g + '</th>';
+                areaHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
             });
-            areaHtml += '<th style="text-align:right;padding:8px;color:white;">Total</th></tr></thead><tbody>';
+            areaHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Total</th></tr></thead><tbody>';
 
             Object.entries(genderByArea).sort((a, b) => {
                 const totalA = Object.values(a[1]).reduce((sum, v) => sum + v.sales, 0);
@@ -6296,7 +6300,7 @@
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             genders.forEach(g => {
-                storeHtml += '<th style="text-align:right;padding:8px;color:' + (genderColors[g] || '#6b7280') + ';background:#f8fafc;">' + g + '</th>';
+                storeHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
             });
             storeHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Total</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Dominant</th></tr></thead><tbody>';
 
