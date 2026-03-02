@@ -5353,7 +5353,7 @@
                 var tipe = item.tipe || null;
                 if (!tipe) { var skuUp = (item.sku || '').toUpperCase(); var artKey = skuUp.replace(/Z\d{2,3}$/, '').replace(/[A-Z][0-9]+$/, ''); tipe = skuTipeMap[skuUp] || skuTipeMap[artKey] || null; }
                 if (!tipe) tipe = getTipeFromSeries ? getTipeFromSeries(item.collection || '') : null;
-                if (!tipe || tipe === '-') tipe = 'Lainnya';
+                if (!tipe || tipe === '-' || tipe === '') return; // skip non-sandal (shopbag, inbox, gwp)
                 if (!byTipe[tipe]) byTipe[tipe] = { sales: 0, qty: 0 };
                 byTipe[tipe].sales += item.total || 0;
                 byTipe[tipe].qty   += item.qty   || 0;
@@ -5705,8 +5705,7 @@
                 article = article.replace(/AZ(?=[A-Z])/g, '');
                 if (!article) return;
                 // Skip non-sandal items for Top Selling
-                const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
-                if (isNonSandal) return;
+                // Include all items in Sales Produk (shopbag, paperbag, inbox dll)
                 if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
                 // Fix: total_jumlah_pesanan (retail) bisa null → fallback ke price*qty
                 const itemTotal = (item.total && item.total > 0) ? item.total : ((item.price || 0) * (item.qty || 0));
