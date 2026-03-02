@@ -5667,7 +5667,14 @@
             data.forEach(item => {
                 const sku = item.sku || '';
                 const skuUpper = sku.toUpperCase();
-                const article = skuUpper.replace(/Z\d{2,3}$/, '');
+                // Strip size suffix (Z42, Z39 dll) lalu strip AZ infix → dapat kode kecil tanpa ukuran
+                // Retail SKU: M1SPVPV207Z42 → M1SPVPV207 → M1SPVPV207 (tidak ada AZ)
+                // Non-retail SKU: E2AZ39EA7 (sudah tanpa size) → strip AZ → E239EA7
+                // Prioritas: pakai item.kode_kecil dari API (paling clean), fallback ke derivasi dari SKU
+                const skuNoSize = skuUpper.replace(/Z\d{2,3}$/, '');
+                const article = item.kode_kecil
+                    ? item.kode_kecil.toUpperCase().replace(/AZ/g, '')
+                    : skuNoSize.replace(/AZ/g, '');
                 if (!article) return;
                 // Skip non-sandal items for Top Selling
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
