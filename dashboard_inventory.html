@@ -1704,17 +1704,18 @@
             [...(entityData.warehouse || []), ...(entityData.retail || [])].forEach(item => {
                 const sku = item.sku ? item.sku.toUpperCase() : '';
                 if (sku) {
-                    const article = sku.replace(/Z\d{2,3}$/, '');
-                    if (item.tier && item.tier !== '-') { skuTierMap[sku] = item.tier; if (article) skuTierMap[article] = item.tier; }
-                    if (item.series && item.series !== '-') { skuSeriesMap[sku] = item.series; if (article) skuSeriesMap[article] = item.series; }
-                    if (item.tipe && item.tipe !== '-') { skuTipeMap[sku] = item.tipe; if (article) skuTipeMap[article] = item.tipe; }
-                    if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
+                    const article = sku.replace(/Z\d{2,3}$/, '');       // e.g. M1AZSPV207
+                    const articleNoAZ = article.replace(/AZ/g, '');    // e.g. M1SPV207 (matches sales kode)
+                    if (item.tier && item.tier !== '-') { skuTierMap[sku] = item.tier; skuTierMap[article] = item.tier; skuTierMap[articleNoAZ] = item.tier; }
+                    if (item.series && item.series !== '-') { skuSeriesMap[sku] = item.series; skuSeriesMap[article] = item.series; skuSeriesMap[articleNoAZ] = item.series; }
+                    if (item.tipe && item.tipe !== '-') { skuTipeMap[sku] = item.tipe; skuTipeMap[article] = item.tipe; skuTipeMap[articleNoAZ] = item.tipe; }
+                    if (articleNoAZ && item.name && item.name !== '-') articleNameMap[articleNoAZ] = item.name;
                 }
                 // ALSO build from kode_kecil field (matches sales SKU format after strip size)
                 const kode = item.kode_kecil ? item.kode_kecil.toUpperCase() : '';
                 if (kode) {
-                    // kode_kecil with size: 'l1cmv204z36' → strip → 'L1CMV204'
-                    const kodeArticle = kode.replace(/Z\d{2,3}$/i, '');
+                    // kode_kecil with size: 'l1azspv207z36' → strip size → 'L1AZSPV207' → strip AZ → 'L1SPV207' (matches sales kode)
+                    const kodeArticle = kode.replace(/Z\d{2,3}$/i, '').replace(/AZ/g, '');
                     if (kodeArticle && item.name && item.name !== '-') {
                         if (!articleNameMap[kodeArticle]) articleNameMap[kodeArticle] = item.name;
                     }
