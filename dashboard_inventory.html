@@ -4938,12 +4938,14 @@
 
         // Helper: Get week number from date
         function getWeekNumber(dateStr) {
-            if (!dateStr) return 0;
+            if (!dateStr) return '0';
             const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return 0;
-            // Week of month (1-5), not week of year
+            if (isNaN(date.getTime())) return '0';
+            // Week of month (1-5) + month abbreviation, e.g. 'W1 Jan', 'W2 Feb'
             const day = date.getDate();
-            return Math.ceil(day / 7);
+            const weekOfMonth = Math.ceil(day / 7);
+            const monthAbbr = date.toLocaleString('id-ID', { month: 'short' });
+            return weekOfMonth + ' ' + monthAbbr;
         }
 
         function initSalesFilters() {
@@ -5706,7 +5708,7 @@
                 }
                 const productName = (!isSKULike(a.productName)) ? a.productName : (mapName || fallbackName || a.article.toLowerCase());
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
-                topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
+                topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
                 topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + a.qty + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
@@ -5732,7 +5734,7 @@
                 }
                 const productName = (!isSKULike2(a.productName)) ? a.productName : (mapName || fallbackName2 || a.article.toLowerCase());
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
-                slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
+                slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
                 slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
