@@ -5673,14 +5673,19 @@
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
                 if (isNonSandal) return;
                 if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
-                byArticle[article].sales += item.total || 0;
+                // Fix: total_jumlah_pesanan (retail) bisa null → fallback ke price*qty
+                const itemTotal = (item.total && item.total > 0) ? item.total : ((item.price || 0) * (item.qty || 0));
+                byArticle[article].sales += itemTotal;
                 byArticle[article].qty += item.qty || 0;
-                // Capture best product name from product_name field
+                // Capture best product name — skip if it looks like a SKU code
                 if (!byArticle[article].productName && item.product_name && item.product_name !== '-') {
-                    // Extract short name: strip brand prefix (ZUMA LADIES/ZUMA MEN etc)
-                    let pn = item.product_name.toUpperCase();
-                    pn = pn.replace(/^ZUMA\s+(LADIES|MEN|KIDS|GIRLS|BOYS|BABY|JUNIOR)\s+/, '');
-                    byArticle[article].productName = pn || item.product_name.toUpperCase();
+                    const pnUp = item.product_name.toUpperCase();
+                    // Skip if product_name IS a SKU: matches SKU pattern (letter+number combos, no spaces, like M1SPVPV214 or M1SPVPV214Z42)
+                    const looksLikeSKU = /^[A-Z0-9]{6,}$/.test(pnUp.trim()) || /Z\d{2,3}$/.test(pnUp.trim());
+                    if (!looksLikeSKU) {
+                        let pn = pnUp.replace(/^ZUMA\s+(LADIES|MEN|KIDS|GIRLS|BOYS|BABY|JUNIOR)\s+/, '');
+                        byArticle[article].productName = pn || pnUp;
+                    }
                 }
             });
 
@@ -5695,7 +5700,7 @@
             articleArr.slice(0, 10).forEach((a, i) => {
                 // Name priority: captured product_name > articleNameMap > collection-based fallback > kode kecil
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const isSKULike = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
+                const isSKULike = pn => !pn || /Z\d{2,3}$/i.test(pn) || /^[A-Z0-9]{6,}$/.test((pn||'').trim()) || pn.toUpperCase() === a.article.toUpperCase();
                 // Generate fallback name from collection + gender + model number
                 let fallbackName = '';
                 if (!mapName && a.collection) {
@@ -5722,7 +5727,7 @@
             slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
+                const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || /^[A-Z0-9]{6,}$/.test((pn||'').trim()) || pn.toUpperCase() === a.article.toUpperCase();
                 let fallbackName2 = '';
                 if (!mapName && a.collection) {
                     const gdr2 = getGenderFromSKU(a.article) || '';
