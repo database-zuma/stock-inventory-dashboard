@@ -1233,33 +1233,33 @@
                             </div>
                         </div>
 
-                        <!-- Shared Month/Week Filter — berlaku untuk Sales by Day, Week, Area Trend, Gender -->
-                        <div id="perfFilterBar" style="margin-bottom:20px;background:#f0f9ff;border-radius:10px;padding:12px 16px;border:1px solid #bae6fd;">
-                            <div style="font-size:0.78rem;color:#0369a1;font-weight:700;margin-bottom:8px;">📅 Filter Periode <span style="font-weight:400;">(berlaku untuk 4 grafik di bawah)</span></div>
-                            <div id="perfMonthPills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
-                            <div id="perfWeekPills" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:28px;"></div>
-                        </div>
-
                         <!-- Row 4: Sales by Day -->
                         <div style="margin-bottom:24px;">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
+                            <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
+                            <div id="perfDayMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
+                            <div id="perfDayWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
                             <div id="salesWeeklySummary"></div>
                         </div>
 
                         <!-- Row 5: Sales by Week -->
                         <div style="margin-bottom:24px;">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
+                            <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
+                            <div id="perfWkMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
                             <div id="salesWeekByWeek"></div>
                         </div>
 
                         <!-- Row 6: Sales by Area Trend + Gender side by side -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <div>
-                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
+                                <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
+                                <div id="perfAreaMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
+                                <div id="perfAreaWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"></div>
                                 <div id="salesAreaTrend"></div>
                             </div>
                             <div>
-                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
+                                <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
+                                <div id="perfGenderMonthPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;"></div>
+                                <div id="perfGenderWeekPills" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"></div>
                                 <div id="salesGenderTrend"></div>
                             </div>
                         </div>
@@ -1660,8 +1660,10 @@
         let salesMap = {};
         let salesDetailData = [];
         let weeklySelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all available
-        let perfSelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all
-        let perfSelectedWeek = null;   // 'W1'-'W5', null = all
+        let perfDayMonth = null,  perfDayWeek = null;   // Sales by Day
+        let perfWkMonth  = null;                        // Sales by Week (month only)
+        let perfAreaMonth = null, perfAreaWeek = null;  // Sales by Area Trend
+        let perfGenderMonth = null, perfGenderWeek = null; // Sales by Gender
         let targetData = {};
 
         // Global format functions
@@ -5259,7 +5261,8 @@
         }
 
         function renderSalesAreaTrend() {
-            var data = getPerfFilteredData();
+            renderChartPills('perfAreaMonthPills', 'perfAreaWeekPills', perfAreaMonth, perfAreaWeek, 'setPerfAreaMonth', 'setPerfAreaWeek');
+            var data = getChartData(perfAreaMonth, perfAreaWeek);
 
             // Area colors
             var areaColors = {
@@ -5340,8 +5343,10 @@
         }
 
         function renderSalesTrend() {
-            renderPerfMonthWeekPills();
-            const data = getPerfFilteredData();
+            const data = filteredSalesData;   // Daily trend + Hour chart still use main filter
+            // Per-chart data (from salesDetailData, independent of main date filter)
+            const dayData = getChartData(perfDayMonth, perfDayWeek);
+            const wkData  = getChartData(perfWkMonth, null);
 
             // Daily trend
             const byDate = {};
@@ -5394,8 +5399,9 @@
             hourHtml += '</div>';
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
-            // Sales by Day with shared month/week filter
-            var weekFilter = perfSelectedWeek || 'all';
+            // Sales by Day — per-chart filter
+            renderChartPills('perfDayMonthPills', 'perfDayWeekPills', perfDayMonth, perfDayWeek, 'setPerfDayMonth', 'setPerfDayWeek');
+            var weekFilter = perfDayWeek || 'all';
             var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
             var dayNamesFull = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
             var dayOrder = [1, 2, 3, 4, 5, 6, 0];
@@ -5409,7 +5415,7 @@
                 var byDayOfWeek = { 0: { sales: 0, count: 0 }, 1: { sales: 0, count: 0 }, 2: { sales: 0, count: 0 }, 3: { sales: 0, count: 0 }, 4: { sales: 0, count: 0 }, 5: { sales: 0, count: 0 }, 6: { sales: 0, count: 0 } };
                 var dateCount = {};
 
-                data.forEach(function(item) {
+                dayData.forEach(function(item) {
                     var dateObj = new Date(item.date);
                     if (isNaN(dateObj)) return;
                     var day = dateObj.getDay();
@@ -5441,13 +5447,13 @@
                 // SPECIFIC WEEK: show dates chronologically (1, 2, 3... or 8, 9, 10...)
                 var weekNum = parseInt(weekFilter.replace('W', ''));
                 var startDate = (weekNum - 1) * 7 + 1;
-                // Derive last day from perfSelectedMonth (or fall back to max 31)
-                var selParts = perfSelectedMonth ? perfSelectedMonth.split('-').map(Number) : null;
+                // Derive last day from perfDayMonth (or fall back to max 31)
+                var selParts = perfDayMonth ? perfDayMonth.split('-').map(Number) : null;
                 var endDate = Math.min(weekNum * 7, selParts ? new Date(selParts[0], selParts[1], 0).getDate() : 31);
 
                 // Aggregate sales by date
                 var dailySales = {};
-                data.forEach(function(item) {
+                dayData.forEach(function(item) {
                     var itemDate = new Date(item.date);
                     if (isNaN(itemDate)) return;
                     var dayOfMonth = itemDate.getDate();
@@ -5554,9 +5560,10 @@
             weeklyHtml += '</div>';
             document.getElementById('salesWeeklySummary').innerHTML = weeklyHtml;
 
-            // Week by Week Trend (W1, W2, W3, W4)
+            // Week by Week Trend — per-chart filter
+            renderChartPills('perfWkMonthPills', null, perfWkMonth, null, 'setPerfWkMonth', null);
             const byWeek = {};
-            data.forEach(item => {
+            wkData.forEach(item => {
                 const date = new Date(item.date);
                 if (isNaN(date)) return;
                 const dayOfMonth = date.getDate();
@@ -6175,7 +6182,8 @@
         }
 
         function renderSalesGenderTrend() {
-            var data = getPerfFilteredData();
+            renderChartPills('perfGenderMonthPills', 'perfGenderWeekPills', perfGenderMonth, perfGenderWeek, 'setPerfGenderMonth', 'setPerfGenderWeek');
+            var data = getChartData(perfGenderMonth, perfGenderWeek);
 
             // Gender colors
             var genderColors = {
@@ -6490,105 +6498,92 @@
             if (el) el.innerHTML = weeklyHtml;
         }
 
-        // ── Performance Period Filter (Month + Week pills) ───────────────────────────────
+        // ── Per-chart Performance filters (Month + Week pills) ────────────────────────
 
-        function getPerfFilteredData() {
-            let data = filteredSalesData;
-            if (perfSelectedMonth) {
+        // Filter salesDetailData (all months) by month + optional week
+        function getChartData(selectedMonth, selectedWeek) {
+            let data = salesDetailData || [];
+            if (selectedMonth) {
                 data = data.filter(item => {
                     if (!item.date) return false;
                     const d = new Date(item.date);
                     if (isNaN(d)) return false;
-                    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                    return key === perfSelectedMonth;
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') === selectedMonth;
                 });
             }
-            if (perfSelectedWeek) {
-                const wNum = parseInt(perfSelectedWeek.replace('W', ''));
+            if (selectedWeek) {
+                const wNum = parseInt(selectedWeek.replace('W', ''));
                 data = data.filter(item => {
                     if (!item.date) return false;
                     const d = new Date(item.date);
-                    if (isNaN(d)) return false;
-                    return Math.ceil(d.getDate() / 7) === wNum;
+                    return !isNaN(d) && Math.ceil(d.getDate() / 7) === wNum;
                 });
             }
             return data;
         }
 
         function _pillStyle(isActive, color) {
-            return 'padding:3px 11px;border-radius:20px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1.5px solid '
+            return 'padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1.5px solid '
                 + (isActive ? color : '#d1d5db') + ';background:'
                 + (isActive ? color : 'white') + ';color:'
                 + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;';
         }
 
-        function renderPerfMonthWeekPills() {
-            const monthEl = document.getElementById('perfMonthPills');
-            const weekEl  = document.getElementById('perfWeekPills');
+        // Generic per-chart pill renderer: extracts months from salesDetailData
+        function renderChartPills(monthElId, weekElId, selectedMonth, selectedWeek, setMonthFn, setWeekFn) {
+            const monthEl = document.getElementById(monthElId);
             if (!monthEl) return;
 
-            // Extract months from filteredSalesData
+            // Extract all available months from salesDetailData
             const monthSet = {};
-            (filteredSalesData || []).forEach(item => {
+            (salesDetailData || []).forEach(item => {
                 if (!item.date) return;
                 const d = new Date(item.date);
                 if (isNaN(d)) return;
                 const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
             });
             const months = Object.keys(monthSet).sort();
 
-            // Reset stale selection
-            if (perfSelectedMonth && !monthSet[perfSelectedMonth]) {
-                perfSelectedMonth = null;
-                perfSelectedWeek = null;
-            }
-
-            // Month pills: Semua + one per month
-            let mHtml = '<button onclick="setPerfMonth(null)" style="' + _pillStyle(!perfSelectedMonth, '#002A3A') + '">Semua Bulan</button>';
+            let mHtml = '<span style="font-size:0.7rem;color:#6b7280;margin-right:3px;">Bulan:</span>';
+            mHtml += '<button onclick="' + setMonthFn + '(null)" style="' + _pillStyle(!selectedMonth, '#002A3A') + '">Semua</button>';
             months.forEach(key => {
-                mHtml += '<button onclick="setPerfMonth(\'' + key + '\')" style="' + _pillStyle(key === perfSelectedMonth, '#002A3A') + '">' + monthSet[key] + '</button>';
+                mHtml += '<button onclick="' + setMonthFn + '(\'' + key + '\')" style="' + _pillStyle(key === selectedMonth, '#002A3A') + '">' + monthSet[key] + '</button>';
             });
             monthEl.innerHTML = mHtml;
 
-            // Week pills (only if month selected)
+            // Week pills (only if a month is selected, only if weekElId is provided)
+            const weekEl = weekElId ? document.getElementById(weekElId) : null;
             if (!weekEl) return;
-            if (!perfSelectedMonth) {
-                weekEl.innerHTML = '';
-                return;
-            }
+            if (!selectedMonth) { weekEl.innerHTML = ''; return; }
 
-            // Determine which weeks exist in the selected month
             const weekCounts = {};
-            (filteredSalesData || []).forEach(item => {
+            (salesDetailData || []).forEach(item => {
                 if (!item.date) return;
                 const d = new Date(item.date);
                 if (isNaN(d)) return;
-                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                if (key !== perfSelectedMonth) return;
+                if (d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') !== selectedMonth) return;
                 const wk = 'W' + Math.ceil(d.getDate() / 7);
                 weekCounts[wk] = (weekCounts[wk] || 0) + 1;
             });
-            const weeksWithData = Object.keys(weekCounts).sort();
+            const weeks = Object.keys(weekCounts).sort();
 
-            let wHtml = '<span style="font-size:0.72rem;color:#6b7280;margin-right:4px;">Minggu:</span>';
-            wHtml += '<button onclick="setPerfWeek(null)" style="' + _pillStyle(!perfSelectedWeek, '#6366f1') + '">Semua</button>';
-            weeksWithData.forEach(wk => {
-                wHtml += '<button onclick="setPerfWeek(\'' + wk + '\')" style="' + _pillStyle(wk === perfSelectedWeek, '#6366f1') + '">' + wk + '</button>';
+            let wHtml = '<span style="font-size:0.7rem;color:#6b7280;margin-right:3px;">Minggu:</span>';
+            wHtml += '<button onclick="' + setWeekFn + '(null)" style="' + _pillStyle(!selectedWeek, '#6366f1') + '">Semua</button>';
+            weeks.forEach(wk => {
+                wHtml += '<button onclick="' + setWeekFn + '(\'' + wk + '\')" style="' + _pillStyle(wk === selectedWeek, '#6366f1') + '">' + wk + '</button>';
             });
             weekEl.innerHTML = wHtml;
         }
 
-        function setPerfMonth(monthKey) {
-            perfSelectedMonth = monthKey;
-            perfSelectedWeek = null;  // reset week when month changes
-            renderSalesTrend();       // re-renders all 4 charts + pills
-        }
-
-        function setPerfWeek(weekKey) {
-            perfSelectedWeek = weekKey;
-            renderSalesTrend();       // re-renders all 4 charts + pills
-        }
+        // Per-chart set functions
+        function setPerfDayMonth(m) { perfDayMonth = m; perfDayWeek = null; renderSalesTrend(); }
+        function setPerfDayWeek(w)  { perfDayWeek = w;  renderSalesTrend(); }
+        function setPerfWkMonth(m)  { perfWkMonth = m;  renderSalesTrend(); }
+        function setPerfAreaMonth(m) { perfAreaMonth = m; perfAreaWeek = null; renderSalesAreaTrend(); }
+        function setPerfAreaWeek(w)  { perfAreaWeek = w;  renderSalesAreaTrend(); }
+        function setPerfGenderMonth(m) { perfGenderMonth = m; perfGenderWeek = null; renderSalesGenderTrend(); }
+        function setPerfGenderWeek(w)  { perfGenderWeek = w;  renderSalesGenderTrend(); }
 
         function switchSalesTab(tab) {
             currentSalesTab = tab;
