@@ -7023,7 +7023,7 @@
                     html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
                         '<td colspan="11" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         grp.sectionLabel + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
-                        '</td></tr>'];
+                        '</td></tr>';
                     var display = (grp.key === 'Store Surplus \u2192 WH') ? grp.rows.slice(0, surplusLimit) : grp.rows;
                     display.forEach(function(r) {
                         var isHigh = r.priority === 'High';
