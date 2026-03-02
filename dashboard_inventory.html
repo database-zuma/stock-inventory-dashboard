@@ -1659,6 +1659,8 @@
         let assortmentMap = {};
         let salesMap = {};
         let salesDetailData = [];
+        let salesDetailByMonth = {};  // cache: 'YYYY-MM' -> records[]
+        let salesAvailableMonths = []; // ['2026-01','2026-02',...] from aggregate
         let weeklySelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all available
         let perfDayMonth = null,  perfDayWeek = null;   // Sales by Day
         let perfWkMonth  = null;                        // Sales by Week (month only)
@@ -1798,6 +1800,29 @@
                 salesChannelCache['retail'] = salesDetailFetch;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
+                // Build salesDetailByMonth cache from initial fetch
+                salesDetailFetch.forEach(item => {
+                    if (!item.date) return;
+                    const m = item.date.slice(0, 7);
+                    if (!salesDetailByMonth[m]) salesDetailByMonth[m] = [];
+                    salesDetailByMonth[m].push(item);
+                });
+                // Extract available months from aggregate (all months, not just detail)
+                const aggMonthSet = {};
+                Object.values(salesAggData).forEach(skuData => {
+                    Object.keys(skuData).forEach(mKey => { aggMonthSet[mKey] = true; });
+                });
+                // Map Indonesian month abbrev → YYYY-MM (rolling 12 months from today)
+                const ID_MONTH = {jan:1,feb:2,mar:3,apr:4,mei:5,jun:6,jul:7,agu:8,sep:9,okt:10,nov:11,des:12};
+                const today = new Date();
+                const aggKeys = Object.keys(aggMonthSet);
+                salesAvailableMonths = aggKeys.map(k => {
+                    const mo = ID_MONTH[k.toLowerCase()];
+                    if (!mo) return null;
+                    // Determine year: if month > today's month, it's previous year
+                    const yr = mo > today.getMonth() + 1 ? today.getFullYear() - 1 : today.getFullYear();
+                    return yr + '-' + String(mo).padStart(2, '0');
+                }).filter(Boolean).sort();
                 buildDerivedMaps();
             } catch (err) {
                 console.error('Failed to load dashboard data:', err);
@@ -6388,22 +6413,16 @@
             const pillsContainer = document.getElementById('weeklyMonthPills');
             if (!pillsContainer) return;
 
-            // Extract available months from salesDetailData
+            // Use salesAvailableMonths (from aggregate) if available, fallback to salesDetailData
+            const months = (salesAvailableMonths.length > 0)
+                ? salesAvailableMonths
+                : [...new Set((salesDetailData||[]).filter(x=>x.date).map(x=>x.date.slice(0,7)))].sort();
             const monthSet = {};
-            (salesDetailData || []).forEach(item => {
-                if (!item.date) return;
-                const d = new Date(item.date);
-                if (isNaN(d)) return;
-                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                const label = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-                monthSet[key] = label;
+            months.forEach(key => {
+                const d = new Date(key + '-01');
+                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             });
-
-            const months = Object.keys(monthSet).sort();
-            if (months.length === 0) {
-                pillsContainer.innerHTML = '';
-                return;
-            }
+            if (months.length === 0) { pillsContainer.innerHTML = ''; return; }
 
             // Default: select the latest month if none selected yet
             if (!weeklySelectedMonth || !monthSet[weeklySelectedMonth]) {
@@ -6500,16 +6519,22 @@
 
         // ── Per-chart Performance filters (Month + Week pills) ────────────────────────
 
-        // Filter salesDetailData (all months) by month + optional week
+        // Filter salesDetailData by month + optional week
+        // If the month is not yet loaded, triggers lazy-load then re-renders
         function getChartData(selectedMonth, selectedWeek) {
             let data = salesDetailData || [];
             if (selectedMonth) {
-                data = data.filter(item => {
-                    if (!item.date) return false;
-                    const d = new Date(item.date);
-                    if (isNaN(d)) return false;
-                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') === selectedMonth;
-                });
+                // Use per-month cache if available
+                if (salesDetailByMonth[selectedMonth]) {
+                    data = salesDetailByMonth[selectedMonth];
+                } else {
+                    data = data.filter(item => {
+                        if (!item.date) return false;
+                        const d = new Date(item.date);
+                        if (isNaN(d)) return false;
+                        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') === selectedMonth;
+                    });
+                }
             }
             if (selectedWeek) {
                 const wNum = parseInt(selectedWeek.replace('W', ''));
@@ -6522,6 +6547,29 @@
             return data;
         }
 
+        // Lazy-load a specific month and re-render all perf charts
+        async function loadPerfMonth(monthKey) {
+            if (salesDetailByMonth[monthKey]) return; // already loaded
+            const [yr, mo] = monthKey.split('-');
+            const lastDay = new Date(yr, mo, 0).getDate();
+            const from = `${yr}-${mo}-01`;
+            const to   = `${yr}-${mo}-${String(lastDay).padStart(2,'0')}`;
+            try {
+                const rows = await fetchAPI(`/api/sales/detail?from=${from}&to=${to}`);
+                salesDetailByMonth[monthKey] = rows;
+                // Merge into salesDetailData (dedup by order_no+sku)
+                const existing = new Set(salesDetailData.map(r => r.order_no + '|' + r.sku));
+                rows.forEach(r => {
+                    if (!existing.has(r.order_no + '|' + r.sku)) {
+                        salesDetailData.push(r);
+                    }
+                });
+            } catch(e) {
+                salesDetailByMonth[monthKey] = []; // mark as attempted (empty)
+                console.warn('loadPerfMonth failed:', monthKey, e);
+            }
+        }
+
         function _pillStyle(isActive, color) {
             return 'padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1.5px solid '
                 + (isActive ? color : '#d1d5db') + ';background:'
@@ -6529,21 +6577,20 @@
                 + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;';
         }
 
-        // Generic per-chart pill renderer: extracts months from salesDetailData
+        // Generic per-chart pill renderer — months from salesAvailableMonths (all months from aggregate)
         function renderChartPills(monthElId, weekElId, selectedMonth, selectedWeek, setMonthFn, setWeekFn) {
             const monthEl = document.getElementById(monthElId);
             if (!monthEl) return;
 
-            // Extract all available months from salesDetailData
+            // Use salesAvailableMonths (from aggregate, all months) as source of truth
+            const months = (salesAvailableMonths.length > 0)
+                ? salesAvailableMonths
+                : [...new Set((salesDetailData || []).filter(x=>x.date).map(x=>x.date.slice(0,7)))].sort();
             const monthSet = {};
-            (salesDetailData || []).forEach(item => {
-                if (!item.date) return;
-                const d = new Date(item.date);
-                if (isNaN(d)) return;
-                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            months.forEach(key => {
+                const d = new Date(key + '-01');
                 monthSet[key] = d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
             });
-            const months = Object.keys(monthSet).sort();
 
             let mHtml = '<span style="font-size:0.7rem;color:#6b7280;margin-right:3px;">Bulan:</span>';
             mHtml += '<button onclick="' + setMonthFn + '(null)" style="' + _pillStyle(!selectedMonth, '#002A3A') + '">Semua</button>';
@@ -6576,13 +6623,13 @@
             weekEl.innerHTML = wHtml;
         }
 
-        // Per-chart set functions
-        function setPerfDayMonth(m) { perfDayMonth = m; perfDayWeek = null; renderSalesTrend(); }
+        // Per-chart set functions — lazy-load month data before rendering
+        function setPerfDayMonth(m) { perfDayMonth = m; perfDayWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
         function setPerfDayWeek(w)  { perfDayWeek = w;  renderSalesTrend(); }
-        function setPerfWkMonth(m)  { perfWkMonth = m;  renderSalesTrend(); }
-        function setPerfAreaMonth(m) { perfAreaMonth = m; perfAreaWeek = null; renderSalesAreaTrend(); }
+        function setPerfWkMonth(m)  { perfWkMonth = m;  if (m) loadPerfMonth(m).then(()=>renderSalesTrend()); else renderSalesTrend(); }
+        function setPerfAreaMonth(m) { perfAreaMonth = m; perfAreaWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesAreaTrend()); else renderSalesAreaTrend(); }
         function setPerfAreaWeek(w)  { perfAreaWeek = w;  renderSalesAreaTrend(); }
-        function setPerfGenderMonth(m) { perfGenderMonth = m; perfGenderWeek = null; renderSalesGenderTrend(); }
+        function setPerfGenderMonth(m) { perfGenderMonth = m; perfGenderWeek = null; if (m) loadPerfMonth(m).then(()=>renderSalesGenderTrend()); else renderSalesGenderTrend(); }
         function setPerfGenderWeek(w)  { perfGenderWeek = w;  renderSalesGenderTrend(); }
 
         function switchSalesTab(tab) {
