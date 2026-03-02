@@ -1454,9 +1454,9 @@
                                     <th style="padding:10px 12px; text-align:left; white-space:nowrap;">Tipe</th>
                                     <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Tier</th>
                                     <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Version</th>
-                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">Target</th>
-                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">On Hand</th>
-                                    <th style="padding:10px 12px; text-align:right; white-space:nowrap;">Gap</th>
+                                    <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Target</th>
+                                    <th style="padding:10px 12px; text-align:center; white-space:nowrap;">On Hand</th>
+                                    <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Gap</th>
                                     <th style="padding:10px 12px; text-align:center; white-space:nowrap;">Status</th>
                                 </tr>
                             </thead>
@@ -1553,9 +1553,9 @@
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gender</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Series</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
-                                        <th style="padding:10px 12px; text-align:right; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Target</th>
-                                        <th style="padding:10px 12px; text-align:right; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">On Hand</th>
-                                        <th style="padding:10px 12px; text-align:right; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gap</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Target</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">On Hand</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gap</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Status</th>
                                         <th style="padding:10px 12px; text-align:right; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Util %</th>
                                     </tr>
@@ -6993,9 +6993,9 @@
                         '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.gender + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.series + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + (r.tier || '-') + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:right;">' + r.target + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:right;">' + r.on_hand + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:right;font-weight:600;color:' + gapColor + ';">' + (r.gap > 0 ? '+' : '') + r.gap + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + r.target + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + r.on_hand + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;font-weight:600;color:' + gapColor + ';">' + (r.gap > 0 ? '+' : '') + r.gap + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + statusBadge + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:right;">' + (r.utilization_pct != null ? r.utilization_pct + '%' : '-') + '</td>' +
                         '</tr>';
@@ -7637,9 +7637,9 @@
                     <td style="padding:8px 12px; white-space:nowrap;">${r.tipe}</td>
                     <td style="padding:8px 12px; text-align:center;">${r.tier}</td>
                     <td style="padding:8px 12px; text-align:center;">${r.version}</td>
-                    <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.target}</td>
-                    <td style="padding:8px 12px; text-align:right; font-weight:600;">${r.onHand}</td>
-                    <td style="padding:8px 12px; text-align:right; font-weight:700; color:${gapColor[r.status]};">${r.gap >= 0 ? '+' : ''}${r.gap}</td>
+                    <td style="padding:8px 12px; text-align:center; font-weight:600;">${r.target}</td>
+                    <td style="padding:8px 12px; text-align:center; font-weight:600;">${r.onHand}</td>
+                    <td style="padding:8px 12px; text-align:center; font-weight:700; color:${gapColor[r.status]};">${r.gap >= 0 ? '+' : ''}${r.gap}</td>
                     <td style="padding:8px 12px; text-align:center; white-space:nowrap;">${statusLabel[r.status]}</td>
                 </tr>
             `).join('');
