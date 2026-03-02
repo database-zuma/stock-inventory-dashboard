@@ -5696,7 +5696,7 @@
             const data = filteredSalesData;
 
             // Top selling by category (extract article from SKU) - SANDAL ONLY
-            const nonSandalPrefixes = ['SHOPBAG', 'PAPERBAG', 'INBOX', 'GWP', 'BOX', 'BAG', 'INNER', 'PAPER'];
+            const nonSandalPrefixes = ['SHOPBAG', 'PAPERBAG', 'INBOX', 'BOX', 'BAG', 'INNER', 'PAPER'];
             const byArticle = {};
             data.forEach(item => {
                 const sku = item.sku || '';
