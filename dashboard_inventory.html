@@ -5350,9 +5350,8 @@
             var tipeColors = { 'Jepit':'#f59e0b', 'Fashion':'#8b5cf6', 'Baby':'#ec4899', 'Ladies':'#10b981', 'Kids':'#06b6d4' };
             var byTipe = {};
             data.forEach(function(item) {
-                var skuUp = (item.sku || '').toUpperCase();
-                var artKey = skuUp.replace(/Z\d{2,3}$/, '').replace(/[A-Z][0-9]+$/, '');
-                var tipe = skuTipeMap[skuUp] || skuTipeMap[artKey] || skuTipeMap[(item.kode_kecil||'').toUpperCase()] || null;
+                var tipe = item.tipe || null;
+                if (!tipe) { var skuUp = (item.sku || '').toUpperCase(); var artKey = skuUp.replace(/Z\d{2,3}$/, '').replace(/[A-Z][0-9]+$/, ''); tipe = skuTipeMap[skuUp] || skuTipeMap[artKey] || null; }
                 if (!tipe) tipe = getTipeFromSeries ? getTipeFromSeries(item.collection || '') : null;
                 if (!tipe || tipe === '-') tipe = 'Lainnya';
                 if (!byTipe[tipe]) byTipe[tipe] = { sales: 0, qty: 0 };
