@@ -7175,6 +7175,22 @@
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([mutasiHeaders, ...mutasiRows]), 'Mutasi ke WH');
             }
 
+            // Per-store sheets — tiap toko dapat sheet sendiri berisi semua transfernya
+            const storeTransferGroups = {};
+            const addToStore = function(store, row) {
+                if (!store) return;
+                if (!storeTransferGroups[store]) storeTransferGroups[store] = [];
+                storeTransferGroups[store].push(row);
+            };
+            const storeHeaders = ['Tipe', 'Dari', 'Ke', 'Kode Mix', 'Artikel', 'Ukuran / Kode Kecil', 'Version', 'Qty', 'Priority'];
+            roProtolItems.forEach(r => addToStore(r.ke,   ['RO Protol',  r.dari||'-',       r.ke||'-',      r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
+            roBoxItems.forEach(r =>    addToStore(r.ke,   ['RO Box',     'WH Pusat',        r.ke||'-',      r.kode_mix, r.artikel, r.kode_kecil||'',   r.version||'', r.qty, r.priority]));
+            mutasiItems.forEach(r =>   addToStore(r.dari, ['Mutasi ke WH', r.dari||'-',     'WH Protol',    r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
+            Object.keys(storeTransferGroups).sort().forEach(function(store) {
+                const ws = XLSX.utils.aoa_to_sheet([storeHeaders, ...storeTransferGroups[store]]);
+                XLSX.utils.book_append_sheet(wb, ws, store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31));
+            });
+
             XLSX.writeFile(wb, 'rd_transfer_recs_' + (rdData.snapshot_date || 'export') + '.xlsx');
         }
     </script>
