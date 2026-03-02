@@ -1783,13 +1783,12 @@
             const loadingEl = document.getElementById('api-loading-overlay');
             if (loadingEl) loadingEl.style.display = 'flex';
             try {
-                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, salesDetailFetch, targetsData, assortmentData] = await Promise.all([
+                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData] = await Promise.all([
                     fetchAPI('/api/stock'),
                     fetchAPI('/api/stores'),
                     fetchAPI('/api/store-areas'),
                     fetchAPI('/api/max-stock'),
                     fetchAPI('/api/sales/aggregate'),
-                    fetchAPI('/api/sales/detail?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)),
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
                 ]);
@@ -1806,17 +1805,30 @@
                 storeAreaMap = storeAreasData;
                 maxStockMap = maxStockData;
                 salesMap = salesAggData;
-                salesDetailData = salesDetailFetch;
-                salesChannelCache['retail'] = salesDetailFetch;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
-                // Build salesDetailByMonth cache from initial fetch
-                salesDetailFetch.forEach(item => {
-                    if (!item.date) return;
-                    const m = item.date.slice(0, 7);
-                    if (!salesDetailByMonth[m]) salesDetailByMonth[m] = [];
-                    salesDetailByMonth[m].push(item);
-                });
+                // Load sales detail per-month (Jan 2026 → current month) to avoid LIMIT issues
+                const todayM = new Date();
+                const months = [];
+                let m = new Date(2026, 0, 1); // Jan 2026
+                while (m <= todayM) {
+                    months.push(m.getFullYear() + '-' + String(m.getMonth()+1).padStart(2,'0'));
+                    m.setMonth(m.getMonth() + 1);
+                }
+                // Load all months in parallel, merge into salesDetailData + salesDetailByMonth
+                await Promise.all(months.map(async (monthKey) => {
+                    const [yr, mo] = monthKey.split('-');
+                    const lastDay = new Date(yr, mo, 0).getDate();
+                    const rows = await fetchAPI(`/api/sales/detail?from=${yr}-${mo}-01&to=${yr}-${mo}-${String(lastDay).padStart(2,'0')}`).catch(()=>[]);
+                    if (rows && rows.length) {
+                        salesDetailByMonth[monthKey] = rows;
+                        const existing = new Set(salesDetailData.map(r => (r.order_no||'') + '|' + (r.sku||'')));
+                        rows.forEach(r => { if (!existing.has((r.order_no||'')+'|'+(r.sku||''))) salesDetailData.push(r); });
+                    } else {
+                        salesDetailByMonth[monthKey] = [];
+                    }
+                }));
+                salesChannelCache['retail'] = salesDetailData;
                 // Extract available months from aggregate (all months, not just detail)
                 const aggMonthSet = {};
                 Object.values(salesAggData).forEach(skuData => {
