@@ -1789,7 +1789,7 @@
                     fetchAPI('/api/store-areas'),
                     fetchAPI('/api/max-stock'),
                     fetchAPI('/api/sales/aggregate'),
-                    fetchAPI('/api/sales/detail?months=2'),
+                    fetchAPI('/api/sales/detail?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)),
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
                 ]);
@@ -5018,7 +5018,7 @@
             // Set date range
             const sortedDates = Array.from(dates).sort();
             if (sortedDates.length > 0) {
-                document.getElementById('salesFilterStartDate').value = sortedDates[0];
+                document.getElementById('salesFilterStartDate').value = '2026-01-01';
                 document.getElementById('salesFilterEndDate').value = sortedDates[sortedDates.length - 1];
             }
 
@@ -7114,7 +7114,7 @@
         function resetSalesFilters() {
             const dates = salesDetailData.map(item => item.date).filter(d => d);
             const sortedDates = [...new Set(dates)].sort();
-            document.getElementById('salesFilterStartDate').value = sortedDates[0] || '';
+            document.getElementById('salesFilterStartDate').value = '2026-01-01';
             document.getElementById('salesFilterEndDate').value = sortedDates[sortedDates.length - 1] || '';
             document.getElementById('salesFilterArea').value = '';
             document.getElementById('salesFilterStore').value = '';
