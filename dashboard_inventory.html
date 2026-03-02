@@ -7112,16 +7112,15 @@
 
 
         function resetSalesFilters() {
-            const dates = salesDetailData.map(item => item.date).filter(d => d);
-            const sortedDates = [...new Set(dates)].sort();
+            const today = new Date().toISOString().slice(0,10);
             document.getElementById('salesFilterStartDate').value = '2026-01-01';
-            document.getElementById('salesFilterEndDate').value = sortedDates[sortedDates.length - 1] || '';
+            document.getElementById('salesFilterEndDate').value = today;
             document.getElementById('salesFilterArea').value = '';
             document.getElementById('salesFilterStore').value = '';
-            document.getElementById('salesFilterCategory').value = '';
             document.getElementById('salesFilterGender').value = '';
             document.getElementById('salesFilterSeries').value = '';
-            document.getElementById('salesFilterSearch').value = '';
+            const cat = document.getElementById('salesFilterCategory'); if (cat) cat.value = '';
+            const srch = document.getElementById('salesFilterSearch'); if (srch) srch.value = '';
             renderSalesDashboard();
         }
 
