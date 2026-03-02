@@ -1701,7 +1701,7 @@
         function buildDerivedMaps() {
         // Build from stock data first
         Object.values(allData).forEach(entityData => {
-            (entityData.warehouse || []).forEach(item => {
+            [...(entityData.warehouse || []), ...(entityData.retail || [])].forEach(item => {
                 const sku = item.sku ? item.sku.toUpperCase() : '';
                 if (sku) {
                     const article = sku.replace(/Z\d{2,3}$/, '');
@@ -1710,23 +1710,32 @@
                     if (item.tipe && item.tipe !== '-') { skuTipeMap[sku] = item.tipe; if (article) skuTipeMap[article] = item.tipe; }
                     if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
                 }
-            });
-            (entityData.retail || []).forEach(item => {
-                const sku = item.sku ? item.sku.toUpperCase() : '';
-                if (sku) {
-                    const article = sku.replace(/Z\d{2,3}$/, '');
-                    if (item.tier && item.tier !== '-') { skuTierMap[sku] = item.tier; if (article) skuTierMap[article] = item.tier; }
-                    if (item.series && item.series !== '-') { skuSeriesMap[sku] = item.series; if (article) skuSeriesMap[article] = item.series; }
-                    if (item.tipe && item.tipe !== '-') { skuTipeMap[sku] = item.tipe; if (article) skuTipeMap[article] = item.tipe; }
-                    if (article && item.name && item.name !== '-') articleNameMap[article] = item.name;
+                // ALSO build from kode_kecil field (matches sales SKU format after strip size)
+                const kode = item.kode_kecil ? item.kode_kecil.toUpperCase() : '';
+                if (kode) {
+                    // kode_kecil with size: 'l1cmv204z36' → strip → 'L1CMV204'
+                    const kodeArticle = kode.replace(/Z\d{2,3}$/i, '');
+                    if (kodeArticle && item.name && item.name !== '-') {
+                        if (!articleNameMap[kodeArticle]) articleNameMap[kodeArticle] = item.name;
+                    }
+                    if (kodeArticle && item.tier && item.tier !== '-') {
+                        if (!skuTierMap[kodeArticle]) skuTierMap[kodeArticle] = item.tier;
+                    }
+                    if (kodeArticle && item.tipe && item.tipe !== '-') {
+                        if (!skuTipeMap[kodeArticle]) skuTipeMap[kodeArticle] = item.tipe;
+                    }
+                    if (kodeArticle && item.series && item.series !== '-') {
+                        if (!skuSeriesMap[kodeArticle]) skuSeriesMap[kodeArticle] = item.series;
+                    }
                 }
             });
         });
         // Also build from sales data (product_name field from Tags column)
         salesDetailData.forEach(item => {
             if (item.sku && item.product_name && item.product_name !== '-') {
-                const article = item.sku.replace(/Z\d{2,3}$/, '');
-                if (article && !articleNameMap[article]) {
+                const article = item.sku.toUpperCase().replace(/Z\d{2,3}$/, '');
+                // Only use sales product_name if it looks like a real name (not a SKU code)
+                if (article && !articleNameMap[article] && item.product_name !== item.sku) {
                     articleNameMap[article] = item.product_name;
                 }
             }
@@ -4893,24 +4902,31 @@
             const s = series.toUpperCase();
             // Fashion — heels, wedges, dress sandals, fashion flats
             const fashionKw = ['ELSA','FREYA','IRIS','KIM','PUFFY','WEDGES','DOVER',
-                               'GINGER','CLASSIC','LUXE','ASTER','BELLA','FLORA',
-                               'LUNA','STELLA','AURORA','CANDY','FERN','HANA',
+                               'LUNA','FLO','LUCA','ZORRO','AIRMOVE','POWERMAX',
+                               'LEEVIERRA','JOVIEV','LAYERSOLE',
+                               'MERCI','CLASSICEARTH','CLASSIC METALIC',
+                               'GINGER','LUXE','ASTER','BELLA','FLORA',
+                               'STELLA','AURORA','CANDY','FERN','HANA',
                                'INDIE','JUNO','KAIA','LARA','MILA','NOVA','OPAL',
-                               'PITA','QUINN','RAYA','SAYA','TARA','UMA','VELA',
-                               'WILMA','XENA','YARA','ZARA','PEARL','ROSE','SAGE',
-                               'ACAI','BIRCH','CEDAR','DAISY','EMBER','FANCY',
-                               'GLAM','HONEY','IVORY','JADE','KNOT','LACE',
-                               'MOCHI','NOLA','ONYX','POPPY','QUEST','RUBY',
-                               'SAND','TAFFY','UMBER','VIOLA','WREN','XYLO',
-                               'YOGA','ZEST','SPICE','SNAP','CRISP','BLOOM',
-                               'GRACE','POSH','CHIC','LUXE','SLEEK','CLEAN',
-                               'LADIES','WOMAN','WOMEN','FEMALE'];
+                               'PEARL','ROSE','SAGE','ACAI','BIRCH','CEDAR',
+                               'DAISY','EMBER','FANCY','GLAM','HONEY','IVORY',
+                               'JADE','KNOT','LACE','MOCHI','NOLA','POPPY',
+                               'RUBY','SAND','TAFFY','VIOLA','WREN',
+                               'GRACE','POSH','CHIC','SLEEK','CLEAN',
+                               'LADIES','WOMAN','WOMEN','FEMALE',
+                               'OXFORD','VELCRO','MILTON','DOVER',
+                               'DISNEY','BATMAN','SPIDER-MAN','STITCH',
+                               'HELLO KITTY','HELLOKITTY','MICKEY','MINNIE',
+                               'LOONEY','GUDETAMA','COCOMELON','DOUGH DARLINGS',
+                               'LOTSO','LUCA NEW','COUPLE','SUMMER','TROPICAL'];
             if (fashionKw.some(k => s.includes(k))) return 'Fashion';
             // Jepit — flat thong, slipper, casual
-            const jepitKw = ['WBB','VELCRO','SLIDE','DALLAS','MILTON','JEPIT',
-                             'THONG','FLIP','FLOP','SLIPPER','CASUAL','BASIC',
-                             'SIMPLE','FLAT','BEACH','POOL','COMFORT','CLOUD',
-                             'FOAM','TERRY','BAND','STRAP','CLIP'];
+            const jepitKw = ['STRIPE','BLACKSERIES','BLACK SERIES','CAMO','CLASSIC',
+                             'WBB','SLIDE','DALLAS','CLOUD','STRAPP','SOLID',
+                             'PILLOW','ROCKY','HANZO','AYANG',
+                             'JEPIT','THONG','FLIP','FLOP','SLIPPER',
+                             'CASUAL','BASIC','SIMPLE','FLAT','BEACH',
+                             'POOL','COMFORT','FOAM','TERRY','BAND','STRAP','CLIP'];
             if (jepitKw.some(k => s.includes(k))) return 'Jepit';
             // Men typically Jepit
             if (['MEN','MALE','BOY','DALLAS','ONYX'].some(k => s.includes(k))) return 'Jepit';
@@ -5675,8 +5691,8 @@
             topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 10).forEach((a, i) => {
                 // Name priority: captured product_name > articleNameMap > kode kecil
-                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toLowerCase()] || '';
-                const productName = a.productName || mapName || a.article.toLowerCase();
+                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
+                const productName = (a.productName && a.productName !== a.article.toUpperCase() && a.productName !== a.article) ? a.productName : (mapName || a.article.toLowerCase());
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
@@ -5691,8 +5707,8 @@
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
-                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toLowerCase()] || '';
-                const productName = a.productName || mapName || a.article.toLowerCase();
+                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
+                const productName = (a.productName && a.productName !== a.article.toUpperCase() && a.productName !== a.article) ? a.productName : (mapName || a.article.toLowerCase());
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
                 slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
