@@ -5669,7 +5669,7 @@
                 // Skip non-sandal items for Top Selling
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
                 if (isNonSandal) return;
-                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '' };
+                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
                 byArticle[article].sales += item.total || 0;
                 byArticle[article].qty += item.qty || 0;
                 // Capture best product name from product_name field
@@ -5682,7 +5682,7 @@
             });
 
             const articleArr = Object.entries(byArticle).map(([article, val]) => ({
-                article, sales: val.sales, qty: val.qty, category: val.category, productName: val.productName
+                article, sales: val.sales, qty: val.qty, category: val.category, productName: val.productName, collection: val.collection, kode_kecil: val.kode_kecil
             })).sort((a, b) => b.qty - a.qty);
 
             // Top 5
@@ -5690,10 +5690,20 @@
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 10).forEach((a, i) => {
-                // Name priority: captured product_name > articleNameMap > kode kecil
+                // Name priority: captured product_name > articleNameMap > collection-based fallback > kode kecil
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
                 const isSKULike = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
-                const productName = (!isSKULike(a.productName)) ? a.productName : (mapName || a.article.toLowerCase());
+                // Generate fallback name from collection + gender + model number
+                let fallbackName = '';
+                if (!mapName && a.collection) {
+                    const gdr = getGenderFromSKU(a.article) || '';
+                    const kk = (a.kode_kecil || a.article || '').toLowerCase();
+                    const modelNum = parseInt((kk.match(/(\d+)$/) || ['','0'])[1]) || 0;
+                    if (gdr && gdr !== 'Unknown' && a.collection && modelNum > 0) {
+                        fallbackName = gdr.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum;
+                    }
+                }
+                const productName = (!isSKULike(a.productName)) ? a.productName : (mapName || fallbackName || a.article.toLowerCase());
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
@@ -5710,7 +5720,16 @@
             articleArr.slice(-10).reverse().forEach((a, i) => {
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
                 const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
-                const productName = (!isSKULike2(a.productName)) ? a.productName : (mapName || a.article.toLowerCase());
+                let fallbackName2 = '';
+                if (!mapName && a.collection) {
+                    const gdr2 = getGenderFromSKU(a.article) || '';
+                    const kk2 = (a.kode_kecil || a.article || '').toLowerCase();
+                    const modelNum2 = parseInt((kk2.match(/(\d+)$/) || ['','0'])[1]) || 0;
+                    if (gdr2 && gdr2 !== 'Unknown' && a.collection && modelNum2 > 0) {
+                        fallbackName2 = gdr2.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum2;
+                    }
+                }
+                const productName = (!isSKULike2(a.productName)) ? a.productName : (mapName || fallbackName2 || a.article.toLowerCase());
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
                 slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
