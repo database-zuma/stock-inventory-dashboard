@@ -5692,7 +5692,8 @@
             articleArr.slice(0, 10).forEach((a, i) => {
                 // Name priority: captured product_name > articleNameMap > kode kecil
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const productName = (a.productName && a.productName !== a.article.toUpperCase() && a.productName !== a.article) ? a.productName : (mapName || a.article.toLowerCase());
+                const isSKULike = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
+                const productName = (!isSKULike(a.productName)) ? a.productName : (mapName || a.article.toLowerCase());
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
@@ -5708,7 +5709,8 @@
             slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
                 const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const productName = (a.productName && a.productName !== a.article.toUpperCase() && a.productName !== a.article) ? a.productName : (mapName || a.article.toLowerCase());
+                const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || pn === a.article.toUpperCase() || pn === a.article;
+                const productName = (!isSKULike2(a.productName)) ? a.productName : (mapName || a.article.toLowerCase());
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
                 slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toLowerCase() + '</td>';
                 slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
