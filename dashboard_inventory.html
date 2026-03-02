@@ -5715,7 +5715,6 @@
                 // Tipe: skuTipeMap by full SKU, then by article (without size), then series-derived
                 const articleKey = skuUpper.replace(/Z\d{2,3}$/, '');
                 const tipe = skuTipeMap[skuUpper] || skuTipeMap[articleKey] || getTipeFromSeries(series);
-                const tipe = skuTipeMap[skuUpper] || getTipeFromSeries(series);
 
                 // Group by Gender > Series
                 const key = gender + '|' + series;
