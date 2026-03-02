@@ -1575,6 +1575,8 @@
                         <button onclick="rdSetType('RO Box')" id="rdTypeBtnBox"    style="padding:6px 14px;border-radius:20px;border:2px solid #7c3aed;background:#fff;color:#7c3aed;cursor:pointer;font-size:0.82rem;font-weight:600;">RO Box</button>
                         <button onclick="rdSetType('Store Surplus \u2192 WH')" id="rdTypeBtnMutasi" style="padding:6px 14px;border-radius:20px;border:2px solid #d97706;background:#fff;color:#d97706;cursor:pointer;font-size:0.82rem;font-weight:600;">Mutasi ke WH</button>
                     </div>
+                    <div style="display:flex; gap:16px; align-items:flex-start;">
+                        <div style="flex:0 0 auto;">
                     <div style="background:white; border-radius:12px; overflow:hidden;">
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
                             <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;">
@@ -1588,13 +1590,15 @@
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ukuran</th>
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; background:rgba(253,230,138,0.3); border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; background:rgba(167,243,208,0.3); border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
-                                        <th style="padding:4px 6px; text-align:right; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Priority</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rdTransferBody"></tbody>
                             </table>
                         </div>
+                        </div>
+                        <div id="rdSummaryPanel" style="flex:1; min-width:170px; display:flex; flex-direction:column; gap:10px; padding-top:2px;"></div>
                     </div>
                 </div>
             </div>
@@ -7074,7 +7078,7 @@
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;max-width:70px;">' + ukuranDisplay + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;background:#fef9c3;color:#92400e;font-weight:600;font-size:0.76rem;">' + (tierMap[r.kode_mix] || '-') + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;background:#ccfbf1;color:#0f766e;font-weight:600;font-size:0.76rem;">' + (r.version || '-') + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:right;font-weight:700;color:' + grp.color + ';">' + qtyDisplay + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:' + grp.color + ';">' + qtyDisplay + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
                             '</tr>';
                     });
@@ -7083,6 +7087,19 @@
                     }
                 });
                 tbody.innerHTML = html;
+                // Populate summary panel
+                var summaryHtml = '';
+                groups.forEach(function(g) {
+                    if (!g.rows.length) return;
+                    var totalQty = g.rows.reduce(function(s, r) { return s + (Number(r.qty) || 0); }, 0);
+                    summaryHtml += '<div style="background:white;border-radius:10px;padding:12px 14px;border-left:4px solid ' + g.color + ';margin-bottom:10px;">' +
+                        '<div style="font-size:0.72rem;font-weight:700;color:' + g.color + ';margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;">' + g.label + '</div>' +
+                        '<div style="font-size:1.3rem;font-weight:700;color:#111827;line-height:1.2;">' + formatNum(g.rows.length) + '<span style="font-size:0.72rem;font-weight:400;color:#6b7280;"> item</span></div>' +
+                        '<div style="font-size:0.79rem;color:#6b7280;margin-top:4px;">Total Qty: <b style="color:#111827;">' + formatNum(totalQty) + (g.key === 'RO Box' ? ' box' : ' pcs') + '</b></div>' +
+                        '</div>';
+                });
+                var sp = document.getElementById('rdSummaryPanel');
+                if (sp) sp.innerHTML = summaryHtml || '<div style="color:#9ca3af;font-size:0.8rem;padding:12px;">Tidak ada data</div>';
             }
         }
 
