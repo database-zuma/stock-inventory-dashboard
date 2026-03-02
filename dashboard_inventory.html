@@ -1521,6 +1521,7 @@
                                 <thead>
                                     <tr style="background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%); color:white; position:sticky; top:0; z-index:2;">
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Grade</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Asal</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tujuan</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Kecil</th>
@@ -6989,7 +6990,7 @@
 
                 document.getElementById('rdRowCount').textContent = formatNum(rows.length) + ' transfers';
                 const tbody = document.getElementById('rdTransferBody');
-                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
+                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
 
                 // Group by source_type — urutan: WH Protol→Store, RO Box, Surplus→WH
                 var groups = [
@@ -7020,6 +7021,7 @@
                     if (!grp.rows.length) return;
                     // Section header
                     html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
+                        '<td colspan="11" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         '<td colspan="10" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         grp.sectionLabel + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
                         '</td></tr>';
@@ -7040,7 +7042,14 @@
                         // Qty
                         var qtyDisplay = '' + r.qty;
                         if (r.source_type === 'RO Box') { qtyDisplay = r.qty + ' box'; }
+                        var gradeColors = { 'A': '#16a34a', 'B': '#2563eb', 'C': '#d97706', 'D': '#9ca3af' };
+                        var grade = r.store_grade || '';
+                        var gradeBadge = grade
+                            ? '<span style="background:' + (gradeColors[grade]||'#9ca3af') + ';color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.72rem;">' + grade + '</span>'
+                            : '<span style="color:#9ca3af;">—</span>';
                         html += '<tr style="background:#fff;border-left:3px solid ' + grp.color + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + typeBadge + '</td>' +
+                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + gradeBadge + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + typeBadge + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#111827;font-size:0.79rem;">' + (r.source_type === 'RO Box' ? 'WH Pusat' : cleanLoc(r.dari)) + '</td>' +
                             '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#111827;font-size:0.79rem;">' + (r.source_type === 'Store Surplus \u2192 WH' ? 'WH Protol' : cleanLoc(r.ke)) + '</td>' +
@@ -7054,7 +7063,7 @@
                             '</tr>';
                     });
                     if (grp.key === 'Store Surplus \u2192 WH' && grp.rows.length > surplusLimit) {
-                        html += '<tr><td colspan="10" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
+                        html += '<tr><td colspan="11" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
                     }
                 });
                 tbody.innerHTML = html;
@@ -7069,6 +7078,21 @@
                         '<div style="font-size:0.79rem;color:#6b7280;margin-top:4px;">Total Qty: <b style="color:#111827;">' + formatNum(totalQty) + (g.key === 'RO Box' ? ' box' : ' pcs') + '</b></div>' +
                         '</div>';
                 });
+                // Grade store legend
+                if (rdData.store_grades && rdData.store_grades.length) {
+                    var gradeColorsMap = { A:'#16a34a', B:'#2563eb', C:'#d97706', D:'#9ca3af' };
+                    summaryHtml += '<div style="background:white;border-radius:10px;padding:12px 14px;border-left:4px solid #6366f1;">' +
+                        '<div style="font-size:0.72rem;font-weight:700;color:#6366f1;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">🏆 Grade Toko</div>';
+                    rdData.store_grades.forEach(function(sg) {
+                        var gc = gradeColorsMap[sg.grade] || '#9ca3af';
+                        var shortName = sg.store.replace(/^ZUMA /i,'').replace(/^Zuma /,'');
+                        summaryHtml += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.76rem;">' +
+                            '<span style="background:' + gc + ';color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.72rem;flex-shrink:0;">' + sg.grade + '</span>' +
+                            '<span style="color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + sg.store + '">' + shortName + '</span>' +
+                            '</div>';
+                    });
+                    summaryHtml += '</div>';
+                }
                 var sp = document.getElementById('rdSummaryPanel');
                 if (sp) sp.innerHTML = summaryHtml || '<div style="color:#9ca3af;font-size:0.8rem;padding:12px;">Tidak ada data</div>';
             }
@@ -7142,8 +7166,8 @@
             const roBoxItems    = transfers.filter(r => r.source_type === 'RO Box');
             const mutasiItems   = transfers.filter(r => r.source_type === 'Store Surplus \u2192 WH');
 
-            const roProtolHeaders = ['Asal', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
-            const roProtolRows = roProtolItems.map(r => [r.dari||'-', r.ke||'-', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
+            const roProtolHeaders = ['Asal', 'Grade', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
+            const roProtolRows = roProtolItems.map(r => [r.dari||'-', r.store_grade||'', r.ke||'-', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
 
             const roBoxHeaders = ['Toko Tujuan', 'Kode Mix', 'Kode Kecil', 'Artikel', 'Version', 'Qty (Box)', 'Est. Pairs', 'Assortment Detail', 'Priority'];
             const roBoxRows = roBoxItems.map(function(r) {
@@ -7182,10 +7206,10 @@
                 if (!storeTransferGroups[store]) storeTransferGroups[store] = [];
                 storeTransferGroups[store].push(row);
             };
-            const storeHeaders = ['Tipe', 'Dari', 'Ke', 'Kode Mix', 'Artikel', 'Ukuran / Kode Kecil', 'Version', 'Qty', 'Priority'];
-            roProtolItems.forEach(r => addToStore(r.ke,   ['RO Protol',  r.dari||'-',       r.ke||'-',      r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
-            roBoxItems.forEach(r =>    addToStore(r.ke,   ['RO Box',     'WH Pusat',        r.ke||'-',      r.kode_mix, r.artikel, r.kode_kecil||'',   r.version||'', r.qty, r.priority]));
-            mutasiItems.forEach(r =>   addToStore(r.dari, ['Mutasi ke WH', r.dari||'-',     'WH Protol',    r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
+            const storeHeaders = ['Tipe', 'Grade', 'Dari', 'Ke', 'Kode Mix', 'Artikel', 'Ukuran / Kode Kecil', 'Version', 'Qty', 'Priority'];
+            roProtolItems.forEach(r => addToStore(r.ke,   ['RO Protol',   r.store_grade||'', r.dari||'-',    r.ke||'-',    r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
+            roBoxItems.forEach(r =>    addToStore(r.ke,   ['RO Box',      r.store_grade||'', 'WH Pusat',     r.ke||'-',    r.kode_mix, r.artikel, r.kode_kecil||'',   r.version||'', r.qty, r.priority]));
+            mutasiItems.forEach(r =>   addToStore(r.dari, ['Mutasi ke WH', r.store_grade||'', r.dari||'-',    'WH Protol',  r.kode_mix, r.artikel, r.ukuran||'',       r.version||'', r.qty, r.priority]));
             Object.keys(storeTransferGroups).sort().forEach(function(store) {
                 const ws = XLSX.utils.aoa_to_sheet([storeHeaders, ...storeTransferGroups[store]]);
                 XLSX.utils.book_append_sheet(wb, ws, store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31));
