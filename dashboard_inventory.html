@@ -5826,13 +5826,14 @@
                 const showGender = c.gender !== currentGender;
                 currentGender = c.gender;
 
-                // Format tipe display (Jepit/Fashion) - no icons, black text
+                // Tipe: 1 tipe per series — ambil dominan berdasarkan total sales terbesar
                 const tipeEntries = Object.entries(c.tipeList).sort((a, b) => b[1] - a[1]);
+                const dominantTipe = tipeEntries.length > 0 ? tipeEntries[0][0] : '-';
                 let tipeDisplay = '';
-                if (tipeEntries.length > 0) {
-                    tipeDisplay = tipeEntries.map(t => {
-                        return '<span style="display:inline-block;padding:2px 6px;background:#f3f4f6;color:#374151;border-radius:4px;font-size:0.7rem;margin-right:4px;border:1px solid #e5e7eb;">' + t[0] + '</span>';
-                    }).join('');
+                if (dominantTipe && dominantTipe !== '-') {
+                    const tc = dominantTipe === 'Fashion' ? '#ec4899' : dominantTipe === 'Jepit' ? '#3b82f6' : '#6b7280';
+                    const tcBg = dominantTipe === 'Fashion' ? '#fdf2f8' : dominantTipe === 'Jepit' ? '#eff6ff' : '#f9fafb';
+                    tipeDisplay = '<span style="display:inline-block;padding:2px 8px;background:' + tcBg + ';color:' + tc + ';border-radius:4px;font-size:0.75rem;border:1px solid ' + tc + ';font-weight:600;">' + dominantTipe + '</span>';
                 } else {
                     tipeDisplay = '<span style="color:#9ca3af;">-</span>';
                 }
