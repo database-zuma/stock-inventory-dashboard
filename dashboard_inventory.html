@@ -1393,7 +1393,8 @@
                     </div>
                     <!-- Weekly Gender Growth -->
                     <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
+                        <h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
+                        <div id="weeklyMonthPills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
                         <div id="salesGenderWeeklyTrend"></div>
                     </div>
                     <!-- Gender by Area -->
@@ -1681,6 +1682,7 @@
         let assortmentMap = {};
         let salesMap = {};
         let salesDetailData = [];
+        let weeklySelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all available
         let targetData = {};
 
         // Global format functions
@@ -6326,55 +6328,10 @@
             });
             document.getElementById('salesGenderSummary').innerHTML = summaryHtml;
 
-            // Weekly Gender Trend with Growth
-            const weeklyByGender = {};
-            data.forEach(item => {
-                const week = 'W' + getWeekNumber(item.date);
-                const gender = getGenderFromSKU(item.sku);
-                if (gender === 'Unknown') return;
-                if (!weeklyByGender[week]) weeklyByGender[week] = {};
-                if (!weeklyByGender[week][gender]) weeklyByGender[week][gender] = { sales: 0, qty: 0 };
-                weeklyByGender[week][gender].sales += item.total || 0;
-                weeklyByGender[week][gender].qty += item.qty || 0;
-            });
-
-            const weeks = Object.keys(weeklyByGender).sort();
-            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g =>
-                weeks.some(w => weeklyByGender[w] && weeklyByGender[w][g])
-            );
-
-            // Build subtitle: list unique months covered e.g. "Februari 2026" or "Jan – Feb 2026"
-            const monthsInData = [...new Set(weeks.map(w => {
-                const parts = w.split(' '); // ['W2', 'Feb'] or 'W2 Feb'
-                return parts.slice(1).join(' '); // 'Feb' or 'Feb 2026'
-            }))];
-            const periodLabel = monthsInData.length === 1
-                ? monthsInData[0]
-                : monthsInData[0] + ' – ' + monthsInData[monthsInData.length - 1];
-            let weeklyHtml = '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:6px;">Periode: <strong style="color:#374151;">' + periodLabel + '</strong> &nbsp;(minggu dalam bulan)</div>';
-            weeklyHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Minggu</th>';
-            genders.forEach(g => {
-                weeklyHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
-                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#a5f3d0;background:#002A3A;">Growth</th>';
-            });
-            weeklyHtml += '</tr></thead><tbody>';
-
-            weeks.forEach((week, idx) => {
-                weeklyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;font-weight:600;">' + week + '</td>';
-                genders.forEach(g => {
-                    const curr = weeklyByGender[week]?.[g]?.sales || 0;
-                    const prev = idx > 0 ? (weeklyByGender[weeks[idx-1]]?.[g]?.sales || 0) : 0;
-                    const growth = prev > 0 ? ((curr - prev) / prev * 100) : 0;
-                    const growthColor = growth > 0 ? '#10b981' : growth < 0 ? '#ef4444' : '#6b7280';
-                    const growthIcon = growth > 0 ? '↑' : growth < 0 ? '↓' : '-';
-                    weeklyHtml += '<td style="text-align:right;padding:8px;font-weight:500;">Rp ' + (curr / 1000000).toFixed(2) + 'jt</td>';
-                    weeklyHtml += '<td style="text-align:right;padding:8px;color:' + growthColor + ';font-weight:600;">' + (idx > 0 ? growthIcon + ' ' + Math.abs(growth).toFixed(1) + '%' : '-') + '</td>';
-                });
-                weeklyHtml += '</tr>';
-            });
-            weeklyHtml += '</tbody></table>';
-            document.getElementById('salesGenderWeeklyTrend').innerHTML = weeklyHtml;
+            // Weekly Gender Trend with Growth — independent of main date filter
+            // Uses salesDetailData (all loaded) filtered by weeklySelectedMonth pill
+            renderWeeklyGenderChart();
+            renderWeeklyMonthPills();
 
             // Gender by Area
             const genderByArea = {};
@@ -6461,6 +6418,121 @@
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesGenderByStore').innerHTML = storeHtml;
+        }
+
+        // ── Month pills for Weekly Gender Growth ────────────────────────────────
+        function renderWeeklyMonthPills() {
+            const pillsContainer = document.getElementById('weeklyMonthPills');
+            if (!pillsContainer) return;
+
+            // Extract available months from salesDetailData
+            const monthSet = {};
+            (salesDetailData || []).forEach(item => {
+                if (!item.date) return;
+                const d = new Date(item.date);
+                if (isNaN(d)) return;
+                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                const label = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                monthSet[key] = label;
+            });
+
+            const months = Object.keys(monthSet).sort();
+            if (months.length === 0) {
+                pillsContainer.innerHTML = '';
+                return;
+            }
+
+            // Default: select the latest month if none selected yet
+            if (!weeklySelectedMonth || !monthSet[weeklySelectedMonth]) {
+                weeklySelectedMonth = months[months.length - 1];
+            }
+
+            let pillHtml = '';
+            months.forEach(key => {
+                const isActive = key === weeklySelectedMonth;
+                pillHtml += '<button onclick="setWeeklyMonth(\'' + key + '\')" style="'
+                    + 'padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1.5px solid '
+                    + (isActive ? '#002A3A' : '#d1d5db') + ';background:'
+                    + (isActive ? '#002A3A' : 'white') + ';color:'
+                    + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;">'
+                    + monthSet[key] + '</button>';
+            });
+            pillsContainer.innerHTML = pillHtml;
+        }
+
+        function setWeeklyMonth(monthKey) {
+            weeklySelectedMonth = monthKey;
+            renderWeeklyGenderChart();
+            renderWeeklyMonthPills();
+        }
+
+        function renderWeeklyGenderChart() {
+            // Independent of main date filter — uses salesDetailData filtered by pill selection
+            const sourceData = salesDetailData || [];
+            const filteredForWeekly = weeklySelectedMonth
+                ? sourceData.filter(item => {
+                    if (!item.date) return false;
+                    const d = new Date(item.date);
+                    if (isNaN(d)) return false;
+                    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                    return key === weeklySelectedMonth;
+                })
+                : sourceData;
+
+            const weeklyByGender = {};
+            filteredForWeekly.forEach(item => {
+                const week = 'W' + Math.ceil(new Date(item.date).getDate() / 7);
+                const gender = getGenderFromSKU(item.sku);
+                if (gender === 'Unknown') return;
+                if (!weeklyByGender[week]) weeklyByGender[week] = {};
+                if (!weeklyByGender[week][gender]) weeklyByGender[week][gender] = { sales: 0, qty: 0 };
+                weeklyByGender[week][gender].sales += item.total || 0;
+                weeklyByGender[week][gender].qty += item.qty || 0;
+            });
+
+            const weeks = Object.keys(weeklyByGender).sort((a, b) => {
+                const na = parseInt(a.replace('W', '')) || 0;
+                const nb = parseInt(b.replace('W', '')) || 0;
+                return na - nb;
+            });
+            const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g =>
+                weeks.some(w => weeklyByGender[w] && weeklyByGender[w][g])
+            );
+
+            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6' };
+
+            if (weeks.length === 0) {
+                const el = document.getElementById('salesGenderWeeklyTrend');
+                if (el) el.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;padding:10px;">Tidak ada data untuk bulan ini.</div>';
+                return;
+            }
+
+            let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">'
+                + '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Minggu</th>';
+            genders.forEach(g => {
+                weeklyHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
+                weeklyHtml += '<th style="text-align:right;padding:8px;font-size:0.7rem;color:#a5f3d0;background:#002A3A;">Growth</th>';
+            });
+            weeklyHtml += '</tr></thead><tbody>';
+
+            weeks.forEach((week, idx) => {
+                weeklyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px;font-weight:600;">' + week + '</td>';
+                genders.forEach(g => {
+                    const curr = weeklyByGender[week]?.[g]?.sales || 0;
+                    const prev = idx > 0 ? (weeklyByGender[weeks[idx - 1]]?.[g]?.sales || 0) : 0;
+                    const growth = prev > 0 ? ((curr - prev) / prev * 100) : 0;
+                    const growthColor = growth > 0 ? '#10b981' : growth < 0 ? '#ef4444' : '#6b7280';
+                    const growthIcon = growth > 0 ? '↑' : growth < 0 ? '↓' : '-';
+                    weeklyHtml += '<td style="text-align:right;padding:8px;font-weight:500;">Rp ' + (curr / 1000000).toFixed(2) + 'jt</td>';
+                    weeklyHtml += '<td style="text-align:right;padding:8px;color:' + growthColor + ';font-weight:600;">' + (idx > 0 ? growthIcon + ' ' + Math.abs(growth).toFixed(1) + '%' : '-') + '</td>';
+                });
+                weeklyHtml += '</tr>';
+            });
+            weeklyHtml += '</tbody></table>';
+
+            const el = document.getElementById('salesGenderWeeklyTrend');
+            if (el) el.innerHTML = weeklyHtml;
         }
 
         function switchSalesTab(tab) {
