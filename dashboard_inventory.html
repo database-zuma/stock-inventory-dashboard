@@ -1233,19 +1233,16 @@
                             </div>
                         </div>
 
+                        <!-- Shared Month/Week Filter — berlaku untuk Sales by Day, Week, Area Trend, Gender -->
+                        <div id="perfFilterBar" style="margin-bottom:20px;background:#f0f9ff;border-radius:10px;padding:12px 16px;border:1px solid #bae6fd;">
+                            <div style="font-size:0.78rem;color:#0369a1;font-weight:700;margin-bottom:8px;">📅 Filter Periode <span style="font-weight:400;">(berlaku untuk 4 grafik di bawah)</span></div>
+                            <div id="perfMonthPills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+                            <div id="perfWeekPills" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:28px;"></div>
+                        </div>
+
                         <!-- Row 4: Sales by Day -->
                         <div style="margin-bottom:24px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
-                                <select id="salesByDayWeekFilter" onchange="renderSalesTrend()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
-                                    <option value="all">All Weeks</option>
-                                    <option value="W1">W1 (1-7)</option>
-                                    <option value="W2">W2 (8-14)</option>
-                                    <option value="W3">W3 (15-21)</option>
-                                    <option value="W4">W4 (22-28)</option>
-                                    <option value="W5">W5 (29-31)</option>
-                                </select>
-                            </div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
                             <div id="salesWeeklySummary"></div>
                         </div>
 
@@ -1258,31 +1255,11 @@
                         <!-- Row 6: Sales by Area Trend + Gender side by side -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <div>
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                    <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
-                                    <select id="salesAreaWeekFilter" onchange="renderSalesAreaTrend()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
-                                        <option value="all">All Weeks</option>
-                                        <option value="W1">W1 (1-7)</option>
-                                        <option value="W2">W2 (8-14)</option>
-                                        <option value="W3">W3 (15-21)</option>
-                                        <option value="W4">W4 (22-28)</option>
-                                        <option value="W5">W5 (29-31)</option>
-                                    </select>
-                                </div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
                                 <div id="salesAreaTrend"></div>
                             </div>
                             <div>
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                    <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
-                                    <select id="salesGenderWeekFilter" onchange="renderSalesGenderTrend()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.8rem;">
-                                        <option value="all">All Weeks</option>
-                                        <option value="W1">W1 (1-7)</option>
-                                        <option value="W2">W2 (8-14)</option>
-                                        <option value="W3">W3 (15-21)</option>
-                                        <option value="W4">W4 (22-28)</option>
-                                        <option value="W5">W5 (29-31)</option>
-                                    </select>
-                                </div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👥 Sales by Gender</h4>
                                 <div id="salesGenderTrend"></div>
                             </div>
                         </div>
@@ -1683,6 +1660,8 @@
         let salesMap = {};
         let salesDetailData = [];
         let weeklySelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all available
+        let perfSelectedMonth = null;  // 'YYYY-MM' e.g. '2026-02', null = all
+        let perfSelectedWeek = null;   // 'W1'-'W5', null = all
         let targetData = {};
 
         // Global format functions
@@ -5280,9 +5259,7 @@
         }
 
         function renderSalesAreaTrend() {
-            var data = filteredSalesData;
-            var weekFilterEl = document.getElementById('salesAreaWeekFilter');
-            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
+            var data = getPerfFilteredData();
 
             // Area colors
             var areaColors = {
@@ -5295,20 +5272,9 @@
                 'Sumatera': '#ef4444'
             };
 
-            // Aggregate sales by area (filtered by week if selected)
+            // Aggregate sales by area
             var byArea = {};
             data.forEach(function(item) {
-                var dateObj = new Date(item.date);
-                if (isNaN(dateObj)) return;
-
-                // Filter by week if not "all"
-                if (weekFilter !== 'all') {
-                    var dayOfMonth = dateObj.getDate();
-                    var itemWeek = Math.ceil(dayOfMonth / 7);
-                    var selectedWeek = parseInt(weekFilter.replace('W', ''));
-                    if (itemWeek !== selectedWeek) return;
-                }
-
                 var area = getAreaFromStore(item.store);
                 if (area === 'Unknown') return;
                 if (!byArea[area]) byArea[area] = 0;
@@ -5374,7 +5340,8 @@
         }
 
         function renderSalesTrend() {
-            const data = filteredSalesData;
+            renderPerfMonthWeekPills();
+            const data = getPerfFilteredData();
 
             // Daily trend
             const byDate = {};
@@ -5427,9 +5394,8 @@
             hourHtml += '</div>';
             document.getElementById('salesByHour').innerHTML = hourHtml;
 
-            // Sales by Day with week filter
-            var weekFilterEl = document.getElementById('salesByDayWeekFilter');
-            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
+            // Sales by Day with shared month/week filter
+            var weekFilter = perfSelectedWeek || 'all';
             var dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
             var dayNamesFull = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
             var dayOrder = [1, 2, 3, 4, 5, 6, 0];
@@ -5475,7 +5441,9 @@
                 // SPECIFIC WEEK: show dates chronologically (1, 2, 3... or 8, 9, 10...)
                 var weekNum = parseInt(weekFilter.replace('W', ''));
                 var startDate = (weekNum - 1) * 7 + 1;
-                var endDate = Math.min(weekNum * 7, 31);
+                // Derive last day from perfSelectedMonth (or fall back to max 31)
+                var selParts = perfSelectedMonth ? perfSelectedMonth.split('-').map(Number) : null;
+                var endDate = Math.min(weekNum * 7, selParts ? new Date(selParts[0], selParts[1], 0).getDate() : 31);
 
                 // Aggregate sales by date
                 var dailySales = {};
@@ -5492,7 +5460,7 @@
                 // Build points for each date in the week
                 var salesValues = [];
                 for (var d = startDate; d <= endDate; d++) {
-                    var dateForDay = new Date(2026, 0, d);
+                    var dateForDay = selParts ? new Date(selParts[0], selParts[1] - 1, d) : new Date(new Date().getFullYear(), new Date().getMonth(), d);
                     var dayOfWeek = dateForDay.getDay();
                     var sales = dailySales[d] || 0;
                     var hasData = dailySales[d] !== undefined && dailySales[d] > 0;
@@ -6207,9 +6175,7 @@
         }
 
         function renderSalesGenderTrend() {
-            var data = filteredSalesData;
-            var weekFilterEl = document.getElementById('salesGenderWeekFilter');
-            var weekFilter = weekFilterEl ? weekFilterEl.value : 'all';
+            var data = getPerfFilteredData();
 
             // Gender colors
             var genderColors = {
@@ -6222,20 +6188,9 @@
                 'Boys': '#8b5cf6'
             };
 
-            // Aggregate sales by gender (filtered by week if selected)
+            // Aggregate sales by gender
             var byGender = {};
             data.forEach(function(item) {
-                var dateObj = new Date(item.date);
-                if (isNaN(dateObj)) return;
-
-                // Filter by week if not "all"
-                if (weekFilter !== 'all') {
-                    var dayOfMonth = dateObj.getDate();
-                    var itemWeek = Math.ceil(dayOfMonth / 7);
-                    var selectedWeek = parseInt(weekFilter.replace('W', ''));
-                    if (itemWeek !== selectedWeek) return;
-                }
-
                 var gender = getGenderFromSKU(item.sku);
                 if (gender === 'Unknown') return;
                 if (!byGender[gender]) byGender[gender] = 0;
@@ -6533,6 +6488,106 @@
 
             const el = document.getElementById('salesGenderWeeklyTrend');
             if (el) el.innerHTML = weeklyHtml;
+        }
+
+        // ── Performance Period Filter (Month + Week pills) ───────────────────────────────
+
+        function getPerfFilteredData() {
+            let data = filteredSalesData;
+            if (perfSelectedMonth) {
+                data = data.filter(item => {
+                    if (!item.date) return false;
+                    const d = new Date(item.date);
+                    if (isNaN(d)) return false;
+                    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                    return key === perfSelectedMonth;
+                });
+            }
+            if (perfSelectedWeek) {
+                const wNum = parseInt(perfSelectedWeek.replace('W', ''));
+                data = data.filter(item => {
+                    if (!item.date) return false;
+                    const d = new Date(item.date);
+                    if (isNaN(d)) return false;
+                    return Math.ceil(d.getDate() / 7) === wNum;
+                });
+            }
+            return data;
+        }
+
+        function _pillStyle(isActive, color) {
+            return 'padding:3px 11px;border-radius:20px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1.5px solid '
+                + (isActive ? color : '#d1d5db') + ';background:'
+                + (isActive ? color : 'white') + ';color:'
+                + (isActive ? 'white' : '#374151') + ';transition:all 0.15s;';
+        }
+
+        function renderPerfMonthWeekPills() {
+            const monthEl = document.getElementById('perfMonthPills');
+            const weekEl  = document.getElementById('perfWeekPills');
+            if (!monthEl) return;
+
+            // Extract months from filteredSalesData
+            const monthSet = {};
+            (filteredSalesData || []).forEach(item => {
+                if (!item.date) return;
+                const d = new Date(item.date);
+                if (isNaN(d)) return;
+                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                monthSet[key] = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            });
+            const months = Object.keys(monthSet).sort();
+
+            // Reset stale selection
+            if (perfSelectedMonth && !monthSet[perfSelectedMonth]) {
+                perfSelectedMonth = null;
+                perfSelectedWeek = null;
+            }
+
+            // Month pills: Semua + one per month
+            let mHtml = '<button onclick="setPerfMonth(null)" style="' + _pillStyle(!perfSelectedMonth, '#002A3A') + '">Semua Bulan</button>';
+            months.forEach(key => {
+                mHtml += '<button onclick="setPerfMonth(\'' + key + '\')" style="' + _pillStyle(key === perfSelectedMonth, '#002A3A') + '">' + monthSet[key] + '</button>';
+            });
+            monthEl.innerHTML = mHtml;
+
+            // Week pills (only if month selected)
+            if (!weekEl) return;
+            if (!perfSelectedMonth) {
+                weekEl.innerHTML = '';
+                return;
+            }
+
+            // Determine which weeks exist in the selected month
+            const weekCounts = {};
+            (filteredSalesData || []).forEach(item => {
+                if (!item.date) return;
+                const d = new Date(item.date);
+                if (isNaN(d)) return;
+                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                if (key !== perfSelectedMonth) return;
+                const wk = 'W' + Math.ceil(d.getDate() / 7);
+                weekCounts[wk] = (weekCounts[wk] || 0) + 1;
+            });
+            const weeksWithData = Object.keys(weekCounts).sort();
+
+            let wHtml = '<span style="font-size:0.72rem;color:#6b7280;margin-right:4px;">Minggu:</span>';
+            wHtml += '<button onclick="setPerfWeek(null)" style="' + _pillStyle(!perfSelectedWeek, '#6366f1') + '">Semua</button>';
+            weeksWithData.forEach(wk => {
+                wHtml += '<button onclick="setPerfWeek(\'' + wk + '\')" style="' + _pillStyle(wk === perfSelectedWeek, '#6366f1') + '">' + wk + '</button>';
+            });
+            weekEl.innerHTML = wHtml;
+        }
+
+        function setPerfMonth(monthKey) {
+            perfSelectedMonth = monthKey;
+            perfSelectedWeek = null;  // reset week when month changes
+            renderSalesTrend();       // re-renders all 4 charts + pills
+        }
+
+        function setPerfWeek(weekKey) {
+            perfSelectedWeek = weekKey;
+            renderSalesTrend();       // re-renders all 4 charts + pills
         }
 
         function switchSalesTab(tab) {
