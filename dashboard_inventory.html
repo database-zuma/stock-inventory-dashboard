@@ -1367,6 +1367,11 @@
                             <div id="salesSlowMoving" style="max-height:500px;overflow-y:auto;"></div>
                         </div>
                     </div>
+                    <!-- Non-Sandal Items (shopbag, paperbag, inbox, gwp) -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🛍️ Non-Sandal Items (Shopbag, Paperbag, Inbox, GWP)</h4>
+                        <div id="salesNonSandal" style="max-height:300px;overflow-y:auto;"></div>
+                    </div>
                     <!-- Gender Sales Summary -->
                     <div style="margin-top:20px;">
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
@@ -5704,8 +5709,8 @@
                 article = article.replace(/[A-Z]{2}\d{2,3}(?=[A-Z])/g, '');
                 article = article.replace(/AZ(?=[A-Z])/g, '');
                 if (!article) return;
-                // Skip non-sandal items for Top Selling
-                // Include all items in Sales Produk (shopbag, paperbag, inbox dll)
+                const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
+                if (isNonSandal) return; // sandal only in top/slow tables
                 if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
                 // Fix: total_jumlah_pesanan (retail) bisa null → fallback ke price*qty
                 const itemTotal = (item.total && item.total > 0) ? item.total : ((item.price || 0) * (item.qty || 0));
@@ -5782,6 +5787,37 @@
             });
             slowHtml += '</tbody></table>';
             document.getElementById('salesSlowMoving').innerHTML = slowHtml;
+
+            // Non-sandal items (shopbag, paperbag, inbox, gwp) — separate table
+            const byNonSandal = {};
+            data.forEach(item => {
+                const skuU = (item.sku || '').toUpperCase();
+                const isNS = nonSandalPrefixes.some(p => skuU.startsWith(p));
+                if (!isNS) return;
+                const key = skuU.replace(/Z\d{2,3}$/, ''); // strip size
+                if (!byNonSandal[key]) byNonSandal[key] = { name: item.product_name || key, qty: 0, sales: 0 };
+                byNonSandal[key].qty += item.qty || 0;
+                byNonSandal[key].sales += item.total || 0;
+            });
+            const nsArr = Object.entries(byNonSandal).map(([k,v])=>({sku:k,...v})).sort((a,b)=>b.qty-a.qty);
+            const nsEl = document.getElementById('salesNonSandal');
+            if (nsEl) {
+                if (nsArr.length === 0) {
+                    nsEl.innerHTML = '<div style="padding:12px;color:#6b7280;font-size:0.85rem;">Tidak ada data</div>';
+                } else {
+                    let nsHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+                    nsHtml += '<thead><tr style="background:#374151;color:white;"><th style="text-align:left;padding:6px;">Item</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
+                    nsArr.forEach(ns => {
+                        nsHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                        nsHtml += '<td style="padding:6px;color:#374151;font-weight:500;">' + ns.name + '</td>';
+                        nsHtml += '<td style="text-align:right;padding:6px;">' + ns.qty.toLocaleString('id-ID') + '</td>';
+                        nsHtml += '<td style="text-align:right;padding:6px;">Rp ' + ns.sales.toLocaleString('id-ID') + '</td>';
+                        nsHtml += '</tr>';
+                    });
+                    nsHtml += '</tbody></table>';
+                    nsEl.innerHTML = nsHtml;
+                }
+            }
 
             // Category Performance - by Gender > Series > Tipe breakdown (from Stock Data/Master Produk)
             const byGenderSeries = {};
