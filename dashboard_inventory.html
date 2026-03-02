@@ -4853,6 +4853,7 @@
             if (firstChar === 'G') return 'Girls';
             if (firstChar === 'B') return 'Boys';
             if (firstChar === 'Z') return 'Baby';
+            if (firstChar === 'E') return 'Ladies'; // E2 prefix = ELSA series (Ladies)
 
             // Fallback: check series from skuSeriesMap to determine gender
             const skuUpper = sku.toUpperCase();
@@ -5713,9 +5714,10 @@
                 // Generate fallback name from collection + gender + model number
                 let fallbackName = '';
                 if (!mapName && a.collection) {
-                    const gdr = getGenderFromSKU(a.article) || '';
-                    const kk = (a.kode_kecil || a.article || '').toLowerCase();
-                    const modelNum = parseInt((kk.match(/(\d+)$/) || ['','0'])[1]) || 0;
+                    const gdr = getGenderFromSKU(a.article) !== 'Unknown'
+                        ? getGenderFromSKU(a.article)
+                        : getGenderFromSeries(a.collection); // fallback: derive gender dari collection name
+                    const modelNum = parseInt((a.article.match(/(\d+)$/) || ['','0'])[1]) || 0;
                     if (gdr && gdr !== 'Unknown' && a.collection && modelNum > 0) {
                         fallbackName = gdr.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum;
                     }
@@ -5739,9 +5741,10 @@
                 const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || /^[A-Z0-9]{6,}$/.test((pn||'').trim()) || pn.toUpperCase() === a.article.toUpperCase();
                 let fallbackName2 = '';
                 if (!mapName && a.collection) {
-                    const gdr2 = getGenderFromSKU(a.article) || '';
-                    const kk2 = (a.kode_kecil || a.article || '').toLowerCase();
-                    const modelNum2 = parseInt((kk2.match(/(\d+)$/) || ['','0'])[1]) || 0;
+                    const gdr2 = getGenderFromSKU(a.article) !== 'Unknown'
+                        ? getGenderFromSKU(a.article)
+                        : getGenderFromSeries(a.collection);
+                    const modelNum2 = parseInt((a.article.match(/(\d+)$/) || ['','0'])[1]) || 0;
                     if (gdr2 && gdr2 !== 'Unknown' && a.collection && modelNum2 > 0) {
                         fallbackName2 = gdr2.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum2;
                     }
