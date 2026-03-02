@@ -549,9 +549,15 @@
             <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
                 📋 Control Stock
             </button>
-            <button class="view-btn" data-view="sales" onclick="switchView('sales')">
+            <button class="view-btn" data-view="sales" onclick="switchView('sales');">
                 💰 Sales
             </button>
+            <div class="entity-toggle-bar" id="salesChannelBar">
+                <button class="entity-toggle-btn active" data-schannel="retail" onclick="switchSalesChannel('retail')">🏬 Retail</button>
+                <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">📦 Consig</button>
+                <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">🏭 Wholesale</button>
+                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">🌐 Online</button>
+            </div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
             </button>
@@ -1192,12 +1198,12 @@
 
                 <!-- Sales Performance Tab -->
                 <div class="sales-tab-content active" id="salesTabPerformance" style="padding:20px;">
-                    <!-- Sub-tabs for Channel (Retail/Consig/Wholesale/Online) -->
-                    <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;margin-bottom:20px;border-radius:8px;padding:8px;gap:4px;">
-                        <button class="sales-tab-btn active" onclick="switchSalesSubTab('retail')" data-sub-tab="retail" style="font-size:0.85rem;padding:8px 16px;">🏬 Retail</button>
-                        <button class="sales-tab-btn" onclick="switchSalesSubTab('consig')" data-sub-tab="consig" style="font-size:0.85rem;padding:8px 16px;">📦 Consig</button>
-                        <button class="sales-tab-btn" onclick="switchSalesSubTab('wholesale')" data-sub-tab="wholesale" style="font-size:0.85rem;padding:8px 16px;">🏭 Wholesale</button>
-                        <button class="sales-tab-btn" onclick="switchSalesSubTab('online')" data-sub-tab="online" style="font-size:0.85rem;padding:8px 16px;">🌐 Online</button>
+                    <!-- Sub-tabs for Channel — navigation moved to sidebar -->
+                    <div style="display:none;"><!-- hidden sub-tab buttons (sidebar controls) -->
+                        <button class="sales-tab-btn active" onclick="switchSalesSubTab('retail')" data-sub-tab="retail">Retail</button>
+                        <button class="sales-tab-btn" onclick="switchSalesSubTab('consig')" data-sub-tab="consig">Consig</button>
+                        <button class="sales-tab-btn" onclick="switchSalesSubTab('wholesale')" data-sub-tab="wholesale">Wholesale</button>
+                        <button class="sales-tab-btn" onclick="switchSalesSubTab('online')" data-sub-tab="online">Online</button>
                     </div>
 
                     <!-- Retail Sub-tab -->
@@ -6508,6 +6514,21 @@
                         }).join('') + '</tbody></table>';
                 }
             }
+        }
+
+        // Sidebar channel nav for Sales (Retail/Consig/Wholesale/Online)
+        function switchSalesChannel(channel) {
+            // Update sidebar active state
+            document.querySelectorAll('[data-schannel]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.schannel === channel);
+            });
+            // Make sure Sales view is active
+            switchView('sales');
+            // After view renders, switch to Performance tab + correct sub-tab
+            setTimeout(function() {
+                switchSalesTab('performance');
+                switchSalesSubTab(channel);
+            }, 50);
         }
 
         // Strip kode kecil from SKU (remove Z{number} suffix and lowercase)
