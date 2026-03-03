@@ -1370,7 +1370,7 @@
                     <!-- Non-Sandal Items (shopbag, paperbag, inbox, gwp) -->
                     <div style="margin-top:20px;">
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🛍️ Non-Sandal Items (Shopbag, Paperbag, Inbox)</h4>
-                        <div id="salesNonSandal" style="max-height:300px;overflow-y:auto;"></div>
+                        <div id="salesNonSandal" style="max-height:300px;overflow-y:auto;display:inline-block;min-width:320px;"></div>
                     </div>
                     <!-- Gender Sales Summary -->
                     <div style="margin-top:20px;">
@@ -5796,7 +5796,7 @@
                     const nsEnd   = document.getElementById('salesFilterEndDate')?.value || '';
                     const nsPeriod = nsStart && nsEnd ? nsStart + ' s/d ' + nsEnd : nsStart || nsEnd || 'periode aktif';
                     let nsHtml = '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:6px;">Periode: ' + nsPeriod + '</div>';
-                    nsHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+                    nsHtml += '<table style="width:auto;min-width:320px;border-collapse:collapse;font-size:0.8rem;">';
                     nsHtml += '<thead><tr style="background:#374151;color:white;"><th style="text-align:left;padding:6px;">Item</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
                     nsArr.forEach(ns => {
                         nsHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
