@@ -5972,8 +5972,8 @@
             const byGenderSize = {};
             data.forEach(item => {
                 const sku = item.sku || '';
-                const sizeMatch = sku.match(/Z(\d{2,3})$/);
-                const size = sizeMatch ? sizeMatch[1] : 'Unknown';
+const sizeMatch = sku.match(/Z(\d{2,3})$/);
+                const size = (item.ukuran && item.ukuran !== '') ? item.ukuran : (sizeMatch ? sizeMatch[1] : 'Unknown');
                 const gender = getGenderFromSKU(sku);
                 if (size === 'Unknown' || gender === 'Unknown') return;
 
