@@ -1731,11 +1731,14 @@
         });
         // Also build from sales data (product_name field from Tags column)
         salesDetailData.forEach(item => {
-            if (item.sku && item.product_name && item.product_name !== '-') {
+            if (item.sku) {
                 const article = item.sku.toUpperCase().replace(/Z\d{2,3}$/, '');
-                // Only use sales product_name if it looks like a real name (not a SKU code)
-                if (article && !articleNameMap[article] && item.product_name !== item.sku) {
-                    articleNameMap[article] = item.product_name;
+                if (!article) return;
+                if (item.nama_barang && item.nama_barang.trim()) {
+                    if (!articleNameMap[article]) articleNameMap[article] = item.nama_barang.trim();
+                } else if (item.product_name && item.product_name !== '-' && item.product_name !== item.sku) {
+                    const looksLikeSKU = /^[A-Z0-9]{6,}$/.test(item.product_name.trim()) || /Z\d{2,3}$/.test(item.product_name.trim());
+                    if (!looksLikeSKU && !articleNameMap[article]) articleNameMap[article] = item.product_name;
                 }
             }
         });
@@ -5727,50 +5730,30 @@
                 if (!article) return;
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
                 if (isNonSandal) return; // sandal only in top/slow tables
-                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, productName: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
+                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, namaBarang: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
                 // Fix: total_jumlah_pesanan (retail) bisa null → fallback ke price*qty
                 const itemTotal = (item.total && item.total > 0) ? item.total : ((item.price || 0) * (item.qty || 0));
                 byArticle[article].sales += itemTotal;
                 byArticle[article].qty += item.qty || 0;
-                // Capture best product name — skip if it looks like a SKU code
-                if (!byArticle[article].productName && item.product_name && item.product_name !== '-') {
-                    const pnUp = item.product_name.toUpperCase();
-                    // Skip if product_name IS a SKU: matches SKU pattern (letter+number combos, no spaces, like M1SPVPV214 or M1SPVPV214Z42)
-                    const looksLikeSKU = /^[A-Z0-9]{6,}$/.test(pnUp.trim()) || /Z\d{2,3}$/.test(pnUp.trim());
-                    if (!looksLikeSKU) {
-                        let pn = pnUp.replace(/^ZUMA\s+(LADIES|MEN|KIDS|GIRLS|BOYS|BABY|JUNIOR)\s+/, '');
-                        byArticle[article].productName = pn || pnUp;
-                    }
+                // Capture nama_barang from kodemix (most authoritative) — takes first non-empty value seen
+                if (!byArticle[article].namaBarang && item.nama_barang) {
+                    byArticle[article].namaBarang = item.nama_barang;
                 }
             });
 
             const articleArr = Object.entries(byArticle).map(([article, val]) => ({
-                article, sales: val.sales, qty: val.qty, category: val.category, productName: val.productName, collection: val.collection, kode_kecil: val.kode_kecil
+                article, sales: val.sales, qty: val.qty, category: val.category, namaBarang: val.namaBarang, collection: val.collection, kode_kecil: val.kode_kecil
             })).sort((a, b) => b.qty - a.qty);
 
             // Top 5
             // Top 10
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 10).forEach((a, i) => {
-                // Name priority: captured product_name > articleNameMap > collection-based fallback > kode kecil
-                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const isSKULike = pn => !pn || /Z\d{2,3}$/i.test(pn) || /^[A-Z0-9]{6,}$/.test((pn||'').trim()) || pn.toUpperCase() === a.article.toUpperCase();
-                // Generate fallback name from collection + gender + model number
-                let fallbackName = '';
-                if (!mapName && a.collection) {
-                    const gdr = getGenderFromSKU(a.article) !== 'Unknown'
-                        ? getGenderFromSKU(a.article)
-                        : getGenderFromSeries(a.collection); // fallback: derive gender dari collection name
-                    const modelNum = parseInt((a.article.match(/(\d+)$/) || ['','0'])[1]) || 0;
-                    if (gdr && gdr !== 'Unknown' && a.collection && modelNum > 0) {
-                        fallbackName = gdr.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum;
-                    }
-                }
-                const productName = (!isSKULike(a.productName)) ? a.productName : (mapName || fallbackName || a.article.toLowerCase());
+                const displayName = a.namaBarang || a.article.toUpperCase();
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
-                topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
+                topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + displayName + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + a.qty + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
@@ -5780,24 +5763,12 @@
             // Bottom 5 (slow moving)
             // Bottom 10 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode Kecil</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Artikel</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
+            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
-                const mapName = articleNameMap[a.article] || articleNameMap[a.article.toUpperCase()] || articleNameMap[a.article.toLowerCase()] || '';
-                const isSKULike2 = pn => !pn || /Z\d{2,3}$/i.test(pn) || /^[A-Z0-9]{6,}$/.test((pn||'').trim()) || pn.toUpperCase() === a.article.toUpperCase();
-                let fallbackName2 = '';
-                if (!mapName && a.collection) {
-                    const gdr2 = getGenderFromSKU(a.article) !== 'Unknown'
-                        ? getGenderFromSKU(a.article)
-                        : getGenderFromSeries(a.collection);
-                    const modelNum2 = parseInt((a.article.match(/(\d+)$/) || ['','0'])[1]) || 0;
-                    if (gdr2 && gdr2 !== 'Unknown' && a.collection && modelNum2 > 0) {
-                        fallbackName2 = gdr2.toUpperCase() + ' ' + a.collection.toUpperCase() + ' ' + modelNum2;
-                    }
-                }
-                const productName = (!isSKULike2(a.productName)) ? a.productName : (mapName || fallbackName2 || a.article.toLowerCase());
+                const displayName2 = a.namaBarang || a.article.toUpperCase();
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
                 slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
-                slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + productName + '</td>';
+                slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + displayName2 + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
