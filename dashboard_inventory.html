@@ -1838,13 +1838,17 @@
                 const ID_MONTH = {jan:1,feb:2,mar:3,apr:4,mei:5,jun:6,jul:7,agu:8,sep:9,okt:10,nov:11,des:12};
                 const today = new Date();
                 const aggKeys = Object.keys(aggMonthSet);
-                salesAvailableMonths = aggKeys.map(k => {
+                // Build available months from aggregate, then intersect with months that ACTUALLY have detail data
+                // This prevents months from appearing in dropdowns when iseller ETL is behind sales_with_product
+                const aggMonthsCandidate = aggKeys.map(k => {
                     const mo = ID_MONTH[k.toLowerCase()];
                     if (!mo) return null;
                     // Determine year: if month > today's month, it's previous year
                     const yr = mo > today.getMonth() + 1 ? today.getFullYear() - 1 : today.getFullYear();
                     return yr + '-' + String(mo).padStart(2, '0');
                 }).filter(Boolean).filter(m => m >= '2026-01').sort();
+                // Only keep months where detail data was actually loaded (iseller may lag behind)
+                salesAvailableMonths = aggMonthsCandidate.filter(m => salesDetailByMonth[m] && salesDetailByMonth[m].length > 0);
                 buildDerivedMaps();
             } catch (err) {
                 console.error('Failed to load dashboard data:', err);
