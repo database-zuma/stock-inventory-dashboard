@@ -5188,9 +5188,21 @@
                 const store = item.store || 'Unknown';
                 // Skip Pameran and KSquare stores
                 if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
-                if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, trx: new Set() };
-                byStore[store].sales += item.total || 0;
-                byStore[store].qty += item.qty || 0;
+                if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, returns: 0, returnQty: 0, trx: new Set() };
+                
+                // Track returns using retur_qty field
+                const returQty = item.retur_qty || 0;
+                const returAmt = item.retur_amt || 0;
+                
+                if (returQty > 0) {
+                    byStore[store].returns += returAmt;
+                    byStore[store].returnQty += returQty;
+                    byStore[store].sales += (item.total || 0) - returAmt;
+                    byStore[store].qty += (item.qty || 0) - returQty;
+                } else {
+                    byStore[store].sales += item.total || 0;
+                    byStore[store].qty += item.qty || 0;
+                }
                 byStore[store].trx.add(item.order_no);
             });
 
@@ -5241,8 +5253,8 @@
                     }
                     const achv = target > 0 ? (val.sales / target * 100) : 0;
                     const area = getAreaFromStore(store);
-                    return { store, area, sales: val.sales, qty: val.qty, trx: val.trx.size, target, achv };
-                }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
+                    return { store, area, sales: val.sales, qty: val.qty, returns: val.returns, returnQty: val.returnQty, trx: val.trx.size, target, achv };
+                }).sort((a, b) => b.sales - a.sales);
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
@@ -5250,6 +5262,7 @@
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Retur</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
@@ -5262,6 +5275,7 @@
                 storeHtml += '<td style="padding:6px;">' + s.store + '</td>';
                 storeHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + (s.sales / 1000000).toFixed(2) + 'jt</td>';
+                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#dc2626;">' + (s.returnQty > 0 ? s.returnQty + ' pcs' : '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
