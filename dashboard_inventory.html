@@ -6074,7 +6074,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.qty + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.trx + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#1d4ed8;font-weight:700;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#6d28d9;font-weight:700;">' + s.atu.toFixed(1) + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#6d28d9;font-weight:700;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits:1, maximumFractionDigits:1}) + '</td>';
                     html += '</tr>';
                 });
             }
