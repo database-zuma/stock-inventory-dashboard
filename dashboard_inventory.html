@@ -5289,14 +5289,26 @@
             const byArea = {};
             data.forEach(item => {
                 const area = getAreaFromStore(item.store);
-                if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, stores: new Set() };
-                byArea[area].sales += item.total || 0;
-                byArea[area].qty += item.qty || 0;
+                if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, returns: 0, returnQty: 0, stores: new Set() };
+                
+                // Track returns
+                const returQty = item.retur_qty || 0;
+                const returAmt = item.retur_amt || 0;
+                
+                if (returQty > 0) {
+                    byArea[area].returns += returAmt;
+                    byArea[area].returnQty += returQty;
+                    byArea[area].sales += (item.total || 0) - returAmt;
+                    byArea[area].qty += (item.qty || 0) - returQty;
+                } else {
+                    byArea[area].sales += item.total || 0;
+                    byArea[area].qty += item.qty || 0;
+                }
                 byArea[area].stores.add(item.store);
             });
 
             const areaArr = Object.entries(byArea).map(([area, val]) => ({
-                area, sales: val.sales, qty: val.qty, stores: val.stores.size
+                area, sales: val.sales, qty: val.qty, returns: val.returns || 0, returnQty: val.returnQty || 0, stores: val.stores.size
             })).sort((a, b) => b.sales - a.sales);
 
             const maxAreaSales = areaArr.length ? Math.max(...areaArr.map(a => a.sales)) : 1;
@@ -5305,6 +5317,7 @@
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:8px 10px;text-align:left;">Area</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Revenue</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:right;">Retur</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Share</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Pairs</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Toko</th>';
@@ -5317,6 +5330,7 @@
                 areaHtml += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
                 areaHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + a.area + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (a.sales / 1e6).toFixed(1) + 'jt</td>';
+                areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#dc2626;">' + (a.returnQty > 0 ? a.returnQty + ' pcs' : '-') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + share + '%</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;">' + a.qty.toLocaleString('id-ID') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + a.stores + '</td>';
