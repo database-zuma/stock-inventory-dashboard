@@ -1818,19 +1818,18 @@
                     months.push(m.getFullYear() + '-' + String(m.getMonth()+1).padStart(2,'0'));
                     m.setMonth(m.getMonth() + 1);
                 }
-                // Load all months in parallel, merge into salesDetailData + salesDetailByMonth
-                await Promise.all(months.map(async (monthKey) => {
+                // Load all months sequentially to avoid race conditions
+                for (const monthKey of months) {
                     const [yr, mo] = monthKey.split('-');
                     const lastDay = new Date(yr, mo, 0).getDate();
                     const rows = await fetchAPI(`/api/sales/detail?from=${yr}-${mo}-01&to=${yr}-${mo}-${String(lastDay).padStart(2,'0')}`).catch(()=>[]);
                     if (rows && rows.length) {
                         salesDetailByMonth[monthKey] = rows;
-                        const existing = new Set(salesDetailData.map(r => (r.order_no||'') + '|' + (r.sku||'')));
-                        rows.forEach(r => { if (!existing.has((r.order_no||'')+'|'+(r.sku||''))) salesDetailData.push(r); });
+                        salesDetailData.push(...rows);
                     } else {
                         salesDetailByMonth[monthKey] = [];
                     }
-                }));
+                }
                 salesChannelCache['retail'] = salesDetailData;
                 // Extract available months from aggregate (all months, not just detail)
                 const aggMonthSet = {};
@@ -6726,7 +6725,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (subTab === 'retail') {
                 // Retail: show existing charts (legacy behavior)
                 document.getElementById('salesSubTabRetail').style.display = 'block';
-                if (!salesChannelCache['retail']) {
+                if (!salesChannelCache['retail'] || salesChannelCache['retail'].length === 0) {
                     try {
                         salesChannelCache['retail'] = await fetchAPI('/api/sales/detail?channel=retail&months=2');
                     } catch(e) {
