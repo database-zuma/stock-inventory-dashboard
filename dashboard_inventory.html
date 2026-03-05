@@ -1649,10 +1649,16 @@
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://accurate-dashboard.vercel.app';
+        const API_BASE = 'https://mirror-structures-been-doubt.trycloudflare.com';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
+            const res = await fetch(API_BASE + path, {
+                headers: { 'X-API-Key': API_KEY }
+            });
+            if (!res.ok) throw new Error('API error ' + res.status + ' for ' + path);
+            return res.json();
+        }
             const res = await fetch(API_BASE + path, {
                 headers: { 'X-API-Key': API_KEY }
             });
