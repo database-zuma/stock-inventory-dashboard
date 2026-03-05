@@ -1649,7 +1649,7 @@
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://mirror-structures-been-doubt.trycloudflare.com';
+        const API_BASE = 'https://gadgets-explains-municipality-spa.trycloudflare.com';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
@@ -1787,74 +1787,6 @@
             if (loadingEl) loadingEl.style.display = 'flex';
             try {
                 const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData] = await Promise.all([
-                    fetchAPI('/api/stock'),
-                    fetchAPI('/api/stores'),
-                    fetchAPI('/api/store-areas'),
-                    fetchAPI('/api/max-stock'),
-                    fetchAPI('/api/sales/aggregate'),
-                    fetchAPI('/api/targets'),
-                    fetchAPI('/api/assortment'),
-                ]);
-                
-                // Transform API responses to match dashboard format
-                // Stock: {data:[...]} -> {DDD:{warehouse:[],retail:[]},LJBB:{...}}
-                allData = {};
-                if (stockData.data) {
-                    stockData.data.forEach(item => {
-                        const entity = item.store ? (item.store.toLowerCase().includes('pusat') || item.store.toLowerCase().includes('gudang') ? 'LJBB' : 'DDD') : 'DDD';
-                        if (!allData[entity]) allData[entity] = { warehouse: [], retail: [] };
-                        const target = entity === 'LJBB' ? 'warehouse' : 'retail';
-                        allData[entity][target].push(item);
-                    });
-                }
-                
-                // Stores: {data:[{store,store_name}]} -> {DDD:{retail:[...]},LJBB:{warehouse:[...]}}
-                const storesTransformed = {};
-                if (storesData.data) {
-                    storesData.data.forEach(s => {
-                        const store = s.store || '';
-                        const entity = store.toLowerCase().includes('pusat') || store.toLowerCase().includes('gudang') ? 'LJBB' : 'DDD';
-                        if (!storesTransformed[entity]) storesTransformed[entity] = { retail: [], warehouse: [] };
-                        const target = entity === 'LJBB' ? 'warehouse' : 'retail';
-                        storesTransformed[entity][target].push(s.store_name || s.store);
-                    });
-                }
-                allStores = storesTransformed;
-                
-                // Store areas
-                storeAreaMap = {};
-                if (storeAreasData.data) {
-                    storeAreasData.data.forEach(a => {
-                        storeAreaMap[a.area || a.name] = a.name;
-                    });
-                }
-                
-                // Sales aggregate - transform to {sku: {jan: x, feb: y, ...}}
-                const salesTransformed = {};
-                const monthNames = {1:'jan',2:'feb',3:'mar',4:'apr',5:'mei',6:'jun',7:'jul',8:'agu',9:'sep',10:'okt',11:'nov',12:'des'};
-                if (salesAggData.data) {
-                    salesAggData.data.forEach(row => {
-                        const sku = (row.store || '').toUpperCase();
-                        if (!salesTransformed[sku]) salesTransformed[sku] = {};
-                        const saleDate = new Date(row.sale_date);
-                        const month = monthNames[saleDate.getMonth() + 1];
-                        if (month) {
-                            salesTransformed[sku][month] = (salesTransformed[sku][month] || 0) + parseFloat(row.total || 0);
-                        }
-                    });
-                }
-                salesMap = salesTransformed;
-                
-                maxStockMap = maxStockData.data || maxStockData;
-                targetData = targetsData.data || targetsData;
-                assortmentMap = assortmentData.data || assortmentData;
-                
-                // Sales aggregate - already in right format usually
-                salesMap = salesAggData.data || salesAggData;
-                
-                maxStockMap = maxStockData.data || maxStockData;
-                targetData = targetsData.data || targetsData;
-                assortmentMap = assortmentData.data || assortmentData;
                     fetchAPI('/api/stock'),
                     fetchAPI('/api/stores'),
                     fetchAPI('/api/store-areas'),
