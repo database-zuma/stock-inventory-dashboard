@@ -1649,7 +1649,7 @@
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://mirror-structures-been-doubt.trycloudflare.com';
+        const API_BASE = 'https://accurate-dashboard.vercel.app';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
@@ -1819,18 +1819,6 @@
                     m.setMonth(m.getMonth() + 1);
                 }
                 // Load all months sequentially to avoid race conditions
-                for (const monthKey of months) {
-                    const [yr, mo] = monthKey.split('-');
-                    const lastDay = new Date(yr, mo, 0).getDate();
-                    const resp = await fetchAPI(`/api/sales/detail?from=${yr}-${mo}-01&to=${yr}-${mo}-${String(lastDay).padStart(2,'0')}`).catch(()=>({rows:[]}));
-                    const rows = resp.rows || resp.data || [];
-                    if (rows && rows.length) {
-                        salesDetailByMonth[monthKey] = rows;
-                        salesDetailData.push(...rows);
-                    } else {
-                        salesDetailByMonth[monthKey] = [];
-                    }
-                }
                 for (const monthKey of months) {
                     const [yr, mo] = monthKey.split('-');
                     const lastDay = new Date(yr, mo, 0).getDate();
@@ -5200,21 +5188,9 @@
                 const store = item.store || 'Unknown';
                 // Skip Pameran and KSquare stores
                 if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
-                if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, returns: 0, returnQty: 0, trx: new Set() };
-                
-                // Track returns using retur_qty field
-                const returQty = item.retur_qty || 0;
-                const returAmt = item.retur_amt || 0;
-                
-                if (returQty > 0) {
-                    byStore[store].returns += returAmt;
-                    byStore[store].returnQty += returQty;
-                    byStore[store].sales += (item.total || 0) - returAmt;
-                    byStore[store].qty += (item.qty || 0) - returQty;
-                } else {
-                    byStore[store].sales += item.total || 0;
-                    byStore[store].qty += item.qty || 0;
-                }
+                if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, trx: new Set() };
+                byStore[store].sales += item.total || 0;
+                byStore[store].qty += item.qty || 0;
                 byStore[store].trx.add(item.order_no);
             });
 
@@ -5265,8 +5241,8 @@
                     }
                     const achv = target > 0 ? (val.sales / target * 100) : 0;
                     const area = getAreaFromStore(store);
-                    return { store, area, sales: val.sales, qty: val.qty, returns: val.returns, returnQty: val.returnQty, trx: val.trx.size, target, achv };
-                }).sort((a, b) => b.sales - a.sales);
+                    return { store, area, sales: val.sales, qty: val.qty, trx: val.trx.size, target, achv };
+                }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
 
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
@@ -5274,7 +5250,6 @@
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Retur</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
@@ -5287,7 +5262,6 @@
                 storeHtml += '<td style="padding:6px;">' + s.store + '</td>';
                 storeHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + (s.sales / 1000000).toFixed(2) + 'jt</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#dc2626;">' + (s.returnQty > 0 ? s.returnQty + ' pcs' : '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
@@ -5301,26 +5275,14 @@
             const byArea = {};
             data.forEach(item => {
                 const area = getAreaFromStore(item.store);
-                if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, returns: 0, returnQty: 0, stores: new Set() };
-                
-                // Track returns
-                const returQty = item.retur_qty || 0;
-                const returAmt = item.retur_amt || 0;
-                
-                if (returQty > 0) {
-                    byArea[area].returns += returAmt;
-                    byArea[area].returnQty += returQty;
-                    byArea[area].sales += (item.total || 0) - returAmt;
-                    byArea[area].qty += (item.qty || 0) - returQty;
-                } else {
-                    byArea[area].sales += item.total || 0;
-                    byArea[area].qty += item.qty || 0;
-                }
+                if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, stores: new Set() };
+                byArea[area].sales += item.total || 0;
+                byArea[area].qty += item.qty || 0;
                 byArea[area].stores.add(item.store);
             });
 
             const areaArr = Object.entries(byArea).map(([area, val]) => ({
-                area, sales: val.sales, qty: val.qty, returns: val.returns || 0, returnQty: val.returnQty || 0, stores: val.stores.size
+                area, sales: val.sales, qty: val.qty, stores: val.stores.size
             })).sort((a, b) => b.sales - a.sales);
 
             const maxAreaSales = areaArr.length ? Math.max(...areaArr.map(a => a.sales)) : 1;
@@ -5329,7 +5291,6 @@
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:8px 10px;text-align:left;">Area</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Revenue</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Retur</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Share</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Pairs</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Toko</th>';
@@ -5342,7 +5303,6 @@
                 areaHtml += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
                 areaHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + a.area + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (a.sales / 1e6).toFixed(1) + 'jt</td>';
-                areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#dc2626;">' + (a.returnQty > 0 ? a.returnQty + ' pcs' : '-') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + share + '%</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;">' + a.qty.toLocaleString('id-ID') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + a.stores + '</td>';
@@ -6084,41 +6044,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             data.forEach(item => {
                 const spg = item.spg || item.kasir || 'Unknown';
                 const store = item.store || '';
-                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, returns: 0, returnQty: 0, trx: new Set(), stores: new Set() };
-                
-                // Use retur_qty field from API data
-                const returQty = item.retur_qty || 0;
-                const returAmt = item.retur_amt || 0;
-                
-                // If there's return data, separate it
-                if (returQty > 0) {
-                    bySPG[spg].returnQty += returQty;
-                    bySPG[spg].returns += returAmt;
-                    // Sales after return
-                    const saleTotal = (item.total || 0) - returAmt;
-                    bySPG[spg].sales += saleTotal > 0 ? saleTotal : 0;
-                    bySPG[spg].qty += (item.qty || 0) - returQty;
-                } else {
-                    // Regular sale
-                    bySPG[spg].sales += item.total || 0;
-                    bySPG[spg].qty += item.qty || 0;
-                }
+                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set(), stores: new Set() };
+                bySPG[spg].sales += item.total || 0;
+                bySPG[spg].qty += item.qty || 0;
                 bySPG[spg].trx.add(item.order_no);
                 bySPG[spg].stores.add(store);
             });
 
             const spgArr = Object.entries(bySPG).map(([spg, val]) => ({
-                spg, sales: val.sales, qty: val.qty, returns: val.returns, returnQty: val.returnQty, trx: val.trx.size, stores: Array.from(val.stores).join(', '),
+                spg, sales: val.sales, qty: val.qty, trx: val.trx.size, stores: Array.from(val.stores).join(', '),
                 atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
                 atu: val.trx.size > 0 ? val.qty / val.trx.size : 0,
                 arp: val.qty > 0 ? val.sales / val.qty : 0
             })).sort((a, b) => b.sales - a.sales);
+
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Retur</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th></tr></thead><tbody>';
+            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
-                html += '<tr><td colspan="10" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
+                html += '<tr><td colspan="9" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
             } else {
                 spgArr.forEach((s, i) => {
                     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
@@ -6127,12 +6072,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#374151;">' + s.spg + '</td>';
                     html += '<td style="padding:8px;font-size:0.75rem;color:#374151;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
                     html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;border-right:1px solid #ccc;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#dc2626;">' + (s.returnQty > 0 ? s.returnQty + ' pcs (Rp ' + s.returns.toLocaleString('id-ID') + ')' : '-') + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.qty + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.trx + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#1d4ed8;font-weight:700;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;color:#6d28d9;font-weight:700;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#059669;font-weight:700;">Rp ' + Math.round(s.arp).toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#6d28d9;font-weight:700;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' pcs</td>';
                 });
             }
             html += '</tbody></table>';
