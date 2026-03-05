@@ -1822,6 +1822,18 @@
                 for (const monthKey of months) {
                     const [yr, mo] = monthKey.split('-');
                     const lastDay = new Date(yr, mo, 0).getDate();
+                    const resp = await fetchAPI(`/api/sales/detail?from=${yr}-${mo}-01&to=${yr}-${mo}-${String(lastDay).padStart(2,'0')}`).catch(()=>({rows:[]}));
+                    const rows = resp.rows || resp.data || [];
+                    if (rows && rows.length) {
+                        salesDetailByMonth[monthKey] = rows;
+                        salesDetailData.push(...rows);
+                    } else {
+                        salesDetailByMonth[monthKey] = [];
+                    }
+                }
+                for (const monthKey of months) {
+                    const [yr, mo] = monthKey.split('-');
+                    const lastDay = new Date(yr, mo, 0).getDate();
                     const rows = await fetchAPI(`/api/sales/detail?from=${yr}-${mo}-01&to=${yr}-${mo}-${String(lastDay).padStart(2,'0')}`).catch(()=>[]);
                     if (rows && rows.length) {
                         salesDetailByMonth[monthKey] = rows;
