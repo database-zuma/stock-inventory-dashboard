@@ -5262,7 +5262,7 @@
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Retur</th>';
+            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Refund</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
@@ -5317,7 +5317,7 @@
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:8px 10px;text-align:left;">Area</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Revenue</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Retur</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:right;">Refund</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Share</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Pairs</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:right;">Toko</th>';
@@ -6103,7 +6103,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             })).sort((a, b) => b.sales - a.sales);
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Retur</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th></tr></thead><tbody>';
+            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Refund</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
                 html += '<tr><td colspan="10" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
