@@ -4119,7 +4119,7 @@
                                 <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">SKU</th>
                                 <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Nama Artikel</th>
                                 <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Size</th>
-                                <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;">Qty</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Qty</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4132,7 +4132,7 @@
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.sku}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${item.nama}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${item.size}</td>
-                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;">${item.stock.toLocaleString('id-ID')}</td>
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;">${item.stock.toLocaleString('id-ID')}</td>
                     </tr>
                 `;
             });
@@ -4224,7 +4224,7 @@
                             <th style="padding: 10px; text-align: left;">Kode Besar</th>
                             <th style="padding: 10px; text-align: left;">Nama Barang</th>
                             <th style="padding: 10px; text-align: center;">Asst</th>
-                            <th style="padding: 10px; text-align: right;">Qty</th>
+                            <th style="padding: 10px; text-align: center;">Qty</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -4239,7 +4239,7 @@
                     <td style="padding: 8px 10px; font-weight: 500; text-transform: uppercase;">${item.kodeBesar}</td>
                     <td style="padding: 8px 10px;">${item.name}</td>
                     <td style="padding: 8px 10px; text-align: center; font-weight: 600; color: #6366f1;">${asstCount}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
+                    <td style="padding: 8px 10px; text-align: center; font-weight: 600; ${qtyColor}">${item.qty.toLocaleString('id-ID')}</td>
                 </tr>`;
             });
 
@@ -5336,8 +5336,8 @@
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th>';
+            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
             storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Achv</th>';
             storeHtml += '</tr></thead><tbody>';
@@ -5348,8 +5348,8 @@
                 storeHtml += '<td style="padding:6px;">' + s.store + '</td>';
                 storeHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + (s.sales / 1000000).toFixed(2) + 'jt</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:center;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                storeHtml += '<td style="text-align:center;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;font-weight:700;color:' + achvColor + ';">' + (s.target > 0 ? s.achv.toFixed(1) + '%' : '-') + '</td></tr>';
             });
@@ -5390,8 +5390,8 @@
                 areaHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + a.area + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:center;color:#6b7280;">' + a.stores + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (a.sales / 1e6).toFixed(1) + 'jt</td>';
-                areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + share + '%</td>';
-                areaHtml += '<td style="padding:8px 10px;text-align:right;">' + a.qty.toLocaleString('id-ID') + '</td>';
+                areaHtml += '<td style="padding:8px 10px;text-align:center;color:#6b7280;">' + share + '%</td>';
+                areaHtml += '<td style="padding:8px 10px;text-align:center;">' + a.qty.toLocaleString('id-ID') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;"><div style="height:8px;background:#00E273;border-radius:4px;width:' + bar + 'px;"></div></td>';
                 areaHtml += '</tr>';
             });
@@ -5519,13 +5519,13 @@
             })).sort((a, b) => a.date.localeCompare(b.date));
 
             let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Trx</th></tr></thead><tbody>';
+            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
                 dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;color:#374151;">' + d.date + ' (' + dayName + ')</td>';
                 dailyHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + d.sales.toLocaleString('id-ID') + '</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;color:#374151;">' + d.qty.toLocaleString('id-ID') + '</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;color:#374151;">' + d.trx.toLocaleString('id-ID') + '</td></tr>';
+                dailyHtml += '<td style="text-align:center;padding:6px;color:#374151;">' + d.qty.toLocaleString('id-ID') + '</td>';
+                dailyHtml += '<td style="text-align:center;padding:6px;color:#374151;">' + d.trx.toLocaleString('id-ID') + '</td></tr>';
             });
             dailyHtml += '</tbody></table>';
             document.getElementById('salesDailyTrend').innerHTML = dailyHtml;
@@ -5833,13 +5833,13 @@
             // Top 5
             // Top 10
             let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
+            topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 10).forEach((a, i) => {
                 const displayName = a.namaBarang || a.article.toUpperCase();
                 topHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 topHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
                 topHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + displayName + '</td>';
-                topHtml += '<td style="text-align:right;padding:6px;font-weight:600;">' + a.qty + '</td>';
+                topHtml += '<td style="text-align:center;padding:6px;font-weight:600;">' + a.qty + '</td>';
                 topHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
             topHtml += '</tbody></table>';
@@ -5848,13 +5848,13 @@
             // Bottom 5 (slow moving)
             // Bottom 10 (slow moving)
             let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Barang</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
+            slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">#</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Barang</th><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
                 const displayName2 = a.namaBarang || a.article.toUpperCase();
                 slowHtml += '<tr style="border-bottom:1px solid #fecaca;"><td style="text-align:center;padding:6px;color:#9ca3af;">' + (i+1) + '</td>';
                 slowHtml += '<td style="padding:6px;font-size:0.8rem;color:#374151;font-weight:500;">' + a.article.toUpperCase() + '</td>';
                 slowHtml += '<td style="padding:6px;font-weight:600;color:#111827;">' + displayName2 + '</td>';
-                slowHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
+                slowHtml += '<td style="text-align:center;padding:6px;font-weight:600;color:#ef4444;">' + a.qty + '</td>';
                 slowHtml += '<td style="text-align:right;padding:6px;">Rp ' + a.sales.toLocaleString('id-ID') + '</td></tr>';
             });
             slowHtml += '</tbody></table>';
@@ -5882,11 +5882,11 @@
                     const nsPeriod = nsStart && nsEnd ? nsStart + ' s/d ' + nsEnd : nsStart || nsEnd || 'periode aktif';
                     let nsHtml = '<div style="font-size:0.75rem;color:#6b7280;margin-bottom:6px;">Periode: ' + nsPeriod + '</div>';
                     nsHtml += '<table style="width:auto;min-width:320px;border-collapse:collapse;font-size:0.8rem;">';
-                    nsHtml += '<thead><tr style="background:#374151;color:white;"><th style="text-align:left;padding:6px;">Item</th><th style="text-align:right;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
+                    nsHtml += '<thead><tr style="background:#374151;color:white;"><th style="text-align:left;padding:6px;">Item</th><th style="text-align:center;padding:6px;">Qty</th><th style="text-align:right;padding:6px;">Sales</th></tr></thead><tbody>';
                     nsArr.forEach(ns => {
                         nsHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                         nsHtml += '<td style="padding:6px;color:#374151;font-weight:500;">' + ns.name + '</td>';
-                        nsHtml += '<td style="text-align:right;padding:6px;">' + ns.qty.toLocaleString('id-ID') + '</td>';
+                        nsHtml += '<td style="text-align:center;padding:6px;">' + ns.qty.toLocaleString('id-ID') + '</td>';
                         nsHtml += '<td style="text-align:right;padding:6px;">Rp ' + ns.sales.toLocaleString('id-ID') + '</td>';
                         nsHtml += '</tr>';
                     });
@@ -5948,8 +5948,8 @@
             catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Tipe</th>';
             catHtml += '<th style="text-align:left;padding:8px;width:120px;color:white;background:#002A3A;">Share</th>';
             catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th>';
-            catHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">%</th>';
+            catHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
+            catHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">%</th>';
             catHtml += '</tr></thead><tbody>';
 
             let currentGender = '';
@@ -5984,8 +5984,8 @@
                 catHtml += '<td style="padding:8px;">' + tipeDisplay + '</td>';
                 catHtml += '<td style="padding:8px;"><div style="height:16px;background:#e2e8f0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div></div></td>';
                 catHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + c.sales.toLocaleString('id-ID') + '</td>';
-                catHtml += '<td style="text-align:right;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
-                catHtml += '<td style="text-align:right;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
+                catHtml += '<td style="text-align:center;padding:8px;color:#374151;">' + c.qty.toLocaleString('id-ID') + '</td>';
+                catHtml += '<td style="text-align:center;padding:8px;color:#6b7280;font-weight:500;">' + pct.toFixed(1) + '%</td>';
                 catHtml += '</tr>';
             });
             catHtml += '</tbody></table>';
@@ -6027,8 +6027,8 @@
             tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;">Tier</th>';
             tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;width:200px;">Share</th>';
             tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Sales</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Qty</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">%</th>';
+            tierHtml += '<th style="text-align:center;padding:10px;color:white;background:#002A3A;">Qty</th>';
+            tierHtml += '<th style="text-align:center;padding:10px;color:white;background:#002A3A;">%</th>';
             tierHtml += '</tr></thead><tbody>';
 
             tierArr.forEach(t => {
@@ -6044,8 +6044,8 @@
                 tierHtml += '<div style="height:100%;width:' + barPct + '%;background:' + color + ';"></div>';
                 tierHtml += '</div></td>';
                 tierHtml += '<td style="text-align:right;padding:10px;font-weight:700;color:' + (t.sales > 0 ? '#10b981' : '#9ca3af') + ';font-size:0.9rem;">' + (t.sales > 0 ? 'Rp ' + t.sales.toLocaleString('id-ID') : '-') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:10px;color:' + (t.qty > 0 ? '#374151' : '#9ca3af') + ';">' + (t.qty > 0 ? t.qty.toLocaleString('id-ID') : '-') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:10px;color:' + (pct > 0 ? '#6b7280' : '#9ca3af') + ';font-weight:600;font-size:0.9rem;">' + (pct > 0 ? pct.toFixed(1) + '%' : '-') + '</td>';
+                tierHtml += '<td style="text-align:center;padding:10px;color:' + (t.qty > 0 ? '#374151' : '#9ca3af') + ';">' + (t.qty > 0 ? t.qty.toLocaleString('id-ID') : '-') + '</td>';
+                tierHtml += '<td style="text-align:center;padding:10px;color:' + (pct > 0 ? '#6b7280' : '#9ca3af') + ';font-weight:600;font-size:0.9rem;">' + (pct > 0 ? pct.toFixed(1) + '%' : '-') + '</td>';
                 tierHtml += '</tr>';
             });
             tierHtml += '</tbody></table>';
@@ -6155,7 +6155,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e2e8f0;">';
-            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Refund</th></tr></thead><tbody>';
+            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Refund</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
                 html += '<tr><td colspan="10" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
@@ -6167,12 +6167,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#374151;">' + s.spg + '</td>';
                     html += '<td style="padding:8px;font-size:0.75rem;color:#374151;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
                     html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.qty + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.trx + '</td>';
+                    html += '<td style="text-align:center;padding:8px;color:#374151;font-weight:600;">' + s.qty + '</td>';
+                    html += '<td style="text-align:center;padding:8px;color:#374151;font-weight:600;">' + s.trx + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#1d4ed8;font-weight:700;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#6d28d9;font-weight:700;">' + s.atu.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#059669;font-weight:700;">Rp ' + Math.round(s.arp).toLocaleString('id-ID') + '</td>';
-                    html += '<td style="text-align:right;padding:8px;color:' + (s.refund_qty > 0 ? '#ef4444' : '#374151') + ';font-weight:600;">' + (s.refund_qty > 0 ? s.refund_qty : '-') + '</td>';
+                    html += '<td style="text-align:center;padding:8px;color:' + (s.refund_qty > 0 ? '#ef4444' : '#374151') + ';font-weight:600;">' + (s.refund_qty > 0 ? s.refund_qty : '-') + '</td>';
                 });
             }
             html += '</tbody></table>';
@@ -6329,7 +6329,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">SPG</th>';
             recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Order</th>';
             recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">SKU</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            recentHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Price</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;font-weight:700;">Total Harga</th>';
             recentHtml += '</tr></thead><tbody>';
@@ -6340,7 +6340,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 recentHtml += '<td style="padding:6px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (item.spg || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;">' + (item.order_no || '-') + '</td>';
                 recentHtml += '<td style="padding:6px;text-transform:uppercase;">' + (item.sku || '-').toUpperCase() + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
+                recentHtml += '<td style="text-align:center;padding:6px;">' + (item.qty || 0) + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
                 const totalHarga = (item.qty || 0) * (item.price || 0);
                 recentHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#047857;">Rp ' + totalHarga.toLocaleString('id-ID') + '</td>';
@@ -7538,7 +7538,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 html += '<tr onclick="selectSKUFromList(\'' + m.sku + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;">' + m.sku + '</td>' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#111827;">' + formatNum(m.qty) + '</td>' +
+                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#111827;">' + formatNum(m.qty) + '</td>' +
                     '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;">' + formatRp(m.total) + '</td>' +
                     '</tr>';
             });
@@ -7650,7 +7650,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     const storeBg = storeIdx % 2 === 0 ? '#ffffff' : '#f8fafc';
                     html += '<tr style="background:' + storeBg + ';">' +
                         '<td style="padding:10px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
-                        '<td style="padding:10px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(sd.qty) + '</td>' +
+                        '<td style="padding:10px 15px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(sd.qty) + '</td>' +
                         '<td style="padding:10px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(sd.total) + '</td>' +
                         '</tr>';
                 });
@@ -7693,7 +7693,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
                 '<thead><tr style="background:#1e293b;color:white;">' +
                 '<th style="padding:8px;text-align:left;font-weight:600;">Toko</th>' +
-                '<th style="padding:8px;text-align:right;font-weight:600;">Qty</th>' +
+                '<th style="padding:8px;text-align:center;font-weight:600;">Qty</th>' +
                 '<th style="padding:8px;text-align:right;font-weight:600;">Sales</th>' +
                 '<th style="padding:8px;text-align:center;font-weight:600;">Trx</th>' +
                 '</tr></thead><tbody>';
@@ -7702,7 +7702,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 storeHtml += '<tr style="background:' + bgColor + ';">' +
                     '<td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#111827;font-weight:500;">' + store + '</td>' +
-                    '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + sd.qty + '</td>' +
+                    '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + sd.qty + '</td>' +
                     '<td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:500;color:#047857;">' + formatRp(sd.total) + '</td>' +
                     '<td style="padding:8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#111827;">' + sd.count + '</td>' +
                     '</tr>';
@@ -7717,7 +7717,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 '<th style="padding:6px 8px;text-align:left;font-weight:500;">Tanggal</th>' +
                 '<th style="padding:6px 8px;text-align:left;font-weight:500;">Toko</th>' +
                 '<th style="padding:6px 8px;text-align:left;font-weight:500;">SPG</th>' +
-                '<th style="padding:6px 8px;text-align:right;font-weight:500;">Qty</th>' +
+                '<th style="padding:6px 8px;text-align:center;font-weight:500;">Qty</th>' +
                 '<th style="padding:6px 8px;text-align:right;font-weight:500;">Total</th>' +
                 '</tr></thead><tbody>';
 
@@ -7727,7 +7727,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#374151;">' + t.date + '</td>' +
                     '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#111827;">' + t.store + '</td>' +
                     '<td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;color:#374151;">' + (t.spg || t.kasir || '-') + '</td>' +
-                    '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #e2e8f0;color:#111827;font-weight:500;">' + t.qty + '</td>' +
+                    '<td style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#111827;font-weight:500;">' + t.qty + '</td>' +
                     '<td style="padding:6px 8px;text-align:right;border-bottom:1px solid #e2e8f0;color:#047857;font-weight:500;">' + formatRp(t.total) + '</td>' +
                     '</tr>';
             });
