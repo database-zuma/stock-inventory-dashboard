@@ -7730,7 +7730,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!document.getElementById('salesFilterStore').options.length || document.getElementById('salesFilterStore').options.length <= 1) {
                     initSalesFilters();
                 }
-                switchSalesSubTab('retail').then(() => renderSalesDashboard());
+                switchSalesSubTab('retail').then(() => { console.log('Sales data loaded:', salesDetailData.length); renderSalesDashboard(); }).catch(e => console.error('switchSalesSubTab error:', e));
             } else if (view === 'redistribusi') {
                 setTimeout(function() {
                     try { initRedistribusi(); } catch(e) { console.error('Error initRedistribusi:', e); }
