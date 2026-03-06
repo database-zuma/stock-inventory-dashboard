@@ -1215,7 +1215,18 @@
 
                         <!-- Row 1: By Store (full width, rapi) -->
                         <div style="margin-bottom:24px;">
-                            <h4 id="salesByStoreTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <h4 id="salesByStoreTitle" style="margin:0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <label style="font-size:0.85rem;color:#6b7280;">Target Bulan:</label>
+                                    <select id="salesTargetMonth" onchange="renderSalesTarget()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                                        <option value="">Semua (Q1)</option>
+                                        <option value="jan">Januari</option>
+                                        <option value="feb">Februari</option>
+                                        <option value="mar">Maret</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div id="salesByStoreTable" style="max-height:420px;overflow-y:auto;"></div>
                         </div>
 
@@ -6180,21 +6191,31 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function renderSalesTarget() {
-            const data = filteredSalesData;
+            // Get selected target month from dropdown
+            const targetMonth = document.getElementById('salesTargetMonth').value;
 
-            // Sales by store (using normalized store names)
+            // Filter sales data by selected month (or use all filtered data)
+            let data;
+            if (targetMonth) {
+                const monthIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(targetMonth);
+                data = filteredSalesData.filter(item => {
+                    const d = new Date(item.date || item.sale_date);
+                    return d.getMonth() === monthIdx;
+                });
+            } else {
+                data = filteredSalesData;
+            }
 
             // Sales by store (using normalized store names)
             const byStore = {};
-            const storeNameMap = {}; // Map normalized -> original
+            const storeNameMap = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
-                // Skip Pameran and KSquare stores
                 if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
                 const normalized = store.toLowerCase()
                     .replace('zuma ', '').replace('zuma', '')
-                    .replace('exchange', 'xchange')  // Normalize Exchange to Xchange
-                    .replace('hills', 'hill')        // Normalize Hills to Hill
+                    .replace('exchange', 'xchange')
+                    .replace('hills', 'hill')
                     .replace(/\s+/g, ' ').trim();
                 if (!byStore[normalized]) {
                     byStore[normalized] = 0;
@@ -6216,7 +6237,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (target.store === 'Nama Toko' || target.store.toLowerCase().includes('ksquare')) return;
                 const storeName = target.store;
                 const area = target.area || getAreaFromStore(storeName);
-                const targetVal = getTargetForStore(target);
+                const targetVal = targetMonth ? (Number(target[targetMonth]) || 0) : getTargetForStore(target);
 
                 // Filter by Area if selected
                 if (salesArea && area.toLowerCase() !== salesArea.toLowerCase()) return;
