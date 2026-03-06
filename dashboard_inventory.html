@@ -556,9 +556,7 @@
                 <button class="entity-toggle-btn active" data-schannel="retail" onclick="switchSalesChannel('retail')">🏬 Retail</button>
                 <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">📦 Consig</button>
                 <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">🏭 Wholesale</button>
-                559#JS|                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">🌐 Online</button>
-JS|                <button class="entity-toggle-btn" data-schannel="event" onclick="switchSalesChannel('event')">🎪 Event</button>
-YH|            </div>
+                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">🌐 Online</button>
             </div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
@@ -1346,33 +1344,7 @@ YH|            </div>
                             <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🌐 Breakdown per Series (Online)</h4>
                             <div id="onlineBreakdown" style="max-height:350px;overflow-y:auto;"></div>
                         </div>
-                    1349#YH|                    </div>
-YH|
-                    <!-- Event Sub-tab -->
-YH|                    <div id="salesSubTabEvent" class="sales-sub-tab-content" style="display:none;">
-YH|                        <!-- Summary Cards -->
-YH|                        <div id="eventSummaryCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;"></div>
-YH|                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-YH|                            <!-- Top Products -->
-YH|                            <div>
-YH|                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top 15 Produk</h4>
-YH|                                <div id="eventTopProducts" style="max-height:380px;overflow-y:auto;"></div>
-YH|                            </div>
-YH|                            <!-- Monthly Trend -->
-YH|                            <div>
-YH|                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Trend Bulanan</h4>
-YH|                                <div id="eventTrend" style="max-height:380px;overflow-y:auto;"></div>
-YH|                            </div>
-YH|                        </div>
-YH|                        <!-- Breakdown per Series -->
-YH|                        <div>
-YH|                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🎪 Breakdown per Series (Event)</h4>
-YH|                            <div id="eventBreakdown" style="max-height:350px;overflow-y:auto;"></div>
-YH|                        </div>
-YH|                    </div>
-YH|                </div>
-NV|
-BM|                <!-- Trend Tab -->
+                    </div>
                 </div>
 
                 <!-- Trend Tab -->
@@ -1677,7 +1649,7 @@ BM|                <!-- Trend Tab -->
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://new-ment-minus-beats.trycloudflare.com';
+        const API_BASE = 'https://gadgets-explains-municipality-spa.trycloudflare.com';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
@@ -1858,31 +1830,7 @@ BM|                <!-- Trend Tab -->
                         salesDetailByMonth[monthKey] = [];
                     }
                 }
-                1833#XY|                salesChannelCache['retail'] = salesDetailData;
-TR|                // Build salesMap from detail data (aggregate by SKU and month) for stock control
-TR|                const monthIdMap = { '01': 'jan', '02': 'feb', '03': 'mar', '04': 'apr', '05': 'mei', '06': 'jun', '07': 'jul', '08': 'agu', '09': 'sep', '10': 'okt', '11': 'nov', '12': 'des' };
-TR|                Object.keys(salesDetailByMonth).forEach(monthKey => {
-TR|                    const [, monthNum] = monthKey.split('-');
-TR|                    const monthAbbr = monthIdMap[monthNum];
-TR|                    if (!monthAbbr) return;
-TR|                    const rows = salesDetailByMonth[monthKey] || [];
-TR|                    rows.forEach(row => {
-TR|                        if (!row.kode) return;
-TR|                        const skuUpper = row.kode.toUpperCase();
-TR|                        if (!salesMap[skuUpper]) {
-TR|                            salesMap[skuUpper] = { nov: 0, des: 0, jan: 0, feb: 0, mar: 0, apr: 0, mei: 0, jun: 0, jul: 0, agu: 0, sep: 0, okt: 0, avg: 0 };
-TR|                        }
-TR|                        salesMap[skuUpper][monthAbbr] = (salesMap[skuUpper][monthAbbr] || 0) + (row.pairs || 0);
-TR|                    });
-TR|                });
-TR|                // Calculate averages
-TR|                Object.keys(salesMap).forEach(sku => {
-TR|                    const m = salesMap[sku];
-TR|                    m.avg = (m.nov + m.des + m.jan) / 3;
-TR|                });
-TR|                // Use salesDetailByMonth keys for available months
-TR|                salesAvailableMonths = Object.keys(salesDetailByMonth).filter(m => salesDetailByMonth[m] && salesDetailByMonth[m].length > 0).sort();
-JB|                buildDerivedMaps();
+                salesChannelCache['retail'] = salesDetailData;
                 // Extract available months from aggregate (all months, not just detail)
                 const aggMonthSet = {};
                 Object.values(salesAggData).forEach(skuData => {
@@ -6796,7 +6744,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 renderSalesSPGChart();
             } else {
                 // Non-retail channels: show dedicated sub-tab with channel summary
-                const divMap = { consig: 'salesSubTabConsig', wholesale: 'salesSubTabWholesale', online: 'salesSubTabOnline', event: 'salesSubTabEvent' };
+                const divMap = { consig: 'salesSubTabConsig', wholesale: 'salesSubTabWholesale', online: 'salesSubTabOnline' };
                 const el = document.getElementById(divMap[subTab]);
                 if (el) el.style.display = 'block';
                 loadSalesChannel(subTab);
