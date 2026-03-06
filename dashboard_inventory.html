@@ -1487,16 +1487,12 @@
                             <div style="position:relative;height:300px;"><canvas id="refundByArticleChart"></canvas></div>
                         </div>
                         <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📈 Refund Trend (Bulanan)</h4>
-                            <div style="position:relative;height:250px;"><canvas id="refundTrendChart"></canvas></div>
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Top SPG Refund</h4>
+                            <div style="position:relative;height:300px;"><canvas id="refundBySPGChart"></canvas></div>
                         </div>
                     </div>
 
-                    <!-- Row 4: Refund Rate per Toko -->
-                    <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📉 Refund Rate per Toko (% dari Sales Qty)</h4>
-                        <div id="refundRateTable" style="max-height:400px;overflow-y:auto;"></div>
-                    </div>
+
 
                     <!-- Row 5: Detail Refund Transactions -->
                     <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
@@ -6915,59 +6911,23 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             // --- Refund Trend Line Chart ---
-            if(refundChartInstances.trend) refundChartInstances.trend.destroy();
-            refundChartInstances.trend = new Chart(document.getElementById('refundTrendChart'), {
-                type: 'line',
+            // --- Top SPG Refund Bar Chart ---
+            if(refundChartInstances.spg) refundChartInstances.spg.destroy();
+            const topSPGs = (rd.by_spg || []).slice(0,15);
+            refundChartInstances.spg = new Chart(document.getElementById('refundBySPGChart'), {
+                type: 'bar',
                 data: {
-                    labels: rd.monthly_trend.map(m => m.month),
-                    datasets: [
-                        { label: 'Refund Qty', data: rd.monthly_trend.map(m => m.refund_qty), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3 },
-                        { label: 'Refund Value (jt)', data: rd.monthly_trend.map(m => Math.round(m.refund_value/1e6)), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.3, yAxisID: 'y1' }
-                    ]
+                    labels: topSPGs.map(s => s.spg.substring(0,20)),
+                    datasets: [{
+                        label: 'Refund Qty',
+                        data: topSPGs.map(s => s.refund_qty),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4,
+                    }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Qty' } },
-                        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Value (jt)' } }
-                    }
-                }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
             });
 
-            // --- Refund Rate per Toko (% dari Sales) ---
-            const salesByStore = {};
-            filteredSalesData.forEach(item => {
-                const store = item.store || 'Unknown';
-                if (!salesByStore[store]) salesByStore[store] = { qty: 0, value: 0 };
-                salesByStore[store].qty += item.qty || 0;
-                salesByStore[store].value += item.total || 0;
-            });
-            let rateArr = rd.by_store.map(s => {
-                const sales = salesByStore[s.toko] || { qty: 0, value: 0 };
-                const rateQty = sales.qty > 0 ? (s.refund_qty / sales.qty * 100) : 0;
-                const rateVal = sales.value > 0 ? (s.refund_value / sales.value * 100) : 0;
-                return { toko: s.toko, area: s.area, refund_qty: s.refund_qty, sales_qty: sales.qty, rate_qty: rateQty, refund_value: s.refund_value, sales_value: sales.value, rate_val: rateVal };
-            }).sort((a,b) => b.rate_qty - a.rate_qty);
-            let rateHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            rateHtml += '<thead><tr style="background:#002A3A;color:white;">';
-            rateHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">Toko</th><th style="padding:6px;">Area</th>';
-            rateHtml += '<th style="padding:6px;">Refund Qty</th><th style="padding:6px;">Sales Qty</th><th style="padding:6px;">Rate %</th>';
-            rateHtml += '<th style="padding:6px;">Status</th></tr></thead><tbody>';
-            rateArr.forEach((s,i) => {
-                const statusColor = s.rate_qty > 5 ? '#ef4444' : s.rate_qty > 2 ? '#f59e0b' : '#10b981';
-                const statusText = s.rate_qty > 5 ? '⚠️ Tinggi' : s.rate_qty > 2 ? '⚡ Sedang' : '✅ Normal';
-                rateHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                rateHtml += '<td style="text-align:center;padding:6px;">'+(i+1)+'</td>';
-                rateHtml += '<td style="padding:6px;">'+s.toko+'</td>';
-                rateHtml += '<td style="padding:6px;">'+s.area+'</td>';
-                rateHtml += '<td style="text-align:right;padding:6px;font-weight:600;">'+s.refund_qty+'</td>';
-                rateHtml += '<td style="text-align:right;padding:6px;">'+s.sales_qty.toLocaleString('id-ID')+'</td>';
-                rateHtml += '<td style="text-align:right;padding:6px;font-weight:700;color:'+statusColor+';">'+s.rate_qty.toFixed(2)+'%</td>';
-                rateHtml += '<td style="padding:6px;color:'+statusColor+';">'+statusText+'</td>';
-                rateHtml += '</tr>';
-            });
-            rateHtml += '</tbody></table>';
-            document.getElementById('refundRateTable').innerHTML = rateHtml;
 
             // --- Detail Refund Transactions ---
             let detailHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
