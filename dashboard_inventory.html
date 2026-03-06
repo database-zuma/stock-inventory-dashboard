@@ -15,6 +15,8 @@
             --card-bg: rgba(255, 255, 255, 0.98); --shadow: 0 1px 3px rgba(0,42,58,0.06), 0 4px 16px rgba(0,42,58,0.04);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        th { text-align: center !important; }
+        table td, table th { border: 1px solid #e2e8f0; }
         body {
             font-family: 'Poppins', sans-serif;
             background: #f8fafc;
@@ -1368,20 +1370,20 @@
                         </div>
                     </div>
                     <!-- Non-Sandal Items (shopbag, paperbag, inbox, gwp) -->
-                    <div style="margin-top:20px;">
+                    <div style="margin-top:20px;display:none;">
                         <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🛍️ Non-Sandal Items (Shopbag, Paperbag, Inbox)</h4>
                         <div id="salesNonSandal" style="max-height:300px;overflow-y:auto;display:inline-block;min-width:320px;"></div>
-                    </div>
-                    <!-- Gender Sales Summary -->
-                    <div style="margin-top:20px;">
-                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
-                        <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
                     </div>
                     <!-- Weekly Gender Growth -->
                     <div style="margin-top:20px;">
                         <h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.95rem;">📈 Weekly Gender Growth</h4>
                         <div id="weeklyMonthPills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
                         <div id="salesGenderWeeklyTrend"></div>
+                    </div>
+                    <!-- Gender Sales Summary -->
+                    <div style="margin-top:20px;">
+                        <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Gender Sales Summary</h4>
+                        <div id="salesGenderSummary" style="display:flex;flex-wrap:wrap;gap:15px;"></div>
                     </div>
                     <!-- Gender by Area -->
                     <div style="margin-top:20px;">
@@ -5125,6 +5127,26 @@
             try { renderSalesByHourChart(); } catch(e) { console.error('renderSalesByHourChart error:', e); }
         }
 
+        // Helper: get month keys covered by current date filter
+        function getTargetMonthKeys() {
+            const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+            const startDate = document.getElementById('salesFilterStartDate').value;
+            const endDate = document.getElementById('salesFilterEndDate').value;
+            if (!startDate && !endDate) {
+                // No filter = all months that have data (non-zero)
+                return monthNames;
+            }
+            const startMonth = startDate ? new Date(startDate).getMonth() : 0; // 0=jan
+            const endMonth = endDate ? new Date(endDate).getMonth() : 11; // 11=dec
+            return monthNames.slice(startMonth, endMonth + 1);
+        }
+
+        // Helper: sum target for a store based on active month range
+        function getTargetForStore(t) {
+            const months = getTargetMonthKeys();
+            return months.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
+        }
+
         function renderSalesSummaryCards() {
             const data = filteredSalesData;
 
@@ -5142,10 +5164,11 @@
             const atv = totalTransactions > 0 ? totalSales / totalTransactions : 0;
             const atu = totalTransactions > 0 ? totalQty / totalTransactions : 0;
             const margin = totalGross > 0 ? ((totalGross - totalHPP) / totalGross * 100) : 0;
+            const arp = totalQty > 0 ? totalSales / totalQty : 0;
 
-            // Calculate target achievement (January)
+            // Calculate target achievement (dynamic by date filter)
             let totalTarget = 0;
-            Object.values(targetData).forEach(t => { totalTarget += (t.jan || 0); });
+            Object.values(targetData).forEach(t => { totalTarget += getTargetForStore(t); });
             const achievement = totalTarget > 0 ? (totalSales / totalTarget * 100) : 0;
 
             // Format number with thousand separator (Indonesian style)
@@ -5160,6 +5183,7 @@
                 { label: 'Total Qty', value: formatNum(totalQty) + ' pcs', color: '#8b5cf6', icon: '📦' },
                 { label: 'ATV', value: formatRp(atv), color: '#f59e0b', icon: '📊' },
                 { label: 'ATU', value: formatNum(atu, 2) + ' pcs', color: '#ec4899', icon: '📈' },
+                { label: 'ARP', value: formatRp(arp), color: '#6366f1', icon: '💎' },
                 { label: 'Achievement', value: formatNum(achievement, 2) + '%', color: achievement >= 100 ? '#10b981' : '#ef4444', icon: '🎯' }
             ];
 
@@ -5218,7 +5242,7 @@
                 Object.values(targetData).forEach(t => {
                     if (t && t.store) {
                         const normalizedName = normalizeStoreName(t.store);
-                        targetMap[normalizedName] = t.jan || 0;
+                        targetMap[normalizedName] = getTargetForStore(t);
                     }
                 });
             }
@@ -5289,12 +5313,12 @@
             const totalSales = areaArr.reduce((s, a) => s + a.sales, 0);
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.83rem;">';
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
-            areaHtml += '<th style="padding:8px 10px;text-align:left;">Area</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Revenue</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Share</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Pairs</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:right;">Toko</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:left;min-width:100px;">Bar</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Area</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Toko</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Revenue</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Share</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Pairs</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;min-width:100px;">Bar</th>';
             areaHtml += '</tr></thead><tbody>';
             areaArr.forEach((a, i) => {
                 const share = totalSales > 0 ? (a.sales / totalSales * 100).toFixed(1) : '0.0';
@@ -5302,10 +5326,10 @@
                 const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
                 areaHtml += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
                 areaHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + a.area + '</td>';
+                areaHtml += '<td style="padding:8px 10px;text-align:center;color:#6b7280;">' + a.stores + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (a.sales / 1e6).toFixed(1) + 'jt</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + share + '%</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;">' + a.qty.toLocaleString('id-ID') + '</td>';
-                areaHtml += '<td style="padding:8px 10px;text-align:right;color:#6b7280;">' + a.stores + '</td>';
                 areaHtml += '<td style="padding:8px 10px;"><div style="height:8px;background:#00E273;border-radius:4px;width:' + bar + 'px;"></div></td>';
                 areaHtml += '</tr>';
             });
@@ -5942,7 +5966,6 @@
             tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;width:200px;">Share</th>';
             tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Sales</th>';
             tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Qty</th>';
-            tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">Trx</th>';
             tierHtml += '<th style="text-align:right;padding:10px;color:white;background:#002A3A;">%</th>';
             tierHtml += '</tr></thead><tbody>';
 
@@ -5960,7 +5983,6 @@
                 tierHtml += '</div></td>';
                 tierHtml += '<td style="text-align:right;padding:10px;font-weight:700;color:' + (t.sales > 0 ? '#10b981' : '#9ca3af') + ';font-size:0.9rem;">' + (t.sales > 0 ? 'Rp ' + t.sales.toLocaleString('id-ID') : '-') + '</td>';
                 tierHtml += '<td style="text-align:right;padding:10px;color:' + (t.qty > 0 ? '#374151' : '#9ca3af') + ';">' + (t.qty > 0 ? t.qty.toLocaleString('id-ID') : '-') + '</td>';
-                tierHtml += '<td style="text-align:right;padding:10px;color:' + (t.trx > 0 ? '#374151' : '#9ca3af') + ';">' + (t.trx > 0 ? t.trx.toLocaleString('id-ID') : '-') + '</td>';
                 tierHtml += '<td style="text-align:right;padding:10px;color:' + (pct > 0 ? '#6b7280' : '#9ca3af') + ';font-weight:600;font-size:0.9rem;">' + (pct > 0 ? pct.toFixed(1) + '%' : '-') + '</td>';
                 tierHtml += '</tr>';
             });
@@ -6059,7 +6081,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             })).sort((a, b) => b.sales - a.sales);
 
             // Leaderboard Table
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e2e8f0;">';
             html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
@@ -6071,7 +6093,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     html += '<td style="padding:8px;font-weight:600;color:#374151;">' + medal + '</td>';
                     html += '<td style="padding:8px;font-weight:' + (i < 3 ? '700' : '500') + ';color:#374151;">' + s.spg + '</td>';
                     html += '<td style="padding:8px;font-size:0.75rem;color:#374151;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.stores + '</td>';
-                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;border-right:1px solid #ccc;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:8px;font-weight:600;color:#10b981;">Rp ' + s.sales.toLocaleString('id-ID') + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.qty + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#374151;font-weight:600;">' + s.trx + '</td>';
                     html += '<td style="text-align:right;padding:8px;color:#1d4ed8;font-weight:700;">Rp ' + Math.round(s.atv).toLocaleString('id-ID') + '</td>';
@@ -6120,7 +6142,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (target.store === 'Nama Toko' || target.store.toLowerCase().includes('ksquare')) return;
                 const storeName = target.store;
                 const area = target.area || getAreaFromStore(storeName);
-                const jan = target.jan || 0;
+                const targetVal = getTargetForStore(target);
 
                 // Filter by Area if selected
                 if (salesArea && area.toLowerCase() !== salesArea.toLowerCase()) return;
@@ -6151,9 +6173,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
 
-                const achievement = jan > 0 ? (actual / jan * 100) : 0;
-                const gap = jan - actual;
-                storeAchArr.push({ store: storeName, area, target: jan, actual, achievement, gap });
+                const achievement = targetVal > 0 ? (actual / targetVal * 100) : 0;
+                const gap = targetVal - actual;
+                storeAchArr.push({ store: storeName, area, target: targetVal, actual, achievement, gap });
             });
 
             storeAchArr.sort((a, b) => b.achievement - a.achievement);
@@ -6235,9 +6257,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             recentHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">SKU</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Qty</th>';
             recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Price</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Total</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Tax</th>';
-            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;font-weight:700;">Sales</th>';
+            recentHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;font-weight:700;">Total Harga</th>';
             recentHtml += '</tr></thead><tbody>';
             recentData.forEach(item => {
                 recentHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -6248,9 +6268,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 recentHtml += '<td style="padding:6px;text-transform:uppercase;">' + (item.sku || '-').toUpperCase() + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">' + (item.qty || 0) + '</td>';
                 recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.price || 0).toLocaleString('id-ID') + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.total_before_tax || 0).toLocaleString('id-ID') + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;">Rp ' + (item.tax_amount || 0).toLocaleString('id-ID') + '</td>';
-                recentHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#047857;">Rp ' + (item.total || 0).toLocaleString('id-ID') + '</td>';
+                const totalHarga = (item.qty || 0) * (item.price || 0);
+                recentHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#047857;">Rp ' + totalHarga.toLocaleString('id-ID') + '</td>';
                 recentHtml += '</tr>';
             });
             recentHtml += '</tbody></table>';
@@ -6710,6 +6729,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             const tabContent = document.getElementById('salesTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
             if (tabContent) tabContent.style.display = 'block';
+            // Re-render with current filters so all tabs stay in sync
+            renderSalesDashboard();
         }
 
         // Switch sub-tabs for sales (Retail/Consig/Wholesale/Online)
