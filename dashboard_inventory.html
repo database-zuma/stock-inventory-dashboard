@@ -1453,6 +1453,14 @@
 
                 <!-- Refund Tab -->
                 <div class="sales-tab-content" id="salesTabRefund" style="padding:20px;display:none;">
+                    <!-- Refund Header Banner -->
+                    <div style="background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:1.5rem;">🔄</span>
+                        <div>
+                            <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Refund Analysis</h3>
+                            <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data pengembalian barang (retail only, excl. event/pameran)</p>
+                        </div>
+                    </div>
                     <!-- Refund Score Cards -->
                     <div id="refundScoreCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
 
@@ -1488,7 +1496,7 @@
                         </div>
                         <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                             <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">👤 Top SPG Refund</h4>
-                            <div style="position:relative;height:300px;"><canvas id="refundBySPGChart"></canvas></div>
+                            <div id="refundBySPGTable" style="max-height:400px;overflow-y:auto;"></div>
                         </div>
                     </div>
 
@@ -6819,7 +6827,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             ];
             let cardsHtml = '';
             cards.forEach(c => {
-                cardsHtml += '<div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid '+c.color+';">';
+                cardsHtml += '<div style="background:#fef2f2;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid '+c.color+';">';
                 cardsHtml += '<div style="display:flex;justify-content:space-between;align-items:center;">';
                 cardsHtml += '<div><div style="font-size:0.75rem;color:#6b7280;">'+c.label+'</div>';
                 cardsHtml += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;">'+c.value+'</div></div>';
@@ -6911,23 +6919,23 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             // --- Refund Trend Line Chart ---
-            // --- Top SPG Refund Bar Chart ---
-            if(refundChartInstances.spg) refundChartInstances.spg.destroy();
-            const topSPGs = (rd.by_spg || []).slice(0,15);
-            refundChartInstances.spg = new Chart(document.getElementById('refundBySPGChart'), {
-                type: 'bar',
-                data: {
-                    labels: topSPGs.map(s => s.spg.substring(0,20)),
-                    datasets: [{
-                        label: 'Refund Qty',
-                        data: topSPGs.map(s => s.refund_qty),
-                        backgroundColor: '#8b5cf6',
-                        borderRadius: 4,
-                    }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+            // --- Top SPG Refund Table ---
+            const topSPGs = (rd.by_spg || []).slice(0,30);
+            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            spgHtml += '<thead><tr style="background:#002A3A;color:white;">';
+            spgHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">SPG</th><th style="padding:6px;">Toko</th>';
+            spgHtml += '<th style="padding:6px;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
+            topSPGs.forEach((s,i) => {
+                spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + (i < 3 ? 'background:#fef2f2;' : '') + '">';
+                spgHtml += '<td style="text-align:center;padding:6px;font-weight:600;">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)) + '</td>';
+                spgHtml += '<td style="padding:6px;font-weight:' + (i < 3 ? '700' : '500') + ';">' + s.spg + '</td>';
+                spgHtml += '<td style="padding:6px;font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.toko || '-') + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + s.refund_qty + '</td>';
+                spgHtml += '<td style="text-align:right;padding:6px;color:#ef4444;">Rp ' + ((s.refund_value||0)/1e6).toFixed(2) + 'jt</td>';
+                spgHtml += '</tr>';
             });
-
+            spgHtml += '</tbody></table>';
+            document.getElementById('refundBySPGTable').innerHTML = spgHtml;
 
             // --- Detail Refund Transactions ---
             let detailHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
