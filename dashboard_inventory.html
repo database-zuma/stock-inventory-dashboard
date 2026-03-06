@@ -1706,7 +1706,8 @@
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://lions-outline-furnished-officially.trycloudflare.com';
+        const API_BASE = 'https://gadgets-explains-municipality-spa.trycloudflare.com';
+        const API_BASE_LOCAL = 'https://lions-outline-furnished-officially.trycloudflare.com';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
@@ -6795,7 +6796,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const startDate = document.getElementById('salesFilterStartDate').value || '2026-01-01';
             const endDate = document.getElementById('salesFilterEndDate').value || new Date().toISOString().slice(0,10);
             try {
-                refundData = await fetchAPI('/api/sales/refunds?from=' + startDate + '&to=' + endDate);
+                const res = await fetch(API_BASE_LOCAL + '/api/sales/refunds?from=' + startDate + '&to=' + endDate, {
+                    headers: { 'X-API-Key': API_KEY }
+                });
+                if (!res.ok) throw new Error('Refund API error ' + res.status);
+                refundData = await res.json();
             } catch(e) {
                 console.error('Failed to load refund data:', e);
                 document.getElementById('refundScoreCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">Gagal memuat data refund</div>';
