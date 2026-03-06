@@ -1538,10 +1538,16 @@
                         <!-- Grand Total Cards -->
                         <div id="consigGrandCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;"></div>
 
-                        <!-- Partner Summary Table -->
-                        <div style="margin-bottom:24px;">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏢 Sales per Partner</h4>
-                            <div id="consigPartnerTable" style="max-height:400px;overflow-y:auto;"></div>
+                        <!-- Sales per Area + Bar Chart -->
+                        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px;margin-bottom:24px;">
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Sales per Area</h4>
+                                <div id="consigAreaTable"></div>
+                            </div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Consignment Sales by Area</h4>
+                                <div style="position:relative;height:260px;"><canvas id="consigAreaChart"></canvas></div>
+                            </div>
                         </div>
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
@@ -7361,14 +7367,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
         let consigDataCache = null;
+        let consigAreaChartInstance = null;
         async function loadConsignmentData() {
-            const fmt = n => 'Rp ' + (n||0).toLocaleString('id-ID');
-            const fmtM = n => 'Rp ' + ((n||0)/1000000).toFixed(1) + 'jt';
-            const fmtK = n => (n||0).toLocaleString('id-ID');
-            const ID_MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-
             // Show loading
-            ['consigGrandCards','consigPartnerTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
+            ['consigGrandCards','consigAreaTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
                 var el = document.getElementById(id);
                 if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data consignment...</div>';
             });
@@ -7384,7 +7386,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 consigDataCache = data;
                 renderConsignmentData(data);
             } catch(e) {
-                ['consigGrandCards','consigPartnerTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
+                ['consigGrandCards','consigAreaTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
                     var el = document.getElementById(id);
                     if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat: ' + e.message + '</div>';
                 });
@@ -7392,19 +7394,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function renderConsignmentData(data) {
-            const fmt = n => 'Rp ' + (n||0).toLocaleString('id-ID');
             const fmtM = n => 'Rp ' + ((n||0)/1000000).toFixed(1) + 'jt';
             const fmtK = n => (n||0).toLocaleString('id-ID');
             const ID_MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
             const gt = data.grand_total || {};
 
-            // Grand Total Cards
+            // Grand Total Cards (no Trx)
             var cardsHtml = '';
             var cards = [
                 { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#7c3aed' },
                 { label: 'Total Qty', value: fmtK(gt.total_qty), color: '#2563eb' },
-                { label: 'Total Trx', value: fmtK(gt.total_trx), color: '#059669' },
-                { label: 'Partners', value: (data.partners||[]).length, color: '#d97706' },
+                { label: 'Total SKU', value: fmtK(gt.total_sku), color: '#059669' },
+                { label: 'Areas', value: (data.areas||[]).length, color: '#d97706' },
             ];
             cards.forEach(function(c) {
                 cardsHtml += '<div style="background:#faf5ff;border-radius:10px;padding:14px 18px;border-left:4px solid ' + c.color + ';">';
@@ -7414,32 +7415,69 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             document.getElementById('consigGrandCards').innerHTML = cardsHtml;
 
-            // Partner Summary Table
-            var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-            pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;width:35px;">No</th>';
-            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Partner</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Toko</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">SKU</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Trx</th>';
-            pHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
-            pHtml += '</tr></thead><tbody>';
-            (data.partners||[]).forEach(function(p, i) {
-                pHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                pHtml += '<td style="text-align:center;padding:8px;color:#6b7280;">' + (i+1) + '</td>';
-                pHtml += '<td style="padding:8px;font-weight:600;">' + p.partner + '</td>';
-                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_stores) + '</td>';
-                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_sku) + '</td>';
-                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_qty) + '</td>';
-                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_trx) + '</td>';
-                pHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#059669;">' + fmtM(p.total_sales) + '</td>';
-                pHtml += '</tr>';
+            // Area Summary Table (replaces Partner table)
+            var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+            aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
+            aHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Area</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Partners</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Toko</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
+            aHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
+            aHtml += '</tr></thead><tbody>';
+            (data.areas||[]).forEach(function(a) {
+                aHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                aHtml += '<td style="padding:8px;font-weight:700;color:#7c3aed;">' + a.area + '</td>';
+                aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_partners) + '</td>';
+                aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_stores) + '</td>';
+                aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_qty) + '</td>';
+                aHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#059669;">' + fmtM(a.total_sales) + '</td>';
+                aHtml += '</tr>';
             });
-            pHtml += '</tbody></table>';
-            document.getElementById('consigPartnerTable').innerHTML = pHtml;
+            aHtml += '</tbody></table>';
+            document.getElementById('consigAreaTable').innerHTML = aHtml;
 
-            // Top Products Table
+            // Area Bar Chart
+            var ctx = document.getElementById('consigAreaChart');
+            if (ctx) {
+                if (consigAreaChartInstance) consigAreaChartInstance.destroy();
+                var areas = data.areas || [];
+                var areaColors = { 'Bali': '#7c3aed', 'Jakarta': '#2563eb', 'Lombok': '#059669' };
+                consigAreaChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: areas.map(a => a.area),
+                        datasets: [{
+                            label: 'Sales (Rp)',
+                            data: areas.map(a => Number(a.total_sales)),
+                            backgroundColor: areas.map(a => areaColors[a.area] || '#a78bfa'),
+                            borderRadius: 8,
+                            barThickness: 50,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) { return 'Rp ' + (ctx.raw/1000000).toFixed(1) + ' jt'; }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: v => 'Rp ' + (v/1000000).toFixed(0) + 'jt', font: { size: 11 } },
+                                grid: { color: '#f3f4f6' }
+                            },
+                            x: { ticks: { font: { size: 12, weight: 'bold' } }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // Top Products Table (unchanged)
             var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             prodHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
             prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;width:30px;">No</th>';
@@ -7458,12 +7496,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             prodHtml += '</tbody></table>';
             document.getElementById('consigProductTable').innerHTML = prodHtml;
 
-            // Monthly Trend Table
+            // Monthly Trend Table (no Trx)
             var tHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             tHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
             tHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Bulan</th>';
             tHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
-            tHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Trx</th>';
             tHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
             tHtml += '</tr></thead><tbody>';
             (data.monthly_trend||[]).forEach(function(t) {
@@ -7472,32 +7509,29 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 tHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
                 tHtml += '<td style="padding:8px;font-weight:600;">' + label + '</td>';
                 tHtml += '<td style="text-align:center;padding:8px;">' + fmtK(t.qty) + '</td>';
-                tHtml += '<td style="text-align:center;padding:8px;">' + fmtK(t.trx) + '</td>';
                 tHtml += '<td style="text-align:right;padding:8px;color:#059669;font-weight:600;">' + fmtM(t.sales) + '</td>';
                 tHtml += '</tr>';
             });
             tHtml += '</tbody></table>';
             document.getElementById('consigTrendTable').innerHTML = tHtml;
 
-            // Store Breakdown Table
+            // Store Breakdown Table (Toko first, then Area — no Trx)
             var sHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             sHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;width:30px;">No</th>';
-            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Partner</th>';
             sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Toko</th>';
+            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Area</th>';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">SKU</th>';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">Qty</th>';
-            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">Trx</th>';
             sHtml += '<th style="text-align:right;padding:6px;color:white;background:#7c3aed;">Sales</th>';
             sHtml += '</tr></thead><tbody>';
             (data.stores||[]).forEach(function(s, i) {
                 sHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
                 sHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
-                sHtml += '<td style="padding:6px;color:#7c3aed;font-weight:600;font-size:0.75rem;">' + s.partner + '</td>';
-                sHtml += '<td style="padding:6px;">' + s.store_name + '</td>';
+                sHtml += '<td style="padding:6px;font-weight:600;">' + s.store_name + '</td>';
+                sHtml += '<td style="padding:6px;color:#7c3aed;font-weight:600;font-size:0.75rem;">' + s.area + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.sku_count) + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.qty) + '</td>';
-                sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.trx) + '</td>';
                 sHtml += '<td style="text-align:right;padding:6px;color:#059669;font-weight:600;">' + fmtM(s.sales) + '</td>';
                 sHtml += '</tr>';
             });
