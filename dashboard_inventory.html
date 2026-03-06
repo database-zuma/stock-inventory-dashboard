@@ -5121,10 +5121,9 @@
                 if (startDate && item.date < startDate) return false;
                 if (endDate && item.date > endDate) return false;
                 if (store && item.store !== store) return false;
-                if (gender && getGenderFromSKU(item.sku) !== gender) return false;
+                if (gender && (item.gender || getGenderFromSKU(item.sku)) !== gender) return false;
                 if (series) {
-                    // Get series from stock data mapping
-                    const itemSeries = skuSeriesMap[item.sku.toUpperCase()] || '';
+                    const itemSeries = item.series || skuSeriesMap[item.sku.toUpperCase()] || '';
                     if (itemSeries !== series) return false;
                 }
                 if (area) {
@@ -7297,7 +7296,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     spgMap[s.spg].refund_value += s.refund_value;
                     spgMap[s.spg].refund_transactions += s.refund_transactions;
                 });
-                const spgArr = Object.entries(spgMap).map(([spg, v]) => ({ spg, toko: Array.from(v.toko).join(', '), ...v })).sort((a,b) => b.refund_qty - a.refund_qty);
+                const spgArr = Object.entries(spgMap).map(([spg, v]) => ({ ...v, spg, toko: Array.from(v.toko).join(', ') })).sort((a,b) => b.refund_qty - a.refund_qty);
                 let st = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
                 st += '<thead><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;">#</th><th style="text-align:left;padding:8px;color:white;">SPG</th><th style="text-align:left;padding:8px;color:white;">Toko</th><th style="text-align:right;padding:8px;color:white;">Refund Qty</th><th style="text-align:right;padding:8px;color:white;">Refund Value</th><th style="text-align:right;padding:8px;color:white;">Trx</th></tr></thead><tbody>';
                 spgArr.forEach((s, i) => {
@@ -7731,7 +7730,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!document.getElementById('salesFilterStore').options.length || document.getElementById('salesFilterStore').options.length <= 1) {
                     initSalesFilters();
                 }
-                renderSalesDashboard();
+                switchSalesSubTab('retail').then(() => renderSalesDashboard());
             } else if (view === 'redistribusi') {
                 setTimeout(function() {
                     try { initRedistribusi(); } catch(e) { console.error('Error initRedistribusi:', e); }
