@@ -1550,6 +1550,18 @@
                             </div>
                         </div>
 
+                        <!-- Sales per Partner + Bar Chart -->
+                        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px;margin-bottom:24px;">
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏢 Sales per Partner</h4>
+                                <div id="consigPartnerTable" style="max-height:320px;overflow-y:auto;"></div>
+                            </div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Partner</h4>
+                                <div style="position:relative;height:280px;"><canvas id="consigPartnerChart"></canvas></div>
+                            </div>
+                        </div>
+
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <!-- Top Products -->
                             <div>
@@ -7368,9 +7380,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         // ============ CONSIGNMENT DEDICATED VIEW ============
         let consigDataCache = null;
         let consigAreaChartInstance = null;
+        let consigPartnerChartInstance = null;
         async function loadConsignmentData() {
             // Show loading
-            ['consigGrandCards','consigAreaTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
+            ['consigGrandCards','consigAreaTable','consigPartnerTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
                 var el = document.getElementById(id);
                 if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data consignment...</div>';
             });
@@ -7386,7 +7399,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 consigDataCache = data;
                 renderConsignmentData(data);
             } catch(e) {
-                ['consigGrandCards','consigAreaTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
+                ['consigGrandCards','consigAreaTable','consigPartnerTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
                     var el = document.getElementById(id);
                     if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat: ' + e.message + '</div>';
                 });
@@ -7405,7 +7418,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#7c3aed' },
                 { label: 'Total Qty', value: fmtK(gt.total_qty), color: '#2563eb' },
                 { label: 'Total SKU', value: fmtK(gt.total_sku), color: '#059669' },
-                { label: 'Areas', value: (data.areas||[]).length, color: '#d97706' },
+                { label: 'Partners', value: (data.partners||[]).length, color: '#d97706' },
             ];
             cards.forEach(function(c) {
                 cardsHtml += '<div style="background:#faf5ff;border-radius:10px;padding:14px 18px;border-left:4px solid ' + c.color + ';">';
@@ -7477,6 +7490,69 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             }
 
+            // Partner Summary Table
+            var pColors = ['#7c3aed','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
+            var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+            pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
+            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Partner</th>';
+            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Area</th>';
+            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Toko</th>';
+            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
+            pHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
+            pHtml += '</tr></thead><tbody>';
+            (data.partners||[]).forEach(function(p, i) {
+                pHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                pHtml += '<td style="padding:8px;font-weight:700;color:' + pColors[i % pColors.length] + ';">' + p.partner + '</td>';
+                pHtml += '<td style="padding:8px;font-size:0.78rem;color:#6b7280;">' + p.area + '</td>';
+                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_stores) + '</td>';
+                pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_qty) + '</td>';
+                pHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#059669;">' + fmtM(p.total_sales) + '</td>';
+                pHtml += '</tr>';
+            });
+            pHtml += '</tbody></table>';
+            document.getElementById('consigPartnerTable').innerHTML = pHtml;
+
+            // Partner Bar Chart
+            var pCtx = document.getElementById('consigPartnerChart');
+            if (pCtx) {
+                if (consigPartnerChartInstance) consigPartnerChartInstance.destroy();
+                var partners = data.partners || [];
+                consigPartnerChartInstance = new Chart(pCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: partners.map(p => p.partner),
+                        datasets: [{
+                            label: 'Sales (Rp)',
+                            data: partners.map(p => Number(p.total_sales)),
+                            backgroundColor: partners.map((p, i) => pColors[i % pColors.length]),
+                            borderRadius: 6,
+                            barThickness: 32,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) { return 'Rp ' + (ctx.raw/1000000).toFixed(1) + ' jt'; }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: v => 'Rp ' + (v/1000000).toFixed(0) + 'jt', font: { size: 10 } },
+                                grid: { color: '#f3f4f6' }
+                            },
+                            y: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
             // Top Products Table (unchanged)
             var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             prodHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
@@ -7515,11 +7591,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             tHtml += '</tbody></table>';
             document.getElementById('consigTrendTable').innerHTML = tHtml;
 
-            // Store Breakdown Table (Toko first, then Area — no Trx)
+            // Store Breakdown Table (Toko, Partner, Area)
             var sHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             sHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;width:30px;">No</th>';
             sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Toko</th>';
+            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Partner</th>';
             sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Area</th>';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">SKU</th>';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">Qty</th>';
@@ -7529,7 +7606,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 sHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
                 sHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 sHtml += '<td style="padding:6px;font-weight:600;">' + s.store_name + '</td>';
-                sHtml += '<td style="padding:6px;color:#7c3aed;font-weight:600;font-size:0.75rem;">' + s.area + '</td>';
+                sHtml += '<td style="padding:6px;color:#7c3aed;font-weight:600;font-size:0.75rem;">' + s.partner + '</td>';
+                sHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + s.area + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.sku_count) + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.qty) + '</td>';
                 sHtml += '<td style="text-align:right;padding:6px;color:#059669;font-weight:600;">' + fmtM(s.sales) + '</td>';
