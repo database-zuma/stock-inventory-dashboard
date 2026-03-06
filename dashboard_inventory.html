@@ -397,7 +397,7 @@
             border: none;
             background: transparent;
             border-radius: 8px;
-            font-size: 0.82rem;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -407,8 +407,8 @@
             width: 100%;
             text-align: left;
         }
-        .view-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.95); }
-        .view-btn.active { background: transparent; color: rgba(255,255,255,0.98); font-weight: 600; border-left: 3px solid #00E273; border-radius: 0 8px 8px 0; padding-left: 11px; }
+        .view-btn:hover { background: rgba(0,226,115,0.1); color: rgba(255,255,255,0.95); }
+        .view-btn.active { background: rgba(0,226,115,0.15); color: #00E273; font-weight: 600; border-left: 3px solid #00E273; border-radius: 0 8px 8px 0; padding-left: 11px; }
         .view-container { display: none; }
         .view-container.active { display: block; }
 
@@ -508,9 +508,9 @@
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
         .entity-toggle-bar { display:flex; flex-direction:column; gap:3px; margin:2px 0 4px 0; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid rgba(0,226,115,0.5); }
-        .entity-toggle-btn { padding:6px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:transparent; color:rgba(255,255,255,0.80); font-weight:600; font-size:0.76rem; cursor:pointer; transition:all 0.15s ease; text-align:left; width:100%; }
-        .entity-toggle-btn:hover { border-color:rgba(0,226,115,0.4); color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.06); }
-        .entity-toggle-btn.active { background: transparent; border-color: transparent; border-left: 3px solid #00E273; border-radius: 0 6px 6px 0; color: rgba(255,255,255,0.98); font-weight: 700; padding-left: 9px; }
+        .entity-toggle-btn { padding:6px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:transparent; color:rgba(255,255,255,0.80); font-weight:600; font-size:0.85rem; cursor:pointer; transition:all 0.15s ease; text-align:left; width:100%; }
+        .entity-toggle-btn:hover { border-color:rgba(0,226,115,0.4); color:rgba(255,255,255,0.9); background:rgba(0,226,115,0.1); }
+        .entity-toggle-btn.active { background: rgba(0,226,115,0.12); border-color: transparent; border-left: 3px solid #00E273; border-radius: 0 6px 6px 0; color: #00E273; font-weight: 700; padding-left: 9px; }
     </style>
 </head>
 <body>
@@ -541,10 +541,10 @@
                 📊 Stock Inventory
             </button>
             <div class="entity-toggle-bar" id="entityToggleBar">
-                <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">DDD</button>
-                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">LJBB</button>
-                <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">MBB</button>
-                <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">UBB</button>
+                <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">› DDD</button>
+                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">› LJBB</button>
+                <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">› MBB</button>
+                <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">› UBB</button>
             </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
@@ -556,10 +556,10 @@
                 💰 Sales
             </button>
             <div class="entity-toggle-bar" id="salesChannelBar">
-                <button class="entity-toggle-btn active" data-schannel="retail" onclick="switchSalesChannel('retail')">🏬 Retail</button>
-                <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">📦 Consig</button>
-                <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">🏭 Wholesale</button>
-                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">🌐 Online</button>
+                <button class="entity-toggle-btn active" data-schannel="retail" onclick="switchSalesChannel('retail')">› 🏬 Retail</button>
+                <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">› 📦 Consig</button>
+                <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">› 🏭 Wholesale</button>
+                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">› 🌐 Online</button>
             </div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
