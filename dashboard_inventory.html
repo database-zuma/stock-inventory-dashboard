@@ -28,8 +28,14 @@
             background: #002A3A; padding: 18px 36px; color: white;
             box-shadow: 0 1px 3px rgba(0,42,58,0.12), 0 8px 24px rgba(0,42,58,0.16); position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: none;
+            border-bottom: none; position: relative; overflow: hidden;
         }
+        .header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url('foto7.png') right center / cover no-repeat;
+            opacity: 0.15; z-index: 0; pointer-events: none;
+        }
+        .header > * { position: relative; z-index: 1; }
         .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
         .header p { opacity: 0.7; font-size: 0.82rem; font-weight: 400; }
         .header .date { font-size: 0.78rem; opacity: 0.8; text-align: right; letter-spacing: 0.01em; }
@@ -517,7 +523,6 @@
 <body>
     <div class="header">
         <div style="display:flex;align-items:center;gap:14px;">
-            <img src="sandal1.png" alt="Zuma" style="height:70px;width:70px;object-fit:cover;border-radius:50%;border:2px solid rgba(255,255,255,0.3);">
             <div>
                 <h1 style="font-size:1.6rem;margin:0;">Master Dashboard Operasional</h1>
                 <p style="margin:5px 0 0 0;font-size:0.85rem;">Zuma Indonesia</p>
