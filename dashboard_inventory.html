@@ -6839,13 +6839,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             storeHtml += '<thead><tr style="background:#002A3A;color:white;">';
             storeHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">Toko</th><th style="padding:6px;">Area</th>';
-            storeHtml += '<th style="padding:6px;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
+            storeHtml += '<th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
             rd.by_store.forEach((s,i) => {
                 storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 storeHtml += '<td style="text-align:center;padding:6px;">'+(i+1)+'</td>';
                 storeHtml += '<td style="padding:6px;">'+s.toko+'</td>';
                 storeHtml += '<td style="padding:6px;">'+s.area+'</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;">'+s.refund_qty+'</td>';
+                storeHtml += '<td style="text-align:center;padding:6px;font-weight:600;">'+s.refund_qty+'</td>';
                 storeHtml += '<td style="text-align:right;padding:6px;color:#ef4444;font-weight:600;">Rp '+(s.refund_value/1e6).toFixed(2)+'jt</td>';
                 storeHtml += '</tr>';
             });
@@ -6872,15 +6872,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // --- Refund by Area Table ---
             let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
-            areaHtml += '<th style="padding:6px;">Area</th><th style="padding:6px;">Qty</th><th style="padding:6px;">Value</th><th style="padding:6px;">Share</th></tr></thead><tbody>';
+            areaHtml += '<th style="padding:6px;">Area</th><th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th><th style="padding:6px;text-align:center;">Share</th></tr></thead><tbody>';
             const totalRefQty = rd.summary.refund_qty || 1;
             rd.by_area.forEach(a => {
                 const share = (a.refund_qty / totalRefQty * 100).toFixed(1);
                 areaHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 areaHtml += '<td style="padding:6px;font-weight:600;">'+a.area+'</td>';
-                areaHtml += '<td style="text-align:right;padding:6px;font-weight:600;">'+a.refund_qty+'</td>';
+                areaHtml += '<td style="text-align:center;padding:6px;font-weight:600;">'+a.refund_qty+'</td>';
                 areaHtml += '<td style="text-align:right;padding:6px;color:#ef4444;font-weight:600;">Rp '+(a.refund_value/1e6).toFixed(2)+'jt</td>';
-                areaHtml += '<td style="text-align:right;padding:6px;">'+share+'%</td>';
+                areaHtml += '<td style="text-align:center;padding:6px;">'+share+'%</td>';
                 areaHtml += '</tr>';
             });
             areaHtml += '</tbody></table>';
@@ -6924,13 +6924,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             spgHtml += '<thead><tr style="background:#002A3A;color:white;">';
             spgHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">SPG</th><th style="padding:6px;">Toko</th>';
-            spgHtml += '<th style="padding:6px;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
+            spgHtml += '<th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
             topSPGs.forEach((s,i) => {
                 spgHtml += '<tr style="border-bottom:1px solid #e2e8f0;' + (i < 3 ? 'background:#fef2f2;' : '') + '">';
                 spgHtml += '<td style="text-align:center;padding:6px;font-weight:600;">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)) + '</td>';
                 spgHtml += '<td style="padding:6px;font-weight:' + (i < 3 ? '700' : '500') + ';">' + s.spg + '</td>';
                 spgHtml += '<td style="padding:6px;font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.toko || '-') + '</td>';
-                spgHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#ef4444;">' + s.refund_qty + '</td>';
+                spgHtml += '<td style="text-align:center;padding:6px;font-weight:600;color:#ef4444;">' + s.refund_qty + '</td>';
                 spgHtml += '<td style="text-align:right;padding:6px;color:#ef4444;">Rp ' + ((s.refund_value||0)/1e6).toFixed(2) + 'jt</td>';
                 spgHtml += '</tr>';
             });
@@ -6939,10 +6939,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // --- Detail Refund Transactions ---
             let detailHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-            detailHtml += '<thead><tr style="background:#002A3A;color:white;">';
-            detailHtml += '<th style="padding:6px;">Tanggal</th><th style="padding:6px;">Order</th><th style="padding:6px;">Toko</th>';
-            detailHtml += '<th style="padding:6px;">SPG</th><th style="padding:6px;">SKU</th><th style="padding:6px;">Artikel</th>';
-            detailHtml += '<th style="padding:6px;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
+            detailHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            detailHtml += '<th style="padding:6px;background:#002A3A;">Tanggal</th><th style="padding:6px;background:#002A3A;">Order</th><th style="padding:6px;background:#002A3A;">Toko</th>';
+            detailHtml += '<th style="padding:6px;background:#002A3A;">SPG</th><th style="padding:6px;background:#002A3A;">SKU</th><th style="padding:6px;background:#002A3A;">Artikel</th>';
+            detailHtml += '<th style="padding:6px;text-align:center;background:#002A3A;">Qty</th><th style="padding:6px;background:#002A3A;">Value</th></tr></thead><tbody>';
             (rd.detail || []).forEach(d => {
                 detailHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
                 detailHtml += '<td style="padding:6px;">'+(d.date||'-')+'</td>';
@@ -6951,7 +6951,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 detailHtml += '<td style="padding:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(d.spg||'-')+'</td>';
                 detailHtml += '<td style="padding:6px;text-transform:uppercase;">'+(d.sku||'-')+'</td>';
                 detailHtml += '<td style="padding:6px;">'+(d.article||'-')+'</td>';
-                detailHtml += '<td style="text-align:right;padding:6px;font-weight:600;">'+d.refund_qty+'</td>';
+                detailHtml += '<td style="text-align:center;padding:6px;font-weight:600;">'+d.refund_qty+'</td>';
                 detailHtml += '<td style="text-align:right;padding:6px;color:#ef4444;font-weight:600;">Rp '+(d.refund_value > 0 ? d.refund_value.toLocaleString('id-ID') : (d.price * d.refund_qty).toLocaleString('id-ID'))+'</td>';
                 detailHtml += '</tr>';
             });
