@@ -1466,13 +1466,6 @@
                 <!-- Refund Tab -->
                 <div class="sales-tab-content" id="salesTabRefund" style="padding:20px;display:none;">
                     <!-- Refund Header Banner -->
-                    <div style="background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-                        <span style="font-size:1.5rem;">🔄</span>
-                        <div>
-                            <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Refund Analysis</h3>
-                            <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data pengembalian barang (retail only, excl. event/pameran)</p>
-                        </div>
-                    </div>
                     <!-- Refund Score Cards -->
                     <div id="refundScoreCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
 
@@ -1535,17 +1528,17 @@
                     </div>
 
                     <!-- Consignment Filters -->
-                    <div style="background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e2e8f0;">
-                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
-                            <div style="min-width:80px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Tahun:</label>
-                                <select id="consigFilterYear" onchange="onConsigYearChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                    <div style="background:#f8fafc;padding:15px 20px;border-bottom:1px solid #e2e8f0;">
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+                            <div style="min-width:100px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Tahun:</label>
+                                <select id="consigFilterYear" onchange="onConsigYearChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua</option>
                                 </select>
                             </div>
-                            <div style="min-width:120px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Area:</label>
-                                <select id="consigFilterArea" onchange="onConsigAreaChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <div style="min-width:140px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Area:</label>
+                                <select id="consigFilterArea" onchange="onConsigAreaChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua Area</option>
                                     <option value="Bali">Bali</option>
                                     <option value="Jakarta">Jakarta</option>
@@ -1553,29 +1546,29 @@
                                     <option value="Jatim">Jatim</option>
                                 </select>
                             </div>
-                            <div style="min-width:130px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Partner:</label>
-                                <select id="consigFilterPartner" onchange="onConsigPartnerChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <div style="min-width:150px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Partner:</label>
+                                <select id="consigFilterPartner" onchange="onConsigPartnerChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua Partner</option>
                                 </select>
                             </div>
-                            <div style="min-width:140px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Toko:</label>
-                                <select id="consigFilterStore" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <div style="min-width:160px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Toko:</label>
+                                <select id="consigFilterStore" onchange="applyConsigFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua Toko</option>
                                 </select>
                             </div>
-                            <div style="min-width:120px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Bulan:</label>
-                                <select id="consigFilterMonth" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <div style="min-width:130px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Bulan:</label>
+                                <select id="consigFilterMonth" onchange="applyConsigFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua Bulan</option>
                                 </select>
                             </div>
-                            <div style="min-width:160px;">
-                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Cari SKU:</label>
-                                <input type="text" id="consigFilterSku" oninput="applyConsigFilters()" placeholder="Ketik SKU/nama..." style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            <div style="min-width:180px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Cari SKU:</label>
+                                <input type="text" id="consigFilterSku" oninput="applyConsigFilters()" placeholder="Ketik SKU/nama..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                             </div>
-                            <button onclick="resetConsigFilters()" style="padding:6px 14px;border:1px solid #e2e8f0;border-radius:6px;background:white;color:#6b7280;cursor:pointer;font-size:0.82rem;">Reset</button>
+                            <button onclick="resetConsigFilters()" style="padding:8px 16px;border:1px solid #e2e8f0;border-radius:6px;background:white;color:#6b7280;cursor:pointer;font-size:0.9rem;font-weight:500;">Reset</button>
                         </div>
                     </div>
                     <div style="padding:20px;">
@@ -7031,7 +7024,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     datasets: [{
                         label: 'Refund Qty',
                         data: topStores.map(s => s.refund_qty),
-                        backgroundColor: '#ef4444',
+                        backgroundColor: '#2563eb',
                         borderRadius: 4,
                     }]
                 },
@@ -7633,7 +7626,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var cards = [
                 { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#002A3A' },
                 { label: 'Total Qty', value: fmtK(gt.total_qty), color: '#2563eb' },
-                { label: 'Total SKU', value: fmtK(gt.total_sku), color: '#059669' },
+                { label: 'Total Toko', value: fmtK(gt.total_stores || (data.stores||[]).length), color: '#059669' },
                 { label: 'Partners', value: (data.partners||[]).length, color: '#d97706' },
             ];
             cards.forEach(function(c) {
@@ -7644,7 +7637,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             document.getElementById('consigGrandCards').innerHTML = cardsHtml;
 
-            var areaColors = { 'Bali': '#e85d04', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#d97706' };
+            var areaColors = { 'Bali': '#e85d04', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#8b5cf6' };
             // Area Summary Table (replaces Partner table)
             var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
@@ -7708,7 +7701,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // Partner Summary Table
-            var pColors = ['#e85d04','#2563eb','#059669','#d97706','#dc2626','#0891b2','#7c3aed','#be185d','#0d9488'];
+            var pColors = ['#e85d04','#2563eb','#059669','#8b5cf6','#dc2626','#0891b2','#f59e0b','#be185d','#0d9488'];
             var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Partner</th>';
