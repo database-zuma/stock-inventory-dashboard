@@ -1906,6 +1906,25 @@
             return res.json();
         }
 
+        // ── DOM FIX: Move misplaced views to correct parent ───────────────────
+        // consignmentView and redistribusiView are incorrectly nested inside salesView
+        // due to HTML div mismatch. Fix by moving them to the correct parent.
+        (function fixDomNesting() {
+            var contentArea = document.querySelector('.view-content-area');
+            if (!contentArea) return;
+            var consigView = document.getElementById('consignmentView');
+            var redistView = document.getElementById('redistribusiView');
+            // Move consignmentView out of salesRetailTabWrapper to salesView level
+            var salesView = document.getElementById('salesView');
+            if (consigView && salesView && consigView.parentElement.id === 'salesRetailTabWrapper') {
+                salesView.appendChild(consigView);
+            }
+            // Move redistribusiView out of salesView to view-content-area level
+            if (redistView && redistView.parentElement.id === 'salesView') {
+                contentArea.appendChild(redistView);
+            }
+        })();
+
         // Data — populated by loadDashboardData() before dashboard initializes
         let allData = {};
         let allStores = {};
@@ -7908,29 +7927,41 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 salesFilters.style.display = '';
                 salesCards.style.display = 'grid';
                 retailTabWrapper.style.display = '';
-                consignmentView.style.display = 'none';
+                // Restore all children, hide consignment
+                Array.from(retailTabWrapper.children).forEach(function(child) {
+                    child.style.display = (child.id === 'consignmentView') ? 'none' : '';
+                });
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
                 }, 50);
             } else if (channel === 'consig') {
-                // Consignment: hide filters+cards, show dedicated view
+                // Consignment: hide filters+cards, show wrapper but hide tabs inside it
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
-                retailTabWrapper.style.display = 'none';
-                consignmentView.style.display = 'block';
+                retailTabWrapper.style.display = '';
+                // Hide all children except consignmentView
+                Array.from(retailTabWrapper.children).forEach(function(child) {
+                    if (child.id === 'consignmentView') {
+                        child.style.display = 'block';
+                    } else {
+                        child.style.display = 'none';
+                    }
+                });
                 loadConsignmentData();
             } else {
                 // Wholesale/Online: hide filters+cards, show retail tabs with sub-tab
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
                 retailTabWrapper.style.display = '';
-                consignmentView.style.display = 'none';
+                // Restore all children, hide consignment
+                Array.from(retailTabWrapper.children).forEach(function(child) {
+                    child.style.display = (child.id === 'consignmentView') ? 'none' : '';
+                });
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
                 }, 50);
-            }
         }
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
