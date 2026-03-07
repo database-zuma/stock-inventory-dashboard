@@ -1432,15 +1432,21 @@
                     <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
                     <div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div>
 
-                    <!-- Area Metrics: ATV / ATU / ARP — SEPARATE CHARTS -->
-                    <h4 style="margin:24px 0 12px 0;color:#1f2937;font-size:0.95rem;">💰 ATV (Average Transaction Value) per Area</h4>
-                    <div style="position:relative;height:280px;"><canvas id="spgAreaATVChart"></canvas></div>
-
-                    <h4 style="margin:24px 0 12px 0;color:#1f2937;font-size:0.95rem;">📦 ATU (Average Transaction Unit) per Area</h4>
-                    <div style="position:relative;height:280px;"><canvas id="spgAreaATUChart"></canvas></div>
-
-                    <h4 style="margin:24px 0 12px 0;color:#1f2937;font-size:0.95rem;">💎 ARP (Average Retail Price) per Area</h4>
-                    <div style="position:relative;height:280px;"><canvas id="spgAreaARPChart"></canvas></div>
+                    <!-- Area Metrics: ATV / ATU / ARP — COMPACT CARDS -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;">
+                        <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                            <h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.85rem;">💰 ATV per Area</h4>
+                            <div style="position:relative;height:220px;"><canvas id="spgAreaATVChart"></canvas></div>
+                        </div>
+                        <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                            <h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.85rem;">📦 ATU per Area</h4>
+                            <div style="position:relative;height:220px;"><canvas id="spgAreaATUChart"></canvas></div>
+                        </div>
+                        <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                            <h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.85rem;">💎 ARP per Area</h4>
+                            <div style="position:relative;height:220px;"><canvas id="spgAreaARPChart"></canvas></div>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -6384,8 +6390,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             datalabels: { display: false }
                         },
                         scales: {
-                            x: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000).toFixed(0) + 'rb', font: { size: 10 } }, grid: { color: '#f3f4f6' } },
-                            y: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+                            x: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000).toFixed(0) + 'rb', font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#f3f4f6' } },
+                            y: { ticks: { font: { size: 10 } }, grid: { display: false } }
                         }
                     }
                 });
@@ -6410,8 +6416,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             datalabels: { display: false }
                         },
                         scales: {
-                            x: { beginAtZero: true, ticks: { callback: v => v.toFixed(1) + ' pcs', font: { size: 10 } }, grid: { color: '#f3f4f6' } },
-                            y: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+                            x: { beginAtZero: true, ticks: { callback: v => v.toFixed(1) + ' pcs', font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#f3f4f6' } },
+                            y: { ticks: { font: { size: 10 } }, grid: { display: false } }
                         }
                     }
                 });
@@ -6436,8 +6442,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             datalabels: { display: false }
                         },
                         scales: {
-                            x: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000).toFixed(0) + 'rb', font: { size: 10 } }, grid: { color: '#f3f4f6' } },
-                            y: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+                            x: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000).toFixed(0) + 'rb', font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#f3f4f6' } },
+                            y: { ticks: { font: { size: 10 } }, grid: { display: false } }
                         }
                     }
                 });
