@@ -6341,7 +6341,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Group by area
             const byArea = {};
             data.forEach(item => {
-                const area = item.area || 'Unknown';
+                const area = getAreaFromStore(item.store) || 'Unknown';
                 if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, trx: new Set() };
                 byArea[area].sales += item.total || 0;
                 byArea[area].qty += item.qty || 0;
