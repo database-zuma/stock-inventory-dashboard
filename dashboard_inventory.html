@@ -8228,7 +8228,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const results = salesDetailData.filter(item => {
                 const sku = (item.sku || '').toUpperCase();
                 const article = sku.replace(/Z\d{2,3}$/, '');
-                const name = (item.product_name || articleNameMap[article] || '').toUpperCase();
+                const name = (articleNameMap[article] || item.product_name || '').toUpperCase();
                 return sku.includes(searchTerm) || name.includes(searchTerm) || article.includes(searchTerm);
             });
 
