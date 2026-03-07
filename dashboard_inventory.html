@@ -1530,10 +1530,48 @@
                         <span style="font-size:1.5rem;">📦</span>
                         <div>
                             <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Consignment</h3>
-                            <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">DDD — Pepito, Sogo, Aeon, Bintang, Omosando, Clandys, Royal Surf</p>
+                            <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data Penjualan Konsinyasi</p>
                         </div>
                     </div>
 
+                    <!-- Consignment Filters -->
+                    <div style="background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e2e8f0;">
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                            <div style="min-width:120px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Area:</label>
+                                <select id="consigFilterArea" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                    <option value="">Semua Area</option>
+                                    <option value="Bali">Bali</option>
+                                    <option value="Jakarta">Jakarta</option>
+                                    <option value="Lombok">Lombok</option>
+                                    <option value="Jatim">Jatim</option>
+                                </select>
+                            </div>
+                            <div style="min-width:130px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Partner:</label>
+                                <select id="consigFilterPartner" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                    <option value="">Semua Partner</option>
+                                </select>
+                            </div>
+                            <div style="min-width:140px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Toko:</label>
+                                <select id="consigFilterStore" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                    <option value="">Semua Toko</option>
+                                </select>
+                            </div>
+                            <div style="min-width:120px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Bulan:</label>
+                                <select id="consigFilterMonth" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                    <option value="">Semua Bulan</option>
+                                </select>
+                            </div>
+                            <div style="min-width:160px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Cari SKU:</label>
+                                <input type="text" id="consigFilterSku" oninput="applyConsigFilters()" placeholder="Ketik SKU/nama..." style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                            </div>
+                            <button onclick="resetConsigFilters()" style="padding:6px 14px;border:1px solid #e2e8f0;border-radius:6px;background:white;color:#6b7280;cursor:pointer;font-size:0.82rem;">Reset</button>
+                        </div>
+                    </div>
                     <div style="padding:20px;">
                         <!-- Grand Total Cards -->
                         <div id="consigGrandCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;"></div>
@@ -7365,7 +7403,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (channel === 'retail') {
                 // Retail: show filters, cards, retail tabs
                 salesFilters.style.display = '';
-                salesCards.style.display = '';
+                salesCards.style.display = 'grid';
                 retailTabWrapper.style.display = '';
                 consignmentView.style.display = 'none';
                 setTimeout(function() {
@@ -7403,7 +7441,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data consignment...</div>';
             });
 
-            if (consigDataCache) { renderConsignmentData(consigDataCache); return; }
+            if (consigDataCache) { renderConsignmentData(consigDataCache); populateConsigFilters(consigDataCache); return; }
 
             try {
                 var resp = await fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), {
@@ -7413,12 +7451,116 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var data = await resp.json();
                 consigDataCache = data;
                 renderConsignmentData(data);
+                populateConsigFilters(data);
             } catch(e) {
                 ['consigGrandCards','consigAreaTable','consigPartnerTable','consigProductTable','consigTrendTable','consigStoreTable'].forEach(id => {
                     var el = document.getElementById(id);
                     if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat: ' + e.message + '</div>';
                 });
             }
+        }
+
+        function populateConsigFilters(data) {
+            // Populate Partner dropdown
+            var pSel = document.getElementById('consigFilterPartner');
+            if (pSel) {
+                var opts = '<option value="">Semua Partner</option>';
+                (data.partners||[]).forEach(function(p) { opts += '<option value="' + p.partner + '">' + p.partner + '</option>'; });
+                pSel.innerHTML = opts;
+            }
+            // Populate Store dropdown
+            var sSel = document.getElementById('consigFilterStore');
+            if (sSel) {
+                var opts = '<option value="">Semua Toko</option>';
+                (data.stores||[]).forEach(function(s) { opts += '<option value="' + s.store_name + '">' + s.store_name + '</option>'; });
+                sSel.innerHTML = opts;
+            }
+            // Populate Month dropdown
+            var mSel = document.getElementById('consigFilterMonth');
+            if (mSel) {
+                var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                var opts = '<option value="">Semua Bulan</option>';
+                (data.monthly_trend||[]).forEach(function(t) {
+                    var mIdx = parseInt(t.month.slice(5)) - 1;
+                    var label = MONTHS[mIdx] + ' ' + t.month.slice(0,4);
+                    opts += '<option value="' + t.month + '">' + label + '</option>';
+                });
+                mSel.innerHTML = opts;
+            }
+        }
+
+        function applyConsigFilters() {
+            if (!consigDataCache) return;
+            var area = (document.getElementById('consigFilterArea')||{}).value || '';
+            var partner = (document.getElementById('consigFilterPartner')||{}).value || '';
+            var store = (document.getElementById('consigFilterStore')||{}).value || '';
+            var month = (document.getElementById('consigFilterMonth')||{}).value || '';
+            var sku = ((document.getElementById('consigFilterSku')||{}).value || '').toLowerCase();
+            var d = consigDataCache;
+
+            // Filter stores
+            var stores = (d.stores||[]).filter(function(s) {
+                if (area && s.area !== area) return false;
+                if (partner && s.partner !== partner) return false;
+                if (store && s.store_name !== store) return false;
+                return true;
+            });
+
+            // Filter products by SKU search
+            var products = (d.top_products||[]).filter(function(p) {
+                if (sku && p.product_name.toLowerCase().indexOf(sku) === -1 && p.sku.toLowerCase().indexOf(sku) === -1) return false;
+                return true;
+            });
+
+            // Filter areas
+            var areas = (d.areas||[]).filter(function(a) {
+                if (area && a.area !== area) return false;
+                return true;
+            });
+
+            // Filter partners
+            var partners = (d.partners||[]).filter(function(p) {
+                if (partner && p.partner !== partner) return false;
+                if (area) {
+                    var hasStoreInArea = stores.some(function(s) { return s.partner === p.partner; });
+                    if (!hasStoreInArea) return false;
+                }
+                return true;
+            });
+
+            // Filter trend by month
+            var trend = (d.monthly_trend||[]).filter(function(t) {
+                if (month && t.month !== month) return false;
+                return true;
+            });
+
+            // Build filtered data object
+            var filtered = {
+                grand_total: d.grand_total,
+                areas: areas,
+                partners: partners,
+                stores: stores,
+                top_products: products,
+                monthly_trend: trend,
+            };
+
+            // Recalculate grand totals from filtered stores
+            if (area || partner || store) {
+                filtered.grand_total = {
+                    total_sales: stores.reduce(function(s,r){ return s + Number(r.sales||0); }, 0),
+                    total_qty: stores.reduce(function(s,r){ return s + Number(r.qty||0); }, 0),
+                    total_stores: stores.length,
+                };
+            }
+            renderConsignmentData(filtered);
+        }
+
+        function resetConsigFilters() {
+            ['consigFilterArea','consigFilterPartner','consigFilterStore','consigFilterMonth'].forEach(function(id) {
+                var el = document.getElementById(id); if (el) el.value = '';
+            });
+            var skuEl = document.getElementById('consigFilterSku'); if (skuEl) skuEl.value = '';
+            if (consigDataCache) renderConsignmentData(consigDataCache);
         }
 
         function renderConsignmentData(data) {
@@ -7506,13 +7648,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // Partner Summary Table
-            var pColors = ['#002A3A','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
+            var pColors = ['#e85d04','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
             var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Partner</th>';
             pHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Toko</th>';
             pHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
             pHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
+            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Top Artikel</th>';
             pHtml += '</tr></thead><tbody>';
             (data.partners||[]).forEach(function(p, i) {
                 pHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -7520,6 +7663,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_stores) + '</td>';
                 pHtml += '<td style="text-align:center;padding:8px;">' + fmtK(p.total_qty) + '</td>';
                 pHtml += '<td style="text-align:right;padding:8px;font-weight:600;color:#059669;">' + fmtM(p.total_sales) + '</td>';
+                var ta = p.top_article;
+                pHtml += '<td style="padding:8px;font-size:0.75rem;color:#6b7280;">' + (ta ? ta.product_name : '-') + '</td>';
                 pHtml += '</tr>';
             });
             pHtml += '</tbody></table>';
