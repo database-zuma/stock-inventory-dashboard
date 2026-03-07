@@ -7568,7 +7568,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (onlineRawData) { populateOnlineFilters(onlineRawData); applyOnlineFilters(); return; }
 
             try {
-                const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
+                const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10) + '&_t=' + Date.now());
                 onlineRawData = rawData;
                 populateOnlineFilters(rawData);
                 applyOnlineFilters();
@@ -7617,7 +7617,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function renderOnlineView(rows) {
-            const fmt = n => 'Rp ' + (n||0).toLocaleString('id-ID');
+            const fmt = n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return fmt(n); };
             const totalRevenue = rows.reduce((s,r) => s + (r.total||0), 0);
             const totalPairs   = rows.reduce((s,r) => s + (r.qty||0), 0);
@@ -7639,9 +7639,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     <div style="${cs}"><div style="${ls}">💰 Total Revenue</div><div style="${vs}">${fmtK(totalRevenue)}</div></div>
                     <div style="${cs}"><div style="${ls}">👟 Total Pairs</div><div style="${vs}">${totalPairs.toLocaleString('id-ID')}</div></div>
                     <div style="${cs}"><div style="${ls}">🧾 Total Trx</div><div style="${vs}">${totalTrx.toLocaleString('id-ID')}</div></div>
-                    <div style="${cs}"><div style="${ls}">💵 ATV</div><div style="${vs}">${fmtK(atv)}</div></div>
+                    <div style="${cs}"><div style="${ls}">💵 ATV</div><div style="${vs}">${fmtK(Math.round(atv))}</div></div>
                     <div style="${cs}"><div style="${ls}">📦 ATU</div><div style="${vs}">${atu.toFixed(1)}</div></div>
-                    <div style="${cs}"><div style="${ls}">🏷️ ARP</div><div style="${vs}">${fmtK(arp)}</div></div>
+                    <div style="${cs}"><div style="${ls}">🏷️ ARP</div><div style="${vs}">${fmtK(Math.round(arp))}</div></div>
                     <div style="${cs}"><div style="${ls}">🗓️ Periode</div><div style="font-size:0.8rem;font-weight:600;color:#374151;margin-top:2px;">${dateFrom}<br>s/d ${dateTo}</div></div>`;
             }
 
