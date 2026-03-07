@@ -1537,9 +1537,15 @@
                     <!-- Consignment Filters -->
                     <div style="background:#f8fafc;padding:14px 20px;border-bottom:1px solid #e2e8f0;">
                         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                            <div style="min-width:80px;">
+                                <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Tahun:</label>
+                                <select id="consigFilterYear" onchange="onConsigYearChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                    <option value="">Semua</option>
+                                </select>
+                            </div>
                             <div style="min-width:120px;">
                                 <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Area:</label>
-                                <select id="consigFilterArea" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                <select id="consigFilterArea" onchange="onConsigAreaChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                                     <option value="">Semua Area</option>
                                     <option value="Bali">Bali</option>
                                     <option value="Jakarta">Jakarta</option>
@@ -1549,7 +1555,7 @@
                             </div>
                             <div style="min-width:130px;">
                                 <label style="display:block;font-size:0.78rem;color:#6b7280;margin-bottom:3px;">Partner:</label>
-                                <select id="consigFilterPartner" onchange="applyConsigFilters()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                <select id="consigFilterPartner" onchange="onConsigPartnerChange()" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
                                     <option value="">Semua Partner</option>
                                 </select>
                             </div>
@@ -7461,32 +7467,87 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function populateConsigFilters(data) {
-            // Populate Partner dropdown
+            var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            // Year dropdown
+            var ySel = document.getElementById('consigFilterYear');
+            if (ySel) {
+                var years = {};
+                (data.monthly_trend||[]).forEach(function(t) { years[t.month.slice(0,4)] = true; });
+                var opts = '<option value="">Semua</option>';
+                Object.keys(years).sort().forEach(function(y) { opts += '<option value="' + y + '">' + y + '</option>'; });
+                ySel.innerHTML = opts;
+            }
+            // Partner dropdown (full list)
             var pSel = document.getElementById('consigFilterPartner');
             if (pSel) {
                 var opts = '<option value="">Semua Partner</option>';
                 (data.partners||[]).forEach(function(p) { opts += '<option value="' + p.partner + '">' + p.partner + '</option>'; });
                 pSel.innerHTML = opts;
             }
-            // Populate Store dropdown
+            // Store dropdown (full list)
             var sSel = document.getElementById('consigFilterStore');
             if (sSel) {
                 var opts = '<option value="">Semua Toko</option>';
                 (data.stores||[]).forEach(function(s) { opts += '<option value="' + s.store_name + '">' + s.store_name + '</option>'; });
                 sSel.innerHTML = opts;
             }
-            // Populate Month dropdown
+            // Month dropdown (month name only, no year)
             var mSel = document.getElementById('consigFilterMonth');
             if (mSel) {
-                var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-                var opts = '<option value="">Semua Bulan</option>';
+                var monthSet = {};
                 (data.monthly_trend||[]).forEach(function(t) {
-                    var mIdx = parseInt(t.month.slice(5)) - 1;
-                    var label = MONTHS[mIdx] + ' ' + t.month.slice(0,4);
-                    opts += '<option value="' + t.month + '">' + label + '</option>';
+                    var mm = t.month.slice(5);
+                    monthSet[mm] = true;
+                });
+                var opts = '<option value="">Semua Bulan</option>';
+                Object.keys(monthSet).sort().forEach(function(mm) {
+                    var idx = parseInt(mm) - 1;
+                    opts += '<option value="' + mm + '">' + MONTHS[idx] + '</option>';
                 });
                 mSel.innerHTML = opts;
             }
+        }
+
+        function onConsigAreaChange() {
+            if (!consigDataCache) return;
+            var area = (document.getElementById('consigFilterArea')||{}).value || '';
+            var stores = consigDataCache.stores || [];
+            if (area) stores = stores.filter(function(s) { return s.area === area; });
+            var pSel = document.getElementById('consigFilterPartner');
+            if (pSel) {
+                var partnerSet = {};
+                stores.forEach(function(s) { partnerSet[s.partner] = true; });
+                var opts = '<option value="">Semua Partner</option>';
+                Object.keys(partnerSet).sort().forEach(function(p) { opts += '<option value="' + p + '">' + p + '</option>'; });
+                pSel.innerHTML = opts;
+            }
+            var sSel = document.getElementById('consigFilterStore');
+            if (sSel) {
+                var opts = '<option value="">Semua Toko</option>';
+                stores.forEach(function(s) { opts += '<option value="' + s.store_name + '">' + s.store_name + '</option>'; });
+                sSel.innerHTML = opts;
+            }
+            applyConsigFilters();
+        }
+
+        function onConsigPartnerChange() {
+            if (!consigDataCache) return;
+            var area = (document.getElementById('consigFilterArea')||{}).value || '';
+            var partner = (document.getElementById('consigFilterPartner')||{}).value || '';
+            var stores = consigDataCache.stores || [];
+            if (area) stores = stores.filter(function(s) { return s.area === area; });
+            if (partner) stores = stores.filter(function(s) { return s.partner === partner; });
+            var sSel = document.getElementById('consigFilterStore');
+            if (sSel) {
+                var opts = '<option value="">Semua Toko</option>';
+                stores.forEach(function(s) { opts += '<option value="' + s.store_name + '">' + s.store_name + '</option>'; });
+                sSel.innerHTML = opts;
+            }
+            applyConsigFilters();
+        }
+
+        function onConsigYearChange() {
+            applyConsigFilters();
         }
 
         function applyConsigFilters() {
@@ -7494,11 +7555,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var area = (document.getElementById('consigFilterArea')||{}).value || '';
             var partner = (document.getElementById('consigFilterPartner')||{}).value || '';
             var store = (document.getElementById('consigFilterStore')||{}).value || '';
+            var year = (document.getElementById('consigFilterYear')||{}).value || '';
             var month = (document.getElementById('consigFilterMonth')||{}).value || '';
             var sku = ((document.getElementById('consigFilterSku')||{}).value || '').toLowerCase();
             var d = consigDataCache;
 
-            // Filter stores
             var stores = (d.stores||[]).filter(function(s) {
                 if (area && s.area !== area) return false;
                 if (partner && s.partner !== partner) return false;
@@ -7506,19 +7567,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return true;
             });
 
-            // Filter products by SKU search
             var products = (d.top_products||[]).filter(function(p) {
                 if (sku && p.product_name.toLowerCase().indexOf(sku) === -1 && p.sku.toLowerCase().indexOf(sku) === -1) return false;
                 return true;
             });
 
-            // Filter areas
             var areas = (d.areas||[]).filter(function(a) {
                 if (area && a.area !== area) return false;
                 return true;
             });
 
-            // Filter partners
             var partners = (d.partners||[]).filter(function(p) {
                 if (partner && p.partner !== partner) return false;
                 if (area) {
@@ -7528,13 +7586,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return true;
             });
 
-            // Filter trend by month
             var trend = (d.monthly_trend||[]).filter(function(t) {
-                if (month && t.month !== month) return false;
+                if (year && t.month.slice(0,4) !== year) return false;
+                if (month && t.month.slice(5) !== month) return false;
                 return true;
             });
 
-            // Build filtered data object
             var filtered = {
                 grand_total: d.grand_total,
                 areas: areas,
@@ -7544,7 +7601,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 monthly_trend: trend,
             };
 
-            // Recalculate grand totals from filtered stores
             if (area || partner || store) {
                 filtered.grand_total = {
                     total_sales: stores.reduce(function(s,r){ return s + Number(r.sales||0); }, 0),
@@ -7556,11 +7612,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function resetConsigFilters() {
-            ['consigFilterArea','consigFilterPartner','consigFilterStore','consigFilterMonth'].forEach(function(id) {
+            ['consigFilterYear','consigFilterArea','consigFilterPartner','consigFilterStore','consigFilterMonth'].forEach(function(id) {
                 var el = document.getElementById(id); if (el) el.value = '';
             });
             var skuEl = document.getElementById('consigFilterSku'); if (skuEl) skuEl.value = '';
-            if (consigDataCache) renderConsignmentData(consigDataCache);
+            if (consigDataCache) {
+                populateConsigFilters(consigDataCache);
+                renderConsignmentData(consigDataCache);
+            }
         }
 
         function renderConsignmentData(data) {
@@ -7585,6 +7644,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             document.getElementById('consigGrandCards').innerHTML = cardsHtml;
 
+            var areaColors = { 'Bali': '#e85d04', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#d97706' };
             // Area Summary Table (replaces Partner table)
             var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
@@ -7596,7 +7656,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             aHtml += '</tr></thead><tbody>';
             (data.areas||[]).forEach(function(a) {
                 aHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                aHtml += '<td style="padding:8px;font-weight:700;color:#002A3A;">' + a.area + '</td>';
+                aHtml += '<td style="padding:8px;font-weight:700;color:' + (areaColors[a.area] || '#1f2937') + ';">' + a.area + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_partners) + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_stores) + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_qty) + '</td>';
@@ -7611,7 +7671,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (ctx) {
                 if (consigAreaChartInstance) consigAreaChartInstance.destroy();
                 var areas = data.areas || [];
-                var areaColors = { 'Bali': '#002A3A', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#d97706' };
+                // areaColors defined above
                 consigAreaChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -7648,7 +7708,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // Partner Summary Table
-            var pColors = ['#e85d04','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
+            var pColors = ['#e85d04','#2563eb','#059669','#d97706','#dc2626','#0891b2','#7c3aed','#be185d','#0d9488'];
             var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
             pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Partner</th>';
