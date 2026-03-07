@@ -1906,19 +1906,17 @@
             return res.json();
         }
 
-        // ── DOM FIX: Move misplaced views to correct parent ───────────────────
-        // consignmentView and redistribusiView are incorrectly nested inside salesView
-        // due to HTML div mismatch. Fix by moving them to the correct parent.
+        // ── DOM FIX: Move redistribusiView out of salesView ─────────────────────
+        // redistribusiView is incorrectly nested inside salesView due to HTML div
+        // mismatch. When switchView activates redistribusiView, salesView loses
+        // 'active' class and hides, taking redistribusiView with it.
+        // Fix: move redistribusiView to the top-level content area.
+        // NOTE: consignmentView stays inside salesRetailTabWrapper — switchSalesChannel
+        // handles its visibility by toggling children within that wrapper.
         (function fixDomNesting() {
             var contentArea = document.querySelector('.view-content-area');
             if (!contentArea) return;
-            var consigView = document.getElementById('consignmentView');
             var redistView = document.getElementById('redistribusiView');
-            // Move consignmentView out of salesRetailTabWrapper to salesView level
-            var salesView = document.getElementById('salesView');
-            if (consigView && salesView && consigView.parentElement.id === 'salesRetailTabWrapper') {
-                salesView.appendChild(consigView);
-            }
             // Move redistribusiView out of salesView to view-content-area level
             if (redistView && redistView.parentElement.id === 'salesView') {
                 contentArea.appendChild(redistView);
@@ -7962,6 +7960,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
                 }, 50);
+            }
         }
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
