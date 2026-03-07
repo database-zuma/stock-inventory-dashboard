@@ -7669,11 +7669,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 summaryEl.innerHTML = `
                     <div style="${cs}"><div style="${ls}">💰 Total Revenue</div><div style="${vs}">${fmtK(totalRevenue)}</div></div>
                     <div style="${cs}"><div style="${ls}">👟 Total Pairs</div><div style="${vs}">${totalPairs.toLocaleString('id-ID')}</div></div>
-                    <div style="${cs}"><div style="${ls}">🧾 Total Trx</div><div style="${vs}">${totalTrx.toLocaleString('id-ID')}</div></div>
-                    <div style="${cs}"><div style="${ls}">💵 ATV</div><div style="${vs}">${fmtK(Math.round(atv))}</div></div>
-                    <div style="${cs}"><div style="${ls}">📦 ATU</div><div style="${vs}">${atu.toFixed(1)}</div></div>
-                    <div style="${cs}"><div style="${ls}">🏷️ ARP</div><div style="${vs}">${fmtK(Math.round(arp))}</div></div>
-                    <div style="${cs}"><div style="${ls}">🗓️ Periode</div><div style="font-size:0.8rem;font-weight:600;color:#374151;margin-top:2px;">${dateFrom}<br>s/d ${dateTo}</div></div>`;
+                    <div style="${cs}"><div style="${ls}">🧾 Total Trx</div><div style="${vs}">${totalTrx.toLocaleString('id-ID')}</div></div>`;
             }
 
             // ── Sales by Marketplace (horizontal bar chart) ──
@@ -7947,8 +7943,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 });
                 loadConsignmentData();
-            } else {
-                // Wholesale/Online: hide filters+cards, show retail tabs with sub-tab
+            } else if (channel === 'wholesale') {
+                // Wholesale: hide filters+cards, show retail tabs with sub-tab
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
                 retailTabWrapper.style.display = '';
@@ -7960,6 +7956,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
                 }, 50);
+            } else if (channel === 'online') {
+                // Online: hide filters+cards, show wrapper but HIDE tab buttons bar
+                salesFilters.style.display = 'none';
+                salesCards.style.display = 'none';
+                retailTabWrapper.style.display = '';
+                // Hide all children first (tab buttons bar, consignmentView, other tab contents)
+                Array.from(retailTabWrapper.children).forEach(function(child) {
+                    child.style.display = 'none';
+                });
+                // Show only the Performance tab content (which contains the Online sub-tab)
+                var perfTab = document.getElementById('salesTabPerformance');
+                if (perfTab) perfTab.style.display = 'block';
+                // Directly show the Online sub-tab content, hide others
+                document.querySelectorAll('.sales-sub-tab-content').forEach(function(c) {
+                    c.style.display = 'none';
+                });
+                var onlineSubTab = document.getElementById('salesSubTabOnline');
+                if (onlineSubTab) onlineSubTab.style.display = 'block';
+                // Load online data
+                loadOnlineChannel();
             }
         }
 
