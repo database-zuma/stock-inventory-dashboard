@@ -1431,7 +1431,10 @@
                     <!-- SPG Leaderboard -->
                     <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
                     <div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div>
-                </div>
+
+                    <!-- Area Metrics: ATV / ATU / ARP -->
+                    <h4 style="margin:24px 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 ATV, ATU, ARP per Area</h4>
+                    <div style="position:relative;height:320px;"><canvas id="spgAreaMetricsChart"></canvas></div>
 
 
                 <!-- Transaction Tab -->
@@ -1536,6 +1539,12 @@
                                     <option value="">Semua</option>
                                 </select>
                             </div>
+                            <div style="min-width:130px;">
+                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Bulan:</label>
+                                <select id="consigFilterMonth" onchange="applyConsigFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
+                                    <option value="">Semua Bulan</option>
+                                </select>
+                            </div>
                             <div style="min-width:140px;">
                                 <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Area:</label>
                                 <select id="consigFilterArea" onchange="onConsigAreaChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
@@ -1556,12 +1565,6 @@
                                 <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Toko:</label>
                                 <select id="consigFilterStore" onchange="applyConsigFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                                     <option value="">Semua Toko</option>
-                                </select>
-                            </div>
-                            <div style="min-width:130px;">
-                                <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Bulan:</label>
-                                <select id="consigFilterMonth" onchange="applyConsigFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
-                                    <option value="">Semua Bulan</option>
                                 </select>
                             </div>
                             <div style="min-width:180px;">
@@ -5337,6 +5340,7 @@
             try { renderSalesTransaction(); } catch(e) { console.error('renderSalesTransaction error:', e); }
             try { renderSalesGender(); } catch(e) { console.error('renderSalesGender error:', e); }
             try { renderSalesSPGChart(); } catch(e) { console.error('renderSalesSPGChart error:', e); }
+            try { renderSPGAreaMetrics(); } catch(e) { console.error('renderSPGAreaMetrics error:', e); }
             try { renderSalesByHourChart(); } catch(e) { console.error('renderSalesByHourChart error:', e); }
             try { renderRefundTab(); } catch(e) { console.error('renderRefundTab error:', e); }
         }
@@ -5406,7 +5410,7 @@
                 html += '<div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid ' + card.color + ';">';
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
                 html += '<div><div style="font-size:0.75rem;color:#6b7280;">' + card.label + '</div>';
-                html += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;">' + card.value + '</div></div>';
+                html += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;white-space:nowrap;">' + card.value + '</div></div>';
                 html += '<div style="font-size:1.5rem;">' + card.icon + '</div>';
                 html += '</div></div>';
             });
@@ -6329,6 +6333,69 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             html += '</tbody></table>';
             document.getElementById('salesSPGLeaderboard').innerHTML = html;
+        }
+
+        var spgAreaMetricsChartInstance = null;
+        function renderSPGAreaMetrics() {
+            const data = filteredSalesData || [];
+            // Group by area
+            const byArea = {};
+            data.forEach(item => {
+                const area = item.area || 'Unknown';
+                if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, trx: new Set() };
+                byArea[area].sales += item.total || 0;
+                byArea[area].qty += item.qty || 0;
+                byArea[area].trx.add(item.order_no);
+            });
+            const areaArr = Object.entries(byArea).map(([area, v]) => ({
+                area,
+                atv: v.trx.size > 0 ? v.sales / v.trx.size : 0,
+                atu: v.trx.size > 0 ? v.qty / v.trx.size : 0,
+                arp: v.qty > 0 ? v.sales / v.qty : 0
+            })).filter(a => a.area !== 'Unknown').sort((a, b) => b.atv - a.atv);
+
+            const ctx = document.getElementById('spgAreaMetricsChart');
+            if (!ctx) return;
+            if (spgAreaMetricsChartInstance) spgAreaMetricsChartInstance.destroy();
+
+            spgAreaMetricsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: areaArr.map(a => a.area),
+                    datasets: [
+                        { label: 'ATV (Rp)', data: areaArr.map(a => Math.round(a.atv)), backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'ARP (Rp)', data: areaArr.map(a => Math.round(a.arp)), backgroundColor: '#10b981', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: { label: function(ctx) { return ctx.dataset.label + ': Rp ' + ctx.raw.toLocaleString('id-ID'); } }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000).toFixed(0) + 'rb', font: { size: 10 } }, grid: { color: '#f3f4f6' } },
+                        x: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // Also show ATU as small info text below chart
+            var infoDiv = document.getElementById('spgAreaMetricsInfo');
+            if (!infoDiv) {
+                infoDiv = document.createElement('div');
+                infoDiv.id = 'spgAreaMetricsInfo';
+                infoDiv.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;';
+                ctx.parentElement.parentElement.appendChild(infoDiv);
+            }
+            infoDiv.innerHTML = areaArr.map(a =>
+                '<div style="background:#f8fafc;border-radius:8px;padding:8px 14px;border-left:3px solid #ec4899;">' +
+                '<div style="font-size:0.72rem;color:#6b7280;">' + a.area + ' ATU</div>' +
+                '<div style="font-size:1rem;font-weight:700;color:#ec4899;">' + a.atu.toFixed(2) + ' pcs</div></div>'
+            ).join('');
         }
 
         function renderSalesTarget() {
