@@ -1139,7 +1139,7 @@
             </div>
 
             <!-- Filters -->
-            <div style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div id="salesFilterSection" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                 <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
                     <div style="min-width:140px;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Mulai:</label>
@@ -1526,7 +1526,7 @@
             <div id="consignmentView" style="display:none;">
                 <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                     <!-- Consignment Header Banner -->
-                    <div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;">
+                    <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;">
                         <span style="font-size:1.5rem;">📦</span>
                         <div>
                             <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Consignment</h3>
@@ -7359,22 +7359,36 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             var retailTabWrapper = document.getElementById('salesRetailTabWrapper');
             var consignmentView = document.getElementById('consignmentView');
+            var salesFilters = document.getElementById('salesFilterSection');
+            var salesCards = document.getElementById('salesSummaryCards');
 
-            if (channel === 'consig') {
-                // Show dedicated Consignment view, hide retail tabs
-                retailTabWrapper.style.display = 'none';
-                consignmentView.style.display = 'block';
-                loadConsignmentData();
-            } else {
-                // Show retail tabs, hide consignment view
+            if (channel === 'retail') {
+                // Retail: show filters, cards, retail tabs
+                salesFilters.style.display = '';
+                salesCards.style.display = '';
                 retailTabWrapper.style.display = '';
                 consignmentView.style.display = 'none';
-                // After view renders, switch to Performance tab + correct sub-tab
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
                 }, 50);
-            }
+            } else if (channel === 'consig') {
+                // Consignment: hide filters+cards, show dedicated view
+                salesFilters.style.display = 'none';
+                salesCards.style.display = 'none';
+                retailTabWrapper.style.display = 'none';
+                consignmentView.style.display = 'block';
+                loadConsignmentData();
+            } else {
+                // Wholesale/Online: hide filters+cards, show retail tabs with sub-tab
+                salesFilters.style.display = 'none';
+                salesCards.style.display = 'none';
+                retailTabWrapper.style.display = '';
+                consignmentView.style.display = 'none';
+                setTimeout(function() {
+                    switchSalesTab('performance');
+                    switchSalesSubTab(channel);
+                }, 50);
         }
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
@@ -7415,7 +7429,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Grand Total Cards (no Trx)
             var cardsHtml = '';
             var cards = [
-                { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#7c3aed' },
+                { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#002A3A' },
                 { label: 'Total Qty', value: fmtK(gt.total_qty), color: '#2563eb' },
                 { label: 'Total SKU', value: fmtK(gt.total_sku), color: '#059669' },
                 { label: 'Partners', value: (data.partners||[]).length, color: '#d97706' },
@@ -7430,16 +7444,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Area Summary Table (replaces Partner table)
             var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-            aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            aHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Area</th>';
-            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Partners</th>';
-            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Toko</th>';
-            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
-            aHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
+            aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            aHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Partners</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Toko</th>';
+            aHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
+            aHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
             aHtml += '</tr></thead><tbody>';
             (data.areas||[]).forEach(function(a) {
                 aHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                aHtml += '<td style="padding:8px;font-weight:700;color:#7c3aed;">' + a.area + '</td>';
+                aHtml += '<td style="padding:8px;font-weight:700;color:#002A3A;">' + a.area + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_partners) + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_stores) + '</td>';
                 aHtml += '<td style="text-align:center;padding:8px;">' + fmtK(a.total_qty) + '</td>';
@@ -7454,7 +7468,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (ctx) {
                 if (consigAreaChartInstance) consigAreaChartInstance.destroy();
                 var areas = data.areas || [];
-                var areaColors = { 'Bali': '#7c3aed', 'Jakarta': '#2563eb', 'Lombok': '#059669' };
+                var areaColors = { 'Bali': '#002A3A', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#d97706' };
                 consigAreaChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -7491,13 +7505,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // Partner Summary Table
-            var pColors = ['#7c3aed','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
+            var pColors = ['#002A3A','#2563eb','#059669','#d97706','#dc2626','#0891b2','#4f46e5','#be185d','#65a30d'];
             var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-            pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Partner</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Toko</th>';
-            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
-            pHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
+            pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Partner</th>';
+            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Toko</th>';
+            pHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
+            pHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
             pHtml += '</tr></thead><tbody>';
             (data.partners||[]).forEach(function(p, i) {
                 pHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
@@ -7553,11 +7567,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Top Products Table (unchanged)
             var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            prodHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;width:30px;">No</th>';
-            prodHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Produk</th>';
-            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">Qty</th>';
-            prodHtml += '<th style="text-align:right;padding:6px;color:white;background:#7c3aed;">Sales</th>';
+            prodHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:30px;">No</th>';
+            prodHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Produk</th>';
+            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            prodHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
             prodHtml += '</tr></thead><tbody>';
             (data.top_products||[]).forEach(function(p, i) {
                 prodHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
@@ -7572,10 +7586,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Monthly Trend Table (no Trx)
             var tHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-            tHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            tHtml += '<th style="text-align:left;padding:8px;color:white;background:#7c3aed;">Bulan</th>';
-            tHtml += '<th style="text-align:center;padding:8px;color:white;background:#7c3aed;">Qty</th>';
-            tHtml += '<th style="text-align:right;padding:8px;color:white;background:#7c3aed;">Sales</th>';
+            tHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            tHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Bulan</th>';
+            tHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
+            tHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th>';
             tHtml += '</tr></thead><tbody>';
             (data.monthly_trend||[]).forEach(function(t) {
                 var mIdx = parseInt(t.month.slice(5)) - 1;
@@ -7591,20 +7605,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Store Breakdown Table (Toko, Partner, Area)
             var sHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            sHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7c3aed;color:white;">';
-            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;width:30px;">No</th>';
-            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Toko</th>';
-            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Partner</th>';
-            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#7c3aed;">Area</th>';
-            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">SKU</th>';
-            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#7c3aed;">Qty</th>';
-            sHtml += '<th style="text-align:right;padding:6px;color:white;background:#7c3aed;">Sales</th>';
+            sHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:30px;">No</th>';
+            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
+            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Partner</th>';
+            sHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
+            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">SKU</th>';
+            sHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
+            sHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
             sHtml += '</tr></thead><tbody>';
             (data.stores||[]).forEach(function(s, i) {
                 sHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
                 sHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
                 sHtml += '<td style="padding:6px;font-weight:600;">' + s.store_name + '</td>';
-                sHtml += '<td style="padding:6px;color:#7c3aed;font-weight:600;font-size:0.75rem;">' + s.partner + '</td>';
+                sHtml += '<td style="padding:6px;color:#002A3A;font-weight:600;font-size:0.75rem;">' + s.partner + '</td>';
                 sHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + s.area + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.sku_count) + '</td>';
                 sHtml += '<td style="text-align:center;padding:6px;">' + fmtK(s.qty) + '</td>';
