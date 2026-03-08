@@ -510,7 +510,7 @@
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
         .entity-toggle-bar { display:flex; flex-direction:column; gap:3px; margin:2px 0 4px 0; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; border-left:3px solid #3b82f6; transition: opacity 0.2s ease; }
-        .entity-toggle-btn { padding:6px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:transparent; color:rgba(255,255,255,0.80); font-weight:600; font-size:0.85rem; cursor:pointer; transition:all 0.15s ease; text-align:left; width:100%; }
+        .entity-toggle-btn { padding:6px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:transparent; color:rgba(255,255,255,0.80); font-weight:600; font-size:0.85rem; cursor:pointer; text-align:left; width:100%; }
         .entity-toggle-btn:hover { border-color:#3b82f6; color:#fff; background:rgba(59,130,246,0.15); }
         .entity-toggle-btn.active { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-color: transparent; border-radius: 6px; color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(29,78,216,0.35); }
         .entity-toggle-bar.dimmed .entity-toggle-btn.active { background: transparent; border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.80); font-weight: 600; box-shadow: none; }
@@ -577,9 +577,9 @@
 
         <!-- Stock Type Toggle -->
         <div id="stockTypeToggle" style="display:flex;gap:8px;margin-bottom:20px;">
-            <button class="stock-type-btn active" data-stype="retail" onclick="switchStockType('retail')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s ease;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;box-shadow:0 2px 6px rgba(59,130,246,0.3);">🏬 Retail</button>
-            <button class="stock-type-btn" data-stype="warehouse" onclick="switchStockType('warehouse')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s ease;background:#e2e8f0;color:#475569;">🏭 Warehouse</button>
-            <button class="stock-type-btn" data-stype="consignment" onclick="switchStockType('consignment')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s ease;background:#e2e8f0;color:#475569;">📦 Consignment</button>
+            <button class="stock-type-btn active" data-stype="retail" onclick="switchStockType('retail')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;box-shadow:0 2px 6px rgba(59,130,246,0.3);">🏬 Retail</button>
+            <button class="stock-type-btn" data-stype="warehouse" onclick="switchStockType('warehouse')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;background:#e2e8f0;color:#475569;">🏭 Warehouse</button>
+            <button class="stock-type-btn" data-stype="consignment" onclick="switchStockType('consignment')" style="padding:10px 22px;border:none;border-radius:8px 8px 0 0;font-size:1rem;font-weight:600;cursor:pointer;background:#e2e8f0;color:#475569;">📦 Consignment</button>
         </div>
 
         <!-- ==================== RETAIL SECTION ==================== -->
@@ -2109,8 +2109,8 @@
 
     <script>
         // ── API Configuration ─────────────────────────────────────────────────────
-        const API_BASE = 'https://roommate-stage-apartment-popular.trycloudflare.com';
-        const API_BASE_LOCAL = 'https://roommate-stage-apartment-popular.trycloudflare.com';
+        const API_BASE = 'https://notifications-tue-great-timing.trycloudflare.com';
+        const API_BASE_LOCAL = 'https://notifications-tue-great-timing.trycloudflare.com';
         const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
 
         async function fetchAPI(path) {
@@ -2370,10 +2370,16 @@
             var consigBtn = document.querySelector('.stock-type-btn[data-stype="consignment"]');
             if (consigBtn) consigBtn.style.display = hasConsignment ? '' : 'none';
 
+            // Clear consignment cache so it reloads for the new entity
+            consignmentStockData = null;
+
             // If currently viewing consignment but entity has no consignment, switch to warehouse
             var consigSection = document.getElementById('consignmentSectionWrapper');
             if (!hasConsignment && consigSection && consigSection.style.display !== 'none') {
                 switchStockType('warehouse');
+            } else if (hasConsignment && consigSection && consigSection.style.display !== 'none') {
+                // If still viewing consignment, reload data for new entity
+                loadConsignmentStock();
             }
 
             updateDisplay();
@@ -3804,6 +3810,10 @@
             if (!data || !data.data) return;
             var items = data.data.slice(); // copy array
 
+            // Filter by current entity (DDD or MBB)
+            var entity = currentEntity || 'DDD';
+            items = items.filter(function(item) { return (item.entity || '').toUpperCase() === entity.toUpperCase(); });
+
             var search = (document.getElementById('csSearchInput') || {}).value || '';
             search = search.toLowerCase();
             var partner = (document.getElementById('csFilterPartner') || {}).value || '';
@@ -3811,7 +3821,6 @@
             var tier = (document.getElementById('csFilterTier') || {}).value || '';
             var gender = (document.getElementById('csFilterGender') || {}).value || '';
             var series = (document.getElementById('csFilterSeries') || {}).value || '';
-
             if (search) {
                 items = items.filter(function(item) {
                     return item.sku.toLowerCase().indexOf(search) >= 0 || (item.name || '').toLowerCase().indexOf(search) >= 0 || (item.kode_kecil || '').toLowerCase().indexOf(search) >= 0;
