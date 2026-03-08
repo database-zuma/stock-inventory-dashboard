@@ -9204,15 +9204,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return;
             }
 
-            // Full width table with area, kode barang, nama
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
+            // SKU search table — not full width, controlled column widths
+            let html = '<table style="max-width:750px;border-collapse:collapse;font-size:0.82rem;">' +
                 '<thead><tr style="background:#002A3A;color:white;position:sticky;top:0;">' +
-                '<th style="padding:8px 10px;text-align:center;width:40px;font-weight:600;">NO</th>' +
-                '<th style="padding:8px 10px;text-align:left;font-weight:600;">KODE BARANG</th>' +
-                '<th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>' +
-                '<th style="padding:8px 10px;text-align:center;font-weight:600;">SIZE</th>' +
-                '<th style="padding:8px 10px;text-align:center;width:80px;font-weight:600;">QTY</th>' +
-                '<th style="padding:8px 10px;text-align:right;width:120px;font-weight:600;">TOTAL SALES</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:35px;font-weight:600;">NO</th>' +
+                '<th style="padding:8px 10px;text-align:left;width:90px;font-weight:600;">KODE BARANG</th>' +
+                '<th style="padding:8px 10px;text-align:left;max-width:240px;font-weight:600;">NAMA BARANG</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:50px;font-weight:600;">SIZE</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:65px;font-weight:600;">QTY</th>' +
+                '<th style="padding:8px 10px;text-align:right;width:110px;font-weight:600;">TOTAL SALES</th>' +
                 '</tr></thead><tbody>';
 
             topMatches.forEach((m, idx) => {
@@ -9222,7 +9222,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const kodeDisplay = m.kodeBarang || m.article || '-';
                 html += '<tr onclick="selectSKUFromList(\'' + m.sku + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
-                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.78rem;">' + kodeDisplay + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1f2937;font-size:0.78rem;text-transform:uppercase;">' + kodeDisplay + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1f2937;font-size:0.78rem;">' + sizeDisplay + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1f2937;width:80px;">' + formatNum(m.qty) + '</td>' +
