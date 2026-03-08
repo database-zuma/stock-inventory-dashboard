@@ -197,6 +197,11 @@
             background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
         }
         .warehouse-section th:hover { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
+        /* Consignment table header - Amber */
+        .consignment-section th {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .consignment-section th:hover { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
         td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; font-size: 0.82rem; }
         tr:hover { background: #f8fafc; }
         tr:nth-child(even) { background: #fafbfc; }
@@ -842,7 +847,7 @@
         <!-- END WAREHOUSE SECTION -->
 
         <!-- ==================== CONSIGNMENT STOCK SECTION ==================== -->
-        <div class="section-wrapper" id="consignmentSectionWrapper" style="display:none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
+        <div class="section-wrapper consignment-section" id="consignmentSectionWrapper" style="display:none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
             <!-- Consignment Section Header -->
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f59e0b;">
                 <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);">
@@ -3767,24 +3772,43 @@
         }
 
         function populateConsignmentFilters(data) {
-            if (!data || !data.filters) return;
-            var f = data.filters;
-            // Partner dropdown
+            if (!data || !data.data) return;
+            var entity = currentEntity || 'DDD';
+            var entityItems = data.data.filter(function(item) { return (item.entity || '').toUpperCase() === entity.toUpperCase(); });
+
+            // Build entity-specific partner list
+            var partnerSet = {};
+            var storeSet = {};
+            var seriesSet = {};
+            entityItems.forEach(function(item) {
+                if (item.partner) partnerSet[item.partner] = true;
+                if (item.series) seriesSet[item.series] = true;
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(function(sn) {
+                        storeSet[sn] = item.partner || '';
+                    });
+                }
+            });
+
+            // Partner dropdown — only partners in this entity
             var partnerEl = document.getElementById('csFilterPartner');
             if (partnerEl) {
                 var opts = '<option value="">Semua Partner</option>';
-                (f.partners || []).forEach(function(p) { opts += '<option value="' + p + '">' + p + '</option>'; });
+                Object.keys(partnerSet).sort().forEach(function(p) { opts += '<option value="' + p + '">' + p + '</option>'; });
                 partnerEl.innerHTML = opts;
             }
-            // Store dropdown (all stores initially)
+
+            // Store dropdown — only stores in this entity
             updateCsStoreDropdown();
-            // Series dropdown
+
+            // Series dropdown — only series in this entity
             var seriesEl = document.getElementById('csFilterSeries');
             if (seriesEl) {
                 var opts2 = '<option value="">Semua</option>';
-                (f.series || []).forEach(function(s) { opts2 += '<option value="' + s + '">' + s + '</option>'; });
+                Object.keys(seriesSet).sort().forEach(function(s) { opts2 += '<option value="' + s + '">' + s + '</option>'; });
                 seriesEl.innerHTML = opts2;
             }
+
             // Snapshot date
             var dateEl = document.getElementById('consigSnapshotDate');
             if (dateEl && data._meta && data._meta.snapshot_date) dateEl.textContent = '\u{1F4C5} Snapshot: ' + data._meta.snapshot_date;
@@ -3792,16 +3816,30 @@
 
         function updateCsStoreDropdown() {
             var data = consignmentStockData;
-            if (!data || !data.filters) return;
+            if (!data || !data.data) return;
+            var entity = currentEntity || 'DDD';
+            var entityItems = data.data.filter(function(item) { return (item.entity || '').toUpperCase() === entity.toUpperCase(); });
+
             var partnerVal = (document.getElementById('csFilterPartner') || {}).value || '';
             var storeEl = document.getElementById('csFilterStore');
             if (!storeEl) return;
-            var stores = data.filters.stores || [];
+
+            // Build store list from entity items
+            var storeMap = {};
+            entityItems.forEach(function(item) {
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(function(sn) {
+                        storeMap[sn] = item.partner || '';
+                    });
+                }
+            });
+
+            var storeEntries = Object.entries(storeMap).sort(function(a, b) { return a[0].localeCompare(b[0]); });
             if (partnerVal) {
-                stores = stores.filter(function(s) { return s.partner === partnerVal; });
+                storeEntries = storeEntries.filter(function(e) { return e[1] === partnerVal; });
             }
             var opts = '<option value="">Semua Store</option>';
-            stores.forEach(function(s) { opts += '<option value="' + s.name + '">' + s.name + '</option>'; });
+            storeEntries.forEach(function(e) { opts += '<option value="' + e[0] + '">' + e[0] + '</option>'; });
             storeEl.innerHTML = opts;
         }
 
@@ -3921,7 +3959,7 @@
                     }
                     var kodeKecil = item.kode || item.kode_kecil || '-';
                     html += '<tr>' +
-                        '<td style="text-transform:uppercase;font-weight:600;">' + kodeKecil + '</td>' +
+                        '<td><a href="#" onclick="showSkuDetail(\'' + kodeKecil + '\', \'consignment\'); return false;" style="color:#92400e; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">' + kodeKecil + '</a></td>' +
                         '<td>' + (item.gender || '-') + '</td>' +
                         '<td>' + (item.series || '-') + '</td>' +
                         '<td>' + (item.tipe || '-') + '</td>' +
@@ -4000,8 +4038,8 @@
             if (elStock) elStock.textContent = totalStock.toLocaleString('id-ID');
             if (elStores) elStores.textContent = totalStoresSet.size.toLocaleString('id-ID');
 
-            // Chart colors
-            var colors = ['#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f', '#6366f1', '#ec4899', '#10b981', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+            // Chart colors - vibrant and distinct for easy analysis
+            var colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#84cc16', '#e11d48', '#0ea5e9', '#a855f7', '#22c55e', '#dc2626', '#0891b2', '#c026d3', '#65a30d', '#ea580c'];
 
             // Gender chart (doughnut)
             if (csCategoryChart) csCategoryChart.destroy();
@@ -4969,8 +5007,16 @@
 
         // SKU Detail Modal Functions
         function showSkuDetail(kodeKecil, dataType) {
-            var entityData = allData[currentEntity] || {};
-            var data = dataType === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            var data;
+            if (dataType === 'consignment') {
+                data = (consignmentStockData && consignmentStockData.data) ? consignmentStockData.data : [];
+                // Filter by current entity
+                var entity = currentEntity || 'DDD';
+                data = data.filter(function(item) { return (item.entity || '').toUpperCase() === entity.toUpperCase(); });
+            } else {
+                var entityData = allData[currentEntity] || {};
+                data = dataType === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            }
 
             // Get location filter based on type
             let locationFilter = '';
@@ -4978,6 +5024,9 @@
             if (dataType === 'warehouse') {
                 locationFilter = document.getElementById('whFilterWarehouse').value;
                 locationLabel = 'Warehouse';
+            } else if (dataType === 'consignment') {
+                locationFilter = (document.getElementById('csFilterStore') || {}).value || '';
+                locationLabel = 'Store';
             } else {
                 locationFilter = document.getElementById('tableFilterStore').value;
                 locationLabel = 'Store';
