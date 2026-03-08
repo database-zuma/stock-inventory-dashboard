@@ -8835,19 +8835,19 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Top 10 Artikel (same format as Online, using raw detail data)
             var prodEl = document.getElementById('consigProductTable');
-            if (prodEl && consigDetailCache && consigDetailCache.length > 0) {
-                var prodMap = {};
-                consigDetailCache.forEach(function(r) {
-                    var kode = (r.kode_kecil || '').toUpperCase();
-                    if (!kode) return;
-                    var sz = r.ukuran || '-';
-                    var key = kode + '|' + sz;
-                    if (!prodMap[key]) prodMap[key] = { kode: kode, sku: r.sku || '-', warna: r.warna || '', tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
-                    prodMap[key].pairs += r.qty || 0;
-                    prodMap[key].revenue += r.total || 0;
-                    if (r.tier && r.tier !== '-') prodMap[key].tier = r.tier;
+            if (prodEl && data.top_products && data.top_products.length > 0) {
+                // Use top_products from /api/sales/consignment (accurate, DDD+MBB consignment only)
+                var products = data.top_products.slice(0, 10).map(function(p) {
+                    return {
+                        kode: (p.sku || '').replace(/Z\d+$/, '').toUpperCase(),
+                        sku: p.product_name || p.sku || '-',
+                        warna: '',
+                        tier: '',
+                        size: '',
+                        pairs: Number(p.qty) || 0,
+                        revenue: Number(p.sales) || 0,
+                    };
                 });
-                var products = Object.values(prodMap).sort(function(a,b) { return b.revenue - a.revenue; }).slice(0, 10);
                 if (products.length > 0) {
                     var fmtRev = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
                     var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
