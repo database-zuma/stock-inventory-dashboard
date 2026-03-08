@@ -546,9 +546,9 @@
             </button>
             <div class="entity-toggle-bar" id="entityToggleBar">
                 <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">› DDD</button>
-
+                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">› LJBB</button>
                 <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">› MBB</button>
-
+                <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">› UBB</button>
             </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
@@ -2364,6 +2364,17 @@
             // DDD has both retail and warehouse, others only warehouse
             const hasRetail = (entity === 'DDD');
             document.getElementById('retailSectionWrapper').style.display = hasRetail ? 'block' : 'none';
+
+            // Consignment only exists for DDD and MBB
+            var hasConsignment = (entity === 'DDD' || entity === 'MBB');
+            var consigBtn = document.querySelector('.stock-type-btn[data-stype="consignment"]');
+            if (consigBtn) consigBtn.style.display = hasConsignment ? '' : 'none';
+
+            // If currently viewing consignment but entity has no consignment, switch to warehouse
+            var consigSection = document.getElementById('consignmentSectionWrapper');
+            if (!hasConsignment && consigSection && consigSection.style.display !== 'none') {
+                switchStockType('warehouse');
+            }
 
             updateDisplay();
 
