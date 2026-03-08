@@ -1755,8 +1755,8 @@
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <!-- Top Products -->
-                            <div>
-                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top 20 Produk</h4>
+                            <div style="grid-column:1/-1;">
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔥 Top 10 Artikel</h4>
                                 <div id="consigProductTable" style="max-height:400px;overflow-y:auto;"></div>
                             </div>
                             <!-- Monthly Trend -->
@@ -8118,12 +8118,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(item.revenue)}</td>
                     </tr>`;
                 }).join('') +
-                `<tr style="background:#f0f9ff;font-weight:700;border-top:2px solid #002A3A;">
-                    <td colspan="2" style="padding:8px;">Total</td>
-                    <td style="padding:8px;text-align:center;color:#002A3A;width:120px;">${totalPairs.toLocaleString('id-ID')}</td>
-                    <td style="padding:8px;text-align:center;color:#002A3A;width:120px;">100%</td>
-                    <td style="padding:8px;text-align:right;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(totalRev)}</td>
-                </tr></tbody></table></div>`;
+                `</tbody></table></div>`;
         }
 
         function renderOnlineTopProducts(rows) {
@@ -8502,6 +8497,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
         let consigDataCache = null;
+        let consigDetailCache = null;
         let consigAreaChartInstance = null;
         let consigPartnerChartInstance = null;
         async function loadConsignmentData() {
@@ -8514,12 +8510,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (consigDataCache) { renderConsignmentData(consigDataCache); populateConsigFilters(consigDataCache); return; }
 
             try {
-                var resp = await fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), {
-                    headers: { 'x-api-key': API_KEY }
-                });
+                var [resp, detailResp] = await Promise.all([
+                    fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), { headers: { 'x-api-key': API_KEY } }),
+                    fetch(API_BASE_LOCAL + '/api/sales/detail?channel=consig&from=2026-01-01&to=' + new Date().toISOString().slice(0,10), { headers: { 'x-api-key': API_KEY } })
+                ]);
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 var data = await resp.json();
                 consigDataCache = data;
+                if (detailResp.ok) { consigDetailCache = await detailResp.json(); }
                 renderConsignmentData(data);
                 populateConsigFilters(data);
             } catch(e) {
@@ -8835,24 +8833,54 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             }
 
-            // Top Products Table (unchanged)
-            var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-            prodHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
-            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:30px;">No</th>';
-            prodHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Produk</th>';
-            prodHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
-            prodHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
-            prodHtml += '</tr></thead><tbody>';
-            (data.top_products||[]).forEach(function(p, i) {
-                prodHtml += '<tr style="border-bottom:1px solid #f3f4f6;">';
-                prodHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
-                prodHtml += '<td style="padding:6px;font-size:0.75rem;">' + (p.product_name || p.sku) + '</td>';
-                prodHtml += '<td style="text-align:center;padding:6px;">' + fmtK(p.qty) + '</td>';
-                prodHtml += '<td style="text-align:right;padding:6px;color:#059669;font-weight:600;">' + fmtM(p.sales) + '</td>';
-                prodHtml += '</tr>';
-            });
-            prodHtml += '</tbody></table>';
-            document.getElementById('consigProductTable').innerHTML = prodHtml;
+            // Top 10 Artikel (same format as Online, using raw detail data)
+            var prodEl = document.getElementById('consigProductTable');
+            if (prodEl && consigDetailCache && consigDetailCache.length > 0) {
+                var prodMap = {};
+                consigDetailCache.forEach(function(r) {
+                    var kode = (r.kode_kecil || '').toUpperCase();
+                    if (!kode) return;
+                    var sz = r.ukuran || '-';
+                    var key = kode + '|' + sz;
+                    if (!prodMap[key]) prodMap[key] = { kode: kode, sku: r.sku || '-', warna: r.warna || '', tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
+                    prodMap[key].pairs += r.qty || 0;
+                    prodMap[key].revenue += r.total || 0;
+                    if (r.tier && r.tier !== '-') prodMap[key].tier = r.tier;
+                });
+                var products = Object.values(prodMap).sort(function(a,b) { return b.revenue - a.revenue; }).slice(0, 10);
+                if (products.length > 0) {
+                    var fmtRev = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+                    var prodHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    prodHtml += '<thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">';
+                    prodHtml += '<th style="padding:8px;text-align:center;width:35px;">NO</th>';
+                    prodHtml += '<th style="padding:8px;text-align:left;width:80px;">KODE</th>';
+                    prodHtml += '<th style="padding:8px;text-align:left;">NAMA BARANG</th>';
+                    prodHtml += '<th style="padding:8px;text-align:center;width:60px;">SIZE</th>';
+                    prodHtml += '<th style="padding:8px;text-align:center;width:50px;">TIER</th>';
+                    prodHtml += '<th style="padding:8px;text-align:right;width:70px;">PAIRS</th>';
+                    prodHtml += '<th style="padding:8px;text-align:right;width:100px;">REVENUE</th>';
+                    prodHtml += '</tr></thead><tbody>';
+                    products.forEach(function(p, idx) {
+                        var namaBarang = p.sku + (p.warna ? ', ' + p.warna : '');
+                        var tierBadge = (p.tier && p.tier !== '-') ? '<span style="background:#002A3A;color:white;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">T' + p.tier + '</span>' : '-';
+                        prodHtml += '<tr style="background:' + (idx%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
+                        prodHtml += '<td style="padding:7px 8px;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:left;font-weight:600;color:#002A3A;font-size:0.78rem;">' + p.kode.toUpperCase() + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:left;font-size:0.78rem;color:#1f2937;">' + namaBarang + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:center;font-weight:600;">' + p.size + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:center;">' + tierBadge + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:right;font-weight:600;color:#1f2937;">' + (p.pairs||0).toLocaleString('id-ID') + '</td>';
+                        prodHtml += '<td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;">' + fmtRev(p.revenue) + '</td>';
+                        prodHtml += '</tr>';
+                    });
+                    prodHtml += '</tbody></table>';
+                    prodEl.innerHTML = prodHtml;
+                } else {
+                    prodEl.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data produk</div>';
+                }
+            } else if (prodEl) {
+                prodEl.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data detail</div>';
+            }
 
             // Monthly Trend Table (no Trx)
             var tHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
