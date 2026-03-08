@@ -7732,115 +7732,105 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return;
             }
 
-            // Group by marketplace (replaces broken area grouping)
-            const mpMap = {};
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const tierColors = { '1': '#002A3A', '2': '#0ea5e9', '3': '#f59e0b', '4': '#ef4444', '5': '#8b5cf6', '8': '#6b7280' };
+            const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
+
+            // Group by SKU (kode_kecil) — each SKU = 1 unique article+size
+            const skuGroups = {};
             let totalPairs = 0, totalRevenue = 0;
             matches.forEach(r => {
-                const mp = r.marketplace || 'Unknown';
-                if (!mpMap[mp]) mpMap[mp] = { pairs: 0, revenue: 0 };
-                mpMap[mp].pairs += r.qty || 0;
-                mpMap[mp].revenue += r.total || 0;
+                const sku = (r.kode_kecil || r.sku || '').toUpperCase();
+                if (!skuGroups[sku]) {
+                    skuGroups[sku] = {
+                        kode: sku,
+                        nama: r.product_name || r.name || '-',
+                        tier: r.tier || '-',
+                        gender: r.gender || '-',
+                        collection: r.collection || '-',
+                        tipe: r.tipe || '-',
+                        pairs: 0, revenue: 0,
+                        marketplaces: {}
+                    };
+                }
+                skuGroups[sku].pairs += r.qty || 0;
+                skuGroups[sku].revenue += r.total || 0;
                 totalPairs += r.qty || 0;
                 totalRevenue += r.total || 0;
+                // Per-marketplace breakdown
+                const mp = r.marketplace || 'Unknown';
+                if (!skuGroups[sku].marketplaces[mp]) skuGroups[sku].marketplaces[mp] = { pairs: 0, revenue: 0 };
+                skuGroups[sku].marketplaces[mp].pairs += r.qty || 0;
+                skuGroups[sku].marketplaces[mp].revenue += r.total || 0;
             });
-            const marketplaces = Object.entries(mpMap).sort((a,b) => b[1].revenue - a[1].revenue);
 
-            // Group by unique article (kode_kecil) for per-article table
-            const articleMap = {};
-            matches.forEach(r => {
-                const kode = (r.kode_kecil || r.sku || '').toUpperCase();
-                if (!articleMap[kode]) {
-                    // Extract base product name (remove size/color suffix)
-                    const fullName = r.product_name || r.name || '-';
-                    const baseName = fullName.split(',')[0].trim();
-                    articleMap[kode] = { kode: kode, nama: baseName, tier: r.tier || '-', marketplaces: new Set(), pairs: 0, revenue: 0 };
-                }
-                articleMap[kode].pairs += r.qty || 0;
-                articleMap[kode].revenue += r.total || 0;
-                if (r.marketplace) articleMap[kode].marketplaces.add(r.marketplace);
-            });
-            const articles = Object.values(articleMap).sort((a,b) => b.revenue - a.revenue);
-
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d', 'Tokopedia': '#42b549', 'TikTok Shop': '#00f2ea' };
-            const tierColors = { '1': '#f59e0b', '2': '#6366f1', '3': '#10b981', '4': '#ef4444', '5': '#8b5cf6' };
+            const sortedSKUs = Object.values(skuGroups).sort((a,b) => b.revenue - a.revenue);
+            const uniqueSKUs = sortedSKUs.length;
 
             let html = '<div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #86efac;border-radius:12px;padding:18px;">';
             html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
             html += '<div>';
             html += '<div style="font-size:1rem;font-weight:700;color:#166534;">🔍 Hasil Pencarian: ' + query.replace(/["<>&]/g,'') + '</div>';
-            html += '<div style="font-size:0.8rem;color:#4ade80;margin-top:2px;">' + articles.length + ' artikel ditemukan · ' + matches.length + ' transaksi</div>';
+            html += '<div style="font-size:0.8rem;color:#4ade80;margin-top:2px;">' + uniqueSKUs + ' SKU ditemukan · ' + matches.length + ' transaksi</div>';
             html += '</div>';
             html += '<button onclick="document.getElementById(\'onlineSkuSearch\').value=\'\'; searchOnlineSku();" style="padding:6px 12px;background:#dcfce7;border:1px solid #86efac;border-radius:6px;cursor:pointer;font-size:0.8rem;color:#166534;">✕ Tutup</button>';
             html += '</div>';
 
-            // Total summary row
-            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">';
-            html += '<div style="background:white;border-radius:8px;padding:12px;text-align:center;border:1px solid #d1fae5;">';
-            html += '<div style="font-size:0.75rem;color:#6b7280;">Total Pairs</div>';
-            html += '<div style="font-size:1.3rem;font-weight:700;color:#002A3A;">' + totalPairs.toLocaleString('id-ID') + '</div>';
-            html += '</div>';
-            html += '<div style="background:white;border-radius:8px;padding:12px;text-align:center;border:1px solid #d1fae5;">';
-            html += '<div style="font-size:0.75rem;color:#6b7280;">Total Revenue</div>';
-            html += '<div style="font-size:1.3rem;font-weight:700;color:#002A3A;">' + fmtK(totalRevenue) + '</div>';
-            html += '</div>';
+            // Summary cards
+            html += '<div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">';
+            html += '<div style="background:white;border-radius:8px;padding:10px 15px;border-left:4px solid #22c55e;"><div style="font-size:0.72rem;color:#6b7280;">Total Pairs</div><div style="font-size:1.2rem;font-weight:700;color:#166534;">' + totalPairs.toLocaleString('id-ID') + '</div></div>';
+            html += '<div style="background:white;border-radius:8px;padding:10px 15px;border-left:4px solid #3b82f6;"><div style="font-size:0.72rem;color:#6b7280;">Total Revenue</div><div style="font-size:1.2rem;font-weight:700;color:#1e40af;">' + fmtK(totalRevenue) + '</div></div>';
+            html += '<div style="background:white;border-radius:8px;padding:10px 15px;border-left:4px solid #eab308;"><div style="font-size:0.72rem;color:#6b7280;">SKU Ditemukan</div><div style="font-size:1.2rem;font-weight:700;color:#a16207;">' + uniqueSKUs + '</div></div>';
+            html += '<div style="background:white;border-radius:8px;padding:10px 15px;border-left:4px solid #8b5cf6;"><div style="font-size:0.72rem;color:#6b7280;">Transaksi</div><div style="font-size:1.2rem;font-weight:700;color:#6d28d9;">' + matches.length + '</div></div>';
             html += '</div>';
 
-            // Per-article detail table
-            html += '<div style="font-size:0.82rem;font-weight:600;color:#166534;margin-bottom:6px;">📋 Detail Per Artikel</div>';
-            html += '<div style="overflow-x:auto;">';
-            html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;min-width:500px;">';
-            html += '<thead><tr style="background:#002A3A;color:white;">';
-            html += '<th style="padding:8px 6px;text-align:center;width:35px;">NO</th>';
-            html += '<th style="padding:8px 6px;text-align:left;width:90px;">KODE</th>';
-            html += '<th style="padding:8px 6px;text-align:left;">NAMA BARANG</th>';
-            html += '<th style="padding:8px 6px;text-align:center;width:120px;">TIER</th>';
-            html += '<th style="padding:8px 6px;text-align:center;width:120px;">PAIRS</th>';
-            html += '<th style="padding:8px 6px;text-align:right;width:120px;">REVENUE</th>';
-            html += '</tr></thead><tbody>';
-            articles.forEach(function(art, i) {
-                var tierBg = tierColors[art.tier] || '#6b7280';
-                html += '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
-                html += '<td style="padding:6px;text-align:center;color:#9ca3af;">' + (i+1) + '</td>';
-                html += '<td style="padding:6px;font-weight:600;color:#002A3A;font-family:monospace;font-size:0.78rem;">' + art.kode + '</td>';
-                html += '<td style="padding:6px;color:#1f2937;">' + art.nama + '</td>';
-                html += '<td style="padding:6px;text-align:center;"><span style="background:' + tierBg + ';color:white;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;">T' + art.tier + '</span></td>';
-                html += '<td style="padding:6px;text-align:center;font-weight:600;">' + art.pairs.toLocaleString('id-ID') + '</td>';
-                html += '<td style="padding:6px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(art.revenue) + '</td>';
-                html += '</tr>';
+            // Per-SKU detail cards (like Retail)
+            sortedSKUs.forEach(function(data, idx) {
+                var tierBg = tierColors[data.tier] || '#6b7280';
+                var mpEntries = Object.entries(data.marketplaces).sort((a,b) => b[1].revenue - a[1].revenue);
+
+                // SKU header card
+                html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden;">';
+                html += '<div style="background:#1e293b;color:white;padding:12px 15px;">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+                html += '<div>';
+                html += '<span style="font-family:monospace;font-weight:700;font-size:1rem;">' + data.kode + '</span>';
+                html += '<span style="margin-left:10px;background:' + tierBg + ';color:white;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;">T' + data.tier + '</span>';
+                html += '</div>';
+                html += '<div style="display:flex;gap:20px;">';
+                html += '<span><strong>' + data.pairs.toLocaleString('id-ID') + '</strong> psg</span>';
+                html += '<span style="color:#86efac;"><strong>' + fmtK(data.revenue) + '</strong></span>';
+                html += '</div></div>';
+                html += '<div style="margin-top:5px;font-size:0.82rem;opacity:0.9;">📦 <strong>' + data.nama + '</strong></div>';
+                html += '<div style="margin-top:3px;font-size:0.75rem;opacity:0.7;">' + data.gender + ' · ' + data.collection + ' · ' + data.tipe + '</div>';
+                html += '</div>';
+
+                // Marketplace breakdown table inside card
+                if (mpEntries.length > 0) {
+                    html += '<div style="padding:0;">';
+                    html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    html += '<thead><tr style="background:#334155;color:white;">';
+                    html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">MARKETPLACE</th>';
+                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:100px;">PAIRS</th>';
+                    html += '<th style="padding:7px 12px;text-align:right;font-weight:600;width:120px;">REVENUE</th>';
+                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:70px;">%</th>';
+                    html += '</tr></thead><tbody>';
+                    mpEntries.forEach(function(entry, mi) {
+                        var mp = entry[0], md = entry[1];
+                        var pct = data.revenue > 0 ? (md.revenue / data.revenue * 100).toFixed(1) : '0.0';
+                        var mpColor = mpColors[mp] || '#6b7280';
+                        html += '<tr style="background:' + (mi%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
+                        html += '<td style="padding:6px 12px;font-weight:600;color:' + mpColor + ';">' + mp + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:center;">' + md.pairs.toLocaleString('id-ID') + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(md.revenue) + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:center;color:#6b7280;">' + pct + '%</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    html += '</div>';
+                }
+                html += '</div>';
             });
-            // Total row
-            html += '<tr style="background:#f0fdf4;border-top:2px solid #002A3A;font-weight:700;">';
-            html += '<td colspan="4" style="padding:8px 6px;color:#002A3A;">TOTAL</td>';
-            html += '<td style="padding:8px 6px;text-align:center;color:#002A3A;">' + totalPairs.toLocaleString('id-ID') + '</td>';
-            html += '<td style="padding:8px 6px;text-align:right;color:#002A3A;">' + fmtK(totalRevenue) + '</td>';
-            html += '</tr>';
-            html += '</tbody></table>';
-            html += '</div>';
-
-            // Marketplace breakdown table (below article table)
-            if (marketplaces.length > 1) {
-                html += '<div style="font-size:0.82rem;font-weight:600;color:#166534;margin:14px 0 6px 0;">🛒 Per Marketplace</div>';
-                html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
-                html += '<thead><tr style="background:#002A3A;color:white;">';
-                html += '<th style="padding:7px 8px;text-align:left;">Marketplace</th>';
-                html += '<th style="padding:7px 8px;text-align:center;width:120px;">Pairs</th>';
-                html += '<th style="padding:7px 8px;text-align:right;width:120px;">Revenue</th>';
-                html += '<th style="padding:7px 8px;text-align:center;width:120px;">%</th>';
-                html += '</tr></thead><tbody>';
-                marketplaces.forEach(function(entry, i) {
-                    var mp = entry[0], d = entry[1];
-                    var pct = totalRevenue > 0 ? (d.revenue / totalRevenue * 100).toFixed(1) : '0.0';
-                    var color = mpColors[mp] || '#6b7280';
-                    html += '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
-                    html += '<td style="padding:6px 8px;font-weight:600;color:' + color + ';">' + mp + '</td>';
-                    html += '<td style="padding:6px 8px;text-align:center;">' + d.pairs.toLocaleString('id-ID') + '</td>';
-                    html += '<td style="padding:6px 8px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(d.revenue) + '</td>';
-                    html += '<td style="padding:6px 8px;text-align:center;color:#6b7280;">' + pct + '%</td>';
-                    html += '</tr>';
-                });
-                html += '</tbody></table>';
-            }
 
             html += '</div>';
             resultEl.style.display = 'block';
@@ -8040,12 +8030,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!days.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data</div>'; return; }
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            const DAYS_ID = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+            const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
             const maxRev = Math.max(...days.map(d => d.revenue));
             el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:left;">TANGGAL</th>
-                    <th style="padding:8px;text-align:left;width:45px;">HARI</th>
+                    <th style="padding:8px;text-align:left;width:70px;">HARI</th>
                     <th style="padding:8px;text-align:center;width:120px;">PAIRS</th>
                     <th style="padding:8px;text-align:right;width:120px;">REVENUE</th>
                 </tr></thead><tbody>` +
