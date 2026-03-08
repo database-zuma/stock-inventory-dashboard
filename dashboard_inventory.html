@@ -843,7 +843,7 @@
 
         <!-- ==================== CONSIGNMENT STOCK SECTION ==================== -->
         <div class="section-wrapper" id="consignmentSectionWrapper" style="display:none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 30px;">
-            <!-- Consignment Header -->
+            <!-- Consignment Section Header -->
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f59e0b;">
                 <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);">
                     📦 CONSIGNMENT STOCK
@@ -855,11 +855,6 @@
             <!-- Consignment Stats Cards -->
             <div class="stats-grid" id="consigStatsGrid" style="margin-bottom: 15px;">
                 <div class="stat-card" style="border-left: 4px solid #f59e0b; background: white;">
-                    <h3 style="color: #92400e;">Total Toko</h3>
-                    <div class="value" id="consigTotalStores" style="color: #d97706;">0</div>
-                    <div class="sub-value">Partner consignment</div>
-                </div>
-                <div class="stat-card" style="border-left: 4px solid #f59e0b; background: white;">
                     <h3 style="color: #92400e;">Total SKU</h3>
                     <div class="value" id="consigTotalSku" style="color: #d97706;">0</div>
                     <div class="sub-value">Artikel terdaftar</div>
@@ -869,54 +864,112 @@
                     <div class="value" id="consigTotalStock" style="color: #d97706;">0</div>
                     <div class="sub-value">Total pairs consignment</div>
                 </div>
-            </div>
-
-            <!-- Partner Summary Cards -->
-            <div id="consigPartnerCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;"></div>
-
-            <!-- Store Table -->
-            <div style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                    <h3 style="margin:0;color:#92400e;">🏪 Stock per Toko Consignment</h3>
-                    <select id="consigFilterPartner" onchange="renderConsignmentStock()" style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
-                        <option value="">Semua Partner</option>
-                    </select>
-                </div>
-                <div style="max-height:400px;overflow-y:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-                        <thead>
-                            <tr style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;position:sticky;top:0;z-index:1;">
-                                <th style="padding:10px 12px;text-align:left;font-weight:600;">NO</th>
-                                <th style="padding:10px 12px;text-align:left;font-weight:600;">TOKO</th>
-                                <th style="padding:10px 12px;text-align:center;font-weight:600;">PARTNER</th>
-                                <th style="padding:10px 12px;text-align:center;font-weight:600;">ENTITY</th>
-                                <th style="padding:10px 12px;text-align:center;font-weight:600;">SKU</th>
-                                <th style="padding:10px 12px;text-align:right;font-weight:600;">PAIRS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="consigStoreTableBody"></tbody>
-                    </table>
+                <div class="stat-card" style="border-left: 4px solid #f59e0b; background: white;">
+                    <h3 style="color: #92400e;">Total Toko</h3>
+                    <div class="value" id="consigTotalStores" style="color: #d97706;">0</div>
+                    <div class="sub-value">Partner consignment</div>
                 </div>
             </div>
 
-            <!-- Top 10 Articles -->
-            <div style="background:white;border-radius:12px;padding:15px;">
-                <h3 style="margin:0 0 15px;color:#92400e;">🏆 Top 10 Artikel Consignment</h3>
-                <div style="max-height:350px;overflow-y:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;max-width:680px;">
-                        <thead>
-                            <tr style="background:#92400e;color:white;position:sticky;top:0;z-index:1;">
-                                <th style="padding:8px 10px;text-align:center;font-weight:600;width:35px;">NO</th>
-                                <th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>
-                                <th style="padding:8px 10px;text-align:center;font-weight:600;width:50px;">TOKO</th>
-                                <th style="padding:8px 10px;text-align:right;font-weight:600;width:65px;">PAIRS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="consigTopArticlesBody"></tbody>
-                    </table>
+            <!-- Consignment Stock Data Table -->
+            <div class="table-section" id="consignmentTableSection" style="background: white; border-radius: 12px; padding: 15px;">
+                <div class="table-header" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #92400e;">📋 Data Stock Consignment</h3>
+                        <button class="btn btn-secondary" onclick="exportData('consignment')" style="background: #f59e0b; color: white; border: none;">📥 Export</button>
+                    </div>
+                <!-- Filter Row -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Partner</label>
+                        <select id="csFilterPartner" onchange="updateCsStoreDropdown(); applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 130px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Partner</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Store</label>
+                        <select id="csFilterStore" onchange="applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 180px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua Store</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Tier</label>
+                        <select id="csFilterTier" onchange="applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 90px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="0">Tier 0</option>
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                            <option value="4">Tier 4</option>
+                            <option value="5">Tier 5</option>
+                            <option value="8">Tier 8</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Gender</label>
+                        <select id="csFilterGender" onchange="applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                            <option value="BABY">Baby</option>
+                            <option value="BOYS">Boys</option>
+                            <option value="GIRLS">Girls</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="LADIES">Ladies</option>
+                            <option value="MEN">Men</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Series</label>
+                        <select id="csFilterSeries" onchange="applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Cari</label>
+                        <input type="text" id="csSearchInput" placeholder="Cari..." oninput="applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; width: 140px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label style="font-size: 0.75rem; color: transparent; margin-bottom: 4px; display: block;">.</label>
+                        <button class="btn btn-secondary" onclick="resetConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 14px; border-radius: 6px;">↺ Reset</button>
+                    </div>
                 </div>
             </div>
-
+            <div class="table-wrapper" style="margin-top: 15px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortConsignmentData('kode_kecil')">Kode Kecil ↕</th>
+                            <th onclick="sortConsignmentData('gender')">Gender ↕</th>
+                            <th onclick="sortConsignmentData('series')">Series ↕</th>
+                            <th onclick="sortConsignmentData('tipe')">Tipe ↕</th>
+                            <th onclick="sortConsignmentData('name')">Nama Barang ↕</th>
+                            <th onclick="sortConsignmentData('tier')">Tier ↕</th>
+                            <th onclick="sortConsignmentData('partner')">Partner ↕</th>
+                            <th onclick="sortConsignmentData('total')">Total Qty ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="csTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="page-info" id="csPageInfo">Showing 0 items</div>
+                <div class="page-buttons" id="csPageButtons"></div>
+            </div>
+            <!-- Consignment Charts -->
+            <div class="charts-grid" style="margin-top: 20px;">
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #92400e;">📊 Stock per Gender</h3>
+                    <div class="chart-container"><canvas id="csCategoryChart"></canvas></div>
+                </div>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #92400e;">📈 Stock per Partner</h3>
+                    <div class="chart-container"><canvas id="csPartnerChart"></canvas></div>
+                </div>
+                <div class="chart-card" style="background: white;">
+                    <h3 style="color: #92400e;">🎯 Stock per Series</h3>
+                    <div class="chart-container"><canvas id="csSeriesChart"></canvas></div>
+                </div>
+            </div>
+            </div>
         </div>
         <!-- END CONSIGNMENT SECTION -->
         </div> <!-- End inventoryView -->
@@ -3338,31 +3391,48 @@
         }
 
         function exportData(type) {
-            var entityData = allData[currentEntity] || {};
-            var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            var rawData;
+            if (type === 'consignment') {
+                rawData = (consignmentStockData && consignmentStockData.data) || [];
+            } else {
+                var entityData = allData[currentEntity] || {};
+                rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            }
             if (!rawData.length) { alert('Tidak ada data'); return; }
 
-            const tableStore = type === 'retail'
-                ? document.getElementById('tableFilterStore').value
-                : document.getElementById('whFilterWarehouse').value;
-            const tableArea = type === 'retail'
-                ? document.getElementById('tableFilterArea').value
-                : document.getElementById('whFilterArea').value;
-            const filterGender = type === 'retail'
-                ? document.getElementById('rtFilterGender').value
-                : document.getElementById('whFilterGender').value;
-            const filterTier = type === 'retail'
-                ? document.getElementById('tableFilterTier').value
-                : document.getElementById('whFilterTier').value;
-            const filterSeries = type === 'retail'
-                ? document.getElementById('rtFilterSeries').value
-                : document.getElementById('whFilterSeries').value;
-
+            var tableStore, tableArea, filterGender, filterTier, filterSeries;
+            if (type === 'consignment') {
+                tableStore = (document.getElementById('csFilterStore') || {}).value || '';
+                tableArea = '';
+                filterGender = (document.getElementById('csFilterGender') || {}).value || '';
+                filterTier = (document.getElementById('csFilterTier') || {}).value || '';
+                filterSeries = (document.getElementById('csFilterSeries') || {}).value || '';
+            } else {
+                tableStore = type === 'retail'
+                    ? document.getElementById('tableFilterStore').value
+                    : document.getElementById('whFilterWarehouse').value;
+                tableArea = type === 'retail'
+                    ? document.getElementById('tableFilterArea').value
+                    : document.getElementById('whFilterArea').value;
+                filterGender = type === 'retail'
+                    ? document.getElementById('rtFilterGender').value
+                    : document.getElementById('whFilterGender').value;
+                filterTier = type === 'retail'
+                    ? document.getElementById('tableFilterTier').value
+                    : document.getElementById('whFilterTier').value;
+                filterSeries = type === 'retail'
+                    ? document.getElementById('rtFilterSeries').value
+                    : document.getElementById('whFilterSeries').value;
+            }
             // Apply same filters as applyRetailFilters/applyWarehouseFilters — WITHOUT group-by
             let data = rawData;
             if (filterGender) data = data.filter(item => (item.gender || '').toUpperCase().includes(filterGender.toUpperCase()));
             if (filterTier)   data = data.filter(item => (item.tier || '') === filterTier);
             if (filterSeries) data = data.filter(item => (item.series || '').includes(filterSeries) || (item.name || '').toUpperCase().includes(filterSeries));
+            if (type === 'consignment') {
+                var filterPartner = (document.getElementById('csFilterPartner') || {}).value || '';
+                if (filterPartner) data = data.filter(item => item.partner === filterPartner);
+            }
             if (tableStore) {
                 data = data.filter(item => item.store_stock && item.store_stock[tableStore] !== undefined && item.store_stock[tableStore] !== 0);
             } else if (tableArea) {
@@ -3395,6 +3465,7 @@
                         if (isExcludedLocation(store)) return;
                         if (type === 'retail' && isWarehouseLocation(store)) return;
                         if (type === 'warehouse' && !isWarehouseLocation(store)) return;
+                        if (type === 'consignment') { /* all consignment stores pass */ }
                         if (tableStore && store !== tableStore) return;
                         if (tableArea && getAreaFromStore(store) !== tableArea) return;
                         const area = getAreaFromStore(store);
@@ -3654,113 +3725,305 @@
         }
 
         // ============ CONSIGNMENT STOCK FUNCTIONS ============
+        var csFilteredData = [];
+        var csSortField = 'total';
+        var csSortDir = 'desc';
+        var csCurrentPage = 1;
+        var csCategoryChart = null;
+        var csPartnerChart = null;
+        var csSeriesChart = null;
+
         function loadConsignmentStock() {
-            var tbody = document.getElementById('consigStoreTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#92400e;">Memuat data consignment...</td></tr>';
+            var tbody = document.getElementById('csTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#92400e;">Memuat data consignment...</td></tr>';
             
             fetchAPI('/api/stock/consignment')
                 .then(function(data) {
                     consignmentStockData = data;
-                    renderConsignmentStock();
+                    populateConsignmentFilters(data);
+                    applyConsignmentFilters();
                 })
                 .catch(function(err) {
                     console.error('Error loading consignment stock:', err);
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
                 });
         }
-        
-        function renderConsignmentStock() {
-            var data = consignmentStockData;
-            if (!data) return;
-            
-            // Update stats cards
-            var elStores = document.getElementById('consigTotalStores');
-            var elSku = document.getElementById('consigTotalSku');
-            var elStock = document.getElementById('consigTotalStock');
-            var elDate = document.getElementById('consigSnapshotDate');
-            if (elStores) elStores.textContent = (data.grand_total_stores || 0).toLocaleString('id-ID');
-            if (elSku) elSku.textContent = (data.grand_total_sku || 0).toLocaleString('id-ID');
-            if (elStock) elStock.textContent = (data.grand_total_qty || 0).toLocaleString('id-ID');
-            if (elDate && data._meta && data._meta.snapshot_date) elDate.textContent = '\u{1F4C5} Snapshot: ' + data._meta.snapshot_date;
-            
-            // Build partner filter dropdown
-            var filterEl = document.getElementById('consigFilterPartner');
-            if (filterEl) {
-                var currentVal = filterEl.value;
+
+        function populateConsignmentFilters(data) {
+            if (!data || !data.filters) return;
+            var f = data.filters;
+            // Partner dropdown
+            var partnerEl = document.getElementById('csFilterPartner');
+            if (partnerEl) {
                 var opts = '<option value="">Semua Partner</option>';
-                (data.partners || []).forEach(function(p) {
-                    opts += '<option value="' + p.partner + '">' + p.partner + ' (' + p.total_qty + ' pcs)</option>';
+                (f.partners || []).forEach(function(p) { opts += '<option value="' + p + '">' + p + '</option>'; });
+                partnerEl.innerHTML = opts;
+            }
+            // Store dropdown (all stores initially)
+            updateCsStoreDropdown();
+            // Series dropdown
+            var seriesEl = document.getElementById('csFilterSeries');
+            if (seriesEl) {
+                var opts2 = '<option value="">Semua</option>';
+                (f.series || []).forEach(function(s) { opts2 += '<option value="' + s + '">' + s + '</option>'; });
+                seriesEl.innerHTML = opts2;
+            }
+            // Snapshot date
+            var dateEl = document.getElementById('consigSnapshotDate');
+            if (dateEl && data._meta && data._meta.snapshot_date) dateEl.textContent = '\u{1F4C5} Snapshot: ' + data._meta.snapshot_date;
+        }
+
+        function updateCsStoreDropdown() {
+            var data = consignmentStockData;
+            if (!data || !data.filters) return;
+            var partnerVal = (document.getElementById('csFilterPartner') || {}).value || '';
+            var storeEl = document.getElementById('csFilterStore');
+            if (!storeEl) return;
+            var stores = data.filters.stores || [];
+            if (partnerVal) {
+                stores = stores.filter(function(s) { return s.partner === partnerVal; });
+            }
+            var opts = '<option value="">Semua Store</option>';
+            stores.forEach(function(s) { opts += '<option value="' + s.name + '">' + s.name + '</option>'; });
+            storeEl.innerHTML = opts;
+        }
+
+        function applyConsignmentFilters() {
+            var data = consignmentStockData;
+            if (!data || !data.data) return;
+            var items = data.data.slice(); // copy array
+
+            var search = (document.getElementById('csSearchInput') || {}).value || '';
+            search = search.toLowerCase();
+            var partner = (document.getElementById('csFilterPartner') || {}).value || '';
+            var store = (document.getElementById('csFilterStore') || {}).value || '';
+            var tier = (document.getElementById('csFilterTier') || {}).value || '';
+            var gender = (document.getElementById('csFilterGender') || {}).value || '';
+            var series = (document.getElementById('csFilterSeries') || {}).value || '';
+
+            if (search) {
+                items = items.filter(function(item) {
+                    return item.sku.toLowerCase().indexOf(search) >= 0 || (item.name || '').toLowerCase().indexOf(search) >= 0 || (item.kode_kecil || '').toLowerCase().indexOf(search) >= 0;
                 });
-                filterEl.innerHTML = opts;
-                filterEl.value = currentVal;
             }
-            
-            // Build partner summary cards
-            var cardsEl = document.getElementById('consigPartnerCards');
-            if (cardsEl && data.partners) {
-                var cardsHtml = '';
-                data.partners.forEach(function(p) {
-                    cardsHtml += '<div style="background:white;border-radius:10px;padding:14px;border-left:4px solid #f59e0b;box-shadow:0 1px 3px rgba(0,0,0,0.08);">' +
-                        '<div style="font-weight:700;color:#92400e;font-size:0.95rem;margin-bottom:6px;">' + p.partner + '</div>' +
-                        '<div style="display:flex;gap:12px;font-size:0.82rem;color:#78716c;">' +
-                        '<span>\u{1F3EA} ' + p.stores + ' toko</span>' +
-                        '<span>\u{1F4E6} ' + p.total_qty.toLocaleString('id-ID') + ' pcs</span>' +
-                        '</div>' +
-                        '<div style="font-size:0.78rem;color:#a8a29e;margin-top:4px;">' + p.total_sku + ' SKU \u00B7 ' + p.entity + '</div>' +
-                        '</div>';
-                });
-                cardsEl.innerHTML = cardsHtml;
+            if (partner) {
+                items = items.filter(function(item) { return item.partner === partner; });
             }
-            
-            // Build store table
-            var selectedPartner = (filterEl && filterEl.value) || '';
-            var stores = data.stores || [];
-            if (selectedPartner) {
-                stores = stores.filter(function(s) { return s.partner === selectedPartner; });
+            if (store) {
+                items = items.filter(function(item) { return item.store_stock && item.store_stock[store] !== undefined && item.store_stock[store] !== 0; });
             }
-            
-            var tbody = document.getElementById('consigStoreTableBody');
-            if (tbody) {
+            if (tier) {
+                items = items.filter(function(item) { return (item.tier || '') === tier; });
+            }
+            if (gender) {
+                items = items.filter(function(item) { return (item.gender || '').toUpperCase() === gender.toUpperCase(); });
+            }
+            if (series) {
+                items = items.filter(function(item) { return (item.series || '') === series; });
+            }
+
+            // Group by kode (base article) like retail does
+            var groupedMap = {};
+            items.forEach(function(item) {
+                var kk = (item.kode || item.kode_kecil || '').toUpperCase();
+                if (!kk) return;
+                if (!groupedMap[kk]) {
+                    groupedMap[kk] = { sku: item.sku, kode_kecil: item.kode_kecil, kode: item.kode, name: item.name, gender: item.gender, series: item.series, tipe: item.tipe, tier: item.tier, color: item.color, partner: item.partner, entity: item.entity, total: 0, store_stock: {} };
+                }
+                if (store && item.store_stock && item.store_stock[store] !== undefined) {
+                    groupedMap[kk].total += item.store_stock[store] || 0;
+                } else {
+                    groupedMap[kk].total += item.total || 0;
+                }
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(function(sn) {
+                        groupedMap[kk].store_stock[sn] = (groupedMap[kk].store_stock[sn] || 0) + item.store_stock[sn];
+                    });
+                }
+            });
+            items = Object.values(groupedMap);
+
+            // Sort
+            items.sort(function(a, b) {
+                var aVal = a[csSortField];
+                var bVal = b[csSortField];
+                if (csSortField === 'total' && store) {
+                    aVal = (a.store_stock && a.store_stock[store]) || 0;
+                    bVal = (b.store_stock && b.store_stock[store]) || 0;
+                }
+                if (typeof aVal === 'string') aVal = (aVal || '').toLowerCase();
+                if (typeof bVal === 'string') bVal = (bVal || '').toLowerCase();
+                if (aVal < bVal) return csSortDir === 'asc' ? -1 : 1;
+                if (aVal > bVal) return csSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            csFilteredData = items;
+            csCurrentPage = 1;
+            renderConsignmentTable();
+            updateConsignmentCharts(items, store);
+        }
+
+        function sortConsignmentData(field) {
+            csSortDir = csSortField === field && csSortDir === 'desc' ? 'asc' : 'desc';
+            csSortField = field;
+            applyConsignmentFilters();
+        }
+
+        function resetConsignmentFilters() {
+            var el;
+            el = document.getElementById('csSearchInput'); if (el) el.value = '';
+            el = document.getElementById('csFilterPartner'); if (el) el.value = '';
+            el = document.getElementById('csFilterStore'); if (el) el.value = '';
+            el = document.getElementById('csFilterTier'); if (el) el.value = '';
+            el = document.getElementById('csFilterGender'); if (el) el.value = '';
+            el = document.getElementById('csFilterSeries'); if (el) el.value = '';
+            csSortField = 'total';
+            csSortDir = 'desc';
+            updateCsStoreDropdown();
+            applyConsignmentFilters();
+        }
+
+        function renderConsignmentTable() {
+            var start = (csCurrentPage - 1) * itemsPerPage;
+            var pageData = csFilteredData.slice(start, start + itemsPerPage);
+            var tbody = document.getElementById('csTableBody');
+            var store = (document.getElementById('csFilterStore') || {}).value || '';
+
+            if (!pageData.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada data</td></tr>';
+            } else {
                 var html = '';
-                stores.forEach(function(s, idx) {
-                    var bg = idx % 2 === 0 ? '#ffffff' : '#fffbeb';
-                    html += '<tr style="background:' + bg + ';">' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;color:#78716c;text-align:center;">' + (idx + 1) + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;color:#1f2937;font-weight:500;">' + s.store_name + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;text-align:center;color:#92400e;font-weight:600;">' + s.partner + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;text-align:center;color:#6b7280;font-size:0.8rem;">' + s.entity + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;text-align:center;color:#1f2937;">' + s.total_sku + '</td>' +
-                        '<td style="padding:8px 12px;border-bottom:1px solid #fde68a;text-align:right;font-weight:600;color:#d97706;">' + s.total_qty.toLocaleString('id-ID') + '</td>' +
+                pageData.forEach(function(item) {
+                    var displayStock = item.total;
+                    if (store && item.store_stock) {
+                        displayStock = item.store_stock[store] || 0;
+                    }
+                    var kodeKecil = item.kode || item.kode_kecil || '-';
+                    html += '<tr>' +
+                        '<td style="text-transform:uppercase;font-weight:600;">' + kodeKecil + '</td>' +
+                        '<td>' + (item.gender || '-') + '</td>' +
+                        '<td>' + (item.series || '-') + '</td>' +
+                        '<td>' + (item.tipe || '-') + '</td>' +
+                        '<td>' + (item.name || '-') + '</td>' +
+                        '<td>' + (item.tier || '-') + '</td>' +
+                        '<td>' + (item.partner || '-') + '</td>' +
+                        '<td><strong>' + displayStock.toLocaleString('id-ID') + '</strong></td>' +
                         '</tr>';
                 });
-                if (stores.length === 0) {
-                    html = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#92400e;">Tidak ada data untuk partner ini</td></tr>';
-                }
-                // Total row
-                var totalQty = stores.reduce(function(sum, s) { return sum + s.total_qty; }, 0);
-                var totalSku = stores.reduce(function(sum, s) { return sum + s.total_sku; }, 0);
-                html += '<tr style="background:#fef3c7;font-weight:700;">' +
-                    '<td colspan="4" style="padding:10px 12px;border-top:2px solid #f59e0b;color:#92400e;">TOTAL (' + stores.length + ' toko)</td>' +
-                    '<td style="padding:10px 12px;border-top:2px solid #f59e0b;text-align:center;color:#92400e;">' + totalSku.toLocaleString('id-ID') + '</td>' +
-                    '<td style="padding:10px 12px;border-top:2px solid #f59e0b;text-align:right;color:#d97706;">' + totalQty.toLocaleString('id-ID') + '</td>' +
-                    '</tr>';
                 tbody.innerHTML = html;
             }
-            
-            // Build top 10 articles
-            var topBody = document.getElementById('consigTopArticlesBody');
-            if (topBody && data.top_articles) {
-                var topHtml = '';
-                data.top_articles.forEach(function(a, idx) {
-                    var bg = idx % 2 === 0 ? '#ffffff' : '#fffbeb';
-                    topHtml += '<tr style="background:' + bg + ';">' +
-                        '<td style="padding:8px 10px;border-bottom:1px solid #fde68a;text-align:center;color:#78716c;">' + (idx + 1) + '</td>' +
-                        '<td style="padding:8px 10px;border-bottom:1px solid #fde68a;color:#1f2937;">' + (a.name || a.sku) + '</td>' +
-                        '<td style="padding:8px 10px;border-bottom:1px solid #fde68a;text-align:center;color:#6b7280;">' + a.stores + '</td>' +
-                        '<td style="padding:8px 10px;border-bottom:1px solid #fde68a;text-align:right;font-weight:600;color:#d97706;">' + a.qty.toLocaleString('id-ID') + '</td>' +
-                        '</tr>';
+            renderConsignmentPagination();
+        }
+
+        function renderConsignmentPagination() {
+            var totalPages = Math.ceil(csFilteredData.length / itemsPerPage);
+            var pageInfo = document.getElementById('csPageInfo');
+            var pageButtons = document.getElementById('csPageButtons');
+
+            var start = (csCurrentPage - 1) * itemsPerPage + 1;
+            var end = Math.min(csCurrentPage * itemsPerPage, csFilteredData.length);
+            if (pageInfo) pageInfo.textContent = csFilteredData.length ? 'Showing ' + start + '-' + end + ' of ' + csFilteredData.length + ' items' : 'Showing 0 items';
+
+            var btns = '';
+            if (totalPages > 1) {
+                if (csCurrentPage > 1) btns += '<button onclick="csGoToPage(' + (csCurrentPage - 1) + ')">&lsaquo;</button>';
+                for (var i = Math.max(1, csCurrentPage - 2); i <= Math.min(totalPages, csCurrentPage + 2); i++) {
+                    btns += '<button class="' + (i === csCurrentPage ? 'active' : '') + '" onclick="csGoToPage(' + i + ')">' + i + '</button>';
+                }
+                if (csCurrentPage < totalPages) btns += '<button onclick="csGoToPage(' + (csCurrentPage + 1) + ')">&rsaquo;</button>';
+            }
+            if (pageButtons) pageButtons.innerHTML = btns;
+        }
+
+        function csGoToPage(page) {
+            csCurrentPage = page;
+            renderConsignmentTable();
+        }
+
+        function updateConsignmentCharts(data, storeFilter) {
+            var catData = {}, partnerData = {}, seriesData = {};
+            var totalSku = data.length;
+            var totalStock = 0;
+            var totalStoresSet = new Set();
+
+            data.forEach(function(item) {
+                var g = item.gender || 'OTHER';
+                var p = item.partner || 'Unknown';
+                var s = item.series || '-';
+
+                var stockValue = 0;
+                if (storeFilter && item.store_stock && item.store_stock[storeFilter] !== undefined) {
+                    stockValue = item.store_stock[storeFilter];
+                } else {
+                    stockValue = item.total || 0;
+                }
+
+                catData[g] = (catData[g] || 0) + Math.max(0, stockValue);
+                partnerData[p] = (partnerData[p] || 0) + Math.max(0, stockValue);
+                if (s && s !== '-') {
+                    var sg = s + ' - ' + g;
+                    seriesData[sg] = (seriesData[sg] || 0) + Math.max(0, stockValue);
+                }
+                totalStock += stockValue;
+
+                if (item.store_stock) {
+                    Object.keys(item.store_stock).forEach(function(sn) { totalStoresSet.add(sn); });
+                }
+            });
+
+            // Update stats cards
+            var elSku = document.getElementById('consigTotalSku');
+            var elStock = document.getElementById('consigTotalStock');
+            var elStores = document.getElementById('consigTotalStores');
+            if (elSku) elSku.textContent = totalSku.toLocaleString('id-ID');
+            if (elStock) elStock.textContent = totalStock.toLocaleString('id-ID');
+            if (elStores) elStores.textContent = totalStoresSet.size.toLocaleString('id-ID');
+
+            // Chart colors
+            var colors = ['#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f', '#6366f1', '#ec4899', '#10b981', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+
+            // Gender chart (doughnut)
+            if (csCategoryChart) csCategoryChart.destroy();
+            var catCanvas = document.getElementById('csCategoryChart');
+            if (catCanvas) {
+                csCategoryChart = new Chart(catCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(catData),
+                        datasets: [{ data: Object.values(catData), backgroundColor: colors, borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Poppins', size: 11 } } } } }
                 });
-                topBody.innerHTML = topHtml;
+            }
+
+            // Partner chart (bar)
+            if (csPartnerChart) csPartnerChart.destroy();
+            var partnerCanvas = document.getElementById('csPartnerChart');
+            if (partnerCanvas) {
+                csPartnerChart = new Chart(partnerCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(partnerData),
+                        datasets: [{ label: 'Stock', data: Object.values(partnerData), backgroundColor: colors, borderRadius: 6 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
+            // Series chart (bar)
+            if (csSeriesChart) csSeriesChart.destroy();
+            var seriesCanvas = document.getElementById('csSeriesChart');
+            if (seriesCanvas) {
+                var sortedSeries = Object.entries(seriesData).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 15);
+                csSeriesChart = new Chart(seriesCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedSeries.map(function(e) { return e[0]; }),
+                        datasets: [{ label: 'Stock', data: sortedSeries.map(function(e) { return e[1]; }), backgroundColor: colors, borderRadius: 6 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+                });
             }
         }
 
