@@ -9152,14 +9152,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const matches = [];
             Object.keys(cache).forEach(sku => {
                 const article = sku.replace(/Z\d{2,3}$/, '');
-                // Get name, area, kode_kecil from salesDetailData
+                // Extract size from SKU suffix: Z2MF01Z21 → 21, L1SM1401Z3738 → 37/38
                 let name = articleNameMap[article] || '';
-                let area = '';
                 let kodeBarang = article;
+                const sizeMatch = sku.match(/Z(\d+)$/i);
+                const sizeRaw = sizeMatch ? sizeMatch[1] : '';
+                const size = sizeRaw.length === 4 ? sizeRaw.substring(0,2) + '/' + sizeRaw.substring(2) : (sizeRaw || '-');
                 const saleItem = salesDetailData.find(d => d.sku === sku);
                 if (saleItem) {
                     if (!name && saleItem.product_name) name = saleItem.product_name;
-                    if (saleItem.area) area = saleItem.area;
                     if (saleItem.kode_kecil) kodeBarang = saleItem.kode_kecil;
                 }
                 if (sku.toUpperCase().includes(searchTerm) ||
@@ -9170,7 +9171,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         sku: sku,
                         name: name,
                         article: article,
-                        area: area,
+                        size: size,
                         kodeBarang: kodeBarang,
                         qty: cache[sku].qty,
                         total: cache[sku].total,
@@ -9209,7 +9210,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 '<th style="padding:8px 10px;text-align:center;width:40px;font-weight:600;">NO</th>' +
                 '<th style="padding:8px 10px;text-align:left;font-weight:600;">KODE BARANG</th>' +
                 '<th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>' +
-                '<th style="padding:8px 10px;text-align:center;font-weight:600;">AREA</th>' +
+                '<th style="padding:8px 10px;text-align:center;font-weight:600;">SIZE</th>' +
                 '<th style="padding:8px 10px;text-align:center;width:80px;font-weight:600;">QTY</th>' +
                 '<th style="padding:8px 10px;text-align:right;width:120px;font-weight:600;">TOTAL SALES</th>' +
                 '</tr></thead><tbody>';
@@ -9217,13 +9218,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 const articleName = m.name || articleNameMap[m.article] || '-';
-                const areaDisplay = m.area || '-';
+                const sizeDisplay = m.size || '-';
                 const kodeDisplay = m.kodeBarang || m.article || '-';
                 html += '<tr onclick="selectSKUFromList(\'' + m.sku + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.78rem;">' + kodeDisplay + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
-                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#6b7280;font-size:0.78rem;">' + areaDisplay + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1f2937;font-size:0.78rem;">' + sizeDisplay + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1f2937;width:80px;">' + formatNum(m.qty) + '</td>' +
                     '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;width:120px;">' + formatRp(m.total) + '</td>' +
                     '</tr>';
@@ -9300,14 +9301,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             sortedSKUs.forEach(([sku, data], idx) => {
                 const article = sku.replace(/Z\d{2,3}$/, '');
-                // Get name, area, kode_kecil from transactions
+                // Get name, kode_kecil from transactions — prefer articleNameMap for clean name
                 const firstTx = data.transactions.find(t => t.product_name);
-                const name = (firstTx && firstTx.product_name) || articleNameMap[article] || '-';
+                const name = articleNameMap[article] || (firstTx && firstTx.product_name) || '-';
                 const kodeBarang = (data.transactions[0] && data.transactions[0].kode_kecil) || article;
 
-                // Collect unique areas from transactions
-                const areas = [...new Set(data.transactions.map(t => t.area).filter(Boolean))];
-                const areaDisplay = areas.length > 0 ? areas.join(', ') : '-';
+                // Extract size from SKU suffix: Z2MF01Z21 → 21, L1SM1401Z3738 → 37/38
+                const sizeMatch2 = sku.match(/Z(\d+)$/i);
+                const sizeRaw2 = sizeMatch2 ? sizeMatch2[1] : '';
+                const sizeDisplay = sizeRaw2.length === 4 ? sizeRaw2.substring(0,2) + '/' + sizeRaw2.substring(2) : (sizeRaw2 || '-');
 
                 // Group by store and sort by qty descending
                 const storeData = {};
@@ -9333,8 +9335,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     '<span style="color:#86efac;"><strong>' + formatRp(data.total) + '</strong></span>' +
                     '</div></div>' +
                     '<div style="display:flex;gap:12px;margin-top:6px;font-size:0.82rem;flex-wrap:wrap;">' +
-                    '<span style="opacity:0.9;">📦 <strong>' + name + '</strong></span>' +
-                    '<span style="opacity:0.7;">📍 ' + areaDisplay + '</span>' +
+                    '<span style="opacity:0.9;">📦 <strong>' + sku.toLowerCase() + ' ' + name + '</strong></span>' +
+                    '<span style="opacity:0.7;">📏 Size: ' + sizeDisplay + '</span>' +
                     '</div>' +
                     '</div>';
 
