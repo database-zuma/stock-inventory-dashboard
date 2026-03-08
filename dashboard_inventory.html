@@ -1476,6 +1476,12 @@
                             <div></div>
                         </div>
 
+                        <!-- Row 6: Size Distribution by Gender (full width) -->
+                        <div style="margin-bottom:22px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📏 Size Distribution by Gender</h4>
+                            <div id="onlineSizeDistribution"></div>
+                        </div>
+
                         </div><!-- /onlineViewDashboard -->
 
                         <!-- === ONLINE SKU SEARCH VIEW (blank initially, like Retail) === -->
@@ -7670,7 +7676,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         let onlineFilteredData = null;
 
         async function loadOnlineChannel() {
-            const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend'];
+            const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data online...</div>'; });
 
             if (onlineRawData) { populateOnlineFilters(onlineRawData); applyOnlineFilters(); return; }
@@ -8067,6 +8073,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // ── Daily Trend ──
             renderOnlineDailyTrend(rows);
+
+            // ── Size Distribution by Gender ──
+            renderOnlineSizeDistribution(rows);
         }
 
         function renderOnlineGroupedBar(elId, rows, groupField, colors, maxItems) {
@@ -8157,6 +8166,73 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;">${fmtK(p.revenue)}</td>
                     </tr>`;
                 }).join('') + '</tbody></table>';
+        }
+
+        function renderOnlineSizeDistribution(rows) {
+            const el = document.getElementById('onlineSizeDistribution');
+            if (!el) return;
+            const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
+
+            // Group by gender then size
+            const byGenderSize = {};
+            rows.forEach(r => {
+                const gender = r.gender || 'Unknown';
+                const size = r.ukuran || '';
+                if (!size || size === '' || gender === 'Unknown') return;
+                if (!byGenderSize[gender]) byGenderSize[gender] = { total: 0, sizes: {} };
+                byGenderSize[gender].total += r.qty || 0;
+                if (!byGenderSize[gender].sizes[size]) byGenderSize[gender].sizes[size] = 0;
+                byGenderSize[gender].sizes[size] += r.qty || 0;
+            });
+
+            const genderSizeArr = Object.entries(byGenderSize)
+                .map(([gender, val]) => ({ gender, total: val.total, sizes: val.sizes }))
+                .sort((a, b) => b.total - a.total);
+
+            if (!genderSizeArr.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data size</div>'; return; }
+
+            var sizeHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">';
+
+            genderSizeArr.forEach(function(g) {
+                var color = genderColors[g.gender] || '#6b7280';
+                var sizeArr = Object.entries(g.sizes)
+                    .map(function(e) { return { size: e[0], qty: e[1] }; })
+                    .sort(function(a, b) { return b.qty - a.qty; });
+                var maxQty = sizeArr.length > 0 ? sizeArr[0].qty : 1;
+
+                sizeHtml += '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #e2e8f0;box-shadow:0 2px 4px rgba(0,0,0,0.05);">';
+
+                // Header
+                sizeHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid ' + color + ';">';
+                sizeHtml += '<div style="display:flex;align-items:center;gap:8px;">';
+                sizeHtml += '<span style="font-weight:700;color:' + color + ';font-size:1rem;">' + g.gender + '</span>';
+                sizeHtml += '</div>';
+                sizeHtml += '<div style="text-align:right;">';
+                sizeHtml += '<div style="font-weight:700;color:#374151;">' + g.total.toLocaleString('id-ID') + ' pcs</div>';
+                sizeHtml += '</div></div>';
+
+                // Size bars
+                sizeHtml += '<div style="display:flex;flex-direction:column;gap:6px;">';
+                sizeArr.forEach(function(s) {
+                    var share = g.total > 0 ? (s.qty / g.total * 100) : 0;
+                    var barWidth = maxQty > 0 ? (s.qty / maxQty * 100) : 0;
+                    sizeHtml += '<div style="display:flex;align-items:center;gap:8px;">';
+                    sizeHtml += '<div style="width:35px;font-weight:600;color:#374151;font-size:0.85rem;">' + s.size + '</div>';
+                    sizeHtml += '<div style="flex:1;height:20px;background:#f3f4f6;border-radius:4px;overflow:hidden;position:relative;">';
+                    sizeHtml += '<div style="height:100%;width:' + barWidth + '%;background:' + color + ';border-radius:4px;"></div>';
+                    sizeHtml += '</div>';
+                    sizeHtml += '<div style="width:70px;text-align:right;font-size:0.8rem;">';
+                    sizeHtml += '<span style="font-weight:600;color:#374151;">' + s.qty.toLocaleString('id-ID') + '</span>';
+                    sizeHtml += '<span style="color:#6b7280;margin-left:4px;">(' + share.toFixed(1) + '%)</span>';
+                    sizeHtml += '</div>';
+                    sizeHtml += '</div>';
+                });
+                sizeHtml += '</div>';
+                sizeHtml += '</div>';
+            });
+
+            sizeHtml += '</div>';
+            el.innerHTML = sizeHtml;
         }
 
         function renderOnlineMonthlyTrend(rows) {
