@@ -8194,7 +8194,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var sizeHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">';
 
             genderSizeArr.forEach(function(g) {
-                var color = genderColors[g.gender] || '#6b7280';
+                var genderKey = g.gender.charAt(0).toUpperCase() + g.gender.slice(1).toLowerCase();
+                var color = genderColors[genderKey] || '#6b7280';
                 var sizeArr = Object.entries(g.sizes)
                     .map(function(e) { return { size: e[0], qty: e[1] }; })
                     .sort(function(a, b) { return b.qty - a.qty; });
@@ -8205,7 +8206,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // Header
                 sizeHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid ' + color + ';">';
                 sizeHtml += '<div style="display:flex;align-items:center;gap:8px;">';
-                sizeHtml += '<span style="font-weight:700;color:' + color + ';font-size:1rem;">' + g.gender + '</span>';
+                sizeHtml += '<span style="font-weight:700;color:' + color + ';font-size:1rem;">' + genderKey + '</span>';
                 sizeHtml += '</div>';
                 sizeHtml += '<div style="text-align:right;">';
                 sizeHtml += '<div style="font-weight:700;color:#374151;">' + g.total.toLocaleString('id-ID') + ' pcs</div>';
