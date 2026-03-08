@@ -7816,8 +7816,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 grp.revenue += r.total || 0;
                 totalPairs += r.qty || 0;
                 totalRevenue += r.total || 0;
-                const parts = (r.product_name || '').split(', ');
-                if (parts.length >= 2) grp.sizes.add(parts[1].trim());
+                if (r.ukuran) grp.sizes.add(r.ukuran);
             });
 
             const sorted = Object.values(articleGroups).sort((a,b) => b.revenue - a.revenue);
@@ -7920,7 +7919,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         pairs: 0, revenue: 0,
                         sizes: {},
                         marketplaces: {},
-                        areas: {},
                         kodes: new Set()
                     };
                 }
@@ -7932,8 +7930,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 totalRevenue += r.total || 0;
 
                 // Size
-                const parts = (r.product_name || '').split(', ');
-                const size = parts.length >= 2 ? parts[1].trim() : 'Unknown';
+                const size = r.ukuran || 'Unknown';
                 totalSizesSet.add(article + '|' + size);
                 if (!grp.sizes[size]) grp.sizes[size] = { pairs: 0, revenue: 0 };
                 grp.sizes[size].pairs += r.qty || 0;
@@ -7944,12 +7941,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!grp.marketplaces[mp]) grp.marketplaces[mp] = { pairs: 0, revenue: 0 };
                 grp.marketplaces[mp].pairs += r.qty || 0;
                 grp.marketplaces[mp].revenue += r.total || 0;
-
-                // Area
-                const area = r.area || 'Unknown';
-                if (!grp.areas[area]) grp.areas[area] = { pairs: 0, revenue: 0 };
-                grp.areas[area].pairs += r.qty || 0;
-                grp.areas[area].revenue += r.total || 0;
             });
 
             const sortedArticles = Object.values(articleGroups).sort((a,b) => b.revenue - a.revenue);
@@ -7968,105 +7959,72 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             let html = '<div style="font-size:0.82rem;color:#6b7280;margin-bottom:12px;">Hasil pencarian: <strong style="color:#1f2937;">"' + query.replace(/["<>&]/g,'') + '"</strong> \u2014 ' + uniqueArticles + ' artikel, ' + totalSizesSet.size + ' size</div>';
 
-            // Per-ARTICLE detail cards
+            // Per-ARTICLE detail
             sortedArticles.forEach(function(data, idx) {
-                var tierBg = tierColors[data.tier] || '#6b7280';
                 var sizeEntries = Object.entries(data.sizes).sort((a,b) => b[1].revenue - a[1].revenue);
                 var mpEntries = Object.entries(data.marketplaces).sort((a,b) => b[1].revenue - a[1].revenue);
-                var areaEntries = Object.entries(data.areas).sort((a,b) => b[1].revenue - a[1].revenue);
                 var kodeList = Array.from(data.kodes).join(', ');
 
-                // Article header
+                // Article container
                 html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden;">';
-                html += '<div style="background:#1e293b;color:white;padding:12px 15px;">';
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
-                html += '<div>';
-                html += '<span style="font-weight:700;font-size:1rem;">' + data.article + '</span>';
-                html += '<span style="margin-left:10px;background:' + tierBg + ';color:white;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;">T' + data.tier + '</span>';
-                html += '</div>';
-                html += '<div style="display:flex;gap:20px;">';
-                html += '<span><strong>' + data.pairs.toLocaleString('id-ID') + '</strong> psg</span>';
-                html += '<span style="color:#86efac;"><strong>' + fmtK(data.revenue) + '</strong></span>';
-                html += '</div></div>';
-                html += '<div style="margin-top:5px;font-size:0.82rem;opacity:0.9;">Kode: <strong style="font-family:monospace;">' + kodeList + '</strong></div>';
-                html += '<div style="margin-top:3px;font-size:0.75rem;opacity:0.7;">' + data.gender + ' \u00b7 ' + data.collection + ' \u00b7 ' + data.tipe + ' \u00b7 ' + sizeEntries.length + ' size</div>';
-                html += '</div>';
 
-                // SIZE breakdown table
+                // Main SIZE table — KODE | NAMA BARANG | SIZE | PAIRS | REVENUE | %
                 if (sizeEntries.length > 0) {
-                    html += '<div style="padding:0;">';
-                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\udccf Breakdown per Size</div>';
                     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-                    html += '<thead><tr style="background:#334155;color:white;">';
-                    html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">SIZE</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:100px;">PAIRS</th>';
-                    html += '<th style="padding:7px 12px;text-align:right;font-weight:600;width:130px;">REVENUE</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:70px;">%</th>';
+                    html += '<thead><tr style="background:#002A3A;color:white;">';
+                    html += '<th style="padding:8px 10px;text-align:left;font-weight:600;">KODE</th>';
+                    html += '<th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>';
+                    html += '<th style="padding:8px 10px;text-align:center;font-weight:600;">SIZE</th>';
+                    html += '<th style="padding:8px 10px;text-align:center;font-weight:600;width:80px;">PAIRS</th>';
+                    html += '<th style="padding:8px 10px;text-align:right;font-weight:600;width:120px;">REVENUE</th>';
+                    html += '<th style="padding:8px 10px;text-align:center;font-weight:600;width:60px;">%</th>';
                     html += '</tr></thead><tbody>';
                     sizeEntries.forEach(function(entry, si) {
                         var sz = entry[0], sd = entry[1];
                         var pct = data.revenue > 0 ? (sd.revenue / data.revenue * 100).toFixed(1) : '0.0';
                         html += '<tr style="background:' + (si%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
-                        html += '<td style="padding:6px 12px;font-weight:600;color:#1e293b;">' + sz + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;">' + sd.pairs.toLocaleString('id-ID') + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(sd.revenue) + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;color:#6b7280;">' + pct + '%</td>';
+                        html += '<td style="padding:6px 10px;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.78rem;">' + kodeList + '</td>';
+                        html += '<td style="padding:6px 10px;color:#111827;">' + data.article + '</td>';
+                        html += '<td style="padding:6px 10px;text-align:center;font-weight:600;color:#1e293b;">' + sz + '</td>';
+                        html += '<td style="padding:6px 10px;text-align:center;">' + sd.pairs.toLocaleString('id-ID') + '</td>';
+                        html += '<td style="padding:6px 10px;text-align:right;font-weight:600;color:#047857;">' + fmtK(sd.revenue) + '</td>';
+                        html += '<td style="padding:6px 10px;text-align:center;color:#6b7280;">' + pct + '%</td>';
                         html += '</tr>';
                     });
+                    // Total row
+                    html += '<tr style="background:#f0fdf4;border-top:2px solid #002A3A;font-weight:700;">';
+                    html += '<td colspan="3" style="padding:7px 10px;color:#002A3A;">TOTAL</td>';
+                    html += '<td style="padding:7px 10px;text-align:center;color:#002A3A;">' + data.pairs.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="padding:7px 10px;text-align:right;color:#047857;">' + fmtK(data.revenue) + '</td>';
+                    html += '<td style="padding:7px 10px;text-align:center;color:#002A3A;">100%</td>';
+                    html += '</tr>';
                     html += '</tbody></table>';
-                    html += '</div>';
                 }
 
-                // MARKETPLACE breakdown table
+                // Marketplace breakdown (compact)
                 if (mpEntries.length > 0) {
-                    html += '<div style="padding:0;">';
-                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\uded2 Breakdown per Marketplace</div>';
-                    html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.78rem;color:#374151;background:#f1f5f9;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">🛒 Marketplace</div>';
+                    html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
                     html += '<thead><tr style="background:#475569;color:white;">';
-                    html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">MARKETPLACE</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:100px;">PAIRS</th>';
-                    html += '<th style="padding:7px 12px;text-align:right;font-weight:600;width:130px;">REVENUE</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:70px;">%</th>';
+                    html += '<th style="padding:6px 10px;text-align:left;font-weight:600;">MARKETPLACE</th>';
+                    html += '<th style="padding:6px 10px;text-align:center;font-weight:600;width:80px;">PAIRS</th>';
+                    html += '<th style="padding:6px 10px;text-align:right;font-weight:600;width:120px;">REVENUE</th>';
+                    html += '<th style="padding:6px 10px;text-align:center;font-weight:600;width:60px;">%</th>';
                     html += '</tr></thead><tbody>';
                     mpEntries.forEach(function(entry, mi) {
                         var mp = entry[0], md = entry[1];
                         var pct = data.revenue > 0 ? (md.revenue / data.revenue * 100).toFixed(1) : '0.0';
                         var mpColor = mpColors[mp] || '#6b7280';
                         html += '<tr style="background:' + (mi%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
-                        html += '<td style="padding:6px 12px;font-weight:600;color:' + mpColor + ';">' + mp + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;">' + md.pairs.toLocaleString('id-ID') + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(md.revenue) + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;color:#6b7280;">' + pct + '%</td>';
+                        html += '<td style="padding:5px 10px;font-weight:600;color:' + mpColor + ';">' + mp + '</td>';
+                        html += '<td style="padding:5px 10px;text-align:center;">' + md.pairs.toLocaleString('id-ID') + '</td>';
+                        html += '<td style="padding:5px 10px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(md.revenue) + '</td>';
+                        html += '<td style="padding:5px 10px;text-align:center;color:#6b7280;">' + pct + '%</td>';
                         html += '</tr>';
                     });
                     html += '</tbody></table>';
-                    html += '</div>';
                 }
 
-                // AREA breakdown table
-                if (areaEntries.length > 0) {
-                    html += '<div style="padding:0;">';
-                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\udccd Penjualan per Area</div>';
-                    html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
-                    html += '<thead><tr style="background:#065f46;color:white;">';
-                    html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">AREA</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:100px;">PAIRS</th>';
-                    html += '<th style="padding:7px 12px;text-align:right;font-weight:600;width:130px;">REVENUE</th>';
-                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:70px;">%</th>';
-                    html += '</tr></thead><tbody>';
-                    areaEntries.forEach(function(entry, ai) {
-                        var area = entry[0], ad = entry[1];
-                        var pct = data.revenue > 0 ? (ad.revenue / data.revenue * 100).toFixed(1) : '0.0';
-                        html += '<tr style="background:' + (ai%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
-                        html += '<td style="padding:6px 12px;font-weight:600;color:#065f46;">' + area + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;">' + ad.pairs.toLocaleString('id-ID') + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(ad.revenue) + '</td>';
-                        html += '<td style="padding:6px 12px;text-align:center;color:#6b7280;">' + pct + '%</td>';
-                        html += '</tr>';
-                    });
-                    html += '</tbody></table>';
-                    html += '</div>';
-                }
                 html += '</div>';
             });
 
