@@ -9322,21 +9322,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
 
-                // SKU Header Card - with kode barang, nama barang, area
+                // SKU Header Card - single line: SKU NAME 📏 Size: XX
                 html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:15px;overflow:hidden;">' +
                     '<div style="background:#1e293b;color:white;padding:12px 15px;">' +
-                    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-                    '<div>' +
-                    '<span style="font-family:monospace;font-weight:700;font-size:1rem;">' + sku + '</span>' +
-                    '<span style="margin-left:12px;font-size:0.85rem;opacity:0.85;">(' + kodeBarang + ')</span>' +
+                    '<div style="font-family:monospace;font-weight:700;font-size:0.95rem;line-height:1.4;">' +
+                    sku.toUpperCase() + ' ' + name + ' \u{1F4CF} Size: ' + sizeDisplay +
                     '</div>' +
-                    '<div style="display:flex;gap:20px;">' +
+                    '<div style="display:flex;gap:20px;margin-top:6px;font-size:0.9rem;">' +
                     '<span><strong>' + formatNum(data.qty) + '</strong> pcs</span>' +
                     '<span style="color:#86efac;"><strong>' + formatRp(data.total) + '</strong></span>' +
-                    '</div></div>' +
-                    '<div style="display:flex;gap:12px;margin-top:6px;font-size:0.82rem;flex-wrap:wrap;">' +
-                    '<span style="opacity:0.9;">📦 <strong>' + sku.toLowerCase() + ' ' + name + '</strong></span>' +
-                    '<span style="opacity:0.7;">📏 Size: ' + sizeDisplay + '</span>' +
                     '</div>' +
                     '</div>';
 
