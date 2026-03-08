@@ -7889,9 +7889,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:center;width:40px;">NO</th>
                     <th style="padding:8px;text-align:${isTier?'center':'left'};">${colLabel.toUpperCase()}</th>
-                    <th style="padding:8px;text-align:center;">PAIRS</th>
+                    <th style="padding:8px;text-align:center;width:80px;">PAIRS</th>
                     <th style="padding:8px;text-align:center;width:55px;">%</th>
-                    <th style="padding:8px;text-align:right;">REVENUE</th>
+                    <th style="padding:8px;text-align:right;width:120px;">REVENUE</th>
                 </tr></thead><tbody>` +
                 items.map((item, idx) => {
                     const pct = totalRev > 0 ? ((item.revenue / totalRev) * 100).toFixed(1) : '0.0';
@@ -7899,16 +7899,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     return `<tr style="background:${idx%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #e2e8f0;">
                         <td style="padding:7px 8px;text-align:center;color:#64748b;font-weight:600;">${idx+1}</td>
                         <td style="padding:7px 8px;text-align:${isTier?'center':'left'};white-space:nowrap;">${tierBadge}</td>
-                        <td style="padding:7px 8px;text-align:center;font-weight:600;color:#002A3A;">${(item.pairs||0).toLocaleString('id-ID')}</td>
-                        <td style="padding:7px 8px;text-align:center;font-weight:600;color:#002A3A;">${pct}%</td>
-                        <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;">${fmtK(item.revenue)}</td>
+                        <td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;width:80px;">${(item.pairs||0).toLocaleString('id-ID')}</td>
+                        <td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;width:55px;">${pct}%</td>
+                        <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(item.revenue)}</td>
                     </tr>`;
                 }).join('') +
                 `<tr style="background:#f0f9ff;font-weight:700;border-top:2px solid #002A3A;">
                     <td colspan="2" style="padding:8px;">Total</td>
-                    <td style="padding:8px;text-align:center;color:#002A3A;">${totalPairs.toLocaleString('id-ID')}</td>
-                    <td style="padding:8px;text-align:center;color:#002A3A;">100%</td>
-                    <td style="padding:8px;text-align:right;color:#002A3A;white-space:nowrap;">${fmtK(totalRev)}</td>
+                    <td style="padding:8px;text-align:center;color:#002A3A;width:80px;">${totalPairs.toLocaleString('id-ID')}</td>
+                    <td style="padding:8px;text-align:center;color:#002A3A;width:55px;">100%</td>
+                    <td style="padding:8px;text-align:right;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(totalRev)}</td>
                 </tr></tbody></table></div>`;
         }
 
@@ -7935,9 +7935,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     <th style="padding:8px;text-align:center;width:40px;">NO</th>
                     <th style="padding:8px;text-align:left;">Produk</th>
                     <th style="padding:8px;text-align:left;width:45px;">Size</th>
-                    <th style="padding:8px;text-align:center;width:50px;">Tier</th>
-                    <th style="padding:8px;text-align:center;">PAIRS</th>
-                    <th style="padding:8px;text-align:right;">REVENUE</th>
+                    <th style="padding:8px;text-align:center;width:60px;">Tier</th>
+                    <th style="padding:8px;text-align:center;width:80px;">PAIRS</th>
+                    <th style="padding:8px;text-align:right;width:120px;">REVENUE</th>
                 </tr></thead><tbody>` +
                 products.map((p, i) => {
                     return `<tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #e2e8f0;">
@@ -7947,9 +7947,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             <div style="font-size:0.72rem;color:#4b5563;">${p.series} · ${p.gender}</div>
                         </td>
                         <td style="padding:7px 8px;font-size:0.82rem;color:#1f2937;font-weight:500;">${p.size}</td>
-                        <td style="padding:7px 8px;text-align:center;"><span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">T${p.tier}</span></td>
-                        <td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;">${(p.pairs||0).toLocaleString('id-ID')}</td>
-                        <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;">${fmtK(p.revenue)}</td>
+                        <td style="padding:7px 8px;text-align:center;width:60px;"><span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">T${p.tier}</span></td>
+                        <td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;width:80px;">${(p.pairs||0).toLocaleString('id-ID')}</td>
+                        <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;width:120px;">${fmtK(p.revenue)}</td>
                     </tr>`;
                 }).join('') + '</tbody></table>';
         }
@@ -8820,19 +8820,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const matches = [];
             Object.keys(cache).forEach(sku => {
                 const article = sku.replace(/Z\d{2,3}$/, '');
-                // Get name from articleNameMap or directly from salesDetailData
+                // Get name, area, kode_kecil from salesDetailData
                 let name = articleNameMap[article] || '';
-                if (!name) {
-                    const saleItem = salesDetailData.find(d => d.sku === sku);
-                    if (saleItem && saleItem.product_name) name = saleItem.product_name;
+                let area = '';
+                let kodeBarang = article;
+                const saleItem = salesDetailData.find(d => d.sku === sku);
+                if (saleItem) {
+                    if (!name && saleItem.product_name) name = saleItem.product_name;
+                    if (saleItem.area) area = saleItem.area;
+                    if (saleItem.kode_kecil) kodeBarang = saleItem.kode_kecil;
                 }
                 if (sku.toUpperCase().includes(searchTerm) ||
                     name.toUpperCase().includes(searchTerm) ||
+                    kodeBarang.toUpperCase().includes(searchTerm) ||
                     article.toUpperCase().includes(searchTerm)) {
                     matches.push({
                         sku: sku,
                         name: name,
                         article: article,
+                        area: area,
+                        kodeBarang: kodeBarang,
                         qty: cache[sku].qty,
                         total: cache[sku].total,
                         count: cache[sku].count
@@ -8864,23 +8871,29 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return;
             }
 
-            // Full width table - no TRX column
-            let html = '<table style="width:100%;border-collapse:collapse;">' +
-                '<thead><tr style="background:#1e293b;color:white;position:sticky;top:0;">' +
-                '<th style="padding:12px 15px;text-align:left;font-weight:600;">SKU</th>' +
-                '<th style="padding:12px 15px;text-align:left;font-weight:600;">NAMA ARTIKEL</th>' +
-                '<th style="padding:12px 15px;text-align:right;font-weight:600;">QTY</th>' +
-                '<th style="padding:12px 15px;text-align:right;font-weight:600;">TOTAL SALES</th>' +
+            // Full width table with area, kode barang, nama
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
+                '<thead><tr style="background:#002A3A;color:white;position:sticky;top:0;">' +
+                '<th style="padding:8px 10px;text-align:center;width:40px;font-weight:600;">NO</th>' +
+                '<th style="padding:8px 10px;text-align:left;font-weight:600;">KODE BARANG</th>' +
+                '<th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>' +
+                '<th style="padding:8px 10px;text-align:center;font-weight:600;">AREA</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:80px;font-weight:600;">QTY</th>' +
+                '<th style="padding:8px 10px;text-align:right;width:120px;font-weight:600;">TOTAL SALES</th>' +
                 '</tr></thead><tbody>';
 
             topMatches.forEach((m, idx) => {
                 const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 const articleName = m.name || articleNameMap[m.article] || '-';
+                const areaDisplay = m.area || '-';
+                const kodeDisplay = m.kodeBarang || m.article || '-';
                 html += '<tr onclick="selectSKUFromList(\'' + m.sku + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;">' + m.sku + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#111827;">' + formatNum(m.qty) + '</td>' +
-                    '<td style="padding:12px 15px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;">' + formatRp(m.total) + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.78rem;">' + kodeDisplay + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + articleName + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#6b7280;font-size:0.78rem;">' + areaDisplay + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1f2937;width:80px;">' + formatNum(m.qty) + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;width:120px;">' + formatRp(m.total) + '</td>' +
                     '</tr>';
             });
 
@@ -8955,44 +8968,61 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             sortedSKUs.forEach(([sku, data], idx) => {
                 const article = sku.replace(/Z\d{2,3}$/, '');
-                // Get name from transactions' product_name or articleNameMap
+                // Get name, area, kode_kecil from transactions
                 const firstTx = data.transactions.find(t => t.product_name);
                 const name = (firstTx && firstTx.product_name) || articleNameMap[article] || '-';
+                const kodeBarang = (data.transactions[0] && data.transactions[0].kode_kecil) || article;
+
+                // Collect unique areas from transactions
+                const areas = [...new Set(data.transactions.map(t => t.area).filter(Boolean))];
+                const areaDisplay = areas.length > 0 ? areas.join(', ') : '-';
 
                 // Group by store and sort by qty descending
                 const storeData = {};
                 data.transactions.forEach(t => {
-                    if (!storeData[t.store]) storeData[t.store] = { qty: 0, total: 0 };
-                    storeData[t.store].qty += t.qty || 0;
-                    storeData[t.store].total += t.total || 0;
+                    const storeKey = t.store || 'Unknown';
+                    if (!storeData[storeKey]) storeData[storeKey] = { qty: 0, total: 0, area: t.area || '-' };
+                    storeData[storeKey].qty += t.qty || 0;
+                    storeData[storeKey].total += t.total || 0;
+                    if (t.area) storeData[storeKey].area = t.area;
                 });
                 const sortedStores = Object.entries(storeData).sort((a, b) => b[1].qty - a[1].qty);
 
-                // SKU Header Card
+                // SKU Header Card - with kode barang, nama barang, area
                 html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:15px;overflow:hidden;">' +
-                    '<div style="background:#1e293b;color:white;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
-                    '<div><span style="font-family:monospace;font-weight:600;font-size:1rem;">' + sku + '</span>' +
-                    '<span style="margin-left:15px;font-size:0.9rem;opacity:0.9;">' + name + '</span></div>' +
+                    '<div style="background:#1e293b;color:white;padding:12px 15px;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+                    '<div>' +
+                    '<span style="font-family:monospace;font-weight:700;font-size:1rem;">' + sku + '</span>' +
+                    '<span style="margin-left:12px;font-size:0.85rem;opacity:0.85;">(' + kodeBarang + ')</span>' +
+                    '</div>' +
                     '<div style="display:flex;gap:20px;">' +
                     '<span><strong>' + formatNum(data.qty) + '</strong> pcs</span>' +
                     '<span style="color:#86efac;"><strong>' + formatRp(data.total) + '</strong></span>' +
-                    '</div></div>';
+                    '</div></div>' +
+                    '<div style="display:flex;gap:12px;margin-top:6px;font-size:0.82rem;flex-wrap:wrap;">' +
+                    '<span style="opacity:0.9;">📦 <strong>' + name + '</strong></span>' +
+                    '<span style="opacity:0.7;">📍 ' + areaDisplay + '</span>' +
+                    '</div>' +
+                    '</div>';
 
-                // Store table with scrollable container for sticky header
+                // Store table with area column
                 html += '<div style="max-height:300px;overflow-y:auto;">' +
-                    '<table style="width:100%;border-collapse:collapse;">' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
                     '<thead><tr style="background:#334155;color:white;position:sticky;top:0;z-index:1;">' +
-                    '<th style="padding:10px 15px;text-align:left;font-weight:600;background:#334155;">TOKO</th>' +
-                    '<th style="padding:10px 15px;text-align:right;font-weight:600;background:#334155;">QTY</th>' +
-                    '<th style="padding:10px 15px;text-align:right;font-weight:600;background:#334155;">SALES</th>' +
+                    '<th style="padding:8px 12px;text-align:left;font-weight:600;background:#334155;">TOKO</th>' +
+                    '<th style="padding:8px 12px;text-align:center;font-weight:600;background:#334155;">AREA</th>' +
+                    '<th style="padding:8px 12px;text-align:center;font-weight:600;background:#334155;width:80px;">QTY</th>' +
+                    '<th style="padding:8px 12px;text-align:right;font-weight:600;background:#334155;width:120px;">SALES</th>' +
                     '</tr></thead><tbody>';
 
                 sortedStores.forEach(([store, sd], storeIdx) => {
                     const storeBg = storeIdx % 2 === 0 ? '#ffffff' : '#f8fafc';
                     html += '<tr style="background:' + storeBg + ';">' +
-                        '<td style="padding:10px 15px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
-                        '<td style="padding:10px 15px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600;color:#111827;">' + formatNum(sd.qty) + '</td>' +
-                        '<td style="padding:10px 15px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;">' + formatRp(sd.total) + '</td>' +
+                        '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#111827;">' + store + '</td>' +
+                        '<td style="padding:8px 12px;text-align:center;border-bottom:1px solid #e2e8f0;color:#6b7280;font-size:0.78rem;">' + (sd.area || '-') + '</td>' +
+                        '<td style="padding:8px 12px;text-align:center;border-bottom:1px solid #e2e8f0;font-weight:600;color:#1f2937;width:80px;">' + formatNum(sd.qty) + '</td>' +
+                        '<td style="padding:8px 12px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:600;color:#047857;width:120px;">' + formatRp(sd.total) + '</td>' +
                         '</tr>';
                 });
 
