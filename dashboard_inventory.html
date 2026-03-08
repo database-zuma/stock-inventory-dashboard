@@ -1370,6 +1370,15 @@
                             </div>
                         </div>
 
+                        <!-- Online Sub-Tabs: Dashboard vs Cari SKU -->
+                        <div style="display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:18px;background:#f8fafc;">
+                            <button id="onlineSubTabDashboard" onclick="switchOnlineView('dashboard')" style="padding:10px 22px;font-size:0.9rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:#3b82f6;border-bottom:2px solid #3b82f6;margin-bottom:-2px;">📊 Dashboard</button>
+                            <button id="onlineSubTabSkuSearch" onclick="switchOnlineView('skusearch')" style="padding:10px 22px;font-size:0.9rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;">🔍 Cari SKU</button>
+                        </div>
+
+                        <!-- === ONLINE DASHBOARD VIEW === -->
+                        <div id="onlineViewDashboard">
+
                         <!-- Filters (Retail-sized) -->
                         <div id="onlineFilterSection" style="background:#f8fafc;padding:15px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:18px;">
                             <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
@@ -1405,16 +1414,6 @@
                                 </div>
                                 <button onclick="resetOnlineFilters()" style="padding:8px 14px;background:#f3f4f6;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:0.85rem;">↻ Reset</button>
                             </div>
-                        </div>
-                        <!-- 🔍 Cari SKU Online (Dedicated Section) -->
-                        <div style="background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:18px;">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU</h4>
-                            <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
-                                <input type="text" id="onlineSkuSearch" placeholder="Ketik kode SKU atau nama artikel..." style="flex:1;min-width:250px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="if(event.key==='Enter') searchOnlineSku()" autocomplete="off">
-                                <button onclick="searchOnlineSku()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">🔍 Cari</button>
-                                <button onclick="resetOnlineSkuSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">Reset</button>
-                            </div>
-                            <div id="onlineSkuResults"></div>
                         </div>
 
                         <!-- Summary Cards -->
@@ -1477,6 +1476,21 @@
                             <div></div>
                         </div>
 
+                        </div><!-- /onlineViewDashboard -->
+
+                        <!-- === ONLINE SKU SEARCH VIEW (blank initially, like Retail) === -->
+                        <div id="onlineViewSkuSearch" style="display:none;padding:10px 0;">
+                            <h4 style="margin:0 0 14px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU Online</h4>
+                            <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+                                <input type="text" id="onlineSkuSearch" placeholder="Ketik kode SKU atau nama artikel..." style="flex:1;min-width:280px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleOnlineSkuKeyup(event)" autocomplete="off">
+                                <button onclick="searchOnlineSku()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">🔍 Cari</button>
+                                <button onclick="resetOnlineSkuSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">Reset</button>
+                            </div>
+                            <div id="onlineSkuSummary" style="margin-bottom:12px;"></div>
+                            <div id="onlineSkuResults" style="max-height:650px;overflow-y:auto;">
+                                <p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>
+                            </div>
+                        </div>
 
 
                 </div>
@@ -7715,18 +7729,59 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             applyOnlineFilters();
         }
 
-        function resetOnlineSkuSearch() {
-            const inp = document.getElementById('onlineSkuSearch'); if (inp) inp.value = '';
-            const res = document.getElementById('onlineSkuResults'); if (res) res.innerHTML = '';
+        // === ONLINE SUB-TAB SWITCHING (Dashboard vs Cari SKU) ===
+        function switchOnlineView(view) {
+            const dash = document.getElementById('onlineViewDashboard');
+            const sku = document.getElementById('onlineViewSkuSearch');
+            const btnDash = document.getElementById('onlineSubTabDashboard');
+            const btnSku = document.getElementById('onlineSubTabSkuSearch');
+            if (view === 'skusearch') {
+                if (dash) dash.style.display = 'none';
+                if (sku) sku.style.display = 'block';
+                if (btnDash) { btnDash.style.color = '#6b7280'; btnDash.style.borderBottomColor = 'transparent'; }
+                if (btnSku) { btnSku.style.color = '#3b82f6'; btnSku.style.borderBottomColor = '#3b82f6'; }
+                const inp = document.getElementById('onlineSkuSearch'); if (inp) inp.focus();
+            } else {
+                if (dash) dash.style.display = 'block';
+                if (sku) sku.style.display = 'none';
+                if (btnDash) { btnDash.style.color = '#3b82f6'; btnDash.style.borderBottomColor = '#3b82f6'; }
+                if (btnSku) { btnSku.style.color = '#6b7280'; btnSku.style.borderBottomColor = 'transparent'; }
+            }
         }
 
-        function searchOnlineSku() {
+        function resetOnlineSkuSearch() {
+            const inp = document.getElementById('onlineSkuSearch'); if (inp) inp.value = '';
+            const summ = document.getElementById('onlineSkuSummary'); if (summ) summ.innerHTML = '';
+            const res = document.getElementById('onlineSkuResults');
+            if (res) res.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
+        }
+
+        // === LIVE SEARCH AS-YOU-TYPE (like Retail) ===
+        let onlineSkuSuggestionMode = false;
+
+        function handleOnlineSkuKeyup(event) {
+            if (event.key === 'Enter') {
+                searchOnlineSku();
+                return;
+            }
+            showOnlineLiveSuggestions();
+        }
+
+        function showOnlineLiveSuggestions() {
+            const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
+            const summEl = document.getElementById('onlineSkuSummary');
             const resultEl = document.getElementById('onlineSkuResults');
             if (!resultEl) return;
-            const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
-            if (!query || query.length < 2 || !onlineRawData) { resultEl.innerHTML = ''; return; }
 
-            // Search in ALL raw data (not filtered) by kode_kecil, sku (article name), and product_name
+            if (!query || query.length < 2 || !onlineRawData) {
+                if (summEl) summEl.innerHTML = '';
+                resultEl.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
+                return;
+            }
+
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+
+            // Search ALL raw data
             const matches = onlineRawData.filter(r => {
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
@@ -7735,18 +7790,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             if (!matches.length) {
-                resultEl.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;text-align:center;color:#b91c1c;font-size:0.9rem;">Tidak ditemukan artikel dengan pencarian "' + query.replace(/["<>&]/g,'') + '"</div>';
+                if (summEl) summEl.innerHTML = '';
+                resultEl.innerHTML = '<p style="text-align:center;color:#6b7280;padding:30px;">Tidak ada hasil untuk "' + query.replace(/["<>&]/g,'') + '"</p>';
                 return;
             }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            const tierColors = { '1': '#002A3A', '2': '#0ea5e9', '3': '#f59e0b', '4': '#ef4444', '5': '#8b5cf6', '8': '#6b7280' };
-            const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
-
-            // GROUP BY ARTICLE (sku field) — NOT by kode_kecil
-            // Each article card shows ALL sizes + marketplace breakdown
+            // Group by article (sku field) for live suggestions
             const articleGroups = {};
-            let totalPairs = 0, totalRevenue = 0, totalSizes = new Set();
+            let totalPairs = 0, totalRevenue = 0;
             matches.forEach(r => {
                 const article = r.sku || r.product_name || '-';
                 if (!articleGroups[article]) {
@@ -7754,12 +7805,122 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         article: article,
                         kode_kecil: r.kode_kecil || '-',
                         tier: r.tier || '-',
+                        pairs: 0, revenue: 0,
+                        sizes: new Set(),
+                        kodes: new Set()
+                    };
+                }
+                const grp = articleGroups[article];
+                grp.kodes.add((r.kode_kecil || '').toUpperCase());
+                grp.pairs += r.qty || 0;
+                grp.revenue += r.total || 0;
+                totalPairs += r.qty || 0;
+                totalRevenue += r.total || 0;
+                const parts = (r.product_name || '').split(', ');
+                if (parts.length >= 2) grp.sizes.add(parts[1].trim());
+            });
+
+            const sorted = Object.values(articleGroups).sort((a,b) => b.revenue - a.revenue);
+            const top20 = sorted.slice(0, 20);
+
+            // Summary
+            if (summEl) {
+                summEl.innerHTML = '<div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:6px;">' +
+                    '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;border-left:3px solid #22c55e;"><span style="font-size:0.75rem;color:#166534;">Ditemukan:</span> <strong style="color:#166534;">' + sorted.length + ' Artikel</strong></div>' +
+                    '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;border-left:3px solid #3b82f6;"><span style="font-size:0.75rem;color:#1e40af;">Total Pairs:</span> <strong style="color:#1e40af;">' + totalPairs.toLocaleString('id-ID') + '</strong></div>' +
+                    '<div style="background:#fef3c7;padding:8px 12px;border-radius:6px;border-left:3px solid #f59e0b;"><span style="font-size:0.75rem;color:#b45309;">Total Revenue:</span> <strong style="color:#b45309;">' + fmtK(totalRevenue) + '</strong></div>' +
+                    '</div>';
+            }
+
+            // Live suggestion table: KODE | NAMA BARANG | SIZE | PAIR | REVENUE | %
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
+                '<thead><tr style="background:#002A3A;color:white;position:sticky;top:0;">' +
+                '<th style="padding:8px 10px;text-align:center;width:40px;font-weight:600;">NO</th>' +
+                '<th style="padding:8px 10px;text-align:left;font-weight:600;">KODE</th>' +
+                '<th style="padding:8px 10px;text-align:left;font-weight:600;">NAMA BARANG</th>' +
+                '<th style="padding:8px 10px;text-align:center;font-weight:600;">SIZE</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:80px;font-weight:600;">PAIR</th>' +
+                '<th style="padding:8px 10px;text-align:right;width:120px;font-weight:600;">REVENUE</th>' +
+                '<th style="padding:8px 10px;text-align:center;width:60px;font-weight:600;">%</th>' +
+                '</tr></thead><tbody>';
+
+            top20.forEach(function(m, idx) {
+                var bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                var kodeList = Array.from(m.kodes).join(', ');
+                var sizeList = Array.from(m.sizes).sort().join(', ') || '-';
+                var sizeCount = m.sizes.size;
+                var pct = totalRevenue > 0 ? (m.revenue / totalRevenue * 100).toFixed(1) : '0.0';
+                html += '<tr onclick="selectOnlineSkuFromList(\'' + m.article.replace(/'/g,"\\'" ) + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:600;color:#1d4ed8;font-size:0.78rem;">' + kodeList + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#111827;">' + m.article + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#6b7280;font-size:0.78rem;">' + sizeCount + ' size</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">' + m.pairs.toLocaleString('id-ID') + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:#047857;">' + fmtK(m.revenue) + '</td>' +
+                    '<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#6b7280;">' + pct + '%</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+
+            if (sorted.length > 20) {
+                html += '<div style="padding:12px;text-align:center;color:#1d4ed8;font-size:0.9rem;font-weight:500;background:#eff6ff;border-top:2px solid #e2e8f0;">Menampilkan 20 dari ' + sorted.length + ' artikel. Tekan Enter atau klik Cari untuk hasil lengkap.</div>';
+            }
+
+            resultEl.innerHTML = html;
+            onlineSkuSuggestionMode = true;
+        }
+
+        function selectOnlineSkuFromList(article) {
+            document.getElementById('onlineSkuSearch').value = article;
+            searchOnlineSku();
+        }
+
+        // === FULL DETAIL SEARCH (Enter or click Cari) ===
+        function searchOnlineSku() {
+            const resultEl = document.getElementById('onlineSkuResults');
+            const summEl = document.getElementById('onlineSkuSummary');
+            if (!resultEl) return;
+            const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
+            if (!query || query.length < 2 || !onlineRawData) {
+                if (summEl) summEl.innerHTML = '<p style="color:#ef4444;">Masukkan minimal 2 karakter untuk dicari</p>';
+                resultEl.innerHTML = '';
+                return;
+            }
+
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const tierColors = { '1': '#002A3A', '2': '#0ea5e9', '3': '#f59e0b', '4': '#ef4444', '5': '#8b5cf6', '8': '#6b7280' };
+            const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
+
+            // Search ALL raw data
+            const matches = onlineRawData.filter(r => {
+                const kode = (r.kode_kecil || '').toLowerCase();
+                const artikel = (r.sku || '').toLowerCase();
+                const name = (r.product_name || r.name || '').toLowerCase();
+                return kode.includes(query) || artikel.includes(query) || name.includes(query);
+            });
+
+            if (!matches.length) {
+                if (summEl) summEl.innerHTML = '';
+                resultEl.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;text-align:center;color:#b91c1c;font-size:0.9rem;">Tidak ditemukan artikel dengan pencarian "' + query.replace(/["<>&]/g,'') + '"</div>';
+                return;
+            }
+
+            // GROUP BY ARTICLE (sku field)
+            const articleGroups = {};
+            let totalPairs = 0, totalRevenue = 0, totalSizesSet = new Set();
+            matches.forEach(r => {
+                const article = r.sku || r.product_name || '-';
+                if (!articleGroups[article]) {
+                    articleGroups[article] = {
+                        article: article,
+                        tier: r.tier || '-',
                         gender: r.gender || '-',
                         collection: r.collection || '-',
                         tipe: r.tipe || '-',
                         pairs: 0, revenue: 0,
                         sizes: {},
                         marketplaces: {},
+                        areas: {},
                         kodes: new Set()
                     };
                 }
@@ -7770,45 +7931,52 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 totalPairs += r.qty || 0;
                 totalRevenue += r.total || 0;
 
-                // Extract size from product_name: "BABY VELCRO BRICKS 3, 23/24, GREY" → size = "23/24"
+                // Size
                 const parts = (r.product_name || '').split(', ');
                 const size = parts.length >= 2 ? parts[1].trim() : 'Unknown';
-                totalSizes.add(article + '|' + size);
+                totalSizesSet.add(article + '|' + size);
                 if (!grp.sizes[size]) grp.sizes[size] = { pairs: 0, revenue: 0 };
                 grp.sizes[size].pairs += r.qty || 0;
                 grp.sizes[size].revenue += r.total || 0;
 
-                // Per-marketplace breakdown
+                // Marketplace
                 const mp = r.marketplace || 'Unknown';
                 if (!grp.marketplaces[mp]) grp.marketplaces[mp] = { pairs: 0, revenue: 0 };
                 grp.marketplaces[mp].pairs += r.qty || 0;
                 grp.marketplaces[mp].revenue += r.total || 0;
+
+                // Area
+                const area = r.area || 'Unknown';
+                if (!grp.areas[area]) grp.areas[area] = { pairs: 0, revenue: 0 };
+                grp.areas[area].pairs += r.qty || 0;
+                grp.areas[area].revenue += r.total || 0;
             });
 
             const sortedArticles = Object.values(articleGroups).sort((a,b) => b.revenue - a.revenue);
             const uniqueArticles = sortedArticles.length;
 
-            let html = '';
+            // Summary
+            if (summEl) {
+                summEl.innerHTML = '<div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;">' +
+                    '<div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:8px;padding:10px 15px;border-left:4px solid #22c55e;"><div style="font-size:0.72rem;color:#6b7280;">Total Pairs</div><div style="font-size:1.15rem;font-weight:700;color:#166534;">' + totalPairs.toLocaleString('id-ID') + '</div></div>' +
+                    '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:8px;padding:10px 15px;border-left:4px solid #3b82f6;"><div style="font-size:0.72rem;color:#6b7280;">Total Revenue</div><div style="font-size:1.15rem;font-weight:700;color:#1e40af;">' + fmtK(totalRevenue) + '</div></div>' +
+                    '<div style="background:linear-gradient(135deg,#fefce8,#fef9c3);border-radius:8px;padding:10px 15px;border-left:4px solid #eab308;"><div style="font-size:0.72rem;color:#6b7280;">Artikel</div><div style="font-size:1.15rem;font-weight:700;color:#a16207;">' + uniqueArticles + '</div></div>' +
+                    '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:8px;padding:10px 15px;border-left:4px solid #8b5cf6;"><div style="font-size:0.72rem;color:#6b7280;">Total Size</div><div style="font-size:1.15rem;font-weight:700;color:#6d28d9;">' + totalSizesSet.size + '</div></div>' +
+                    '<div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border-radius:8px;padding:10px 15px;border-left:4px solid #ec4899;"><div style="font-size:0.72rem;color:#6b7280;">Transaksi</div><div style="font-size:1.15rem;font-weight:700;color:#be185d;">' + matches.length + '</div></div>' +
+                    '</div>';
+            }
 
-            // Summary cards
-            html += '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">';
-            html += '<div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:8px;padding:10px 15px;border-left:4px solid #22c55e;"><div style="font-size:0.72rem;color:#6b7280;">Total Pairs</div><div style="font-size:1.2rem;font-weight:700;color:#166534;">' + totalPairs.toLocaleString('id-ID') + '</div></div>';
-            html += '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:8px;padding:10px 15px;border-left:4px solid #3b82f6;"><div style="font-size:0.72rem;color:#6b7280;">Total Revenue</div><div style="font-size:1.2rem;font-weight:700;color:#1e40af;">' + fmtK(totalRevenue) + '</div></div>';
-            html += '<div style="background:linear-gradient(135deg,#fefce8,#fef9c3);border-radius:8px;padding:10px 15px;border-left:4px solid #eab308;"><div style="font-size:0.72rem;color:#6b7280;">Artikel</div><div style="font-size:1.2rem;font-weight:700;color:#a16207;">' + uniqueArticles + '</div></div>';
-            html += '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:8px;padding:10px 15px;border-left:4px solid #8b5cf6;"><div style="font-size:0.72rem;color:#6b7280;">Total Size</div><div style="font-size:1.2rem;font-weight:700;color:#6d28d9;">' + totalSizes.size + '</div></div>';
-            html += '<div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border-radius:8px;padding:10px 15px;border-left:4px solid #ec4899;"><div style="font-size:0.72rem;color:#6b7280;">Transaksi</div><div style="font-size:1.2rem;font-weight:700;color:#be185d;">' + matches.length + '</div></div>';
-            html += '</div>';
-
-            html += '<div style="font-size:0.82rem;color:#6b7280;margin-bottom:12px;">Hasil pencarian: <strong style="color:#1f2937;">"' + query.replace(/["<>&]/g,'') + '"</strong> — ' + uniqueArticles + ' artikel, ' + totalSizes.size + ' size</div>';
+            let html = '<div style="font-size:0.82rem;color:#6b7280;margin-bottom:12px;">Hasil pencarian: <strong style="color:#1f2937;">"' + query.replace(/["<>&]/g,'') + '"</strong> \u2014 ' + uniqueArticles + ' artikel, ' + totalSizesSet.size + ' size</div>';
 
             // Per-ARTICLE detail cards
             sortedArticles.forEach(function(data, idx) {
                 var tierBg = tierColors[data.tier] || '#6b7280';
                 var sizeEntries = Object.entries(data.sizes).sort((a,b) => b[1].revenue - a[1].revenue);
                 var mpEntries = Object.entries(data.marketplaces).sort((a,b) => b[1].revenue - a[1].revenue);
+                var areaEntries = Object.entries(data.areas).sort((a,b) => b[1].revenue - a[1].revenue);
                 var kodeList = Array.from(data.kodes).join(', ');
 
-                // Article header card
+                // Article header
                 html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden;">';
                 html += '<div style="background:#1e293b;color:white;padding:12px 15px;">';
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
@@ -7821,13 +7989,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 html += '<span style="color:#86efac;"><strong>' + fmtK(data.revenue) + '</strong></span>';
                 html += '</div></div>';
                 html += '<div style="margin-top:5px;font-size:0.82rem;opacity:0.9;">Kode: <strong style="font-family:monospace;">' + kodeList + '</strong></div>';
-                html += '<div style="margin-top:3px;font-size:0.75rem;opacity:0.7;">' + data.gender + ' · ' + data.collection + ' · ' + data.tipe + ' · ' + sizeEntries.length + ' size</div>';
+                html += '<div style="margin-top:3px;font-size:0.75rem;opacity:0.7;">' + data.gender + ' \u00b7 ' + data.collection + ' \u00b7 ' + data.tipe + ' \u00b7 ' + sizeEntries.length + ' size</div>';
                 html += '</div>';
 
                 // SIZE breakdown table
                 if (sizeEntries.length > 0) {
                     html += '<div style="padding:0;">';
-                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">📏 Breakdown per Size</div>';
+                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\udccf Breakdown per Size</div>';
                     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
                     html += '<thead><tr style="background:#334155;color:white;">';
                     html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">SIZE</th>';
@@ -7852,7 +8020,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // MARKETPLACE breakdown table
                 if (mpEntries.length > 0) {
                     html += '<div style="padding:0;">';
-                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">🛒 Breakdown per Marketplace</div>';
+                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\uded2 Breakdown per Marketplace</div>';
                     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
                     html += '<thead><tr style="background:#475569;color:white;">';
                     html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">MARKETPLACE</th>';
@@ -7874,10 +8042,36 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     html += '</tbody></table>';
                     html += '</div>';
                 }
+
+                // AREA breakdown table
+                if (areaEntries.length > 0) {
+                    html += '<div style="padding:0;">';
+                    html += '<div style="padding:8px 12px;font-weight:600;font-size:0.8rem;color:#374151;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">\ud83d\udccd Penjualan per Area</div>';
+                    html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    html += '<thead><tr style="background:#065f46;color:white;">';
+                    html += '<th style="padding:7px 12px;text-align:left;font-weight:600;">AREA</th>';
+                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:100px;">PAIRS</th>';
+                    html += '<th style="padding:7px 12px;text-align:right;font-weight:600;width:130px;">REVENUE</th>';
+                    html += '<th style="padding:7px 12px;text-align:center;font-weight:600;width:70px;">%</th>';
+                    html += '</tr></thead><tbody>';
+                    areaEntries.forEach(function(entry, ai) {
+                        var area = entry[0], ad = entry[1];
+                        var pct = data.revenue > 0 ? (ad.revenue / data.revenue * 100).toFixed(1) : '0.0';
+                        html += '<tr style="background:' + (ai%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">';
+                        html += '<td style="padding:6px 12px;font-weight:600;color:#065f46;">' + area + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:center;">' + ad.pairs.toLocaleString('id-ID') + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(ad.revenue) + '</td>';
+                        html += '<td style="padding:6px 12px;text-align:center;color:#6b7280;">' + pct + '%</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    html += '</div>';
+                }
                 html += '</div>';
             });
 
             resultEl.innerHTML = html;
+            onlineSkuSuggestionMode = false;
         }
 
         function renderOnlineView(rows) {
