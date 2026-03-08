@@ -5472,7 +5472,7 @@
             // Update period display
             const startDate = document.getElementById('salesFilterStartDate').value;
             const endDate = document.getElementById('salesFilterEndDate').value;
-            document.getElementById('salesPeriodRange').textContent = (startDate || '-') + ' s/d ' + (endDate || '-');
+            const periodEl = document.getElementById('salesPeriodRange'); if (periodEl) periodEl.textContent = (startDate || '-') + ' s/d ' + (endDate || '-');
 
             try { renderSalesSummaryCards(); } catch(e) { console.error('renderSalesSummaryCards error:', e); }
             try { renderSalesPerformance(); } catch(e) { console.error('renderSalesPerformance error:', e); }
