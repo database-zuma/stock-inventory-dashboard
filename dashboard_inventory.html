@@ -2365,25 +2365,31 @@
             currentArea = '';
             currentStore = '';
 
-            // Show/hide tables and stats based on entity
-            // DDD has both retail and warehouse, others only warehouse
-            const hasRetail = (entity === 'DDD');
-            document.getElementById('retailSectionWrapper').style.display = hasRetail ? 'block' : 'none';
-
-            // Consignment only exists for DDD and MBB
+            // LJBB and UBB only have warehouse stock
+            var hasRetail = (entity === 'DDD' || entity === 'MBB');
             var hasConsignment = (entity === 'DDD' || entity === 'MBB');
+
+            // Show/hide Retail and Consignment buttons
+            var retailBtn = document.querySelector('.stock-type-btn[data-stype="retail"]');
             var consigBtn = document.querySelector('.stock-type-btn[data-stype="consignment"]');
+            if (retailBtn) retailBtn.style.display = hasRetail ? '' : 'none';
             if (consigBtn) consigBtn.style.display = hasConsignment ? '' : 'none';
+
+            // Hide retail section for non-retail entities
+            document.getElementById('retailSectionWrapper').style.display = (entity === 'DDD') ? 'block' : 'none';
 
             // Clear consignment cache so it reloads for the new entity
             consignmentStockData = null;
 
-            // If currently viewing consignment but entity has no consignment, switch to warehouse
+            // If currently viewing retail/consignment but entity doesn't support it, switch to warehouse
             var consigSection = document.getElementById('consignmentSectionWrapper');
-            if (!hasConsignment && consigSection && consigSection.style.display !== 'none') {
+            var retailSection = document.getElementById('retailSectionWrapper');
+            var needSwitch = false;
+            if (!hasRetail && retailSection && retailSection.style.display !== 'none') needSwitch = true;
+            if (!hasConsignment && consigSection && consigSection.style.display !== 'none') needSwitch = true;
+            if (needSwitch) {
                 switchStockType('warehouse');
             } else if (hasConsignment && consigSection && consigSection.style.display !== 'none') {
-                // If still viewing consignment, reload data for new entity
                 loadConsignmentStock();
             }
 
