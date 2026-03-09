@@ -573,6 +573,9 @@
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
             </button>
+            <button class="view-btn" data-view="skusearch" onclick="switchView('skusearch')">
+                🔍 SKU Search
+            </button>
             </div><!-- end nav-wrapper -->
         </div><!-- end view-toggle -->
         <div class="view-content-area">
@@ -2060,6 +2063,39 @@
             </div>
         </div>
         <!-- End redistribusiView -->
+
+        <!-- ==================== SKU SEARCH VIEW ==================== -->
+        <div class="view-container" id="skusearchView">
+            <div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:2px solid #0284c7;border-radius:16px;padding:20px;margin-bottom:30px;">
+                <!-- Header -->
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #0284c7;">
+                    <div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);color:white;padding:10px 20px;border-radius:10px;font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        🔍 CROSS-ENTITY SKU SEARCH
+                    </div>
+                    <span style="color:#0369a1;font-size:0.85rem;">Search across ALL entities &amp; stock types</span>
+                </div>
+
+                <!-- Search Box -->
+                <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
+                    <input type="text" id="globalSkuSearchInput" placeholder="Cari SKU / Kode Kecil / Nama Barang..." style="flex:1;padding:12px 16px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'" onkeydown="if(event.key==='Enter')searchSKUGlobal()">
+                    <button onclick="searchSKUGlobal()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:600;white-space:nowrap;">🔍 Search</button>
+                    <button onclick="clearSkuSearch()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:12px 16px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:600;">✕ Clear</button>
+                </div>
+
+                <!-- Summary Cards (filled by JS) -->
+                <div id="skuSearchSummary" style="display:none;margin-bottom:20px;"></div>
+
+                <!-- Results -->
+                <div id="skuSearchResults">
+                    <div style="text-align:center;padding:60px 20px;color:#94a3b8;">
+                        <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
+                        <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">Search Across All Entities</div>
+                        <div style="font-size:0.85rem;">Masukkan SKU, Kode Kecil, atau Nama Barang untuk mencari di semua entity (DDD, LJBB, MBB, UBB) dan semua tipe stok (Warehouse, Retail, Consignment)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End skuSearchView -->
         </div><!-- end view-content-area -->
         </div><!-- end dashboard-body -->
 
@@ -4089,6 +4125,323 @@
                     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
                 });
             }
+        }
+
+        // ============ GLOBAL SKU SEARCH FUNCTIONS ============
+        function searchSKUGlobal() {
+            var input = document.getElementById('globalSkuSearchInput');
+            if (!input) return;
+            var query = input.value.trim().toLowerCase();
+            if (query.length < 2) {
+                alert('Masukkan minimal 2 karakter untuk pencarian');
+                return;
+            }
+
+            var results = {}; // keyed by kode_kecil → { info, warehouse: {entity: qty}, retail: {entity: qty}, consignment: {entity: qty} }
+
+            // 1. Search warehouse & retail from allData
+            var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
+            entities.forEach(function(ent) {
+                if (!allData[ent]) return;
+                ['warehouse', 'retail'].forEach(function(stockType) {
+                    var items = allData[ent][stockType];
+                    if (!items || !items.length) return;
+                    items.forEach(function(item) {
+                        var kk = (item.kode_kecil || '').toLowerCase();
+                        var sku = (item.sku || '').toLowerCase();
+                        var name = (item.name || '').toLowerCase();
+                        var kode = (item.kode || '').toLowerCase();
+                        if (kk.indexOf(query) === -1 && sku.indexOf(query) === -1 && name.indexOf(query) === -1 && kode.indexOf(query) === -1) return;
+
+                        var key = item.kode_kecil || item.sku || 'unknown';
+                        if (!results[key]) {
+                            results[key] = {
+                                kode_kecil: item.kode_kecil || '',
+                                kode: item.kode || '',
+                                name: item.name || '',
+                                sku: item.sku || '',
+                                series: item.series || '',
+                                tipe: item.tipe || '',
+                                size: item.size || '',
+                                gender: item.gender || '',
+                                color: item.color || '',
+                                tier: item.tier || '',
+                                warehouse: {}, retail: {}, consignment: {},
+                                warehouseTotal: 0, retailTotal: 0, consignmentTotal: 0,
+                                warehouseStores: {}, retailStores: {}, consignmentStores: {}
+                            };
+                        }
+                        var r = results[key];
+                        var total = item.total || 0;
+                        if (stockType === 'warehouse') {
+                            r.warehouse[ent] = (r.warehouse[ent] || 0) + total;
+                            r.warehouseTotal += total;
+                            if (item.store_stock) {
+                                Object.keys(item.store_stock).forEach(function(sn) {
+                                    if (!r.warehouseStores[ent]) r.warehouseStores[ent] = {};
+                                    r.warehouseStores[ent][sn] = (r.warehouseStores[ent][sn] || 0) + item.store_stock[sn];
+                                });
+                            }
+                        } else {
+                            r.retail[ent] = (r.retail[ent] || 0) + total;
+                            r.retailTotal += total;
+                            if (item.store_stock) {
+                                Object.keys(item.store_stock).forEach(function(sn) {
+                                    if (!r.retailStores[ent]) r.retailStores[ent] = {};
+                                    r.retailStores[ent][sn] = (r.retailStores[ent][sn] || 0) + item.store_stock[sn];
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+
+            // 2. Search consignment data (load if needed)
+            if (consignmentStockData && consignmentStockData.data) {
+                consignmentStockData.data.forEach(function(item) {
+                    var kk = (item.kode_kecil || '').toLowerCase();
+                    var sku = (item.sku || '').toLowerCase();
+                    var name = (item.name || '').toLowerCase();
+                    var kode = (item.kode || '').toLowerCase();
+                    if (kk.indexOf(query) === -1 && sku.indexOf(query) === -1 && name.indexOf(query) === -1 && kode.indexOf(query) === -1) return;
+
+                    var ent = (item.entity || '').toUpperCase();
+                    var key = item.kode_kecil || item.sku || 'unknown';
+                    if (!results[key]) {
+                        results[key] = {
+                            kode_kecil: item.kode_kecil || '',
+                            kode: item.kode || '',
+                            name: item.name || '',
+                            sku: item.sku || '',
+                            series: item.series || '',
+                            tipe: item.tipe || '',
+                            size: item.size || '',
+                            gender: item.gender || '',
+                            color: item.color || '',
+                            tier: item.tier || '',
+                            warehouse: {}, retail: {}, consignment: {},
+                            warehouseTotal: 0, retailTotal: 0, consignmentTotal: 0,
+                            warehouseStores: {}, retailStores: {}, consignmentStores: {}
+                        };
+                    }
+                    var r = results[key];
+                    var total = item.total || 0;
+                    r.consignment[ent] = (r.consignment[ent] || 0) + total;
+                    r.consignmentTotal += total;
+                    if (item.store_stock) {
+                        Object.keys(item.store_stock).forEach(function(sn) {
+                            if (!r.consignmentStores[ent]) r.consignmentStores[ent] = {};
+                            r.consignmentStores[ent][sn] = (r.consignmentStores[ent][sn] || 0) + item.store_stock[sn];
+                        });
+                    }
+                });
+            }
+
+            // If consignment not loaded yet, load it first then re-search
+            if (!consignmentStockData) {
+                fetchAPI('/api/stock/consignment')
+                    .then(function(data) {
+                        consignmentStockData = data;
+                        searchSKUGlobal(); // re-run with consignment data
+                    })
+                    .catch(function(err) {
+                        console.error('Error loading consignment for SKU search:', err);
+                        renderSkuSearchResults(results, query);
+                    });
+                // Show loading state
+                var resultEl = document.getElementById('skuSearchResults');
+                if (resultEl) resultEl.innerHTML = '<div style="text-align:center;padding:40px;color:#0284c7;"><div style="font-size:2rem;margin-bottom:8px;">⏳</div>Memuat data consignment...</div>';
+                return;
+            }
+
+            renderSkuSearchResults(results, query);
+        }
+
+        function clearSkuSearch() {
+            var input = document.getElementById('globalSkuSearchInput');
+            if (input) input.value = '';
+            var summaryEl = document.getElementById('skuSearchSummary');
+            if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
+            var resultEl = document.getElementById('skuSearchResults');
+            if (resultEl) {
+                resultEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8;">' +
+                    '<div style="font-size:3rem;margin-bottom:12px;">\ud83d\udd0d</div>' +
+                    '<div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">Search Across All Entities</div>' +
+                    '<div style="font-size:0.85rem;">Masukkan SKU, Kode Kecil, atau Nama Barang untuk mencari di semua entity (DDD, LJBB, MBB, UBB) dan semua tipe stok (Warehouse, Retail, Consignment)</div>' +
+                    '</div>';
+            }
+        }
+
+        function renderSkuSearchResults(results, query) {
+            var resultEl = document.getElementById('skuSearchResults');
+            var summaryEl = document.getElementById('skuSearchSummary');
+            if (!resultEl) return;
+
+            var items = Object.values(results);
+            if (items.length === 0) {
+                if (summaryEl) { summaryEl.style.display = 'none'; }
+                resultEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8;">' +
+                    '<div style="font-size:3rem;margin-bottom:12px;">\ud83e\udee5</div>' +
+                    '<div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">Tidak ditemukan</div>' +
+                    '<div style="font-size:0.85rem;">Tidak ada hasil untuk \"' + query.replace(/["<>&]/g,'') + '\"</div>' +
+                    '</div>';
+                return;
+            }
+
+            // Sort by total stock desc
+            items.sort(function(a, b) {
+                return (b.warehouseTotal + b.retailTotal + b.consignmentTotal) - (a.warehouseTotal + a.retailTotal + a.consignmentTotal);
+            });
+
+            // Summary
+            var totalWH = 0, totalRT = 0, totalCS = 0;
+            items.forEach(function(r) { totalWH += r.warehouseTotal; totalRT += r.retailTotal; totalCS += r.consignmentTotal; });
+            var grandTotal = totalWH + totalRT + totalCS;
+
+            if (summaryEl) {
+                summaryEl.style.display = 'block';
+                summaryEl.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+                    '<div style="flex:1;min-width:120px;background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid #0284c7;">' +
+                    '<div style="font-size:0.75rem;color:#0369a1;">SKU Ditemukan</div>' +
+                    '<div style="font-size:1.3rem;font-weight:700;color:#0284c7;">' + items.length.toLocaleString('id-ID') + '</div></div>' +
+                    '<div style="flex:1;min-width:120px;background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid #0d9488;">' +
+                    '<div style="font-size:0.75rem;color:#0f766e;">🏢 Warehouse</div>' +
+                    '<div style="font-size:1.3rem;font-weight:700;color:#0d9488;">' + totalWH.toLocaleString('id-ID') + '</div></div>' +
+                    '<div style="flex:1;min-width:120px;background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid #2563eb;">' +
+                    '<div style="font-size:0.75rem;color:#1e40af;">🏪 Retail</div>' +
+                    '<div style="font-size:1.3rem;font-weight:700;color:#2563eb;">' + totalRT.toLocaleString('id-ID') + '</div></div>' +
+                    '<div style="flex:1;min-width:120px;background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid #d97706;">' +
+                    '<div style="font-size:0.75rem;color:#92400e;">📦 Consignment</div>' +
+                    '<div style="font-size:1.3rem;font-weight:700;color:#d97706;">' + totalCS.toLocaleString('id-ID') + '</div></div>' +
+                    '<div style="flex:1;min-width:120px;background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid #16a34a;">' +
+                    '<div style="font-size:0.75rem;color:#166534;">📊 Grand Total</div>' +
+                    '<div style="font-size:1.3rem;font-weight:700;color:#16a34a;">' + grandTotal.toLocaleString('id-ID') + '</div></div>' +
+                    '</div>';
+            }
+
+            // Table
+            var html = '<div style="font-size:0.82rem;color:#6b7280;margin-bottom:8px;">Hasil: <strong style="color:#1f2937;">"' + query.replace(/["<>&]/g,'') + '"</strong> \u2014 ' + items.length + ' SKU</div>';
+            html += '<div style="overflow-x:auto;">';
+            html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:900px;">';
+            html += '<thead><tr>';
+            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:left;font-weight:600;width:90px;">KODE</th>';
+            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:left;font-weight:600;">NAMA BARANG</th>';
+            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:center;font-weight:600;width:50px;">SIZE</th>';
+            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Warehouse">🏢 DDD</th>';
+            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="LJBB Warehouse">🏢 LJBB</th>';
+            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Warehouse">🏢 MBB</th>';
+            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="UBB Warehouse">🏢 UBB</th>';
+            html += '<th style="background:#2563eb;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Retail">🏪 DDD</th>';
+            html += '<th style="background:#2563eb;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Retail">🏪 MBB</th>';
+            html += '<th style="background:#d97706;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Consignment">📦 DDD</th>';
+            html += '<th style="background:#d97706;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Consignment">📦 MBB</th>';
+            html += '<th style="background:#16a34a;color:white;padding:8px 6px;text-align:center;font-weight:700;font-size:0.75rem;width:75px;">TOTAL</th>';
+            html += '</tr></thead><tbody>';
+
+            // Group by kode for visual grouping
+            var prevKode = '';
+            items.forEach(function(r, idx) {
+                var total = r.warehouseTotal + r.retailTotal + r.consignmentTotal;
+                var isNewKode = r.kode !== prevKode;
+                prevKode = r.kode;
+
+                var bgColor = idx % 2 === 0 ? '#fff' : '#f8fafc';
+                if (isNewKode && idx > 0) bgColor = idx % 2 === 0 ? '#fff' : '#f8fafc';
+
+                html += '<tr style="background:' + bgColor + ';border-bottom:1px solid #e2e8f0;">';
+                html += '<td style="padding:6px;font-weight:600;font-size:0.78rem;">' + r.kode + '</td>';
+                html += '<td style="padding:6px;"><span style="font-weight:500;">' + r.name + '</span>';
+                if (r.series || r.tipe) html += '<br><span style="font-size:0.72rem;color:#64748b;">' + (r.series || '') + (r.tipe ? ' · ' + r.tipe : '') + (r.tier ? ' · ' + r.tier : '') + '</span>';
+                html += '</td>';
+                html += '<td style="padding:6px;text-align:center;font-weight:600;">' + r.size + '</td>';
+
+                // Warehouse columns (DDD, LJBB, MBB, UBB)
+                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['DDD'] || 0) > 0 ? r.warehouse['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['LJBB'] || 0) > 0 ? r.warehouse['LJBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['MBB'] || 0) > 0 ? r.warehouse['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['UBB'] || 0) > 0 ? r.warehouse['UBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+
+                // Retail columns (DDD, MBB only)
+                html += '<td style="padding:6px;text-align:center;background:#eff6ff;">' + ((r.retail['DDD'] || 0) > 0 ? r.retail['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+                html += '<td style="padding:6px;text-align:center;background:#eff6ff;">' + ((r.retail['MBB'] || 0) > 0 ? r.retail['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+
+                // Consignment columns (DDD, MBB only)
+                html += '<td style="padding:6px;text-align:center;background:#fffbeb;">' + ((r.consignment['DDD'] || 0) > 0 ? r.consignment['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+                html += '<td style="padding:6px;text-align:center;background:#fffbeb;">' + ((r.consignment['MBB'] || 0) > 0 ? r.consignment['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
+
+                // Total
+                html += '<td style="padding:6px;text-align:center;font-weight:700;background:#f0fdf4;">' + (total > 0 ? total.toLocaleString('id-ID') : '<span style="color:#d1d5db;">0</span>') + '</td>';
+                html += '</tr>';
+
+                // Expandable detail row — show store breakdown on click
+                html += '<tr class="sku-detail-row" id="skuDetail_' + idx + '" style="display:none;">';
+                html += '<td colspan="12" style="padding:0;background:#f1f5f9;">';
+                html += '<div style="padding:10px 16px;">';
+
+                // Warehouse stores
+                var hasWHStores = Object.keys(r.warehouseStores).length > 0;
+                var hasRTStores = Object.keys(r.retailStores).length > 0;
+                var hasCSStores = Object.keys(r.consignmentStores).length > 0;
+
+                if (hasWHStores) {
+                    html += '<div style="margin-bottom:8px;"><strong style="color:#0d9488;font-size:0.8rem;">🏢 Warehouse Detail:</strong>';
+                    Object.keys(r.warehouseStores).forEach(function(ent) {
+                        html += '<span style="margin-left:12px;font-size:0.78rem;color:#374151;font-weight:600;">' + ent + ':</span> ';
+                        var stores = r.warehouseStores[ent];
+                        Object.keys(stores).sort().forEach(function(sn) {
+                            html += '<span style="font-size:0.75rem;background:#ccfbf1;padding:2px 6px;border-radius:4px;margin:2px;display:inline-block;">' + sn + ': ' + stores[sn] + '</span> ';
+                        });
+                    });
+                    html += '</div>';
+                }
+
+                if (hasRTStores) {
+                    html += '<div style="margin-bottom:8px;"><strong style="color:#2563eb;font-size:0.8rem;">🏪 Retail Detail:</strong>';
+                    Object.keys(r.retailStores).forEach(function(ent) {
+                        html += '<span style="margin-left:12px;font-size:0.78rem;color:#374151;font-weight:600;">' + ent + ':</span> ';
+                        var stores = r.retailStores[ent];
+                        Object.keys(stores).sort().forEach(function(sn) {
+                            html += '<span style="font-size:0.75rem;background:#dbeafe;padding:2px 6px;border-radius:4px;margin:2px;display:inline-block;">' + sn + ': ' + stores[sn] + '</span> ';
+                        });
+                    });
+                    html += '</div>';
+                }
+
+                if (hasCSStores) {
+                    html += '<div style="margin-bottom:8px;"><strong style="color:#d97706;font-size:0.8rem;">📦 Consignment Detail:</strong>';
+                    Object.keys(r.consignmentStores).forEach(function(ent) {
+                        html += '<span style="margin-left:12px;font-size:0.78rem;color:#374151;font-weight:600;">' + ent + ':</span> ';
+                        var stores = r.consignmentStores[ent];
+                        Object.keys(stores).sort().forEach(function(sn) {
+                            html += '<span style="font-size:0.75rem;background:#fef3c7;padding:2px 6px;border-radius:4px;margin:2px;display:inline-block;">' + sn + ': ' + stores[sn] + '</span> ';
+                        });
+                    });
+                    html += '</div>';
+                }
+
+                if (!hasWHStores && !hasRTStores && !hasCSStores) {
+                    html += '<span style="font-size:0.78rem;color:#94a3b8;">No store detail available</span>';
+                }
+
+                html += '</div></td></tr>';
+            });
+
+            html += '</tbody></table></div>';
+
+            // Add click listener for expandable rows
+            resultEl.innerHTML = html;
+
+            // Add click handlers to main rows to toggle detail
+            var rows = resultEl.querySelectorAll('tbody tr:not(.sku-detail-row)');
+            rows.forEach(function(row, idx) {
+                row.style.cursor = 'pointer';
+                row.onclick = function() {
+                    var detailRow = document.getElementById('skuDetail_' + idx);
+                    if (detailRow) {
+                        detailRow.style.display = detailRow.style.display === 'none' ? '' : 'none';
+                    }
+                };
+            });
         }
 
         // ============ VIEW TOGGLE FUNCTIONS ============
