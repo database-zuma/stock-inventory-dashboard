@@ -5574,7 +5574,7 @@
                 html += `
                     <tr style="background:${idx % 2 === 0 ? '#fff' : '#f9fafb'};">
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:500;">${item.store}</td>
-                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.sku}</td>
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.kode_kecil || item.sku}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${item.nama}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${item.size}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;">${item.stock.toLocaleString('id-ID')}</td>
