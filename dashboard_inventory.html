@@ -554,6 +554,7 @@
                 <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">› LJBB</button>
                 <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">› MBB</button>
                 <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">› UBB</button>
+                <button class="entity-toggle-btn" data-view="skusearch" onclick="switchView('skusearch')" style="margin-top:2px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;color:#94a3b8;font-size:0.8rem;">› 🔍 SKU Search</button>
             </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
@@ -572,9 +573,6 @@
             </div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
-            </button>
-            <button class="view-btn" data-view="skusearch" onclick="switchView('skusearch')">
-                🔍 SKU Search
             </button>
             </div><!-- end nav-wrapper -->
         </div><!-- end view-toggle -->
@@ -2174,8 +2172,13 @@
             if (!contentArea) return;
             var redistView = document.getElementById('redistribusiView');
             // Move redistribusiView out of salesView to view-content-area level
-            if (redistView && redistView.parentElement.id === 'salesView') {
+            if (redistView && redistView.parentElement !== contentArea) {
                 contentArea.appendChild(redistView);
+            }
+            // Move skusearchView out to view-content-area level (same nesting issue)
+            var skuView = document.getElementById('skusearchView');
+            if (skuView && skuView.parentElement !== contentArea) {
+                contentArea.appendChild(skuView);
             }
         })();
 
@@ -4472,7 +4475,7 @@
             // Dim/activate toggle bars based on active view
             var entityBar = document.getElementById('entityToggleBar');
             var salesBar = document.getElementById('salesChannelBar');
-            if (view === 'inventory') {
+            if (view === 'inventory' || view === 'skusearch') {
                 entityBar.classList.remove('dimmed');
                 salesBar.classList.add('dimmed');
             } else if (view === 'sales') {
@@ -4481,6 +4484,20 @@
             } else {
                 entityBar.classList.add('dimmed');
                 salesBar.classList.add('dimmed');
+            }
+
+            // Highlight SKU Search button in entityBar when skusearch view is active
+            var skuSearchBtn = document.querySelector('.entity-toggle-btn[data-view="skusearch"]');
+            if (skuSearchBtn) {
+                if (view === 'skusearch') {
+                    skuSearchBtn.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
+                    skuSearchBtn.style.color = '#fff';
+                    skuSearchBtn.style.fontWeight = '700';
+                } else {
+                    skuSearchBtn.style.background = '';
+                    skuSearchBtn.style.color = '';
+                    skuSearchBtn.style.fontWeight = '';
+                }
             }
 
             if (view === 'maxstock') {
