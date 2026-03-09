@@ -2081,10 +2081,10 @@
                 </div>
 
                 <!-- Summary Cards (filled by JS) -->
-                <div id="skuSearchSummary" style="display:none;margin-bottom:20px;"></div>
+                <div id="globalSkuSearchSummary" style="display:none;margin-bottom:20px;"></div>
 
                 <!-- Results -->
-                <div id="skuSearchResults">
+                <div id="globalSkuSearchResults">
                     <div style="text-align:center;padding:60px 20px;color:#94a3b8;">
                         <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
                         <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">Search Across All Entities</div>
@@ -4252,7 +4252,7 @@
                         renderSkuSearchResults(results, query);
                     });
                 // Show loading state
-                var resultEl = document.getElementById('skuSearchResults');
+                var resultEl = document.getElementById('globalSkuSearchResults');
                 if (resultEl) resultEl.innerHTML = '<div style="text-align:center;padding:40px;color:#0284c7;"><div style="font-size:2rem;margin-bottom:8px;">⏳</div>Memuat data consignment...</div>';
                 return;
             }
@@ -4263,9 +4263,9 @@
         function clearSkuSearch() {
             var input = document.getElementById('globalSkuSearchInput');
             if (input) input.value = '';
-            var summaryEl = document.getElementById('skuSearchSummary');
+            var summaryEl = document.getElementById('globalSkuSearchSummary');
             if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
-            var resultEl = document.getElementById('skuSearchResults');
+            var resultEl = document.getElementById('globalSkuSearchResults');
             if (resultEl) {
                 resultEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8;">' +
                     '<div style="font-size:3rem;margin-bottom:12px;">\ud83d\udd0d</div>' +
@@ -4276,8 +4276,8 @@
         }
 
         function renderSkuSearchResults(results, query) {
-            var resultEl = document.getElementById('skuSearchResults');
-            var summaryEl = document.getElementById('skuSearchSummary');
+            var resultEl = document.getElementById('globalSkuSearchResults');
+            var summaryEl = document.getElementById('globalSkuSearchSummary');
             if (!resultEl) return;
 
             var items = Object.values(results);
