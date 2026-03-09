@@ -5731,7 +5731,7 @@
             const kodeKecilMap = {};
 
             scItems.forEach(item => {
-                const kk = item.kodeKecil || item.sku;
+                const kk = (item.kode || item.kodeKecil || item.sku || '').toUpperCase();
                 if (!kk) return;
 
                 if (!kodeKecilMap[kk]) {
@@ -5899,6 +5899,7 @@
                     skuMap[sku] = {
                         sku: sku,
                         kodeKecil: item.kode_kecil,
+                        kode: item.kode,
                         name: item.name,
                         size: item.size || '',
                         series: item.series,
@@ -5944,6 +5945,7 @@
                     skuMap[sku] = {
                         sku: sku,
                         kodeKecil: item.kode_kecil,
+                        kode: item.kode,
                         name: item.name,
                         size: item.size || '',
                         series: item.series,
@@ -6097,6 +6099,7 @@
                     if (toFilter === 'negative' && storeStock >= 0) return false;
                     if (toFilter === 'zero' && storeStock !== 0) return false;
                     if (toFilter === 'positive' && storeStock <= 0) return false;
+                }
 
                 // GAP filter
                 if (gapFilter) {
@@ -6119,7 +6122,6 @@
                     if (strFilter === 'high' && str <= 80) return false;
                     if (strFilter === 'medium' && (str < 50 || str > 80)) return false;
                     if (strFilter === 'low' && str >= 50) return false;
-                }
                 }
                 return true;
             });
@@ -6315,15 +6317,15 @@
 
                 // Dead Stock badge
                 const isDeadStock = avgSales === 0 && basisStock > 0;
-                const deadBadge = isDeadStock ? ' <span style="background:#7f1d1d;color:white;font-size:0.6rem;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700;">DEAD</span>' : '';
+                const deadBadge = isDeadStock ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-left:5px;vertical-align:middle;" title="Dead Stock"></span>' : '';
 
                 const cellStyle = 'padding:8px;text-align:center;';
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
-                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + deadBadge + '</td>' +
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
@@ -6343,10 +6345,10 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
                     '</tr>';
                 } else {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + deadBadge + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
-                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
