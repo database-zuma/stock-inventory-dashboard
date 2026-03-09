@@ -4436,112 +4436,78 @@
                     '</div>';
             }
 
-            // Table
+            // Results
             var html = '<div style="font-size:0.82rem;color:#6b7280;margin-bottom:8px;">Hasil: <strong style="color:#1f2937;">"' + query.replace(/["<>&]/g,'') + '"</strong> \u2014 ' + items.length + ' SKU</div>';
-            html += '<div style="overflow-x:auto;">';
-            html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:900px;">';
-            html += '<thead><tr>';
-            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:left;font-weight:600;width:90px;">KODE</th>';
-            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:left;font-weight:600;">NAMA BARANG</th>';
-            html += '<th style="background:#002A3A;color:white;padding:8px 6px;text-align:center;font-weight:600;width:50px;">SIZE</th>';
-            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Warehouse">\ud83c\udfe2 DDD</th>';
-            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="LJBB Warehouse">\ud83c\udfe2 LJBB</th>';
-            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Warehouse">\ud83c\udfe2 MBB</th>';
-            html += '<th style="background:#0d9488;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="UBB Warehouse">\ud83c\udfe2 UBB</th>';
-            html += '<th style="background:#2563eb;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Retail">\ud83c\udfea DDD</th>';
-            html += '<th style="background:#2563eb;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Retail">\ud83c\udfea MBB</th>';
-            html += '<th style="background:#d97706;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="DDD Consignment">\ud83d\udce6 DDD</th>';
-            html += '<th style="background:#d97706;color:white;padding:8px 6px;text-align:center;font-weight:600;font-size:0.75rem;width:70px;"  title="MBB Consignment">\ud83d\udce6 MBB</th>';
-            html += '<th style="background:#16a34a;color:white;padding:8px 6px;text-align:center;font-weight:700;font-size:0.75rem;width:75px;">TOTAL</th>';
-            html += '</tr></thead><tbody>';
 
             items.forEach(function(r, idx) {
                 var total = r.warehouseTotal + r.retailTotal + r.consignmentTotal;
-                var bgColor = idx % 2 === 0 ? '#fff' : '#f8fafc';
 
-                html += '<tr style="background:' + bgColor + ';border-bottom:1px solid #e2e8f0;cursor:pointer;" onclick="var d=document.getElementById(\'skuDetail_' + idx + '\');if(d)d.style.display=d.style.display===\'none\'?\'\':\'none\';">';
-                html += '<td style="padding:6px;font-weight:600;font-size:0.78rem;color:#1f2937;">' + r.kode.toUpperCase() + '</td>';
-                html += '<td style="padding:6px;"><span style="font-weight:500;">' + r.name + '</span>';
-                if (r.series || r.tipe) html += '<br><span style="font-size:0.72rem;color:#64748b;">' + (r.series || '') + (r.tipe ? ' \u00b7 ' + r.tipe : '') + (r.tier ? ' \u00b7 ' + r.tier : '') + '</span>';
-                html += '</td>';
-                html += '<td style="padding:6px;text-align:center;font-weight:600;">' + r.size + '</td>';
-
-                // Warehouse columns (DDD, LJBB, MBB, UBB)
-                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['DDD'] || 0) > 0 ? r.warehouse['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['LJBB'] || 0) > 0 ? r.warehouse['LJBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['MBB'] || 0) > 0 ? r.warehouse['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-                html += '<td style="padding:6px;text-align:center;background:#f0fdfa;">' + ((r.warehouse['UBB'] || 0) > 0 ? r.warehouse['UBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-
-                // Retail columns (DDD, MBB only)
-                html += '<td style="padding:6px;text-align:center;background:#eff6ff;">' + ((r.retail['DDD'] || 0) > 0 ? r.retail['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-                html += '<td style="padding:6px;text-align:center;background:#eff6ff;">' + ((r.retail['MBB'] || 0) > 0 ? r.retail['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-
-                // Consignment columns (DDD, MBB only)
-                html += '<td style="padding:6px;text-align:center;background:#fffbeb;">' + ((r.consignment['DDD'] || 0) > 0 ? r.consignment['DDD'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-                html += '<td style="padding:6px;text-align:center;background:#fffbeb;">' + ((r.consignment['MBB'] || 0) > 0 ? r.consignment['MBB'].toLocaleString('id-ID') : '<span style="color:#d1d5db;">-</span>') + '</td>';
-
-                // Total
-                html += '<td style="padding:6px;text-align:center;font-weight:700;background:#f0fdf4;">' + (total > 0 ? total.toLocaleString('id-ID') : '<span style="color:#d1d5db;">0</span>') + '</td>';
-                html += '</tr>';
-
-                // Detail row — auto-expanded, shows 4 compact tables in 2x2 grid
-                html += '<tr class="sku-detail-row" id="skuDetail_' + idx + '">';
-                html += '<td colspan="12" style="padding:0;background:#f1f5f9;border-bottom:2px solid #cbd5e1;">';
-                html += '<div style="padding:12px 16px;">';
+                // Article info card
+                html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;">';
+                html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">';
+                html += '<span style="background:#002A3A;color:white;padding:4px 12px;border-radius:6px;font-weight:700;font-size:0.88rem;letter-spacing:0.5px;">' + r.kode.toUpperCase() + '</span>';
+                html += '<span style="font-weight:600;color:#1f2937;font-size:0.95rem;">' + r.name + '</span>';
+                if (r.series || r.tipe || r.tier) html += '<span style="font-size:0.8rem;color:#64748b;">' + (r.series || '') + (r.tipe ? ' \u00b7 ' + r.tipe : '') + (r.tier ? ' \u00b7 ' + r.tier : '') + '</span>';
+                html += '<span style="background:#f1f5f9;padding:3px 10px;border-radius:5px;font-size:0.82rem;font-weight:600;color:#334155;">Size: ' + r.size + '</span>';
+                html += '<span style="margin-left:auto;font-size:0.88rem;font-weight:700;color:#16a34a;">Total: ' + total.toLocaleString('id-ID') + '</span>';
+                html += '</div>';
 
                 // Collect data for 4 tables
                 // 1) Global summary by entity
                 var globalRows = [];
                 var entities = ['DDD','LJBB','MBB','UBB'];
+                var sumWh = 0, sumRt = 0, sumCs = 0;
                 entities.forEach(function(ent) {
                     var wh = r.warehouse[ent] || 0;
                     var rt = r.retail[ent] || 0;
                     var cs = r.consignment[ent] || 0;
                     var tot = wh + rt + cs;
-                    if (tot > 0) globalRows.push({ entity: ent, wh: wh, retail: rt, consign: cs, total: tot });
+                    if (tot > 0) { globalRows.push({ entity: ent, wh: wh, retail: rt, consign: cs, total: tot }); sumWh += wh; sumRt += rt; sumCs += cs; }
                 });
+                globalRows.sort(function(a, b) { return b.total - a.total; });
 
                 // 2) Warehouse detail
                 var whRows = [];
                 var whKeys = Object.keys(r.warehouseStores || {});
                 whKeys.forEach(function(ent) {
                     var stores = r.warehouseStores[ent];
-                    Object.keys(stores).sort().forEach(function(sn) {
+                    Object.keys(stores).forEach(function(sn) {
                         if (stores[sn] > 0) whRows.push({ name: sn, entity: ent, qty: stores[sn] });
                     });
                 });
+                whRows.sort(function(a, b) { return b.qty - a.qty; });
 
                 // 3) Retail store detail
                 var rtRows = [];
                 var rtKeys = Object.keys(r.retailStores || {});
                 rtKeys.forEach(function(ent) {
                     var stores = r.retailStores[ent];
-                    Object.keys(stores).sort().forEach(function(sn) {
+                    Object.keys(stores).forEach(function(sn) {
                         if (stores[sn] > 0) {
                             var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
                             rtRows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
                         }
                     });
                 });
-                rtRows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
+                rtRows.sort(function(a, b) { return b.qty - a.qty; });
 
                 // 4) Consignment store detail
                 var csRows = [];
                 var csKeys = Object.keys(r.consignmentStores || {});
                 csKeys.forEach(function(ent) {
                     var stores = r.consignmentStores[ent];
-                    Object.keys(stores).sort().forEach(function(sn) {
+                    Object.keys(stores).forEach(function(sn) {
                         if (stores[sn] > 0) {
                             var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
                             csRows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
                         }
                     });
                 });
-                csRows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
+                csRows.sort(function(a, b) { return b.qty - a.qty; });
 
                 // Helper: build marketplace-style table
-                function buildTable(title, icon, headers, dataRows, renderRow) {
-                    if (dataRows.length === 0) return '';
+                function buildTable(title, icon, headers, dataRows, renderRow, footerRow) {
+                    if (dataRows.length === 0) return '<div><h4 style="margin:0 0 8px 0;color:#94a3b8;font-size:0.88rem;">' + icon + ' ' + title + ' (kosong)</h4></div>';
                     var t = '<div>';
                     t += '<h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.88rem;">' + icon + ' ' + title + '</h4>';
                     t += '<div style="max-height:300px;overflow-y:auto;">';
@@ -4557,6 +4523,11 @@
                         t += renderRow(row, i);
                         t += '</tr>';
                     });
+                    if (footerRow) {
+                        t += '<tr style="background:#e2e8f0;border-top:2px solid #002A3A;">';
+                        t += footerRow;
+                        t += '</tr>';
+                    }
                     t += '</tbody></table></div></div>';
                     return t;
                 }
@@ -4564,7 +4535,8 @@
                 // Render 2x2 grid
                 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
 
-                // Table 1: Global Summary
+                // Table 1: Stock Summary with total row
+                var sumTotal = sumWh + sumRt + sumCs;
                 html += buildTable('Stock Summary', '\ud83d\udcca', [
                     {label:'NO',align:'center',width:'40px'},{label:'ENTITY',align:'left'},{label:'WAREHOUSE',align:'center',width:'90px'},{label:'RETAIL',align:'center',width:'90px'},{label:'CONSIGN',align:'center',width:'90px'},{label:'TOTAL',align:'center',width:'90px'}
                 ], globalRows, function(row, i) {
@@ -4574,7 +4546,11 @@
                         '<td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;">' + (row.retail > 0 ? row.retail.toLocaleString('id-ID') : '-') + '</td>' +
                         '<td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;">' + (row.consign > 0 ? row.consign.toLocaleString('id-ID') : '-') + '</td>' +
                         '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;">' + row.total.toLocaleString('id-ID') + '</td>';
-                });
+                }, '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;" colspan="2">TOTAL</td>' +
+                    '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;">' + (sumWh > 0 ? sumWh.toLocaleString('id-ID') : '-') + '</td>' +
+                    '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;">' + (sumRt > 0 ? sumRt.toLocaleString('id-ID') : '-') + '</td>' +
+                    '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;">' + (sumCs > 0 ? sumCs.toLocaleString('id-ID') : '-') + '</td>' +
+                    '<td style="padding:7px 8px;text-align:center;font-weight:800;color:#16a34a;">' + sumTotal.toLocaleString('id-ID') + '</td>');
 
                 // Table 2: Warehouse Detail
                 html += buildTable('Warehouse', '\ud83c\udfe2', [
@@ -4609,12 +4585,8 @@
                 });
 
                 html += '</div>'; // close grid
-
-                html += '</div></td></tr>'; // close detail row
-
+                html += '</div>'; // close article card
             });
-
-            html += '</tbody></table></div>';
 
             resultEl.innerHTML = html;
         }
