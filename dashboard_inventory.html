@@ -4358,15 +4358,20 @@
             var h = '';
             suggestions.forEach(function(s) {
                 var displayKode = s.kode_kecil || s.kode;
-                var highlight = function(text) {
+                var highlightName = function(text) {
                     var idx = text.toLowerCase().indexOf(query);
                     if (idx === -1) return text;
                     return text.substring(0, idx) + '<strong style="color:#0284c7;">' + text.substring(idx, idx + query.length) + '</strong>' + text.substring(idx + query.length);
                 };
+                var highlightBadge = function(text) {
+                    var idx = text.toLowerCase().indexOf(query);
+                    if (idx === -1) return text;
+                    return text.substring(0, idx) + '<span style="background:#fff;color:#0284c7;border-radius:3px;padding:0 2px;font-weight:800;">' + text.substring(idx, idx + query.length) + '</span>' + text.substring(idx + query.length);
+                };
                 h += '<div onclick="selectSkuSuggestion(\'' + displayKode.replace(/'/g, "\\'") + '\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;transition:background 0.1s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'white\'">';
-                h += '<div style="background:#0284c7;color:white;padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;white-space:nowrap;">' + highlight(displayKode) + '</div>';
+                h += '<div style="background:#0284c7;color:white;padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;white-space:nowrap;">' + highlightBadge(displayKode) + '</div>';
                 h += '<div style="flex:1;min-width:0;">';
-                h += '<div style="font-size:0.82rem;font-weight:500;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + highlight(s.name) + '</div>';
+                h += '<div style="font-size:0.82rem;font-weight:500;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + highlightName(s.name) + '</div>';
                 h += '<div style="font-size:0.72rem;color:#94a3b8;">' + (s.series || '') + (s.size ? ' · Size ' + s.size : '') + '</div>';
                 h += '</div></div>';
             });
@@ -4485,38 +4490,59 @@
                 html += '<div style="padding:12px 16px;">';
 
                 // Helper: render stores for a stock type, only show qty > 0
-                function renderStoreSection(label, color, bgColor, storesObj) {
-                    var sectionHtml = '';
+                // Helper: render warehouse table
+                function renderWarehouseTable(storesObj) {
+                    var rows = [];
                     var entKeys = Object.keys(storesObj);
-                    if (entKeys.length === 0) return '';
-                    var hasAnyStock = false;
                     entKeys.forEach(function(ent) {
                         var stores = storesObj[ent];
-                        Object.keys(stores).forEach(function(sn) {
-                            if (stores[sn] > 0) hasAnyStock = true;
+                        Object.keys(stores).sort().forEach(function(sn) {
+                            if (stores[sn] > 0) {
+                                rows.push({ name: sn, entity: ent, qty: stores[sn] });
+                            }
                         });
                     });
-                    if (!hasAnyStock) return '';
-                    sectionHtml += '<div style="margin-bottom:8px;">';
-                    sectionHtml += '<strong style="color:' + color + ';font-size:0.8rem;">' + label + '</strong>';
+                    if (rows.length === 0) return '';
+                    var t = '<div style="margin-bottom:10px;"><strong style="color:#0d9488;font-size:0.82rem;">\ud83c\udfe2 Warehouse</strong>';
+                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:4px;">';
+                    t += '<thead><tr style="background:#f0fdfa;"><th style="text-align:left;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Warehouse</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Entity</th><th style="text-align:right;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Qty</th></tr></thead><tbody>';
+                    rows.forEach(function(row) {
+                        t += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 8px;">' + row.name + '</td><td style="padding:4px 8px;">' + row.entity + '</td><td style="padding:4px 8px;text-align:right;font-weight:700;">' + row.qty.toLocaleString('id-ID') + '</td></tr>';
+                    });
+                    t += '</tbody></table></div>';
+                    return t;
+                }
+
+                // Helper: render store table (retail or consignment) with Area column
+                function renderStoreTable(label, icon, color, headerBg, borderColor, storesObj) {
+                    var rows = [];
+                    var entKeys = Object.keys(storesObj);
                     entKeys.forEach(function(ent) {
                         var stores = storesObj[ent];
-                        var storeNames = Object.keys(stores).sort();
-                        var activeStores = storeNames.filter(function(sn) { return stores[sn] > 0; });
-                        if (activeStores.length === 0) return;
-                        sectionHtml += '<span style="margin-left:10px;font-size:0.78rem;color:#374151;font-weight:600;">' + ent + ':</span> ';
-                        activeStores.forEach(function(sn) {
-                            sectionHtml += '<span style="font-size:0.75rem;background:' + bgColor + ';padding:2px 8px;border-radius:4px;margin:2px;display:inline-block;">' + sn + ': <strong>' + stores[sn].toLocaleString('id-ID') + '</strong></span> ';
+                        Object.keys(stores).sort().forEach(function(sn) {
+                            if (stores[sn] > 0) {
+                                var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
+                                rows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
+                            }
                         });
                     });
-                    sectionHtml += '</div>';
-                    return sectionHtml;
+                    if (rows.length === 0) return '';
+                    // Sort by entity then area then name
+                    rows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
+                    var t = '<div style="margin-bottom:10px;"><strong style="color:' + color + ';font-size:0.82rem;">' + icon + ' ' + label + '</strong>';
+                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:4px;">';
+                    t += '<thead><tr style="background:' + headerBg + ';"><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Store</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Area</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Entity</th><th style="text-align:right;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Qty</th></tr></thead><tbody>';
+                    rows.forEach(function(row) {
+                        t += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 8px;">' + row.name + '</td><td style="padding:4px 8px;color:#64748b;">' + row.area + '</td><td style="padding:4px 8px;">' + row.entity + '</td><td style="padding:4px 8px;text-align:right;font-weight:700;">' + row.qty.toLocaleString('id-ID') + '</td></tr>';
+                    });
+                    t += '</tbody></table></div>';
+                    return t;
                 }
 
                 var detailContent = '';
-                detailContent += renderStoreSection('\ud83c\udfe2 Warehouse:', '#0d9488', '#ccfbf1', r.warehouseStores);
-                detailContent += renderStoreSection('\ud83c\udfea Retail:', '#2563eb', '#dbeafe', r.retailStores);
-                detailContent += renderStoreSection('\ud83d\udce6 Consignment:', '#d97706', '#fef3c7', r.consignmentStores);
+                detailContent += renderWarehouseTable(r.warehouseStores);
+                detailContent += renderStoreTable('Retail', '\ud83c\udfea', '#2563eb', '#eff6ff', '#bfdbfe', r.retailStores);
+                detailContent += renderStoreTable('Consignment', '\ud83d\udce6', '#d97706', '#fffbeb', '#fde68a', r.consignmentStores);
 
                 if (detailContent === '') {
                     html += '<span style="font-size:0.78rem;color:#94a3b8;">No store detail available</span>';
