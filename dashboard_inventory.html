@@ -8830,6 +8830,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 renderSalesSPG();
                 renderSalesByHourChart();
                 renderSalesSPGChart();
+            } else if (subTab === 'global') {
+                // Global: show combined data from all channels
+                const el = document.getElementById('salesSubTabOnline');
+                if (el) el.style.display = 'block';
+                loadGlobalChannel();
             } else if (subTab === 'online') {
                 // Online: show dedicated sub-tab with rich view
                 const el = document.getElementById('salesSubTabOnline');
@@ -9076,7 +9081,36 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
         }
 
+        // === GLOBAL CHANNEL (All channels combined) ===
+        let globalRawData = null;
+        async function loadGlobalChannel() {
+            const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
+            containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data global...</div>'; });
+
+            try {
+                // Load all channels in parallel
+                const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
+                    fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI('/api/sales/detail?channel=consig&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => [])
+                ]);
+
+                // Combine all data
+                const allData = [...(retailData||[]), ...(onlineData||[]), ...(consigData||[]), ...(wholesaleData||[])];
+                allData.forEach(r => { r.channel = r.channel || 'global'; });
+                globalRawData = allData;
+                
+                // Use same rendering as online
+                populateOnlineFilters(allData);
+                applyOnlineFilters();
+            } catch(e) {
+                containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat: ' + e.message + '</div>'; });
+            }
+        }
+
         function populateOnlineFilters(rows) {
+            if (!rows) rows = globalRawData || onlineRawData;
             const mp = [...new Set(rows.map(r => r.marketplace).filter(Boolean))].sort();
             const genders = [...new Set(rows.map(r => r.gender).filter(Boolean))].sort();
             const series = [...new Set(rows.map(r => r.collection).filter(Boolean))].sort();
@@ -9097,14 +9131,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function applyOnlineFilters() {
-            if (!onlineRawData) return;
+            const data = globalRawData || onlineRawData;
+            if (!data) return;
             const mpVal = document.getElementById('onlineFilterMarketplace')?.value || '';
             const gdVal = document.getElementById('onlineFilterGender')?.value || '';
             const srVal = document.getElementById('onlineFilterSeries')?.value || '';
             const trVal = document.getElementById('onlineFilterTier')?.value || '';
             const arVal = document.getElementById('onlineFilterArea')?.value || '';
 
-            let filtered = onlineRawData;
+            let filtered = data;
             if (mpVal) filtered = filtered.filter(r => r.marketplace === mpVal);
             if (gdVal) filtered = filtered.filter(r => r.gender === gdVal);
             if (srVal) filtered = filtered.filter(r => r.collection === srVal);
@@ -9164,7 +9199,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const resultEl = document.getElementById('onlineSkuResults');
             if (!resultEl) return;
 
-            if (!query || query.length < 2 || !onlineRawData) {
+            if (!query || query.length < 2 || !(globalRawData || onlineRawData)) {
                 if (summEl) summEl.innerHTML = '';
                 resultEl.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
                 return;
@@ -9173,7 +9208,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
 
             // Search ALL raw data
-            const matches = onlineRawData.filter(r => {
+            const matches = globalRawData || onlineRawData.filter(r => {
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
                 const name = (r.product_name || r.name || '').toLowerCase();
@@ -9265,19 +9300,19 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const summEl = document.getElementById('onlineSkuSummary');
             if (!resultEl) return;
             const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
-            if (!exactKode && (!query || query.length < 2 || !onlineRawData)) {
+            if (!exactKode && (!query || query.length < 2 || !(globalRawData || onlineRawData))) {
                 if (summEl) summEl.innerHTML = '<p style="color:#ef4444;">Masukkan minimal 2 karakter untuk dicari</p>';
                 resultEl.innerHTML = '';
                 return;
             }
-            if (!onlineRawData) return;
+            const data = globalRawData || onlineRawData; if (!data) return;
             const displayQuery = exactKode || query;
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
 
             // Search ALL raw data
-            const matches = onlineRawData.filter(r => {
+            const matches = globalRawData || onlineRawData.filter(r => {
                 if (exactKode) return (r.kode_kecil || '').toUpperCase() === exactKode.toUpperCase();
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
