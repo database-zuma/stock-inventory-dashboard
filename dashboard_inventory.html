@@ -2411,7 +2411,20 @@
                 });
                 // Indonesian month order for sorting
                 const ID_MONTH_ORDER = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
-                const allMonthKeys = [...monthKeysSet].filter(k => ID_MONTH_ORDER.includes(k)).sort((a,b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
+                const allMonthKeys = [...monthKeysSet].filter(k => ID_MONTH_ORDER.includes(k));
+                // Handle year-crossing: if both early (jan-mar) and late (okt-des) months exist,
+                // late months are from previous year and should sort before early months
+                const hasEarly = allMonthKeys.some(k => ID_MONTH_ORDER.indexOf(k) < 6);
+                const hasLate = allMonthKeys.some(k => ID_MONTH_ORDER.indexOf(k) >= 9);
+                if (hasEarly && hasLate) {
+                    allMonthKeys.sort((a, b) => {
+                        const ai = ID_MONTH_ORDER.indexOf(a);
+                        const bi = ID_MONTH_ORDER.indexOf(b);
+                        return (ai >= 9 ? ai - 12 : ai) - (bi >= 9 ? bi - 12 : bi);
+                    });
+                } else {
+                    allMonthKeys.sort((a, b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
+                }
                 // Take last 3 months
                 salesMap['_months'] = allMonthKeys.length >= 3 ? allMonthKeys.slice(-3) : allMonthKeys;
                 targetData = targetsData;
@@ -5768,7 +5781,7 @@
                 kodeKecilMap[kk].stokTokoSulawesi += item.stokTokoSulawesi || 0;
                 kodeKecilMap[kk].stokTokoSumatera += item.stokTokoSumatera || 0;
                 kodeKecilMap[kk].stokTokoLombok += item.stokTokoLombok || 0;
-                kodeKecilMap[kk].skuList.push(item.sku);
+                kodeKecilMap[kk].skuList.push(item.kodeKecil || item.sku);
             });
 
             // Calculate totals
@@ -6034,9 +6047,10 @@
             }
 
             // Helper function to get sales for SKU (dynamic months)
-            function getSales(sku) {
-                const skuUpper = (sku || '').toUpperCase();
-                const s = salesMap[skuUpper] || {};
+            function getSales(sku, kodeKecil) {
+                // salesMap is keyed by kode_besar (= item.kodeKecil), NOT kode_mix_size (= item.sku)
+                const key = (kodeKecil || sku || '').toUpperCase();
+                const s = salesMap[key] || {};
                 const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
                 const avg = (v1 + v2 + v3) / 3;
                 return { m1: v1, m2: v2, m3: v3, avg: avg };
@@ -6047,7 +6061,7 @@
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    return getSales(item.sku);
+                    return getSales(item.sku, item.kodeKecil);
                 }
             }
 
@@ -6317,14 +6331,14 @@
 
                 // Dead Stock badge
                 const isDeadStock = avgSales === 0 && basisStock > 0;
-                const deadBadge = isDeadStock ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-left:5px;vertical-align:middle;" title="Dead Stock"></span>' : '';
+                const deadBadge = '';
 
                 const cellStyle = 'padding:8px;text-align:center;';
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
-                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
@@ -6346,7 +6360,7 @@
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
-                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
@@ -6438,8 +6452,8 @@
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    const skuUpper = (item.sku || '').toUpperCase();
-                    const s = salesMap[skuUpper] || {};
+                    const key = (item.kodeKecil || item.sku || '').toUpperCase();
+                    const s = salesMap[key] || {};
                     const v1 = s[sM1] || 0, v2 = s[sM2] || 0, v3 = s[sM3] || 0;
                     return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
                 }
@@ -6507,8 +6521,8 @@
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    const skuU = (item.sku || '').toUpperCase();
-                    const s = salesMap[skuU] || {};
+                    const key = (item.kodeKecil || item.sku || '').toUpperCase();
+                    const s = salesMap[key] || {};
                     const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
                     return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
                 }
