@@ -5755,14 +5755,8 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
-                        stokToko: 0,
-                        stokTokoBali: 0,
-                        stokTokoJakarta: 0,
-                        stokTokoJatim: 0,
-                        stokTokoBatam: 0,
-                        stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0,
-                        stokTokoLombok: 0,
+                        stokRetail: 0,
+                        stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0,
                         skuList: []
@@ -5773,21 +5767,15 @@
                 kodeKecilMap[kk].WHS += item.WHS || 0;
                 kodeKecilMap[kk].WHB += item.WHB || 0;
                 kodeKecilMap[kk].WHJ += item.WHJ || 0;
-                kodeKecilMap[kk].stokToko += item.stokToko || 0;
-                kodeKecilMap[kk].stokTokoBali += item.stokTokoBali || 0;
-                kodeKecilMap[kk].stokTokoJakarta += item.stokTokoJakarta || 0;
-                kodeKecilMap[kk].stokTokoJatim += item.stokTokoJatim || 0;
-                kodeKecilMap[kk].stokTokoBatam += item.stokTokoBatam || 0;
-                kodeKecilMap[kk].stokTokoSulawesi += item.stokTokoSulawesi || 0;
-                kodeKecilMap[kk].stokTokoSumatera += item.stokTokoSumatera || 0;
-                kodeKecilMap[kk].stokTokoLombok += item.stokTokoLombok || 0;
+                kodeKecilMap[kk].stokRetail += item.stokRetail || 0;
+                kodeKecilMap[kk].stokConsignment += item.stokConsignment || 0;
                 kodeKecilMap[kk].skuList.push(item.kodeKecil || item.sku);
             });
 
             // Calculate totals
             Object.values(kodeKecilMap).forEach(item => {
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
-                item.globalStock = item.whTotal + item.stokToko;
+                item.globalStock = item.whTotal + item.stokRetail + item.stokConsignment;
             });
 
             return Object.values(kodeKecilMap);
@@ -5858,7 +5846,8 @@
                     '<th style="' + headerStyle + 'background:#34d399;color:#064e3b;">WH BALI</th>' +
                     '<th style="' + headerStyle + 'background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
                     '<th style="' + headerStyle + 'background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
+                    '<th style="' + headerStyle + 'background:#059669;" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + 'background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
                     '<th style="' + headerStyle + 'background:#b91c1c;" onclick="sortStockControl(\'gap\')">GAP</th>' +
                     '<th style="' + headerStyle + 'background:#9333ea;" onclick="sortStockControl(\'str\')">STR</th>' +
@@ -5880,7 +5869,8 @@
                     '<th style="' + headerStyle + 'background:#34d399;color:#064e3b;">WH BALI</th>' +
                     '<th style="' + headerStyle + 'background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
                     '<th style="' + headerStyle + 'background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
+                    '<th style="' + headerStyle + 'background:#059669;" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + 'background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
                     '<th style="' + headerStyle + 'background:#b91c1c;" onclick="sortStockControl(\'gap\')">GAP</th>' +
                     '<th style="' + headerStyle + 'background:#9333ea;" onclick="sortStockControl(\'str\')">STR</th>' +
@@ -5904,8 +5894,12 @@
             const whDataUBB = allData.UBB?.warehouse || [];
             const whData = [...whDataDDD, ...whDataLJBB, ...whDataMBB, ...whDataUBB];
 
-            // Process retail data
-            retailData.forEach(item => {
+            // Process retail data - DDD = Retail, MBB = Consignment
+            const retailDDD = allData.DDD?.retail || [];
+            const retailMBB = allData.MBB?.retail || [];
+            
+            // DDD = Retail stores
+            retailDDD.forEach(item => {
                 const sku = item.sku;
                 if (!sku) return;
                 if (!skuMap[sku]) {
@@ -5919,38 +5913,51 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
-                        stokToko: 0,
-                        stokTokoBali: 0,
-                        stokTokoJakarta: 0,
-                        stokTokoJatim: 0,
-                        stokTokoBatam: 0,
-                        stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0,
-                        stokTokoLombok: 0,
+                        stokRetail: 0,
+                        stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0
                     };
                 }
-                // Sum retail stock by area
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
-                        const area = getAreaFromStore(store);
-                        const s = store.toLowerCase();
-                        skuMap[sku].stokToko += stock;
-                        if (area === 'Bali') skuMap[sku].stokTokoBali += stock;
-                        else if (area === 'Jakarta') skuMap[sku].stokTokoJakarta += stock;
-                        else if (area === 'Jawa Timur') skuMap[sku].stokTokoJatim += stock;
-                        else {
-                            if (s.includes('batam')) skuMap[sku].stokTokoBatam += stock;
-                            else if (s.includes('manado')) skuMap[sku].stokTokoSulawesi += stock;
-                            else if (s.includes('ska') || s.includes('pekanbaru')) skuMap[sku].stokTokoSumatera += stock;
-                            else if (s.includes('lombok') || s.includes('mataram')) skuMap[sku].stokTokoLombok += stock;
-                        }
+                        skuMap[sku].stokRetail += stock;
                     });
                 }
             });
 
-            // Process warehouse data
+            // MBB = Consignment stores
+            retailMBB.forEach(item => {
+                const sku = item.sku;
+                if (!sku) return;
+                if (!skuMap[sku]) {
+                    skuMap[sku] = {
+                        sku: sku,
+                        kodeKecil: item.kode_kecil,
+                        kode: item.kode,
+                        name: item.name,
+                        size: item.size || '',
+                        series: item.series,
+                        gender: item.gender,
+                        tier: item.tier,
+                        WHS: 0, WHB: 0, WHJ: 0,
+                        stokRetail: 0,
+                        stokConsignment: 0,
+                        globalStock: 0,
+                        whTotal: 0
+                    };
+                }
+                if (item.store_stock) {
+                    Object.entries(item.store_stock).forEach(([store, stock]) => {
+                        skuMap[sku].stokConsignment += stock;
+                    });
+                }
+            });
+
+            // Process warehouse data - ALL entities (DDD, LJBB, MBB, UBB)
+            // WH Jakarta = Warehouse Jakarta + Warehouse Pluit (semua entity)
+            // WH Bali = Warehouse Bali + Warehouse Bali Gatsu (semua entity)
+            // WH Pusat = Warehouse Pusat (semua entity)
             whData.forEach(item => {
                 const sku = item.sku;
                 if (!sku) return;
@@ -5965,14 +5972,8 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
-                        stokToko: 0,
-                        stokTokoBali: 0,
-                        stokTokoJakarta: 0,
-                        stokTokoJatim: 0,
-                        stokTokoBatam: 0,
-                        stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0,
-                        stokTokoLombok: 0,
+                        stokRetail: 0,
+                        stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0
                     };
@@ -5983,7 +5984,7 @@
                         const w = wh.toLowerCase();
                         if (w.includes('pusat')) skuMap[sku].WHS += stock;
                         else if (w.includes('bali') || w.includes('gatsu')) skuMap[sku].WHB += stock;
-                        else if (w.includes('jakarta') || w.includes('pluit')) skuMap[sku].WHJ += stock;
+                        else if (w.includes('jakarta') || w.includes('pluit') || w.includes('palembang') || w.includes('online')) skuMap[sku].WHJ += stock;
                     });
                 }
             });
@@ -5991,7 +5992,7 @@
             // Calculate totals
             Object.values(skuMap).forEach(item => {
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
-                item.globalStock = item.whTotal + item.stokToko;
+                item.globalStock = item.whTotal + item.stokRetail + item.stokConsignment;
             });
 
             return Object.values(skuMap);
@@ -6039,7 +6040,8 @@
             // Helper function to get stock basis for an item
             function getStockBasis(item) {
                 if (basisStok === 'wh') return item.whTotal || 0;
-                if (basisStok === 'toko') return item.stokToko || 0;
+                if (basisStok === 'retail') return item.stokRetail || 0;
+                if (basisStok === 'consignment') return item.stokConsignment || 0;
                 if (basisStok === 'pusat') return item.WHS || 0;
                 if (basisStok === 'bali') return item.WHB || 0;
                 if (basisStok === 'jkt') return item.WHJ || 0;
@@ -6574,7 +6576,8 @@
                 row[m3Label] = sales.m3;
                 row['AVG'] = Math.round(avgSales * 100) / 100;
                 row['WH TOTAL'] = item.whTotal || 0;
-                row['STOK TOKO'] = item.stokToko || 0;
+                row['STOK RETAIL'] = item.stokRetail || 0;
+                row['STOK CONSIG'] = item.stokConsignment || 0;
                 row['GLOBAL'] = item.globalStock || 0;
                 row['TW'] = Math.round(tw * 100) / 100;
                 row['TO'] = Math.round(to * 100) / 100;
