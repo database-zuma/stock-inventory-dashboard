@@ -1145,6 +1145,29 @@
                 </div>
             </div>
 
+            <!-- KPI Summary Cards (GAP Analysis) -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+                <div id="scKpiUnderstock" onclick="document.getElementById('scFilterGAP').value='understock';renderStockControlTable();" style="cursor:pointer;background:linear-gradient(135deg,#fef2f2 0%,#fecaca 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#ef4444'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#991b1b;margin-bottom:5px;">🔴 Understock</div>
+                    <div id="scKpiUnderstockCount" style="font-size:1.8rem;font-weight:700;color:#dc2626;">0</div>
+                    <div style="font-size:0.7rem;color:#b91c1c;margin-top:3px;">GAP &lt; 0</div>
+                </div>
+                <div id="scKpiTipis" onclick="document.getElementById('scFilterGAP').value='tipis';renderStockControlTable();" style="cursor:pointer;background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#f59e0b'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#92400e;margin-bottom:5px;">🟡 Tipis</div>
+                    <div id="scKpiTipisCount" style="font-size:1.8rem;font-weight:700;color:#d97706;">0</div>
+                    <div style="font-size:0.7rem;color:#b45309;margin-top:3px;">0 ≤ GAP &lt; AvgSales</div>
+                </div>
+                <div id="scKpiAman" onclick="document.getElementById('scFilterGAP').value='aman';renderStockControlTable();" style="cursor:pointer;background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#22c55e'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#166534;margin-bottom:5px;">🟢 Aman</div>
+                    <div id="scKpiAmanCount" style="font-size:1.8rem;font-weight:700;color:#16a34a;">0</div>
+                    <div style="font-size:0.7rem;color:#15803d;margin-top:3px;">GAP ≥ AvgSales</div>
+                </div>
+                <div id="scKpiDead" onclick="document.getElementById('scFilterGAP').value='dead';renderStockControlTable();" style="cursor:pointer;background:linear-gradient(135deg,#f3f4f6 0%,#e5e7eb 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#6b7280'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#374151;margin-bottom:5px;">💀 Dead Stock</div>
+                    <div id="scKpiDeadCount" style="font-size:1.8rem;font-weight:700;color:#4b5563;">0</div>
+                    <div style="font-size:0.7rem;color:#6b7280;margin-top:3px;">Avg Sales = 0 & Stock &gt; 0</div>
+                </div>
+            </div>
             <!-- Filters -->
             <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:12px;padding:15px;margin-bottom:20px;">
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
@@ -1209,6 +1232,36 @@
                             <option value="positive">Positif</option>
                         </select>
                     </div>
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Basis Stok:</label>
+                        <select id="scFilterBasis" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="global">Global (WH+Toko)</option>
+                            <option value="wh">WH Total</option>
+                            <option value="toko">Stok Toko</option>
+                            <option value="pusat">WH Pusat</option>
+                            <option value="bali">WH Bali</option>
+                            <option value="jkt">WH Jakarta</option>
+                        </select>
+                    </div>
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">GAP Status:</label>
+                        <select id="scFilterGAP" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="understock">🔴 Understock</option>
+                            <option value="tipis">🟡 Tipis</option>
+                            <option value="aman">🟢 Aman</option>
+                            <option value="dead">💀 Dead Stock</option>
+                        </select>
+                    </div>
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">STR Status:</label>
+                        <select id="scFilterSTR" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="high">🔴 High (&gt;80%)</option>
+                            <option value="medium">🟡 Medium (50-80%)</option>
+                            <option value="low">🟢 Low (&lt;50%)</option>
+                        </select>
+                    </div>
                     <div style="min-width:120px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
                         <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -1216,6 +1269,12 @@
                 </div>
             </div>
 
+            <!-- Export Excel Button -->
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+                <button onclick="exportStockControlExcel()" style="padding:10px 20px;background:linear-gradient(135deg,#059669 0%,#10b981 100%);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    📥 Export Excel
+                </button>
+            </div>
             <!-- Control Stock Table -->
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                 <div style="overflow-x:auto;">
@@ -1243,25 +1302,32 @@
                         <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
                             <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
                             <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
-                            <li><b>TW+TO</b> = Total Stock / Avg Sales 3 Bulan</li>
+                            <li><b>GAP</b> = Basis Stok - (Avg Sales × 3)</li>
+                            <li><b>STR (Sell Through Rate)</b> = (Avg Sales × 3) / ((Avg Sales × 3) + Basis Stok) × 100%</li>
                         </ul>
                     </div>
                     <div>
                         <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW/TO:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;margin-bottom:10px;">
                             <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;1</b> Critical</span>
                             <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>1-2</b> Low</span>
                             <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>2-4</b> Normal</span>
                             <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;4</b> High</span>
                         </div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna GAP:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">🔴 <b>Understock</b> GAP &lt; 0</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">🟡 <b>Tipis</b> 0 ≤ GAP &lt; Avg</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">🟢 <b>Aman</b> GAP ≥ Avg</span>
+                            <span style="background:#1f2937;color:white;padding:3px 8px;border-radius:4px;">💀 <b>Dead Stock</b> Avg=0 & Stok&gt;0</span>
+                        </div>
                     </div>
                     <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW+TO:</div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna STR:</div>
                         <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
-                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;2</b> Critical</span>
-                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>2-4</b> Low</span>
-                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>4-8</b> Normal</span>
-                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;8</b> High</span>
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">🔴 <b>&gt;80%</b> High (Perlu Restock)</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">🟡 <b>50-80%</b> Medium</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">🟢 <b>&lt;50%</b> Low (Stok Cukup)</span>
                         </div>
                     </div>
                 </div>
@@ -2335,6 +2401,19 @@
                 storeAreaMap = storeAreasData;
                 maxStockMap = maxStockData;
                 salesMap = salesAggData;
+                // Extract dynamic month keys from salesMap for Control Stock
+                // salesMap keys per SKU are like {nov: N, des: N, jan: N}
+                const monthKeysSet = new Set();
+                Object.values(salesAggData).forEach(skuData => {
+                    if (typeof skuData === 'object' && !Array.isArray(skuData)) {
+                        Object.keys(skuData).forEach(k => monthKeysSet.add(k));
+                    }
+                });
+                // Indonesian month order for sorting
+                const ID_MONTH_ORDER = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
+                const allMonthKeys = [...monthKeysSet].filter(k => ID_MONTH_ORDER.includes(k)).sort((a,b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
+                // Take last 3 months
+                salesMap['_months'] = allMonthKeys.length >= 3 ? allMonthKeys.slice(-3) : allMonthKeys;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
                 // Load sales detail per-month (Jan 2026 → current month) to avoid LIMIT issues
@@ -4902,7 +4981,7 @@
                                 if (stock !== 0) {
                                     if (!whArticles[whName][tier]) whArticles[whName][tier] = [];
                                     whArticles[whName][tier].push({
-                                        sku: item.sku,
+                                    sku: item.kode_kecil || item.sku,
                                         nama: item.name || item.nama || item.sku,
                                         size: item.size || '-',
                                         stock: stock,
@@ -5050,7 +5129,7 @@
                             // Track article detail (include negatif agar bisa di-investigate)
                             if (stock !== 0) {
                                 storeArticles[store][tier].push({
-                                    sku: item.sku,
+                                    sku: item.kode_kecil || item.sku,
                                     nama: item.name || item.nama || item.sku,
                                     size: item.size || '-',
                                     stock: stock,
@@ -5467,12 +5546,12 @@
                 <div style="max-height:400px;overflow-y:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
                         <thead>
-                            <tr style="background:#f8fafc;position:sticky;top:0;">
-                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Store</th>
-                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">SKU</th>
-                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Nama Artikel</th>
-                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Size</th>
-                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Qty</th>
+                            <tr style="background:#374151;position:sticky;top:0;">
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">Store</th>
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">KODE BARANG</th>
+                                <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">Nama Artikel</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Size</th>
+                                <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;color:white;">Qty</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -5703,16 +5782,18 @@
 
         // Get aggregated sales for Kode Kecil (sum all SKU sales)
         function getKodeKecilSales(skuList) {
-            let nov = 0, des = 0, jan = 0;
+            const months = salesMap['_months'] || ['nov','des','jan'];
+            const [m1, m2, m3] = months;
+            let s1 = 0, s2 = 0, s3 = 0;
             skuList.forEach(sku => {
                 const skuUpper = (sku || '').toUpperCase();
-                const s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
-                nov += s.nov;
-                des += s.des;
-                jan += s.jan;
+                const s = salesMap[skuUpper] || {};
+                s1 += s[m1] || 0;
+                s2 += s[m2] || 0;
+                s3 += s[m3] || 0;
             });
-            const avg = (nov + des + jan) / 3;
-            return { nov, des, jan, avg };
+            const avg = (s1 + s2 + s3) / 3;
+            return { m1: s1, m2: s2, m3: s3, avg };
         }
 
         // Switch view mode
@@ -5744,61 +5825,71 @@
             const thead = document.getElementById('scTableHead');
             if (!thead) return;
 
-            const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;';
+            const months = salesMap['_months'] || ['nov','des','jan'];
+            const mLabels = months.map(m => m.toUpperCase());
+            const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;';
 
             if (scViewMode === 'sku') {
                 thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
-                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE SKU</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;" onclick="sortStockControl(\'size\')">SIZE</th>' +
+                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE BARANG</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'size\')">SIZE</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'nov\')">NOV</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'des\')">DES</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'jan\')">JAN</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\'twto\')">TW+TO</th>' +
+                    '<th style="' + headerStyle + '">SERIES</th>' +
+                    '<th style="' + headerStyle + '">GENDER</th>' +
+                    '<th style="' + headerStyle + '">TIER</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m1\')">' + mLabels[0] + '</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m2\')">' + mLabels[1] + '</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m3\')">' + mLabels[2] + '</th>' +
+                    '<th style="' + headerStyle + 'background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
+                    '<th style="' + headerStyle + 'background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
+                    '<th style="' + headerStyle + 'background:#34d399;color:#064e3b;">WH BALI</th>' +
+                    '<th style="' + headerStyle + 'background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
+                    '<th style="' + headerStyle + 'background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
+                    '<th style="' + headerStyle + 'background:#b91c1c;" onclick="sortStockControl(\'gap\')">GAP</th>' +
+                    '<th style="' + headerStyle + 'background:#9333ea;" onclick="sortStockControl(\'str\')">STR</th>' +
+                    '<th style="' + headerStyle + 'background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
+                    '<th style="' + headerStyle + 'background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             } else {
                 thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE KECIL</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'nov\')">NOV</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'des\')">DES</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'jan\')">JAN</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\'twto\')">TW+TO</th>' +
+                    '<th style="' + headerStyle + '">SERIES</th>' +
+                    '<th style="' + headerStyle + '">GENDER</th>' +
+                    '<th style="' + headerStyle + '">TIER</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m1\')">' + mLabels[0] + '</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m2\')">' + mLabels[1] + '</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m3\')">' + mLabels[2] + '</th>' +
+                    '<th style="' + headerStyle + 'background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
+                    '<th style="' + headerStyle + 'background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
+                    '<th style="' + headerStyle + 'background:#34d399;color:#064e3b;">WH BALI</th>' +
+                    '<th style="' + headerStyle + 'background:#60a5fa;color:#1e3a8a;">WH JKT</th>' +
+                    '<th style="' + headerStyle + 'background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + 'background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
+                    '<th style="' + headerStyle + 'background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
+                    '<th style="' + headerStyle + 'background:#b91c1c;" onclick="sortStockControl(\'gap\')">GAP</th>' +
+                    '<th style="' + headerStyle + 'background:#9333ea;" onclick="sortStockControl(\'str\')">STR</th>' +
+                    '<th style="' + headerStyle + 'background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
+                    '<th style="' + headerStyle + 'background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             }
         }
 
         function buildSkuItems() {
             const skuMap = {};
-            const retailData = allData.DDD?.retail || [];
-            // Warehouse data dari DDD dan LJBB saja
+            // Retail data dari DDD + MBB + UBB
+            const retailDDD = allData.DDD?.retail || [];
+            const retailMBB = allData.MBB?.retail || [];
+            const retailUBB = allData.UBB?.retail || [];
+            const retailData = [...retailDDD, ...retailMBB, ...retailUBB];
+            // Warehouse data dari DDD, LJBB, MBB, UBB
             const whDataDDD = allData.DDD?.warehouse || [];
             const whDataLJBB = allData.LJBB?.warehouse || [];
-            const whData = [...whDataDDD, ...whDataLJBB];
+            const whDataMBB = allData.MBB?.warehouse || [];
+            const whDataUBB = allData.UBB?.warehouse || [];
+            const whData = [...whDataDDD, ...whDataLJBB, ...whDataMBB, ...whDataUBB];
 
             // Process retail data
             retailData.forEach(item => {
@@ -5920,15 +6011,33 @@
             const toFilter = document.getElementById('scFilterTO')?.value || '';
             const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
 
-            // Use salesMap directly (loaded from salesss.csv)
-            // salesMap format: {SKU: {nov, des, jan}}
+            // Dynamic months from salesMap
+            const scMonths = salesMap['_months'] || ['nov','des','jan'];
+            const [scM1, scM2, scM3] = scMonths;
 
-            // Helper function to get sales for SKU
+            // Basis Stok dropdown
+            const basisStok = document.getElementById('scFilterBasis')?.value || 'global';
+            // GAP and STR filters
+            const gapFilter = document.getElementById('scFilterGAP')?.value || '';
+            const strFilter = document.getElementById('scFilterSTR')?.value || '';
+
+            // Helper function to get stock basis for an item
+            function getStockBasis(item) {
+                if (basisStok === 'wh') return item.whTotal || 0;
+                if (basisStok === 'toko') return item.stokToko || 0;
+                if (basisStok === 'pusat') return item.WHS || 0;
+                if (basisStok === 'bali') return item.WHB || 0;
+                if (basisStok === 'jkt') return item.WHJ || 0;
+                return item.globalStock || 0; // default: global
+            }
+
+            // Helper function to get sales for SKU (dynamic months)
             function getSales(sku) {
                 const skuUpper = (sku || '').toUpperCase();
                 const s = salesMap[skuUpper] || {};
-                const avg = ((s.nov || 0) + (s.des || 0) + (s.jan || 0)) / 3;
-                return { nov: (s.nov || 0), des: (s.des || 0), jan: (s.jan || 0), avg: avg };
+                const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
+                const avg = (v1 + v2 + v3) / 3;
+                return { m1: v1, m2: v2, m3: v3, avg: avg };
             }
 
             // Helper function to get sales for item (handles both modes)
@@ -5988,6 +6097,29 @@
                     if (toFilter === 'negative' && storeStock >= 0) return false;
                     if (toFilter === 'zero' && storeStock !== 0) return false;
                     if (toFilter === 'positive' && storeStock <= 0) return false;
+
+                // GAP filter
+                if (gapFilter) {
+                    const sales = getItemSales(item);
+                    const basisStock = getStockBasis(item);
+                    const avgSales = sales.avg;
+                    const gap = basisStock - (avgSales * 3);
+                    if (gapFilter === 'understock' && gap >= 0) return false;
+                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales)) return false;
+                    if (gapFilter === 'aman' && gap < avgSales) return false;
+                    if (gapFilter === 'dead' && !(avgSales === 0 && basisStock > 0)) return false;
+                }
+
+                // STR filter
+                if (strFilter) {
+                    const sales2 = getItemSales(item);
+                    const basisStock2 = getStockBasis(item);
+                    const avgSales2 = sales2.avg;
+                    const str = (avgSales2 * 3) / ((avgSales2 * 3) + basisStock2) * 100;
+                    if (strFilter === 'high' && str <= 80) return false;
+                    if (strFilter === 'medium' && (str < 50 || str > 80)) return false;
+                    if (strFilter === 'low' && str >= 50) return false;
+                }
                 }
                 return true;
             });
@@ -6018,13 +6150,83 @@
             document.getElementById('scWhJakarta').textContent = totalWHJ.toLocaleString();
             document.getElementById('scStokToko').textContent = totalToko.toLocaleString();
 
+            // KPI Summary Cards — count by GAP category (using ALL filtered items, ignoring GAP/STR filter)
+            let kpiUnderstock = 0, kpiTipis = 0, kpiAman = 0, kpiDead = 0;
+            // Count from sourceItems with all filters EXCEPT gapFilter/strFilter
+            const kpiItems = sourceItems.filter(item => {
+                if (gender && item.gender !== gender) return false;
+                if (tier && String(item.tier) !== tier) return false;
+                if (series && item.series !== series) return false;
+                if (search) {
+                    if (scViewMode === 'kodeKecil') {
+                        if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    } else {
+                        if (!item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    }
+                }
+                if (area) {
+                    let hasStock = false;
+                    if (area === 'Bali') hasStock = (item.WHB + item.stokTokoBali) !== 0;
+                    else if (area === 'Jakarta') hasStock = (item.WHJ + item.stokTokoJakarta) !== 0;
+                    else if (area === 'Jawa Timur') hasStock = (item.WHS + item.stokTokoJatim) !== 0;
+                    else if (area === 'Batam') hasStock = item.stokTokoBatam !== 0;
+                    else if (area === 'Sulawesi') hasStock = item.stokTokoSulawesi !== 0;
+                    else if (area === 'Sumatera') hasStock = item.stokTokoSumatera !== 0;
+                    else if (area === 'Lombok') hasStock = item.stokTokoLombok !== 0;
+                    if (!hasStock) return false;
+                }
+                if (twFilter) {
+                    const s = getItemSales(item);
+                    const whS = area === 'Bali' ? item.WHB : (area === 'Jakarta' ? item.WHJ : (area === 'Jawa Timur' ? item.WHS : item.whTotal));
+                    const twV = s.avg > 0 ? (whS / s.avg) : 999;
+                    if (twFilter === 'critical' && twV >= 2) return false;
+                    if (twFilter === 'low' && (twV < 2 || twV >= 4)) return false;
+                    if (twFilter === 'normal' && (twV < 4 || twV >= 8)) return false;
+                    if (twFilter === 'high' && twV < 8) return false;
+                }
+                if (toFilter) {
+                    const stS = area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko));
+                    if (toFilter === 'negative' && stS >= 0) return false;
+                    if (toFilter === 'zero' && stS !== 0) return false;
+                    if (toFilter === 'positive' && stS <= 0) return false;
+                }
+                return true;
+            });
+            kpiItems.forEach(item => {
+                const kSales = getItemSales(item);
+                const kBasis = getStockBasis(item);
+                const kAvg = kSales.avg;
+                const kGap = kBasis - (kAvg * 3);
+                if (kAvg === 0 && kBasis > 0) { kpiDead++; }
+                else if (kGap < 0) { kpiUnderstock++; }
+                else if (kGap < kAvg) { kpiTipis++; }
+                else { kpiAman++; }
+            });
+            const kpiUnderstockEl = document.getElementById('scKpiUnderstockCount');
+            const kpiTipisEl = document.getElementById('scKpiTipisCount');
+            const kpiAmanEl = document.getElementById('scKpiAmanCount');
+            const kpiDeadEl = document.getElementById('scKpiDeadCount');
+            if (kpiUnderstockEl) kpiUnderstockEl.textContent = kpiUnderstock.toLocaleString();
+            if (kpiTipisEl) kpiTipisEl.textContent = kpiTipis.toLocaleString();
+            if (kpiAmanEl) kpiAmanEl.textContent = kpiAman.toLocaleString();
+            if (kpiDeadEl) kpiDeadEl.textContent = kpiDead.toLocaleString();
+            // Highlight active KPI card
+            ['scKpiUnderstock','scKpiTipis','scKpiAman','scKpiDead'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.borderColor = 'transparent';
+            });
+            if (gapFilter === 'understock') { const e = document.getElementById('scKpiUnderstock'); if(e) e.style.borderColor='#ef4444'; }
+            if (gapFilter === 'tipis') { const e = document.getElementById('scKpiTipis'); if(e) e.style.borderColor='#f59e0b'; }
+            if (gapFilter === 'aman') { const e = document.getElementById('scKpiAman'); if(e) e.style.borderColor='#22c55e'; }
+            if (gapFilter === 'dead') { const e = document.getElementById('scKpiDead'); if(e) e.style.borderColor='#6b7280'; }
+
             // Render table
             const tbody = document.getElementById('scTableBody');
             if (!tbody) return;
 
             tbody.innerHTML = pageData.map(item => {
                 const sales = getItemSales(item);
-                let nov = sales.nov, des = sales.des, jan = sales.jan, avgSales = sales.avg;
+                let s1 = sales.m1, s2 = sales.m2, s3 = sales.m3, avgSales = sales.avg;
                 let whStock, tokoStock, globalStock;
 
                 if (!area) {
@@ -6061,16 +6263,31 @@
                     globalStock = tokoStock;
                 }
 
+                // GAP & STR calculation
+                const basisStock = getStockBasis(item);
+                const gap = basisStock - (avgSales * 3);
+                const denominator = (avgSales * 3) + basisStock;
+                const str = denominator > 0 ? ((avgSales * 3) / denominator * 100) : 0;
+
+                // GAP color
+                let gapColor = '#6b7280', gapBg = 'transparent';
+                if (gap < 0) { gapColor = '#dc2626'; gapBg = '#fef2f2'; }
+                else if (gap < avgSales) { gapColor = '#d97706'; gapBg = '#fffbeb'; }
+                else { gapColor = '#16a34a'; gapBg = '#f0fdf4'; }
+
+                // STR color
+                let strColor = '#6b7280', strBg = 'transparent';
+                if (str > 80) { strColor = '#dc2626'; strBg = '#fef2f2'; }
+                else if (str >= 50) { strColor = '#d97706'; strBg = '#fffbeb'; }
+                else { strColor = '#16a34a'; strBg = '#f0fdf4'; }
+
                 const tw = avgSales > 0 ? (whStock / avgSales).toFixed(1) : 0;
                 const to = avgSales > 0 ? (tokoStock / avgSales).toFixed(1) : 0;
                 const twVal = parseFloat(tw) || 0;
                 const toVal = parseFloat(to) || 0;
-                const twtoVal = twVal + toVal;
-                const twto = twtoVal.toFixed(1);
 
                 let twColor = '#6b7280', twBg = 'transparent';
                 let toColor = '#6b7280', toBg = 'transparent';
-                let twtoColor = '#6b7280', twtoBg = 'transparent';
                 if (avgSales > 0) {
                     if (twVal < 1) { twColor = '#ef4444'; twBg = '#fef2f2'; }
                     else if (twVal < 2) { twColor = '#f59e0b'; twBg = '#fffbeb'; }
@@ -6081,11 +6298,6 @@
                     else if (toVal < 2) { toColor = '#f59e0b'; toBg = '#fffbeb'; }
                     else if (toVal < 4) { toColor = '#10b981'; toBg = '#f0fdf4'; }
                     else { toColor = '#3b82f6'; toBg = '#eff6ff'; }
-
-                    if (twtoVal < 2) { twtoColor = '#ef4444'; twtoBg = '#fef2f2'; }
-                    else if (twtoVal < 4) { twtoColor = '#f59e0b'; twtoBg = '#fffbeb'; }
-                    else if (twtoVal < 8) { twtoColor = '#10b981'; twtoBg = '#f0fdf4'; }
-                    else { twtoColor = '#3b82f6'; twtoBg = '#eff6ff'; }
                 }
 
                 let whPusat = '-', whBali = '-', whJkt = '-';
@@ -6101,49 +6313,57 @@
                     whPusat = item.WHS.toLocaleString();
                 }
 
+                // Dead Stock badge
+                const isDeadStock = avgSales === 0 && basisStock > 0;
+                const deadBadge = isDeadStock ? ' <span style="background:#7f1d1d;color:white;font-size:0.6rem;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700;">DEAD</span>' : '';
+
+                const cellStyle = 'padding:8px;text-align:center;';
+
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + (item.kodeKecil||'-') + '</td>' +
-                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
+                        '<td style="' + cellStyle + 'background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:700;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + item.sku + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
-                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
+                        '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + deadBadge + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
+                        '<td style="' + cellStyle + 'background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:700;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
@@ -6197,13 +6417,29 @@
                 scSortAsc = true;
             }
 
+            // Dynamic months and basis for sorting
+            const sortMonths = salesMap['_months'] || ['nov','des','jan'];
+            const [sM1, sM2, sM3] = sortMonths;
+            const sortBasis = document.getElementById('scFilterBasis')?.value || 'global';
+
+            function getSortBasis(item) {
+                if (sortBasis === 'wh') return item.whTotal || 0;
+                if (sortBasis === 'toko') return item.stokToko || 0;
+                if (sortBasis === 'pusat') return item.WHS || 0;
+                if (sortBasis === 'bali') return item.WHB || 0;
+                if (sortBasis === 'jkt') return item.WHJ || 0;
+                return item.globalStock || 0;
+            }
+
             // Helper to get sales based on view mode
             function getSortSales(item) {
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
                     const skuUpper = (item.sku || '').toUpperCase();
-                    return salesMap[skuUpper] || {nov: 0, des: 0, jan: 0, avg: 0};
+                    const s = salesMap[skuUpper] || {};
+                    const v1 = s[sM1] || 0, v2 = s[sM2] || 0, v3 = s[sM3] || 0;
+                    return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
                 }
             }
 
@@ -6211,26 +6447,32 @@
                 let valA, valB;
                 const salesA = getSortSales(a);
                 const salesB = getSortSales(b);
-                const avgA = salesA.avg !== undefined ? salesA.avg : (salesA.nov + salesA.des + salesA.jan) / 3;
-                const avgB = salesB.avg !== undefined ? salesB.avg : (salesB.nov + salesB.des + salesB.jan) / 3;
+                const avgA = salesA.avg || 0;
+                const avgB = salesB.avg || 0;
 
                 switch(column) {
                     case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
                     case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
                     case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
-                    case 'nov': valA = salesA.nov; valB = salesB.nov; break;
-                    case 'des': valA = salesA.des; valB = salesB.des; break;
-                    case 'jan': valA = salesA.jan; valB = salesB.jan; break;
+                    case 'm1': valA = salesA.m1; valB = salesB.m1; break;
+                    case 'm2': valA = salesA.m2; valB = salesB.m2; break;
+                    case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
                     case 'stokToko': valA = a.stokToko; valB = b.stokToko; break;
                     case 'global': valA = a.globalStock; valB = b.globalStock; break;
+                    case 'gap':
+                        valA = getSortBasis(a) - (avgA * 3);
+                        valB = getSortBasis(b) - (avgB * 3);
+                        break;
+                    case 'str':
+                        const denA = (avgA * 3) + getSortBasis(a);
+                        const denB = (avgB * 3) + getSortBasis(b);
+                        valA = denA > 0 ? ((avgA * 3) / denA * 100) : 0;
+                        valB = denB > 0 ? ((avgB * 3) / denB * 100) : 0;
+                        break;
                     case 'tw': valA = avgA > 0 ? a.whTotal / avgA : 999; valB = avgB > 0 ? b.whTotal / avgB : 999; break;
                     case 'to': valA = avgA > 0 ? a.stokToko / avgA : 999; valB = avgB > 0 ? b.stokToko / avgB : 999; break;
-                    case 'twto':
-                        valA = avgA > 0 ? a.globalStock / avgA : 999;
-                        valB = avgB > 0 ? b.globalStock / avgB : 999;
-                        break;
                     default:
                         valA = scViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
                         valB = scViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
@@ -6247,7 +6489,91 @@
         }
 
         function exportStockControl() {
-            alert('Export feature coming soon!');
+            exportStockControlExcel();
+        }
+
+        function exportStockControlExcel() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS library not loaded. Please refresh the page.'); return; }
+            if (!scFilteredItems || scFilteredItems.length === 0) { alert('Tidak ada data untuk di-export.'); return; }
+
+            const scMonths = salesMap['_months'] || ['nov','des','jan'];
+            const [scM1, scM2, scM3] = scMonths;
+            const basisLabel = document.getElementById('scFilterBasis')?.value || 'global';
+
+            // Helper to get sales for export
+            function getExportSales(item) {
+                if (scViewMode === 'kodeKecil') {
+                    return getKodeKecilSales(item.skuList || []);
+                } else {
+                    const skuU = (item.sku || '').toUpperCase();
+                    const s = salesMap[skuU] || {};
+                    const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
+                    return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
+                }
+            }
+
+            function getExportBasis(item) {
+                if (basisLabel === 'wh') return item.whTotal || 0;
+                if (basisLabel === 'toko') return item.stokToko || 0;
+                if (basisLabel === 'pusat') return item.WHS || 0;
+                if (basisLabel === 'bali') return item.WHB || 0;
+                if (basisLabel === 'jkt') return item.WHJ || 0;
+                return item.globalStock || 0;
+            }
+
+            const m1Label = scM1.charAt(0).toUpperCase() + scM1.slice(1);
+            const m2Label = scM2.charAt(0).toUpperCase() + scM2.slice(1);
+            const m3Label = scM3.charAt(0).toUpperCase() + scM3.slice(1);
+
+            const rows = scFilteredItems.map(item => {
+                const sales = getExportSales(item);
+                const basisStock = getExportBasis(item);
+                const avgSales = sales.avg;
+                const gap = basisStock - (avgSales * 3);
+                const strDen = (avgSales * 3) + basisStock;
+                const str = strDen > 0 ? ((avgSales * 3) / strDen * 100) : 0;
+                const tw = avgSales > 0 ? (item.whTotal / avgSales) : 0;
+                const to = avgSales > 0 ? (item.stokToko / avgSales) : 0;
+                const isDead = avgSales === 0 && basisStock > 0;
+                let gapStatus = 'Aman';
+                if (isDead) gapStatus = 'Dead Stock';
+                else if (gap < 0) gapStatus = 'Understock';
+                else if (gap < avgSales) gapStatus = 'Tipis';
+                let strStatus = 'Low (<50%)';
+                if (str > 80) strStatus = 'High (>80%)';
+                else if (str >= 50) strStatus = 'Medium (50-80%)';
+
+                const row = {};
+                if (scViewMode === 'kodeKecil') {
+                    row['KODE BARANG'] = item.kodeKecil || '';
+                } else {
+                    row['KODE BARANG'] = item.kodeKecil || item.sku || '';
+                    row['SIZE'] = item.size || '';
+                }
+                row['ARTICLE'] = item.name || '';
+                row['GENDER'] = item.gender || '';
+                row['TIER'] = item.tier || '';
+                row[m1Label] = sales.m1;
+                row[m2Label] = sales.m2;
+                row[m3Label] = sales.m3;
+                row['AVG'] = Math.round(avgSales * 100) / 100;
+                row['WH TOTAL'] = item.whTotal || 0;
+                row['STOK TOKO'] = item.stokToko || 0;
+                row['GLOBAL'] = item.globalStock || 0;
+                row['TW'] = Math.round(tw * 100) / 100;
+                row['TO'] = Math.round(to * 100) / 100;
+                row['GAP'] = Math.round(gap);
+                row['GAP STATUS'] = gapStatus;
+                row['STR (%)'] = Math.round(str * 100) / 100;
+                row['STR STATUS'] = strStatus;
+                return row;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Control Stock');
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, 'Control_Stock_' + basisLabel + '_' + dateStr + '.xlsx');
         }
 
         // ============ SALES DASHBOARD FUNCTIONS ============
