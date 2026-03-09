@@ -551,9 +551,9 @@
             </button>
             <div class="entity-toggle-bar" id="entityToggleBar">
                 <button class="entity-toggle-btn active" data-entity="DDD" onclick="selectEntity('DDD')">› DDD</button>
-                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">› LJBB</button>
                 <button class="entity-toggle-btn" data-entity="MBB" onclick="selectEntity('MBB')">› MBB</button>
                 <button class="entity-toggle-btn" data-entity="UBB" onclick="selectEntity('UBB')">› UBB</button>
+                <button class="entity-toggle-btn" data-entity="LJBB" onclick="selectEntity('LJBB')">› LJBB</button>
                 <button class="entity-toggle-btn" data-view="skusearch" onclick="switchView('skusearch')" style="margin-top:2px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;color:#94a3b8;font-size:0.8rem;">› 🔍 SKU Search</button>
             </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
@@ -2399,6 +2399,11 @@
         }
 
         function selectEntity(entity) {
+            // Auto-switch to inventory view when clicking entity
+            if (currentView !== 'inventory') {
+                switchView('inventory');
+            }
+
             currentEntity = entity;
             document.querySelectorAll('.entity-toggle-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.entity === entity);
@@ -2408,43 +2413,30 @@
             currentArea = '';
             currentStore = '';
 
-            // LJBB and UBB only have warehouse stock
-            var hasRetail = (entity === 'DDD' || entity === 'MBB');
+            // Only DDD has retail; DDD and MBB have consignment; LJBB and UBB only warehouse
+            var hasRetail = (entity === 'DDD');
             var hasConsignment = (entity === 'DDD' || entity === 'MBB');
 
-            // Show/hide Retail and Consignment buttons
+            // Show/hide Retail and Consignment tab buttons
             var retailBtn = document.querySelector('.stock-type-btn[data-stype="retail"]');
             var consigBtn = document.querySelector('.stock-type-btn[data-stype="consignment"]');
             if (retailBtn) retailBtn.style.display = hasRetail ? '' : 'none';
             if (consigBtn) consigBtn.style.display = hasConsignment ? '' : 'none';
 
-            // Hide retail section for non-retail entities
+            // Hide retail section for non-DDD entities
             document.getElementById('retailSectionWrapper').style.display = (entity === 'DDD') ? 'block' : 'none';
 
             // Clear consignment cache so it reloads for the new entity
             consignmentStockData = null;
 
-            // If currently viewing retail/consignment but entity doesn't support it, switch to warehouse
-            var consigSection = document.getElementById('consignmentSectionWrapper');
-            var retailSection = document.getElementById('retailSectionWrapper');
-            var needSwitch = false;
-            if (!hasRetail && retailSection && retailSection.style.display !== 'none') needSwitch = true;
-            if (!hasConsignment && consigSection && consigSection.style.display !== 'none') needSwitch = true;
-            if (needSwitch) {
+            // Auto-select appropriate stock type and show data immediately
+            if (hasRetail) {
+                switchStockType('retail');
+            } else {
                 switchStockType('warehouse');
-            } else if (hasConsignment && consigSection && consigSection.style.display !== 'none') {
-                loadConsignmentStock();
             }
 
             updateDisplay();
-
-            // Update Max Stock Analysis jika view aktif
-            if (currentView === 'maxstock') {
-                if (currentMSType === 'retail') {
-                    populateMSFilters();
-                }
-                updateMaxStockAnalysis();
-            }
         }
 
         function switchTab(type) {
@@ -4617,17 +4609,13 @@
                 }
             }
 
-            // Dim/activate toggle bars based on active view
+            // Entity bar always active — clickable from any view
             var entityBar = document.getElementById('entityToggleBar');
             var salesBar = document.getElementById('salesChannelBar');
-            if (view === 'inventory' || view === 'skusearch') {
-                entityBar.classList.remove('dimmed');
-                salesBar.classList.add('dimmed');
-            } else if (view === 'sales') {
-                entityBar.classList.add('dimmed');
+            entityBar.classList.remove('dimmed');
+            if (view === 'sales') {
                 salesBar.classList.remove('dimmed');
             } else {
-                entityBar.classList.add('dimmed');
                 salesBar.classList.add('dimmed');
             }
 
