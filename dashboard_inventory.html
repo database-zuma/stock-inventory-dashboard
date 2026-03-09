@@ -566,7 +566,8 @@
                 💰 Sales
             </button>
             <div class="entity-toggle-bar dimmed" id="salesChannelBar">
-                <button class="entity-toggle-btn active" data-schannel="retail" onclick="switchSalesChannel('retail')">› 🏬 Retail</button>
+                <button class="entity-toggle-btn active" data-schannel="global" onclick="switchSalesChannel('global')">› 🌍 Global</button>
+                <button class="entity-toggle-btn" data-schannel="retail" onclick="switchSalesChannel('retail')">› 🏬 Retail</button>
                 <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">› 🌐 Online</button>
                 <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">› 📦 Consignment</button>
                 <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">› 🏭 Wholesale</button>
@@ -9816,7 +9817,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var salesFilters = document.getElementById('salesFilterSection');
             var salesCards = document.getElementById('salesSummaryCards');
 
-            if (channel === 'retail') {
+            if (channel === 'global') {
+                // Global: show combined sales from all channels
+                salesFilters.style.display = '';
+                salesCards.style.display = 'grid';
+                retailTabWrapper.style.display = '';
+                // Hide all children - global shows summary only
+                Array.from(retailTabWrapper.children).forEach(function(child) {
+                    child.style.display = 'none';
+                });
+                setTimeout(function() {
+                    switchSalesTab('performance');
+                    switchSalesSubTab('global');
+                }, 50);
+            } else if (channel === 'retail') {
                 // Retail: show filters, cards, retail tabs
                 salesFilters.style.display = '';
                 salesCards.style.display = 'grid';
