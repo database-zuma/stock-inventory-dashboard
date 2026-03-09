@@ -4357,7 +4357,7 @@
             // Render dropdown
             var h = '';
             suggestions.forEach(function(s) {
-                var displayKode = s.kode_kecil || s.kode;
+                var displayKode = (s.kode_kecil || s.kode).toUpperCase();
                 var highlightName = function(text) {
                     var idx = text.toLowerCase().indexOf(query);
                     if (idx === -1) return text;
@@ -4366,10 +4366,10 @@
                 var highlightBadge = function(text) {
                     var idx = text.toLowerCase().indexOf(query);
                     if (idx === -1) return text;
-                    return text.substring(0, idx) + '<span style="background:#fff;color:#0284c7;border-radius:3px;padding:0 2px;font-weight:800;">' + text.substring(idx, idx + query.length) + '</span>' + text.substring(idx + query.length);
+                    return text.substring(0, idx) + '<span style="background:#fbbf24;color:#1e293b;border-radius:3px;padding:0 2px;font-weight:800;">' + text.substring(idx, idx + query.length).toUpperCase() + '</span>' + text.substring(idx + query.length);
                 };
                 h += '<div onclick="selectSkuSuggestion(\'' + displayKode.replace(/'/g, "\\'") + '\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;transition:background 0.1s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'white\'">';
-                h += '<div style="background:#0284c7;color:white;padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;white-space:nowrap;">' + highlightBadge(displayKode) + '</div>';
+                h += '<div style="background:#0284c7;color:white;padding:3px 8px;border-radius:6px;font-size:0.78rem;font-weight:700;white-space:nowrap;text-transform:uppercase;">' + highlightBadge(displayKode) + '</div>';
                 h += '<div style="flex:1;min-width:0;">';
                 h += '<div style="font-size:0.82rem;font-weight:500;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + highlightName(s.name) + '</div>';
                 h += '<div style="font-size:0.72rem;color:#94a3b8;">' + (s.series || '') + (s.size ? ' · Size ' + s.size : '') + '</div>';
@@ -4460,7 +4460,7 @@
                 var bgColor = idx % 2 === 0 ? '#fff' : '#f8fafc';
 
                 html += '<tr style="background:' + bgColor + ';border-bottom:1px solid #e2e8f0;cursor:pointer;" onclick="var d=document.getElementById(\'skuDetail_' + idx + '\');if(d)d.style.display=d.style.display===\'none\'?\'\':\'none\';">';
-                html += '<td style="padding:6px;font-weight:600;font-size:0.78rem;">' + r.kode + '</td>';
+                html += '<td style="padding:6px;font-weight:600;font-size:0.78rem;color:#1f2937;">' + r.kode.toUpperCase() + '</td>';
                 html += '<td style="padding:6px;"><span style="font-weight:500;">' + r.name + '</span>';
                 if (r.series || r.tipe) html += '<br><span style="font-size:0.72rem;color:#64748b;">' + (r.series || '') + (r.tipe ? ' \u00b7 ' + r.tipe : '') + (r.tier ? ' \u00b7 ' + r.tier : '') + '</span>';
                 html += '</td>';
@@ -4484,73 +4484,134 @@
                 html += '<td style="padding:6px;text-align:center;font-weight:700;background:#f0fdf4;">' + (total > 0 ? total.toLocaleString('id-ID') : '<span style="color:#d1d5db;">0</span>') + '</td>';
                 html += '</tr>';
 
-                // Detail row — auto-expanded, shows only stores with stock > 0
+                // Detail row — auto-expanded, shows 4 compact tables in 2x2 grid
                 html += '<tr class="sku-detail-row" id="skuDetail_' + idx + '">';
                 html += '<td colspan="12" style="padding:0;background:#f1f5f9;border-bottom:2px solid #cbd5e1;">';
                 html += '<div style="padding:12px 16px;">';
 
-                // Helper: render stores for a stock type, only show qty > 0
-                // Helper: render warehouse table
-                function renderWarehouseTable(storesObj) {
-                    var rows = [];
-                    var entKeys = Object.keys(storesObj);
-                    entKeys.forEach(function(ent) {
-                        var stores = storesObj[ent];
-                        Object.keys(stores).sort().forEach(function(sn) {
-                            if (stores[sn] > 0) {
-                                rows.push({ name: sn, entity: ent, qty: stores[sn] });
-                            }
-                        });
+                // Collect data for 4 tables
+                // 1) Global summary by entity
+                var globalRows = [];
+                var entities = ['DDD','LJBB','MBB','UBB'];
+                entities.forEach(function(ent) {
+                    var wh = r.warehouse[ent] || 0;
+                    var rt = r.retail[ent] || 0;
+                    var cs = r.consignment[ent] || 0;
+                    var tot = wh + rt + cs;
+                    if (tot > 0) globalRows.push({ entity: ent, wh: wh, retail: rt, consign: cs, total: tot });
+                });
+
+                // 2) Warehouse detail
+                var whRows = [];
+                var whKeys = Object.keys(r.warehouseStores || {});
+                whKeys.forEach(function(ent) {
+                    var stores = r.warehouseStores[ent];
+                    Object.keys(stores).sort().forEach(function(sn) {
+                        if (stores[sn] > 0) whRows.push({ name: sn, entity: ent, qty: stores[sn] });
                     });
-                    if (rows.length === 0) return '';
-                    var t = '<div style="margin-bottom:10px;"><strong style="color:#0d9488;font-size:0.82rem;">\ud83c\udfe2 Warehouse</strong>';
-                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:4px;">';
-                    t += '<thead><tr style="background:#f0fdfa;"><th style="text-align:left;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Warehouse</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Entity</th><th style="text-align:right;padding:4px 8px;font-weight:600;color:#0d9488;border-bottom:1px solid #99f6e4;">Qty</th></tr></thead><tbody>';
-                    rows.forEach(function(row) {
-                        t += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 8px;">' + row.name + '</td><td style="padding:4px 8px;">' + row.entity + '</td><td style="padding:4px 8px;text-align:right;font-weight:700;">' + row.qty.toLocaleString('id-ID') + '</td></tr>';
+                });
+
+                // 3) Retail store detail
+                var rtRows = [];
+                var rtKeys = Object.keys(r.retailStores || {});
+                rtKeys.forEach(function(ent) {
+                    var stores = r.retailStores[ent];
+                    Object.keys(stores).sort().forEach(function(sn) {
+                        if (stores[sn] > 0) {
+                            var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
+                            rtRows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
+                        }
                     });
-                    t += '</tbody></table></div>';
+                });
+                rtRows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
+
+                // 4) Consignment store detail
+                var csRows = [];
+                var csKeys = Object.keys(r.consignmentStores || {});
+                csKeys.forEach(function(ent) {
+                    var stores = r.consignmentStores[ent];
+                    Object.keys(stores).sort().forEach(function(sn) {
+                        if (stores[sn] > 0) {
+                            var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
+                            csRows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
+                        }
+                    });
+                });
+                csRows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
+
+                // Helper: build marketplace-style table
+                function buildTable(title, icon, headers, dataRows, renderRow) {
+                    if (dataRows.length === 0) return '';
+                    var t = '<div>';
+                    t += '<h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.88rem;">' + icon + ' ' + title + '</h4>';
+                    t += '<div style="max-height:300px;overflow-y:auto;">';
+                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    t += '<thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">';
+                    headers.forEach(function(h) {
+                        t += '<th style="padding:7px 8px;text-align:' + (h.align || 'left') + ';font-weight:600;white-space:nowrap;' + (h.width ? 'width:' + h.width + ';' : '') + '">' + h.label + '</th>';
+                    });
+                    t += '</tr></thead><tbody>';
+                    dataRows.forEach(function(row, i) {
+                        var bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+                        t += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
+                        t += renderRow(row, i);
+                        t += '</tr>';
+                    });
+                    t += '</tbody></table></div></div>';
                     return t;
                 }
 
-                // Helper: render store table (retail or consignment) with Area column
-                function renderStoreTable(label, icon, color, headerBg, borderColor, storesObj) {
-                    var rows = [];
-                    var entKeys = Object.keys(storesObj);
-                    entKeys.forEach(function(ent) {
-                        var stores = storesObj[ent];
-                        Object.keys(stores).sort().forEach(function(sn) {
-                            if (stores[sn] > 0) {
-                                var area = (typeof getAreaFromStore === 'function') ? getAreaFromStore(sn) : '-';
-                                rows.push({ name: sn, area: area, entity: ent, qty: stores[sn] });
-                            }
-                        });
-                    });
-                    if (rows.length === 0) return '';
-                    // Sort by entity then area then name
-                    rows.sort(function(a, b) { return (a.entity + a.area + a.name).localeCompare(b.entity + b.area + b.name); });
-                    var t = '<div style="margin-bottom:10px;"><strong style="color:' + color + ';font-size:0.82rem;">' + icon + ' ' + label + '</strong>';
-                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:4px;">';
-                    t += '<thead><tr style="background:' + headerBg + ';"><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Store</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Area</th><th style="text-align:left;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Entity</th><th style="text-align:right;padding:4px 8px;font-weight:600;color:' + color + ';border-bottom:1px solid ' + borderColor + ';">Qty</th></tr></thead><tbody>';
-                    rows.forEach(function(row) {
-                        t += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 8px;">' + row.name + '</td><td style="padding:4px 8px;color:#64748b;">' + row.area + '</td><td style="padding:4px 8px;">' + row.entity + '</td><td style="padding:4px 8px;text-align:right;font-weight:700;">' + row.qty.toLocaleString('id-ID') + '</td></tr>';
-                    });
-                    t += '</tbody></table></div>';
-                    return t;
-                }
+                // Render 2x2 grid
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
 
-                var detailContent = '';
-                detailContent += renderWarehouseTable(r.warehouseStores);
-                detailContent += renderStoreTable('Retail', '\ud83c\udfea', '#2563eb', '#eff6ff', '#bfdbfe', r.retailStores);
-                detailContent += renderStoreTable('Consignment', '\ud83d\udce6', '#d97706', '#fffbeb', '#fde68a', r.consignmentStores);
+                // Table 1: Global Summary
+                html += buildTable('Stock Summary', '\ud83d\udcca', [
+                    {label:'NO',align:'center',width:'40px'},{label:'ENTITY',align:'left'},{label:'WAREHOUSE',align:'center',width:'90px'},{label:'RETAIL',align:'center',width:'90px'},{label:'CONSIGN',align:'center',width:'90px'},{label:'TOTAL',align:'center',width:'90px'}
+                ], globalRows, function(row, i) {
+                    return '<td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;">' + (i+1) + '</td>' +
+                        '<td style="padding:7px 8px;font-weight:600;color:#002A3A;">' + row.entity + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;">' + (row.wh > 0 ? row.wh.toLocaleString('id-ID') : '-') + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;">' + (row.retail > 0 ? row.retail.toLocaleString('id-ID') : '-') + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:600;color:#1f2937;">' + (row.consign > 0 ? row.consign.toLocaleString('id-ID') : '-') + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#002A3A;">' + row.total.toLocaleString('id-ID') + '</td>';
+                });
 
-                if (detailContent === '') {
-                    html += '<span style="font-size:0.78rem;color:#94a3b8;">No store detail available</span>';
-                } else {
-                    html += detailContent;
-                }
+                // Table 2: Warehouse Detail
+                html += buildTable('Warehouse', '\ud83c\udfe2', [
+                    {label:'NO',align:'center',width:'40px'},{label:'WAREHOUSE',align:'left'},{label:'ENTITY',align:'left',width:'80px'},{label:'QTY',align:'center',width:'80px'}
+                ], whRows, function(row, i) {
+                    return '<td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;">' + (i+1) + '</td>' +
+                        '<td style="padding:7px 8px;font-weight:600;color:#1f2937;">' + row.name + '</td>' +
+                        '<td style="padding:7px 8px;color:#1f2937;">' + row.entity + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#1f2937;">' + row.qty.toLocaleString('id-ID') + '</td>';
+                });
 
-                html += '</div></td></tr>';
+                // Table 3: Retail Store Detail
+                html += buildTable('Retail Store', '\ud83c\udfea', [
+                    {label:'NO',align:'center',width:'40px'},{label:'STORE',align:'left'},{label:'AREA',align:'left',width:'110px'},{label:'ENTITY',align:'left',width:'70px'},{label:'QTY',align:'center',width:'70px'}
+                ], rtRows, function(row, i) {
+                    return '<td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;">' + (i+1) + '</td>' +
+                        '<td style="padding:7px 8px;font-weight:600;color:#1f2937;">' + row.name + '</td>' +
+                        '<td style="padding:7px 8px;color:#1f2937;">' + row.area + '</td>' +
+                        '<td style="padding:7px 8px;color:#1f2937;">' + row.entity + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#1f2937;">' + row.qty.toLocaleString('id-ID') + '</td>';
+                });
+
+                // Table 4: Consignment Store Detail
+                html += buildTable('Consignment', '\ud83d\udce6', [
+                    {label:'NO',align:'center',width:'40px'},{label:'STORE',align:'left'},{label:'AREA',align:'left',width:'110px'},{label:'ENTITY',align:'left',width:'70px'},{label:'QTY',align:'center',width:'70px'}
+                ], csRows, function(row, i) {
+                    return '<td style="padding:7px 8px;text-align:center;color:#1f2937;font-weight:600;">' + (i+1) + '</td>' +
+                        '<td style="padding:7px 8px;font-weight:600;color:#1f2937;">' + row.name + '</td>' +
+                        '<td style="padding:7px 8px;color:#1f2937;">' + row.area + '</td>' +
+                        '<td style="padding:7px 8px;color:#1f2937;">' + row.entity + '</td>' +
+                        '<td style="padding:7px 8px;text-align:center;font-weight:700;color:#1f2937;">' + row.qty.toLocaleString('id-ID') + '</td>';
+                });
+
+                html += '</div>'; // close grid
+
+                html += '</div></td></tr>'; // close detail row
+
             });
 
             html += '</tbody></table></div>';
