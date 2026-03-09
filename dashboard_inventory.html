@@ -5799,7 +5799,7 @@
             const [m1, m2, m3] = months;
             let s1 = 0, s2 = 0, s3 = 0;
             skuList.forEach(sku => {
-                const skuUpper = (sku || '').toUpperCase();
+                const skuUpper = (sku || "").toLowerCase();
                 const s = salesMap[skuUpper] || {};
                 s1 += s[m1] || 0;
                 s2 += s[m2] || 0;
@@ -6049,7 +6049,7 @@
             // Helper function to get sales for SKU (dynamic months)
             function getSales(sku, kodeKecil) {
                 // salesMap is keyed by kode_besar (= item.kodeKecil), NOT kode_mix_size (= item.sku)
-                const key = (kodeKecil || sku || '').toUpperCase();
+                const key = (kodeKecil || sku || '').toLowerCase();
                 const s = salesMap[key] || {};
                 const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
                 const avg = (v1 + v2 + v3) / 3;
@@ -6452,7 +6452,7 @@
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    const key = (item.kodeKecil || item.sku || '').toUpperCase();
+                    const key = (item.kodeKecil || item.sku || '').toLowerCase();
                     const s = salesMap[key] || {};
                     const v1 = s[sM1] || 0, v2 = s[sM2] || 0, v3 = s[sM3] || 0;
                     return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
@@ -6521,7 +6521,7 @@
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    const key = (item.kodeKecil || item.sku || '').toUpperCase();
+                    const key = (item.kodeKecil || item.sku || '').toLowerCase();
                     const s = salesMap[key] || {};
                     const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
                     return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
