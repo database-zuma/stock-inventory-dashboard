@@ -9030,7 +9030,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data online...</div>'; });
 
-            if (onlineRawData) { populateOnlineFilters(onlineRawData); applyOnlineFilters(); return; }
+            if (onlineRawData) { 
+                currentOnlineDataSource = 'online'; // Make sure to use online data
+                populateOnlineFilters(onlineRawData); 
+                applyOnlineFilters(); 
+                return; 
+            }
 
             try {
                 const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10) + '&_t=' + Date.now());
