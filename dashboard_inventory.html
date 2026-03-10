@@ -9067,8 +9067,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 // Combine all data - tag each with its source channel
                 const allData = [];
-                (retailData||[]).forEach(r => { r.channel = 'retail'; allData.push(r); });
-                (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
+                (retailData||[]).forEach(r => { r.channel = 'Retail'; allData.push(r); });
+                (onlineData||[]).forEach(r => { r.channel = 'Online'; allData.push(r); });
                 
                 // Consignment API returns object format with stores array, transform to flat array
                 // Handle both object and array formats - also handle empty object {}
@@ -9082,7 +9082,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }
                 consigArr.forEach(s => {
                     allData.push({
-                        channel: 'consignment',
+                        channel: 'Consignment',
                         qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
                         total: Number(s.total_sales) || Number(s.sales) || Number(s.total) || 0,
                         area: s.area || '',
@@ -9092,7 +9092,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 console.log('Transformed consignment items:', allData.filter(r => r.channel === 'consignment').length);
                 
-                (wholesaleData||[]).forEach(r => { r.channel = 'wholesale'; allData.push(r); });
+                (wholesaleData||[]).forEach(r => { r.channel = 'Wholesale'; allData.push(r); });
                 
                 // Debug: log data counts
                 console.log('Global load - retail:', (retailData||[]).length, 'online:', (onlineData||[]).length, 'consig:', (consigData||[]).length, 'wholesale:', (wholesaleData||[]).length);
