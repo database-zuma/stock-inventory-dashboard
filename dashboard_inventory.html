@@ -9437,8 +9437,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:12px;padding:14px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.85);">🧾 Total Trx</div><div style="${vs}color:white;">${totalTrx.toLocaleString('id-ID')}</div></div>`;
             }
 
-            // ── Sales by Marketplace (horizontal bar chart) ──
-            renderOnlineGroupedBar('onlineByMarketplace', rows, 'marketplace', ['#0ea5e9','#f97316','#22c55e','#a855f7','#ef4444','#eab308','#6366f1','#ec4899','#14b8a6']);
+            // ── Sales by Marketplace (or by Channel for Global) ──
+            const isGlobalChannel = currentOnlineDataSource === 'global';
+            const marketplaceTitle = isGlobalChannel ? '🛒 Sales by Channel' : '🛒 Sales by Marketplace';
+            const marketplaceEl = document.getElementById('onlineByMarketplace');
+            if (marketplaceEl && marketplaceEl.previousElementSibling) {
+                marketplaceEl.previousElementSibling.textContent = marketplaceTitle;
+            }
+            const groupField = isGlobalChannel ? 'channel' : 'marketplace';
+            renderOnlineGroupedBar('onlineByMarketplace', rows, groupField, ['#0ea5e9','#f97316','#22c55e','#a855f7','#ef4444','#eab308','#6366f1','#ec4899','#14b8a6']);
 
             // ── Top 10 Artikel ──
             renderOnlineTopProducts(rows);
