@@ -1234,7 +1234,7 @@
                         </select>
                     </div>
                     <div style="min-width:110px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Basis Stok:</label>
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Stock Global:</label>
                         <select id="scFilterBasis" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                             <option value="global">Global (WH+Toko)</option>
                             <option value="wh">WH Total</option>
@@ -1303,8 +1303,8 @@
                         <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
                             <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
                             <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
-                            <li><b>GAP</b> = Basis Stok - (Avg Sales × 3)</li>
-                            <li><b>STR (Sell Through Rate)</b> = (Avg Sales × 3) / ((Avg Sales × 3) + Basis Stok) × 100%</li>
+                            <li><b>GAP</b> = Stock Global - (Avg Sales × 3)</li>
+                            <li><b>STR (Sell Through Rate)</b> = (Avg Sales × 3) / ((Avg Sales × 3) + Stock Global) × 100%</li>
                         </ul>
                     </div>
                     <div>
@@ -6030,7 +6030,7 @@
             const scMonths = salesMap['_months'] || ['nov','des','jan'];
             const [scM1, scM2, scM3] = scMonths;
 
-            // Basis Stok dropdown
+            // Stock Global dropdown
             const basisStok = document.getElementById('scFilterBasis')?.value || 'global';
             // GAP and STR filters
             const gapFilter = document.getElementById('scFilterGAP')?.value || '';
