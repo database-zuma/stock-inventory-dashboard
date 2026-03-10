@@ -6357,8 +6357,8 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'background:#7c3aed;color:white;' : '') + '">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'background:#7c3aed;color:white;' : '') + '">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
@@ -6381,8 +6381,8 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'background:#7c3aed;color:white;' : '') + '">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'background:#7c3aed;color:white;' : '') + '">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
