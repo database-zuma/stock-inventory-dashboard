@@ -6355,10 +6355,10 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'color:#dc2626;' : (gap < avgSales ? 'color:#eab308;' : 'color:#16a34a;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'color:#dc2626;' : (str >= 50 ? 'color:#eab308;' : 'color:#16a34a;')) + '">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'color:#7c3aed;' : '') + '">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'color:#7c3aed;' : '') + '">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'background:#1f2937;color:white;' : '') + '">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'background:#1f2937;color:white;' : '') + '">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
@@ -6379,10 +6379,10 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'color:#dc2626;' : (gap < avgSales ? 'color:#eab308;' : 'color:#16a34a;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'color:#dc2626;' : (str >= 50 ? 'color:#eab308;' : 'color:#16a34a;')) + '">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'color:#7c3aed;' : '') + '">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'color:#7c3aed;' : '') + '">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (tw > 4 ? 'background:#1f2937;color:white;' : '') + '">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (to > 4 ? 'background:#1f2937;color:white;' : '') + '">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
