@@ -6247,9 +6247,9 @@
                 let whStock, tokoStock, globalStock;
 
                 if (!area) {
-                    whStock = item.whTotal;
+                    whStock = item.whTotal || 0;
                     tokoStock = (item.stokToko !== undefined) ? item.stokToko : ((item.stokRetail || 0) + (item.stokConsignment || 0));
-                    globalStock = item.globalStock;
+                    globalStock = item.globalStock || 0;
                 } else if (area === 'Bali') {
                     whStock = item.WHB || 0;
                     tokoStock = item.stokTokoBali || 0;
