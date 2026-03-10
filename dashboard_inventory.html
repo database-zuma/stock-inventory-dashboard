@@ -5832,7 +5832,7 @@
             const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;';
 
             if (scViewMode === 'sku') {
-                thead.innerHTML = '<tr style="background:#ffffff;color:#000000;position:sticky;top:0;z-index:10;">' +
+                thead.innerHTML = '<tr style="background:#1f2937;color:#ffffff;position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE BARANG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'size\')">SIZE</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
@@ -5856,7 +5856,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             } else {
-                thead.innerHTML = '<tr style="background:#ffffff;color:#000000;position:sticky;top:0;z-index:10;">' +
+                thead.innerHTML = '<tr style="background:#1f2937;color:#ffffff;position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE KECIL</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
                     '<th style="' + headerStyle + '">SERIES</th>' +
@@ -6334,7 +6334,7 @@
                 const isDeadStock = avgSales === 0 && basisStock > 0;
                 const deadBadge = '';
 
-                const cellStyle = 'padding:8px;text-align:center;';
+                const cellStyle = 'padding:8px;text-align:center;border-right:1px solid #000000;';
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
