@@ -9059,7 +9059,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
                     fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Retail API error:', e); return []; }),
                     fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Online API error:', e); return []; }),
-                    fetchAPI(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Consignment API error:', e); return []; }),
+                    fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), { headers: { 'x-api-key': API_KEY } }).catch(e => { console.error('Consignment API error:', e); return {}; }),
                     fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Wholesale API error:', e); return []; })
                 ]);
 
@@ -9069,12 +9069,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
                 
                 // Consignment API returns object format with stores array, transform to flat array
-                // Handle both object and array formats
+                // Handle both object and array formats - also handle empty object {}
                 let consigArr = [];
-                if (Array.isArray(consigData)) {
-                    consigArr = consigData;
-                } else if (consigData && Array.isArray(consigData.stores)) {
-                    consigArr = consigData.stores;
+                if (consigData && typeof consigData === 'object') {
+                    if (Array.isArray(consigData)) {
+                        consigArr = consigData;
+                    } else if (Array.isArray(consigData?.stores)) {
+                        consigArr = consigData.stores;
+                    }
                 }
                 consigArr.forEach(s => {
                     allData.push({
