@@ -9571,14 +9571,24 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!el) return;
             const prodMap = {};
             rows.forEach(r => {
-                const kode = (r.kode_kecil || '').toUpperCase();
+                const kode = (r.kode_kecil || r.kode || '').toUpperCase();
                 if (!kode) return;
-                const sz = r.ukuran || '-';
+                const sz = r.ukuran || r.size || '-';
                 const key = kode + '|' + sz;
-                if (!prodMap[key]) prodMap[key] = { kode: kode, sku: r.sku || '-', warna: r.warna || '', tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
-                prodMap[key].pairs += r.qty || 0;
-                prodMap[key].revenue += r.total || 0;
+                // Try various field names for product name
+                const sku = r.sku || r.product_name || r.nama_barang || r.nama || r.artikel || '-';
+                const warna = r.warna || r.color || r.collection || r.series || '';
+                if (!prodMap[key]) prodMap[key] = { kode: kode, sku: sku, warna: warna, tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
+                prodMap[key].pairs += Number(r.qty) || 0;
+                prodMap[key].revenue += Number(r.total) || 0;
                 if (r.tier && r.tier !== '-') prodMap[key].tier = r.tier;
+                // Preserve sku/warna from any row that has them
+                if (sku && sku !== '-' && sku !== 'null' && prodMap[key].sku === '-') {
+                    prodMap[key].sku = sku;
+                }
+                if (warna && warna !== '' && warna !== 'null' && !prodMap[key].warna) {
+                    prodMap[key].warna = warna;
+                }
             });
             const products = Object.values(prodMap).sort((a,b) => b.revenue - a.revenue).slice(0, 10);
             if (!products.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data produk</div>'; return; }
