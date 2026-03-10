@@ -9059,7 +9059,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
                     fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
                     fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
-                    fetchAPI('/api/sales/detail?channel=consig&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
                     fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => [])
                 ]);
 
