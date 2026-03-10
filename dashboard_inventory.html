@@ -9068,24 +9068,33 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (retailData||[]).forEach(r => { r.channel = 'retail'; allData.push(r); });
                 (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
                 
-                // Consignment API returns object format, need to transform to array
-                if (consigData && consigData.stores) {
-                    consigData.stores.forEach(s => {
-                        allData.push({
-                            channel: 'consignment',
-                            qty: s.total_qty || 0,
-                            total: s.total_sales || 0,
-                            area: s.area,
-                            store_name: s.store_name,
-                            partner: s.partner
-                        });
-                    });
+                // Consignment API returns object format with stores array, transform to flat array
+                // Handle both object and array formats
+                let consigArr = [];
+                if (Array.isArray(consigData)) {
+                    consigArr = consigData;
+                } else if (consigData && Array.isArray(consigData.stores)) {
+                    consigArr = consigData.stores;
                 }
+                consigArr.forEach(s => {
+                    allData.push({
+                        channel: 'consignment',
+                        qty: s.total_qty || s.qty || s.sales_qty || 0,
+                        total: s.total_sales || s.sales || s.total || 0,
+                        area: s.area || '',
+                        store_name: s.store_name || s.store || '',
+                        partner: s.partner || ''
+                    });
+                });
+                console.log('Transformed consignment items:', allData.filter(r => r.channel === 'consignment').length);
                 
                 (wholesaleData||[]).forEach(r => { r.channel = 'wholesale'; allData.push(r); });
                 
                 // Debug: log data counts
                 console.log('Global load - retail:', (retailData||[]).length, 'online:', (onlineData||[]).length, 'consig:', (consigData||[]).length, 'wholesale:', (wholesaleData||[]).length);
+                console.log('Consignment data keys:', consigData ? Object.keys(consigData) : 'null');
+                console.log('Consignment stores:', consigData?.stores?.length || 0);
+                if (consigData?.stores?.length > 0) console.log('First store:', consigData.stores[0]);
                 
                 globalRawData = allData;
                 currentOnlineDataSource = 'global';
