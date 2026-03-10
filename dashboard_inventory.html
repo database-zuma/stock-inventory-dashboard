@@ -9023,6 +9023,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // ============ ONLINE MARKETPLACE DEDICATED VIEW ============
         let onlineRawData = null;
+        let currentOnlineDataSource = null; // 'global' or 'online'
         let onlineFilteredData = null;
 
         async function loadOnlineChannel() {
@@ -9034,6 +9035,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             try {
                 const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10) + '&_t=' + Date.now());
                 onlineRawData = rawData;
+                currentOnlineDataSource = 'online';
                 populateOnlineFilters(rawData);
                 applyOnlineFilters();
             } catch(e) {
@@ -9060,6 +9062,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const allData = [...(retailData||[]), ...(onlineData||[]), ...(consigData||[]), ...(wholesaleData||[])];
                 allData.forEach(r => { r.channel = r.channel || 'global'; });
                 globalRawData = allData;
+                currentOnlineDataSource = 'global';
                 
                 // Use same rendering as online
                 populateOnlineFilters(allData);
@@ -9091,7 +9094,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function applyOnlineFilters() {
-            const data = globalRawData || onlineRawData;
+            // Use the correct data source based on current channel
+            let data;
+            if (currentOnlineDataSource === 'global') {
+                data = globalRawData;
+            } else {
+                data = onlineRawData;
+            }
+            if (!data) data = globalRawData || onlineRawData; // fallback
             if (!data) return;
             const mpVal = document.getElementById('onlineFilterMarketplace')?.value || '';
             const gdVal = document.getElementById('onlineFilterGender')?.value || '';
