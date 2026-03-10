@@ -6354,10 +6354,10 @@
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (whStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:700;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:' + toColor + ';">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:700;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
@@ -6377,10 +6377,10 @@
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (whStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:700;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:' + toColor + ';">' + to + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:700;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + str.toFixed(1) + '%</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + tw + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
