@@ -16,7 +16,7 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         th { text-align: center !important; }
-        table td, table th { border: 1px solid #e2e8f0; }
+        table td, table th { border: 1px solid #000000; }
         table td[style*="#374151"], table td[style*="#6b7280"], table td[style*="#9ca3af"], table td[style*="#1f2937"] { color: #000 !important; }
         body {
             font-family: 'Poppins', sans-serif;
@@ -62,7 +62,7 @@
         .tabs {
             display: flex; gap: 5px; margin-bottom: 25px; background: white;
             padding: 6px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,42,58,0.06); width: fit-content;
-            border: 1px solid #e8eef3;
+            border: 1px solid #000000;
         }
         .tab {
             padding: 10px 22px; border: none; background: transparent; border-radius: 8px;
@@ -81,7 +81,7 @@
             background: white; border-radius: 14px; padding: 20px 22px;
             box-shadow: 0 1px 3px rgba(0,42,58,0.05), 0 4px 12px rgba(0,42,58,0.03);
             position: relative; overflow: hidden;
-            border: 1px solid #e8eef3; transition: all 0.2s ease;
+            border: 1px solid #000000; transition: all 0.2s ease;
         }
         .stat-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0;
@@ -138,7 +138,7 @@
         }
         .btn-primary { background: var(--bg-gradient); color: white; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,42,58,0.3); }
-        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #000000; }
         .btn-secondary:hover { background: #e2e8f0; }
 
         /* Store Summary */
@@ -224,7 +224,7 @@
         .page-info { font-size: 0.8rem; color: #6b7280; }
         .page-buttons { display: flex; gap: 4px; }
         .page-btn {
-            padding: 6px 12px; border: 1px solid #e5e7eb; background: white;
+            padding: 6px 12px; border: 1px solid #000000; background: white;
             border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease;
         }
         .page-btn:hover { background: #f3f4f6; }
@@ -626,7 +626,7 @@
                         <button class="btn btn-secondary" onclick="exportData('retail')" style="background: #3b82f6; color: white; border: none;">📥 Export</button>
                     </div>
                 <!-- Filter Row -->
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #000000;">
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
                         <select id="tableFilterArea" onchange="updateTableStoreDropdown(); applyRetailFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
@@ -755,7 +755,7 @@
                         <button class="btn btn-secondary" onclick="exportData('warehouse')" style="background: #14b8a6; color: white; border: none;">📥 Export</button>
                     </div>
                 <!-- Filter Row -->
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #000000;">
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Area</label>
                         <select id="whFilterArea" onchange="updateWhWarehouseDropdown(); applyWarehouseFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 120px; border-radius: 6px; border: 1px solid #cbd5e1;">
@@ -886,7 +886,7 @@
                         <button class="btn btn-secondary" onclick="exportData('consignment')" style="background: #f59e0b; color: white; border: none;">📥 Export</button>
                     </div>
                 <!-- Filter Row -->
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #000000;">
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px; display: block;">Partner</label>
                         <select id="csFilterPartner" onchange="updateCsStoreDropdown(); applyConsignmentFilters()" style="font-size: 0.85rem; padding: 8px 12px; min-width: 130px; border-radius: 6px; border: 1px solid #cbd5e1;">
@@ -1271,7 +1271,7 @@
             <!-- Control Stock Table -->
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                 <div style="overflow-x:auto;max-height:500px;overflow-y:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">
                         <thead id="scTableHead" style="position:sticky;top:0;z-index:10;">
                             <!-- Header will be rendered dynamically by JavaScript -->
                         </thead>
@@ -2051,7 +2051,7 @@
                     <div style="flex:0 0 auto;">
                     <div style="background:white; border-radius:12px; overflow:hidden;">
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                            <table style="width:auto; border-collapse:collapse; font-size:0.85rem;">
+                            <table style="width:auto; border-collapse:collapse; font-size:0.85rem;border:1px solid #000;">
                                 <thead>
                                     <tr style="background:linear-gradient(135deg,#db2777 0%,#be185d 100%); color:white; position:sticky; top:0; z-index:2;">
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Store</th>
@@ -2090,7 +2090,7 @@
                         <div style="flex:0 0 auto;">
                     <div style="background:white; border-radius:12px; overflow:hidden;">
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                            <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;">
+                            <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;border:1px solid #000;">
                                 <thead>
                                     <tr style="background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%); color:white; position:sticky; top:0; z-index:2;">
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
@@ -4584,7 +4584,7 @@
                     var t = '<div>';
                     t += '<h4 style="margin:0 0 8px 0;color:#1f2937;font-size:0.88rem;">' + icon + ' ' + title + '</h4>';
                     t += '<div style="max-height:300px;overflow-y:auto;">';
-                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+                    t += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">';
                     t += '<thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">';
                     headers.forEach(function(h) {
                         t += '<th style="padding:7px 8px;text-align:' + (h.align || 'left') + ';font-weight:600;white-space:nowrap;' + (h.width ? 'width:' + h.width + ';' : '') + '">' + h.label + '</th>';
@@ -5546,7 +5546,7 @@
                     <strong>Tier ${tier}</strong> - ${sorted.length} items di ${uniqueStores} store, Total: ${totalStock.toLocaleString('id-ID')} pairs
                 </div>
                 <div style="max-height:400px;overflow-y:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;border:1px solid #000;">
                         <thead>
                             <tr style="background:#374151;position:sticky;top:0;">
                                 <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;color:white;">Store</th>
@@ -5663,7 +5663,7 @@
             </div>`;
 
             html += `<div style="max-height: 400px; overflow-y: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <table style="width:100%;border-collapse:collapse;font-size:0.85rem;border:1px solid #000;">
                     <thead style="position: sticky; top: 0; background: #1e3a5f; color: white;">
                         <tr>
                             <th style="padding: 10px; text-align: left;">Kode Besar</th>
@@ -7001,7 +7001,7 @@
                     return { store, area, sales: val.sales, qty: val.qty, trx: val.trx.size, target, achv };
                 }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
 
-            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:40px;">No</th>';
             storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
@@ -7044,7 +7044,7 @@
 
             const maxAreaSales = areaArr.length ? Math.max(...areaArr.map(a => a.sales)) : 1;
             const totalSales = areaArr.reduce((s, a) => s + a.sales, 0);
-            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.83rem;">';
+            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.83rem;border:1px solid #000;">';
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Area</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Toko</th>';
@@ -7189,7 +7189,7 @@
                 date, sales: val.sales, qty: val.qty, trx: val.trx.size
             })).sort((a, b) => a.date.localeCompare(b.date));
 
-            let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
@@ -7503,7 +7503,7 @@
 
             // Top 5
             // Top 10
-            let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let topHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             topHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:center;padding:6px;color:white;background:#002A3A;width:28px;">NO</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Nama Barang</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             articleArr.slice(0, 10).forEach((a, i) => {
                 const displayName = a.namaBarang || a.article.toUpperCase();
@@ -7518,7 +7518,7 @@
 
             // Bottom 5 (slow moving)
             // Bottom 10 (slow moving)
-            let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let slowHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             slowHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#7f1d1d;color:white;"><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;width:28px;">NO</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Kode</th><th style="text-align:left;padding:6px;color:white;background:#7f1d1d;">Nama Barang</th><th style="text-align:center;padding:6px;color:white;background:#7f1d1d;">Qty</th><th style="text-align:right;padding:6px;color:white;background:#7f1d1d;">Sales</th></tr></thead><tbody>';
             articleArr.slice(-10).reverse().forEach((a, i) => {
                 const displayName2 = a.namaBarang || a.article.toUpperCase();
@@ -7612,7 +7612,7 @@
             const genderIcons = { Men: '👨', Ladies: '👩', Kids: '🧒', Girls: '👧', Baby: '👶', Junior: '🧒', Boys: '👦', Unknown: '❓' };
             const genderColors = { Men: '#3b82f6', Ladies: '#ec4899', Kids: '#f59e0b', Girls: '#a855f7', Baby: '#10b981', Junior: '#06b6d4', Boys: '#8b5cf6', Unknown: '#6b7280' };
 
-            let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let catHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             catHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Gender</th>';
             catHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Series</th>';
@@ -7693,7 +7693,7 @@
             const tierColors = { '1': '#ef4444', '2': '#f59e0b', '3': '#10b981', '4': '#3b82f6', '5': '#8b5cf6', '8': '#ec4899' };
 
             // Clean table layout for Tier Performance
-            let tierHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">';
+            let tierHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;border:1px solid #000;">';
             tierHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;">Tier</th>';
             tierHtml += '<th style="text-align:left;padding:10px;color:white;background:#002A3A;width:200px;">Share</th>';
@@ -8044,7 +8044,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Gap Analysis - all stores sorted by achievement (lowest first), filtered by area
             const allStores = storeAchArr.sort((a, b) => a.achievement - b.achievement);
 
-            let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let gapHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             gapHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             gapHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:40px;">No</th>';
             gapHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
@@ -8267,7 +8267,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Define genders based on what's actually in filteredSalesData
             const genders = ['Men', 'Ladies', 'Kids', 'Girls', 'Baby', 'Junior', 'Boys'].filter(g => byGender[g] && byGender[g].sales > 0);
 
-            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             areaHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             genders.forEach(g => {
                 areaHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
@@ -8310,7 +8310,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 genderByStore[store][gender].qty += item.qty || 0;
             });
 
-            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             genders.forEach(g => {
                 storeHtml += '<th style="text-align:right;padding:8px;color:white;background:#002A3A;">' + g + '</th>';
@@ -8432,7 +8432,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return;
             }
 
-            let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let weeklyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             weeklyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">'
                 + '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Minggu</th>';
             genders.forEach(g => {
@@ -8623,7 +8623,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             document.getElementById('refundScoreCards').innerHTML = cardsHtml;
 
             // --- Refund by Store Table ---
-            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             storeHtml += '<thead><tr style="background:#002A3A;color:white;">';
             storeHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">Toko</th><th style="padding:6px;">Area</th>';
             storeHtml += '<th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
@@ -8657,7 +8657,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             // --- Refund by Area Table ---
-            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:6px;">Area</th><th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th><th style="padding:6px;text-align:center;">Share</th></tr></thead><tbody>';
             const totalRefQty = rd.summary.refund_qty || 1;
@@ -8708,7 +8708,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // --- Refund Trend Line Chart ---
             // --- Top SPG Refund Table ---
             const topSPGs = (rd.by_spg || []).slice(0,30);
-            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            let spgHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             spgHtml += '<thead><tr style="background:#002A3A;color:white;">';
             spgHtml += '<th style="padding:6px;">No</th><th style="padding:6px;">SPG</th><th style="padding:6px;">Toko</th>';
             spgHtml += '<th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;">Value</th></tr></thead><tbody>';
@@ -8942,7 +8942,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!products.length) { topEl.innerHTML = '<div style="color:#64748b">Tidak ada data produk</div>'; }
                 else {
                     const maxRev = Math.max(...products.map(p => p.revenue));
-                    topEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                    topEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                         <thead><tr style="background:#002A3A;color:white;">
                             <th style="padding:8px;text-align:left;">Produk</th>
                             <th style="padding:8px;text-align:center;">Pairs</th>
@@ -8970,7 +8970,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!months.length) { trendEl.innerHTML = '<div style="color:#64748b">Tidak ada data trend</div>'; }
                 else {
                     const maxRev = Math.max(...months.map(m => m.revenue));
-                    trendEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                    trendEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                         <thead><tr style="background:#002A3A;color:white;">
                             <th style="padding:8px;text-align:left;">Bulan</th>
                             <th style="padding:8px;text-align:center;">Pairs</th>
@@ -8999,7 +8999,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!breakdown.length) { bkEl.innerHTML = '<div style="color:#64748b">Tidak ada data breakdown</div>'; }
                 else {
                     const maxRev = Math.max(...breakdown.map(b => b.revenue));
-                    bkEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                    bkEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                         <thead><tr style="background:#002A3A;color:white;">
                             <th style="padding:8px;text-align:left;">${bkLabel}</th>
                             <th style="padding:8px;text-align:center;">Pairs</th>
@@ -9535,7 +9535,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const tierColors = {'1':'#002A3A','2':'#0ea5e9','3':'#f59e0b','4':'#ef4444','5':'#8b5cf6'};
             const isTier = groupField === 'tier';
 
-            el.innerHTML = `<div style="max-height:400px;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            el.innerHTML = `<div style="max-height:400px;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:center;width:40px;">NO</th>
                     <th style="padding:8px;text-align:${isTier?'center':'left'};">${colLabel.toUpperCase()}</th>
@@ -9575,7 +9575,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!products.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data produk</div>'; return; }
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:center;width:35px;">NO</th>
                     <th style="padding:8px;text-align:left;width:80px;">KODE</th>
@@ -9720,7 +9720,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
             const maxRev = Math.max(...days.map(d => d.revenue));
-            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:left;">TANGGAL</th>
                     <th style="padding:8px;text-align:left;width:70px;">HARI</th>
@@ -10154,7 +10154,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             var areaColors = { 'Bali': '#e85d04', 'Jakarta': '#2563eb', 'Lombok': '#059669', 'Jatim': '#8b5cf6' };
             // Area Summary Table (replaces Partner table)
-            var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+            var aHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">';
             aHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             aHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Area</th>';
             aHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Partners</th>';
@@ -10217,7 +10217,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Partner Summary Table
             var pColors = ['#e85d04','#2563eb','#059669','#8b5cf6','#dc2626','#0891b2','#f59e0b','#be185d','#0d9488'];
-            var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+            var pHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">';
             pHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             pHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Partner</th>';
             pHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Toko</th>';
@@ -10316,7 +10316,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // Monthly Trend Table (no Trx)
-            var tHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+            var tHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">';
             tHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             tHtml += '<th style="text-align:left;padding:8px;color:white;background:#002A3A;">Bulan</th>';
             tHtml += '<th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th>';
@@ -10335,7 +10335,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             document.getElementById('consigTrendTable').innerHTML = tHtml;
 
             // Store Breakdown Table (Toko, Partner, Area)
-            var sHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            var sHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
             sHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
             sHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:30px;">No</th>';
             sHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
@@ -10785,7 +10785,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 // Store table with area column
                 html += '<div style="max-height:300px;overflow-y:auto;">' +
-                    '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">' +
                     '<thead><tr style="background:#334155;color:white;position:sticky;top:0;z-index:1;">' +
                     '<th style="padding:8px 12px;text-align:left;font-weight:600;background:#334155;">TOKO</th>' +
                     '<th style="padding:8px 12px;text-align:center;font-weight:600;background:#334155;">AREA</th>' +
@@ -10838,7 +10838,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Store breakdown table
             let storeHtml = '<div style="margin-bottom:20px;">' +
                 '<h4 style="margin:0 0 10px 0;color:#111827;font-size:0.95rem;">🏪 Penjualan per Toko (diurutkan qty terbanyak)</h4>' +
-                '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+                '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;border:1px solid #000;">' +
                 '<thead><tr style="background:#1e293b;color:white;">' +
                 '<th style="padding:8px;text-align:left;font-weight:600;">Toko</th>' +
                 '<th style="padding:8px;text-align:center;font-weight:600;">Qty</th>' +
@@ -10860,7 +10860,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Transaction detail table
             let trxHtml = '<div><h4 style="margin:0 0 10px 0;color:#111827;font-size:0.95rem;">📋 Detail Transaksi</h4>' +
                 '<div style="max-height:250px;overflow-y:auto;">' +
-                '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">' +
+                '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">' +
                 '<thead><tr style="background:#334155;color:white;position:sticky;top:0;">' +
                 '<th style="padding:6px 8px;text-align:left;font-weight:500;">Tanggal</th>' +
                 '<th style="padding:6px 8px;text-align:left;font-weight:500;">Toko</th>' +
@@ -11430,7 +11430,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         .chat-msg.assistant .chat-msg-bubble {
             background: white;
             color: #1f2937;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #000000;
             border-bottom-left-radius: 4px;
         }
         .chat-widget-input {
@@ -11443,7 +11443,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         .chat-widget-input input {
             flex: 1;
             padding: 10px 14px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #000000;
             border-radius: 8px;
             font-size: 0.85rem;
             outline: none;
@@ -11469,7 +11469,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             gap: 4px;
             padding: 10px 14px;
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #000000;
             border-radius: 12px;
             border-bottom-left-radius: 4px;
             width: fit-content;
