@@ -1280,7 +1280,7 @@
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
                 <div style="overflow-x:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
-                        <thead id="scTableHead">
+                        <thead id="scTableHead" style="position:sticky;top:0;z-index:10;">
                             <!-- Header will be rendered dynamically by JavaScript -->
                         </thead>
                         <tbody id="scTableBody">
@@ -5832,7 +5832,7 @@
             const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;';
 
             if (scViewMode === 'sku') {
-                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
+                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE BARANG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'size\')">SIZE</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
@@ -5856,7 +5856,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             } else {
-                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
+                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE KECIL</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
                     '<th style="' + headerStyle + '">SERIES</th>' +
