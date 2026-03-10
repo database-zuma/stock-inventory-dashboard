@@ -1254,15 +1254,7 @@
                             <option value="dead">💀 Dead Stock</option>
                         </select>
                     </div>
-                    <div style="min-width:110px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">STR Status:</label>
-                        <select id="scFilterSTR" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
-                            <option value="">Semua</option>
-                            <option value="high">🔴 High (&gt;80%)</option>
-                            <option value="medium">🟡 Medium (50-80%)</option>
-                            <option value="low">🟢 Low (&lt;50%)</option>
-                        </select>
-                    </div>
+                    
                     <div style="min-width:120px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
                         <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -1325,12 +1317,7 @@
                         </div>
                     </div>
                     <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna STR:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
-                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">🔴 <b>&gt;80%</b> High (Perlu Restock)</span>
-                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">🟡 <b>50-80%</b> Medium</span>
-                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">🟢 <b>&lt;50%</b> Low (Stok Cukup)</span>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -5852,7 +5839,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'gap\')">GAP</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'str\')">STR</th>' +
+                    
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'tw\')">TW</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
@@ -5875,7 +5862,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'gap\')">GAP</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'str\')">STR</th>' +
+                    
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'tw\')">TW</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
@@ -6033,9 +6020,8 @@
 
             // Stock Global dropdown
             const basisStok = document.getElementById('scFilterBasis')?.value || 'global';
-            // GAP and STR filters
+            // GAP filter
             const gapFilter = document.getElementById('scFilterGAP')?.value || '';
-            const strFilter = document.getElementById('scFilterSTR')?.value || '';
 
             // Helper function to get stock basis for an item
             function getStockBasis(item) {
@@ -6129,16 +6115,6 @@
                     if (gapFilter === 'dead' && !(avgSales === 0 && basisStock > 0)) return false;
                 }
 
-                // STR filter
-                if (strFilter) {
-                    const sales2 = getItemSales(item);
-                    const basisStock2 = getStockBasis(item);
-                    const avgSales2 = sales2.avg;
-                    const str = (avgSales2 * 3) / ((avgSales2 * 3) + basisStock2) * 100;
-                    if (strFilter === 'high' && str <= 80) return false;
-                    if (strFilter === 'medium' && (str < 50 || str > 80)) return false;
-                    if (strFilter === 'low' && str >= 50) return false;
-                }
                 return true;
             });
 
@@ -6284,20 +6260,12 @@
                 // GAP & STR calculation
                 const basisStock = getStockBasis(item);
                 const gap = basisStock - (avgSales * 3);
-                const denominator = (avgSales * 3) + basisStock;
-                const str = denominator > 0 ? ((avgSales * 3) / denominator * 100) : 0;
 
                 // GAP color
                 let gapColor = '#6b7280', gapBg = 'transparent';
                 if (gap < 0) { gapColor = '#dc2626'; gapBg = '#fef2f2'; }
                 else if (gap < avgSales) { gapColor = '#d97706'; gapBg = '#fffbeb'; }
                 else { gapColor = '#16a34a'; gapBg = '#f0fdf4'; }
-
-                // STR color
-                let strColor = '#6b7280', strBg = 'transparent';
-                if (str > 80) { strColor = '#dc2626'; strBg = '#fef2f2'; }
-                else if (str >= 50) { strColor = '#d97706'; strBg = '#fffbeb'; }
-                else { strColor = '#16a34a'; strBg = '#f0fdf4'; }
 
                 const tw = avgSales > 0 ? (whStock / avgSales).toFixed(1) : 0;
                 const to = avgSales > 0 ? (tokoStock / avgSales).toFixed(1) : 0;
@@ -6357,7 +6325,6 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
@@ -6381,7 +6348,6 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (str > 80 ? 'background:#dc2626;color:white;' : (str >= 50 ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + str.toFixed(1) + '%</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
@@ -6550,8 +6516,6 @@
                 const basisStock = getExportBasis(item);
                 const avgSales = sales.avg;
                 const gap = basisStock - (avgSales * 3);
-                const strDen = (avgSales * 3) + basisStock;
-                const str = strDen > 0 ? ((avgSales * 3) / strDen * 100) : 0;
                 const tw = avgSales > 0 ? (item.whTotal / avgSales) : 0;
                 const to = avgSales > 0 ? (item.stokToko / avgSales) : 0;
                 const isDead = avgSales === 0 && basisStock > 0;
@@ -6559,10 +6523,6 @@
                 if (isDead) gapStatus = 'Dead Stock';
                 else if (gap < 0) gapStatus = 'Understock';
                 else if (gap < avgSales) gapStatus = 'Tipis';
-                let strStatus = 'Low (<50%)';
-                if (str > 80) strStatus = 'High (>80%)';
-                else if (str >= 50) strStatus = 'Medium (50-80%)';
-
                 const row = {};
                 if (scViewMode === 'kodeKecil') {
                     row['KODE BARANG'] = item.kodeKecil || '';
@@ -6585,8 +6545,7 @@
                 row['TO'] = Math.round(to * 100) / 100;
                 row['GAP'] = Math.round(gap);
                 row['GAP STATUS'] = gapStatus;
-                row['STR (%)'] = Math.round(str * 100) / 100;
-                row['STR STATUS'] = strStatus;
+                
                 return row;
             });
 
