@@ -9083,8 +9083,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 consigArr.forEach(s => {
                     allData.push({
                         channel: 'consignment',
-                        qty: s.total_qty || s.qty || s.sales_qty || 0,
-                        total: s.total_sales || s.sales || s.total || 0,
+                        qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
+                        total: Number(s.total_sales) || Number(s.sales) || Number(s.total) || 0,
                         area: s.area || '',
                         store_name: s.store_name || s.store || '',
                         partner: s.partner || ''
@@ -9521,8 +9521,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             rows.forEach(r => {
                 const g = r[groupField] || 'Unknown';
                 if (!gMap[g]) gMap[g] = { name: g, pairs: 0, revenue: 0 };
-                gMap[g].pairs += r.qty || 0;
-                gMap[g].revenue += r.total || 0;
+                gMap[g].pairs += Number(r.qty) || 0;
+                gMap[g].revenue += Number(r.total) || 0;
             });
             let items = Object.values(gMap).sort((a,b) => b.revenue - a.revenue);
             if (maxItems) items = items.slice(0, maxItems);
