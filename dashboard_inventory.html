@@ -9081,6 +9081,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
                 consigArr.forEach(s => {
+                    // Try to get gender from various field names
+                    const gender = s.gender || s.jenis_kelamin || s.jk || '';
                     allData.push({
                         channel: 'Consignment',
                         qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
@@ -9092,7 +9094,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         sku: s.sku || s.nama_barang || '',
                         warna: s.warna || s.color || '',
                         ukuran: s.ukuran || s.size || '-',
-                        tier: s.tier || '-'
+                        tier: s.tier || '-',
+                        gender: gender
                     });
                 });
                 console.log('Transformed consignment items:', allData.filter(r => r.channel === 'consignment').length);
