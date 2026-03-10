@@ -9087,7 +9087,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         total: Number(s.total_sales) || Number(s.sales) || Number(s.total) || 0,
                         area: s.area || '',
                         store_name: s.store_name || s.store || '',
-                        partner: s.partner || ''
+                        partner: s.partner || '',
+                        kode_kecil: s.kode_kecil || s.kode || '',
+                        sku: s.sku || s.nama_barang || '',
+                        warna: s.warna || s.color || '',
+                        ukuran: s.ukuran || s.size || '-',
+                        tier: s.tier || '-'
                     });
                 });
                 console.log('Transformed consignment items:', allData.filter(r => r.channel === 'consignment').length);
@@ -9525,6 +9530,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 gMap[g].revenue += Number(r.total) || 0;
             });
             let items = Object.values(gMap).sort((a,b) => b.revenue - a.revenue);
+            // Filter out Unknown for channel/marketplace views
+            if (groupField === 'channel' || groupField === 'marketplace') {
+                items = items.filter(i => i.name && i.name.toLowerCase() !== 'unknown');
+            }
             if (maxItems) items = items.slice(0, maxItems);
             if (!items.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
 
@@ -9586,7 +9595,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     <th style="padding:8px;text-align:right;width:110px;">REVENUE</th>
                 </tr></thead><tbody>` +
                 products.map((p, i) => {
-                    const namaBarang = p.warna ? p.sku + ', ' + p.warna : p.sku;
+                    const namaBarang = (p.warna && p.warna !== 'null' && p.warna !== 'undefined') 
+                        ? ((p.sku && p.sku !== 'null' && p.sku !== 'undefined') ? p.sku + ', ' + p.warna : p.warna) 
+                        : ((p.sku && p.sku !== 'null' && p.sku !== 'undefined') ? p.sku : '-');
                     return `<tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #e2e8f0;">
                         <td style="padding:7px 8px;text-align:center;color:#64748b;font-weight:600;">${i+1}</td>
                         <td style="padding:7px 8px;font-size:0.78rem;font-weight:600;color:#1f2937;">${p.kode}</td>
