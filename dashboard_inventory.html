@@ -181,7 +181,7 @@
             content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.85rem;
         }
         .table-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; }
+        table { width: 100%; border-collapse: collapse; border: 2px solid #000000; }
         th {
             color: white; padding: 12px 14px; text-align: left; font-size: 0.75rem;
             font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
@@ -5573,7 +5573,7 @@
 
             sorted.forEach((item, idx) => {
                 html += `
-                    <tr style="background:${idx % 2 === 0 ? '#fff' : '#f9fafb'};">
+                    <tr style="background:${'#ffffff'};">
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:500;">${item.store}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.kode_kecil || item.sku}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${item.nama}</td>
@@ -5832,7 +5832,7 @@
             const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;';
 
             if (scViewMode === 'sku') {
-                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);position:sticky;top:0;z-index:10;">' +
+                thead.innerHTML = '<tr style="background:#ffffff;color:#000000;position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE BARANG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'size\')">SIZE</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
@@ -5856,7 +5856,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             } else {
-                thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);position:sticky;top:0;z-index:10;">' +
+                thead.innerHTML = '<tr style="background:#ffffff;color:#000000;position:sticky;top:0;z-index:10;">' +
                     '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE KECIL</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
                     '<th style="' + headerStyle + '">SERIES</th>' +
@@ -6338,7 +6338,7 @@
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
+                    return '<tr style="border-bottom:1px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
@@ -6360,7 +6360,7 @@
                         '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
                     '</tr>';
                 } else {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
+                    return '<tr style="border-bottom:1px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:500;color:#374151;">' + (item.size||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
