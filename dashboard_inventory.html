@@ -9058,9 +9058,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => [])
                 ]);
 
-                // Combine all data
-                const allData = [...(retailData||[]), ...(onlineData||[]), ...(consigData||[]), ...(wholesaleData||[])];
-                allData.forEach(r => { r.channel = r.channel || 'global'; });
+                // Combine all data - tag each with its source channel
+                const allData = [];
+                (retailData||[]).forEach(r => { r.channel = 'retail'; allData.push(r); });
+                (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
+                (consigData||[]).forEach(r => { r.channel = 'consignment'; allData.push(r); });
+                (wholesaleData||[]).forEach(r => { r.channel = 'wholesale'; allData.push(r); });
                 globalRawData = allData;
                 currentOnlineDataSource = 'global';
                 
