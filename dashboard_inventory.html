@@ -6338,7 +6338,7 @@
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
-                    return '<tr style="border-bottom:1px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
+                    return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
@@ -6360,7 +6360,7 @@
                         '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
                     '</tr>';
                 } else {
-                    return '<tr style="border-bottom:1px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
+                    return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:500;color:#374151;">' + (item.size||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
