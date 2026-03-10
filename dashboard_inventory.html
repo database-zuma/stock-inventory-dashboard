@@ -9059,7 +9059,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
                     fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
                     fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
-                    fetchAPI(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Consignment API error:', e); return []; }),
                     fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => [])
                 ]);
 
@@ -9069,6 +9069,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
                 (consigData||[]).forEach(r => { r.channel = 'consignment'; allData.push(r); });
                 (wholesaleData||[]).forEach(r => { r.channel = 'wholesale'; allData.push(r); });
+                
+                // Debug: log data counts
+                console.log('Global load - retail:', (retailData||[]).length, 'online:', (onlineData||[]).length, 'consig:', (consigData||[]).length, 'wholesale:', (wholesaleData||[]).length);
+                
                 globalRawData = allData;
                 currentOnlineDataSource = 'global';
                 
