@@ -6338,7 +6338,7 @@
 
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
@@ -6351,16 +6351,16 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#db2777;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#db2777;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (whStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (tokoStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (globalStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + str.toFixed(1) + '%</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
                     '</tr>';
                 } else {
-                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? 'background:#fef2f2;' : '') + '">' +
+                    return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;' + (isDeadStock ? '' : '') + '">' +
                         '<td style="' + cellStyle + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:500;color:#374151;">' + (item.size||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
@@ -6374,10 +6374,10 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#db2777;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;color:#db2777;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (whStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (tokoStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + (globalStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;color:#374151;">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + str.toFixed(1) + '%</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;">' + to + '</td>' +
