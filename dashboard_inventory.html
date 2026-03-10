@@ -1003,6 +1003,22 @@
                 </div>
             </div>
 
+            <!-- B10: KPI Summary Cards -->
+            <div id="kpiSummaryCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                <div onclick="filterByGAP('understock')" style="background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);border-radius:12px;padding:15px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#991b1b;margin-bottom:5px;">🔴 Understock (GAP&lt;0)</div>
+                    <div id="kpiUnderstock" style="font-size:1.8rem;font-weight:700;color:#dc2626;">0</div>
+                </div>
+                <div onclick="filterByGAP('tipis')" style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:15px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#92400a;margin-bottom:5px;">🟡 Tipis (GAP 0~avg)</div>
+                    <div id="kpiTipis" style="font-size:1.8rem;font-weight:700;color:#d97706;">0</div>
+                </div>
+                <div onclick="filterByGAP('aman')" style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);border-radius:12px;padding:15px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#065f46;margin-bottom:5px;">🟢 Aman (GAP≥avg)</div>
+                    <div id="kpiAman" style="font-size:1.8rem;font-weight:700;color:#059669;">0</div>
+                </div>
+            </div>
+
             <!-- Filters -->
             <div style="background:linear-gradient(135deg,#fce7f3 0%,#fdf2f8 50%,#f5f3ff 100%);border-radius:12px;padding:15px;margin-bottom:20px;">
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
@@ -1067,6 +1083,38 @@
                             <option value="positive">Positif</option>
                         </select>
                     </div>
+                    <!-- B6: Basis Stok Dropdown -->
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Basis Stok:</label>
+                        <select id="scFilterBasis" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="global">Global</option>
+                            <option value="wh">WH Total</option>
+                            <option value="toko">Stok Toko</option>
+                            <option value="pusat">WH Pusat</option>
+                            <option value="bali">WH Bali</option>
+                            <option value="jkt">WH Jakarta</option>
+                        </select>
+                    </div>
+                    <!-- B9: GAP Status Filter -->
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">GAP Status:</label>
+                        <select id="scFilterGAP" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="understock">Understock</option>
+                            <option value="tipis">Tipis</option>
+                            <option value="aman">Aman</option>
+                        </select>
+                    </div>
+                    <!-- B9: STR Status Filter -->
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">STR Status:</label>
+                        <select id="scFilterSTR" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="tinggi">&gt;80% Tinggi</option>
+                            <option value="sedang">50-80% Sedang</option>
+                            <option value="rendah">&lt;50% Rendah</option>
+                        </select>
+                    </div>
                     <div style="min-width:120px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
                         <input type="text" id="scSearch" onkeyup="renderStockControlTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -1076,6 +1124,13 @@
 
             <!-- Control Stock Table -->
             <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+                <div style="padding:15px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <h3 style="margin:0;color:#1f2937;font-size:1rem;font-weight:600;">Control Stock</h3>
+                    <!-- B13: Export Excel Button -->
+                    <button onclick="exportControlStockExcel()" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                        📊 Export Excel
+                    </button>
+                </div>
                 <div style="overflow-x:auto;">
                     <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
                         <thead id="scTableHead">
@@ -1101,25 +1156,35 @@
                         <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
                             <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
                             <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
-                            <li><b>TW+TO</b> = Total Stock / Avg Sales 3 Bulan</li>
+                            <li><b>GAP</b> = Basis Stok - (Avg Sales × 3)</li>
+                            <li><b>STR</b> = (Avg Sales × 3) / ((Avg Sales × 3) + Basis Stok) × 100%</li>
                         </ul>
                     </div>
+                    <!-- B12: GAP Legend -->
                     <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW/TO:</div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna GAP:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fee2e2;color:#dc2626;padding:3px 8px;border-radius:4px;">🔴 Understock (&lt;0)</span>
+                            <span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;">🟡 Tipis (0~1×avg)</span>
+                            <span style="background:#d1fae5;color:#059669;padding:3px 8px;border-radius:4px;">🟢 Aman (≥1×avg)</span>
+                        </div>
+                    </div>
+                    <!-- B12: STR Legend -->
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna STR:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fee2e2;color:#dc2626;padding:3px 8px;border-radius:4px;">🔴 Tinggi (&gt;80%)</span>
+                            <span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;">🟡 Sedang (50-80%)</span>
+                            <span style="background:#d1fae5;color:#059669;padding:3px 8px;border-radius:4px;">🟢 Rendah (&lt;50%)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW:</div>
                         <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
                             <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;1</b> Critical</span>
                             <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>1-2</b> Low</span>
                             <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>2-4</b> Normal</span>
                             <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;4</b> High</span>
-                        </div>
-                    </div>
-                    <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW+TO:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
-                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;2</b> Critical</span>
-                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>2-4</b> Low</span>
-                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>4-8</b> Normal</span>
-                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;8</b> High</span>
                         </div>
                     </div>
                 </div>
@@ -4275,18 +4340,20 @@
             return Object.values(kodeKecilMap);
         }
 
-        // Get aggregated sales for Kode Kecil (sum all SKU sales)
+        // Get aggregated sales for Kode Kecil (sum all SKU sales) - B3: Dynamic months
         function getKodeKecilSales(skuList) {
-            let nov = 0, des = 0, jan = 0;
+            const months = getSalesMonths();
+            const m1 = months[0], m2 = months[1], m3 = months[2];
+            let v1 = 0, v2 = 0, v3 = 0;
             skuList.forEach(sku => {
                 const skuUpper = (sku || '').toUpperCase();
-                const s = salesMap[skuUpper] || {nov: 0, des: 0, jan: 0};
-                nov += s.nov;
-                des += s.des;
-                jan += s.jan;
+                const s = salesMap[skuUpper] || {};
+                v1 += s[m1] || 0;
+                v2 += s[m2] || 0;
+                v3 += s[m3] || 0;
             });
-            const avg = (nov + des + jan) / 3;
-            return { nov, des, jan, avg };
+            const avg = (v1 + v2 + v3) / 3;
+            return { m1: v1, m2: v2, m3: v3, avg: avg };
         }
 
         // Switch view mode
@@ -4318,19 +4385,24 @@
             const thead = document.getElementById('scTableHead');
             if (!thead) return;
 
-            const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;';
+            // B3: Dynamic month labels
+            const monthLabels = getMonthLabels();
+            const m1 = monthLabels[0], m2 = monthLabels[1], m3 = monthLabels[2];
+
+            // B4: Center alignment for all columns
+            const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;';
 
             if (scViewMode === 'sku') {
                 thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
-                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE SKU</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;" onclick="sortStockControl(\'size\')">SIZE</th>' +
+                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'sku\')">KODE BARANG</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'size\')">SIZE</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'nov\')">NOV</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'des\')">DES</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'jan\')">JAN</th>' +
+                    '<th style="' + headerStyle + '">SERIES</th>' +
+                    '<th style="' + headerStyle + '">GENDER</th>' +
+                    '<th style="' + headerStyle + '">TIER</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m1\')">' + m1 + '</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m2\')">' + m2 + '</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m3\')">' + m3 + '</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
@@ -4338,20 +4410,21 @@
                     '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\'twto\')">TW+TO</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#dc2626;" onclick="sortStockControl(\'gap\')">GAP</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#8b5cf6;" onclick="sortStockControl(\'str\')">STR</th>' +
+                    '<th style="' + headerStyle + 'background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
+                    '<th style="' + headerStyle + 'background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             } else {
                 thead.innerHTML = '<tr style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);">' +
-                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE KECIL</th>' +
+                    '<th style="' + headerStyle + 'text-align:left;white-space:nowrap;" onclick="sortStockControl(\'kodeKecil\')">KODE BARANG</th>' +
                     '<th style="' + headerStyle + 'text-align:left;max-width:200px;">ARTICLE</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">SERIES</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">GENDER</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;">TIER</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'nov\')">NOV</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'des\')">DES</th>' +
-                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'jan\')">JAN</th>' +
+                    '<th style="' + headerStyle + '">SERIES</th>' +
+                    '<th style="' + headerStyle + '">GENDER</th>' +
+                    '<th style="' + headerStyle + '">TIER</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m1\')">' + m1 + '</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m2\')">' + m2 + '</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;" onclick="sortStockControl(\'m3\')">' + m3 + '</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#92400e;" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#fbbf24;color:#78350f;">WH PUSAT</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#34d399;color:#064e3b;">WH BALI</th>' +
@@ -4359,20 +4432,29 @@
                     '<th style="' + headerStyle + 'text-align:right;background:#1e3a8a;" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#166534;" onclick="sortStockControl(\'stokToko\')">STOK TOKO</th>' +
                     '<th style="' + headerStyle + 'text-align:right;background:#7c3aed;" onclick="sortStockControl(\'global\')">GLOBAL</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
-                    '<th style="' + headerStyle + 'text-align:center;background:#dc2626;" onclick="sortStockControl(\'twto\')">TW+TO</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#dc2626;" onclick="sortStockControl(\'gap\')">GAP</th>' +
+                    '<th style="' + headerStyle + 'text-align:right;background:#8b5cf6;" onclick="sortStockControl(\'str\')">STR</th>' +
+                    '<th style="' + headerStyle + 'background:#0891b2;" onclick="sortStockControl(\'tw\')">TW</th>' +
+                    '<th style="' + headerStyle + 'background:#0d9488;" onclick="sortStockControl(\'to\')">TO</th>' +
                 '</tr>';
             }
         }
 
         function buildSkuItems() {
             const skuMap = {};
-            const retailData = allData.DDD?.retail || [];
-            // Warehouse data dari DDD dan LJBB saja
+            
+            // B2: Retail data from DDD, MBB, UBB (SUM, not overwrite)
+            const retailDataDDD = allData.DDD?.retail || [];
+            const retailDataMBB = allData.MBB?.retail || [];
+            const retailDataUBB = allData.UBB?.retail || [];
+            const retailData = [...retailDataDDD, ...retailDataMBB, ...retailDataUBB];
+            
+            // B2: Warehouse data from DDD, LJBB, MBB, UBB (SUM, not overwrite)
             const whDataDDD = allData.DDD?.warehouse || [];
             const whDataLJBB = allData.LJBB?.warehouse || [];
-            const whData = [...whDataDDD, ...whDataLJBB];
+            const whDataMBB = allData.MBB?.warehouse || [];
+            const whDataUBB = allData.UBB?.warehouse || [];
+            const whData = [...whDataDDD, ...whDataLJBB, ...whDataMBB, ...whDataUBB];
 
             // Process retail data
             retailData.forEach(item => {
@@ -4459,7 +4541,9 @@
             // Calculate totals
             Object.values(skuMap).forEach(item => {
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
-                item.globalStock = item.whTotal + item.stokToko;
+                // BUG FIX: Include stokConsig in globalStock calculation
+                const stokConsig = item.stokConsig || 0;
+                item.globalStock = item.whTotal + item.stokToko + stokConsig;
             });
 
             return Object.values(skuMap);
@@ -4482,6 +4566,43 @@
             renderStockControlTable();
         }
 
+        // B3: Dynamic rolling 3M - get months from salesMap
+        function getSalesMonths() {
+            return salesMap["_months"] || ["nov", "des", "jan"];
+        }
+        
+        function getSalesData(sku) {
+            const skuUpper = (sku || '').toUpperCase();
+            const s = salesMap[skuUpper] || {};
+            const months = getSalesMonths();
+            const m1 = months[0], m2 = months[1], m3 = months[2];
+            return {
+                m1: s[m1] || 0,
+                m2: s[m2] || 0,
+                m3: s[m3] || 0,
+                avg: ((s[m1] || 0) + (s[m2] || 0) + (s[m3] || 0)) / 3
+            };
+        }
+        
+        function getMonthLabels() {
+            const months = getSalesMonths();
+            return months.map(m => m.charAt(0).toUpperCase() + m.slice(1));
+        }
+
+        // B6: getStockBasis function
+        function getStockBasis(item) {
+            const basis = document.getElementById('scFilterBasis')?.value || 'global';
+            switch (basis) {
+                case 'global': return item.globalStock;
+                case 'wh': return item.whTotal;
+                case 'toko': return item.stokToko;
+                case 'pusat': return item.WHS || 0;
+                case 'bali': return item.WHB || 0;
+                case 'jkt': return item.WHJ || 0;
+                default: return item.globalStock;
+            }
+        }
+
         function renderStockControlTable() {
             // Render header based on view mode
             renderStockControlHeader();
@@ -4494,15 +4615,11 @@
             const toFilter = document.getElementById('scFilterTO')?.value || '';
             const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
 
-            // Use salesMap directly (loaded from salesss.csv)
-            // salesMap format: {SKU: {nov, des, jan}}
-
-            // Helper function to get sales for SKU
+            // B3: Use dynamic months from salesMap["_months"]
+            
+            // Helper function to get sales for SKU using dynamic months
             function getSales(sku) {
-                const skuUpper = (sku || '').toUpperCase();
-                const s = salesMap[skuUpper] || {};
-                const avg = ((s.nov || 0) + (s.des || 0) + (s.jan || 0)) / 3;
-                return { nov: (s.nov || 0), des: (s.des || 0), jan: (s.jan || 0), avg: avg };
+                return getSalesData(sku); // Uses the global function with _months support
             }
 
             // Helper function to get sales for item (handles both modes)
@@ -4563,6 +4680,34 @@
                     if (toFilter === 'zero' && storeStock !== 0) return false;
                     if (toFilter === 'positive' && storeStock <= 0) return false;
                 }
+                
+                // B9: GAP Status filter
+                const gapFilter = document.getElementById('scFilterGAP')?.value || '';
+                if (gapFilter) {
+                    const sales = getItemSales(item);
+                    const avgSales = sales.avg;
+                    const basisStock = getStockBasis(item);
+                    const gap = basisStock - (avgSales * 3);
+                    
+                    if (gapFilter === 'understock' && gap >= 0) return false;
+                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales)) return false;
+                    if (gapFilter === 'aman' && gap < avgSales) return false;
+                }
+                
+                // B9: STR Status filter
+                const strFilter = document.getElementById('scFilterSTR')?.value || '';
+                if (strFilter) {
+                    const sales = getItemSales(item);
+                    const avgSales = sales.avg;
+                    const basisStock = getStockBasis(item);
+                    const denominator = (avgSales * 3) + basisStock;
+                    const str = denominator > 0 ? ((avgSales * 3) / denominator * 100) : 0;
+                    
+                    if (strFilter === 'tinggi' && str <= 80) return false;
+                    if (strFilter === 'sedang' && (str < 50 || str > 80)) return false;
+                    if (strFilter === 'rendah' && str >= 50) return false;
+                }
+                
                 return true;
             });
 
@@ -4598,53 +4743,72 @@
 
             tbody.innerHTML = pageData.map(item => {
                 const sales = getItemSales(item);
-                let nov = sales.nov, des = sales.des, jan = sales.jan, avgSales = sales.avg;
-                let whStock, tokoStock, globalStock;
+                // B3: Use dynamic months (m1, m2, m3)
+                let m1 = sales.m1, m2 = sales.m2, m3 = sales.m3, avgSales = sales.avg;
+                
+                // B6: Use getStockBasis function for stock calculations
+                let whStock, tokoStock, basisStock;
 
                 if (!area) {
                     whStock = item.whTotal;
                     tokoStock = item.stokToko;
-                    globalStock = item.globalStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Bali') {
                     whStock = item.WHB || 0;
                     tokoStock = item.stokTokoBali || 0;
-                    globalStock = whStock + tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Jakarta') {
                     whStock = item.WHJ || 0;
                     tokoStock = item.stokTokoJakarta || 0;
-                    globalStock = whStock + tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Jawa Timur') {
                     whStock = item.WHS || 0;
                     tokoStock = item.stokTokoJatim || 0;
-                    globalStock = whStock + tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Batam') {
                     whStock = 0;
                     tokoStock = item.stokTokoBatam || 0;
-                    globalStock = tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Sulawesi') {
                     whStock = 0;
                     tokoStock = item.stokTokoSulawesi || 0;
-                    globalStock = tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Sumatera') {
                     whStock = 0;
                     tokoStock = item.stokTokoSumatera || 0;
-                    globalStock = tokoStock;
+                    basisStock = getStockBasis(item);
                 } else if (area === 'Lombok') {
                     whStock = 0;
                     tokoStock = item.stokTokoLombok || 0;
-                    globalStock = tokoStock;
+                    basisStock = getStockBasis(item);
                 }
+
+                // B7: GAP calculation
+                const gap = basisStock - (avgSales * 3);
+                
+                // B8: STR calculation
+                const denominator = (avgSales * 3) + basisStock;
+                const str = denominator > 0 ? ((avgSales * 3) / denominator * 100) : 0;
 
                 const tw = avgSales > 0 ? (whStock / avgSales).toFixed(1) : 0;
                 const to = avgSales > 0 ? (tokoStock / avgSales).toFixed(1) : 0;
                 const twVal = parseFloat(tw) || 0;
                 const toVal = parseFloat(to) || 0;
-                const twtoVal = twVal + toVal;
-                const twto = twtoVal.toFixed(1);
+
+                // B7: GAP color coding
+                let gapColor = '#6b7280', gapBg = 'transparent';
+                if (gap < 0) { gapColor = '#dc2626'; gapBg = '#fee2e2'; }
+                else if (gap >= 0 && gap < avgSales) { gapColor = '#d97706'; gapBg = '#fef3c7'; }
+                else { gapColor = '#059669'; gapBg = '#d1fae5'; }
+
+                // B8: STR color coding
+                let strColor = '#6b7280', strBg = 'transparent';
+                if (str > 80) { strColor = '#dc2626'; strBg = '#fee2e2'; }
+                else if (str >= 50 && str <= 80) { strColor = '#d97706'; strBg = '#fef3c7'; }
+                else { strColor = '#059669'; strBg = '#d1fae5'; }
 
                 let twColor = '#6b7280', twBg = 'transparent';
                 let toColor = '#6b7280', toBg = 'transparent';
-                let twtoColor = '#6b7280', twtoBg = 'transparent';
                 if (avgSales > 0) {
                     if (twVal < 1) { twColor = '#ef4444'; twBg = '#fef2f2'; }
                     else if (twVal < 2) { twColor = '#f59e0b'; twBg = '#fffbeb'; }
@@ -4655,11 +4819,6 @@
                     else if (toVal < 2) { toColor = '#f59e0b'; toBg = '#fffbeb'; }
                     else if (toVal < 4) { toColor = '#10b981'; toBg = '#f0fdf4'; }
                     else { toColor = '#3b82f6'; toBg = '#eff6ff'; }
-
-                    if (twtoVal < 2) { twtoColor = '#ef4444'; twtoBg = '#fef2f2'; }
-                    else if (twtoVal < 4) { twtoColor = '#f59e0b'; twtoBg = '#fffbeb'; }
-                    else if (twtoVal < 8) { twtoColor = '#10b981'; twtoBg = '#f0fdf4'; }
-                    else { twtoColor = '#3b82f6'; twtoBg = '#eff6ff'; }
                 }
 
                 let whPusat = '-', whBali = '-', whJkt = '-';
@@ -4675,49 +4834,61 @@
                     whPusat = item.WHS.toLocaleString();
                 }
 
+                // B1: B11: Dead Stock badge
+                const isDeadStock = avgSales === 0 && basisStock > 0;
+                const deadBadge = isDeadStock ? '<span style="background:#991b1b;color:white;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:600;margin-left:4px;">DEAD</span>' : '';
+
+                // B4: Center alignment for all cells, B1: Use kode_kecil for display, B5: Remove TW+TO, B7: GAP, B8: STR
                 // Different row structure based on view mode
                 if (scViewMode === 'kodeKecil') {
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + (item.kodeKecil||'-') + '</td>' +
-                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + (item.kodeKecil||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whPusat + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whBali + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whJkt + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + basisStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
                     '</tr>';
                 } else {
+                    // B1: Use kode_kecil || sku for display, B11: Dead Stock badge
+                    const displayCode = item.kode_kecil || item.sku;
+                    const isDeadStock = avgSales === 0 && basisStock > 0;
+                    const deadBadge = isDeadStock ? '<span style="background:#991b1b;color:white;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:600;margin-left:4px;">DEAD</span>' : '';
+                    
                     return '<tr style="border-bottom:1px solid #f3f4f6;color:#1f2937;">' +
-                        '<td style="padding:8px;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + item.sku + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;">' + displayCode + deadBadge + '</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:500;color:#6366f1;">' + (item.size||'-') + '</td>' +
-                        '<td style="padding:8px;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="padding:8px;text-align:center;color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + nov.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + des.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + jan.toLocaleString('id-ID') + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whPusat + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whBali + '</td>' +
-                        '<td style="padding:8px;text-align:right;color:#374151;">' + whJkt + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
-                        '<td style="padding:8px;text-align:right;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + globalStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + m3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#fef3c7;font-weight:600;color:#92400e;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whPusat + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whBali + '</td>' +
+                        '<td style="padding:8px;text-align:center;color:#374151;">' + whJkt + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#dbeafe;font-weight:600;color:#1e3a8a;">' + whStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#dcfce7;font-weight:600;color:#166534;">' + tokoStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;background:#f3e8ff;font-weight:600;color:#7c3aed;">' + basisStock.toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + gapBg + ';color:' + gapColor + ';">' + Math.round(gap).toLocaleString() + '</td>' +
+                        '<td style="padding:8px;text-align:center;font-weight:600;background:' + strBg + ';color:' + strColor + ';">' + str.toFixed(1) + '%</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:600;background:' + twBg + ';color:' + twColor + ';">' + tw + '</td>' +
                         '<td style="padding:8px;text-align:center;font-weight:600;background:' + toBg + ';color:' + toColor + ';">' + to + '</td>' +
-                        '<td style="padding:8px;text-align:center;font-weight:700;background:' + twtoBg + ';color:' + twtoColor + ';">' + twto + '</td>' +
                     '</tr>';
                 }
             }).join('');
@@ -4730,6 +4901,97 @@
 
             // Pagination
             renderScPagination(totalPages);
+            
+            // B10: Update KPI Summary Cards
+            updateKPISummary();
+        }
+
+        // B10: Filter by GAP status (click on KPI cards)
+        function filterByGAP(status) {
+            const gapFilter = document.getElementById('scFilterGAP');
+            if (gapFilter) {
+                gapFilter.value = status;
+                renderStockControlTable();
+            }
+        }
+
+        // B10: Update KPI Summary Cards counts
+        function updateKPISummary() {
+            let understock = 0, tipis = 0, aman = 0;
+            
+            scFilteredItems.forEach(item => {
+                const sales = getItemSales(item);
+                const avgSales = sales.avg;
+                const basisStock = getStockBasis(item);
+                const gap = basisStock - (avgSales * 3);
+                
+                if (gap < 0) understock++;
+                else if (gap >= 0 && gap < avgSales) tipis++;
+                else aman++;
+            });
+            
+            document.getElementById('kpiUnderstock').textContent = understock;
+            document.getElementById('kpiTipis').textContent = tipis;
+            document.getElementById('kpiAman').textContent = aman;
+        }
+
+        // B13: Export Control Stock to Excel
+        function exportControlStockExcel() {
+            const basis = document.getElementById('scFilterBasis')?.value || 'global';
+            const monthLabels = getMonthLabels();
+            const headers = [
+                'KODE BARANG', 'SIZE', 'ARTICLE', 'SERIES', 'GENDER', 'TIER',
+                monthLabels[0], monthLabels[1], monthLabels[2], 'AVG 3M',
+                'WH PUSAT', 'WH BALI', 'WH JKT', 'WH TOTAL', 'STOK TOKO',
+                'GLOBAL', 'GAP', 'STR', 'TW', 'TO'
+            ];
+            
+            const data = scFilteredItems.map(item => {
+                const sales = getItemSales(item);
+                const avgSales = sales.avg;
+                const basisStock = getStockBasis(item);
+                const gap = Math.round(basisStock - (avgSales * 3));
+                const denominator = (avgSales * 3) + basisStock;
+                const str = denominator > 0 ? ((avgSales * 3) / denominator * 100) : 0;
+                
+                const whStock = item.whTotal;
+                const tokoStock = item.stokToko;
+                const tw = avgSales > 0 ? (whStock / avgSales).toFixed(1) : 0;
+                const to = avgSales > 0 ? (tokoStock / avgSales).toFixed(1) : 0;
+                
+                // B1: Use kode_kecil for SKU view
+                const kodeBarang = scViewMode === 'sku' ? (item.kode_kecil || item.sku) : item.kodeKecil;
+                
+                return [
+                    kodeBarang,
+                    item.size || '',
+                    item.name || '',
+                    item.series || '',
+                    item.gender || '',
+                    item.tier || '',
+                    sales.m1,
+                    sales.m2,
+                    sales.m3,
+                    avgSales.toFixed(1),
+                    item.WHS,
+                    item.WHB,
+                    item.WHJ,
+                    item.whTotal,
+                    item.stokToko,
+                    item.globalStock,
+                    gap,
+                    str.toFixed(1) + '%',
+                    tw,
+                    to
+                ];
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Control Stock');
+            
+            const date = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Control_Stock_${basis}_${date}.xlsx`);
         }
 
         function renderScPagination(totalPages) {
@@ -4771,13 +5033,12 @@
                 scSortAsc = true;
             }
 
-            // Helper to get sales based on view mode
+            // B3: Helper to get sales with dynamic months
             function getSortSales(item) {
                 if (scViewMode === 'kodeKecil') {
                     return getKodeKecilSales(item.skuList || []);
                 } else {
-                    const skuUpper = (item.sku || '').toUpperCase();
-                    return salesMap[skuUpper] || {nov: 0, des: 0, jan: 0, avg: 0};
+                    return getSalesData(item.sku); // Uses dynamic months
                 }
             }
 
@@ -4785,25 +5046,38 @@
                 let valA, valB;
                 const salesA = getSortSales(a);
                 const salesB = getSortSales(b);
-                const avgA = salesA.avg !== undefined ? salesA.avg : (salesA.nov + salesA.des + salesA.jan) / 3;
-                const avgB = salesB.avg !== undefined ? salesB.avg : (salesB.nov + salesB.des + salesB.jan) / 3;
+                const avgA = salesA.avg;
+                const avgB = salesB.avg;
+                
+                // B6: Get basis stock for GAP/STR sorting
+                const basisA = getStockBasis(a);
+                const basisB = getStockBasis(b);
 
                 switch(column) {
                     case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
                     case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
                     case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
-                    case 'nov': valA = salesA.nov; valB = salesB.nov; break;
-                    case 'des': valA = salesA.des; valB = salesB.des; break;
-                    case 'jan': valA = salesA.jan; valB = salesB.jan; break;
+                    // B3: Dynamic month sorting
+                    case 'm1': valA = salesA.m1; valB = salesB.m1; break;
+                    case 'm2': valA = salesA.m2; valB = salesB.m2; break;
+                    case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
                     case 'stokToko': valA = a.stokToko; valB = b.stokToko; break;
-                    case 'global': valA = a.globalStock; valB = b.globalStock; break;
+                    case 'global': valA = basisA; valB = basisB; break;
                     case 'tw': valA = avgA > 0 ? a.whTotal / avgA : 999; valB = avgB > 0 ? b.whTotal / avgB : 999; break;
                     case 'to': valA = avgA > 0 ? a.stokToko / avgA : 999; valB = avgB > 0 ? b.stokToko / avgB : 999; break;
-                    case 'twto':
-                        valA = avgA > 0 ? a.globalStock / avgA : 999;
-                        valB = avgB > 0 ? b.globalStock / avgB : 999;
+                    // B7: GAP sorting
+                    case 'gap':
+                        valA = basisA - (avgA * 3);
+                        valB = basisB - (avgB * 3);
+                        break;
+                    // B8: STR sorting
+                    case 'str':
+                        const denomA = (avgA * 3) + basisA;
+                        const denomB = (avgB * 3) + basisB;
+                        valA = denomA > 0 ? ((avgA * 3) / denomA * 100) : 0;
+                        valB = denomB > 0 ? ((avgB * 3) / denomB * 100) : 0;
                         break;
                     default:
                         valA = scViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
