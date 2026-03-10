@@ -9059,7 +9059,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
                     fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Retail API error:', e); return []; }),
                     fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Online API error:', e); return []; }),
-                    fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), { headers: { 'x-api-key': API_KEY } }).catch(e => { console.error('Consignment API error:', e); return {}; }),
+                    fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10), { headers: { 'x-api-key': API_KEY } })
+                    .then(r => { console.log('Consignment API response status:', r.status); return r.ok ? r.json() : {}; })
+                    .catch(e => { console.error('Consignment API error:', e); return {}; }),
                     fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Wholesale API error:', e); return []; })
                 ]);
 
