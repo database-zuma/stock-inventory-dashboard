@@ -9057,17 +9057,31 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             try {
                 // Load all channels in parallel
                 const [retailData, onlineData, consigData, wholesaleData] = await Promise.all([
-                    fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
-                    fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => []),
+                    fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Retail API error:', e); return []; }),
+                    fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Online API error:', e); return []; }),
                     fetchAPI(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Consignment API error:', e); return []; }),
-                    fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(() => [])
+                    fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + new Date().toISOString().slice(0,10)).catch(e => { console.error('Wholesale API error:', e); return []; })
                 ]);
 
                 // Combine all data - tag each with its source channel
                 const allData = [];
                 (retailData||[]).forEach(r => { r.channel = 'retail'; allData.push(r); });
                 (onlineData||[]).forEach(r => { r.channel = 'online'; allData.push(r); });
-                (consigData||[]).forEach(r => { r.channel = 'consignment'; allData.push(r); });
+                
+                // Consignment API returns object format, need to transform to array
+                if (consigData && consigData.stores) {
+                    consigData.stores.forEach(s => {
+                        allData.push({
+                            channel: 'consignment',
+                            qty: s.total_qty || 0,
+                            total: s.total_sales || 0,
+                            area: s.area,
+                            store_name: s.store_name,
+                            partner: s.partner
+                        });
+                    });
+                }
+                
                 (wholesaleData||[]).forEach(r => { r.channel = 'wholesale'; allData.push(r); });
                 
                 // Debug: log data counts
