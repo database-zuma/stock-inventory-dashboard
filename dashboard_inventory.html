@@ -9070,7 +9070,19 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (retailData||[]).forEach(r => { r.channel = 'Retail'; allData.push(r); });
                 (onlineData||[]).forEach(r => { r.channel = 'Online'; allData.push(r); });
                 
-                // Consignment API returns object format with stores array, transform to flat array
+                // Helper function to parse gender from product_name or sku
+            function parseGenderFromProduct(productName, sku) {
+                const text = (productName || sku || '').toUpperCase();
+                if (text.includes('MEN ') || text.startsWith('M1') || text.startsWith('M2')) return 'Men';
+                if (text.includes('LADIES') || text.startsWith('L1') || text.startsWith('L2')) return 'Ladies';
+                if (text.includes('BOYS')) return 'Boys';
+                if (text.includes('GIRLS')) return 'Girls';
+                if (text.includes('BABY')) return 'Baby';
+                if (text.includes('JUNIOR')) return 'Junior';
+                return null;
+            }
+            
+            // Consignment API returns object format with stores array, transform to flat array
                 // Handle both object and array formats - also handle empty object {}
                 let consigArr = [];
                 if (consigData && typeof consigData === 'object') {
@@ -9081,8 +9093,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
                 consigArr.forEach(s => {
-                    // Try to get gender from various field names
-                    const gender = s.gender || s.jenis_kelamin || s.jk || '';
+                    // Try to get gender from various field names, or parse from product_name/sku
+                    const gender = s.gender || s.jenis_kelamin || s.jk || parseGenderFromProduct(s.product_name, s.sku) || '';
                     allData.push({
                         channel: 'Consignment',
                         qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
