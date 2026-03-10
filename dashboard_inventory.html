@@ -9527,17 +9527,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!el) return;
             const gMap = {};
             rows.forEach(r => {
-                // Skip consignment for gender grouping since it doesn't have gender data
-                if (groupField === 'gender' && r.channel === 'Consignment') return;
-                const g = r[groupField] || 'Unknown';
-                if (!gMap[g]) gMap[g] = { name: g, pairs: 0, revenue: 0 };
-                gMap[g].pairs += Number(r.qty) || 0;
-                gMap[g].revenue += Number(r.total) || 0;
+                const g = r[groupField];
+                // For gender, use 'Unknown' only if gender is truly null/undefined/empty
+                const genderVal = (g === null || g === undefined || g === '' || g === 'null' || g === 'undefined') ? 'Unknown' : g;
+                if (!gMap[genderVal]) gMap[genderVal] = { name: genderVal, pairs: 0, revenue: 0 };
+                gMap[genderVal].pairs += Number(r.qty) || 0;
+                gMap[genderVal].revenue += Number(r.total) || 0;
             });
             let items = Object.values(gMap).sort((a,b) => b.revenue - a.revenue);
-            // Calculate totals from ALL data before filtering
-            const totalRevAll = items.reduce((s,i) => s + i.revenue, 0);
-            const totalPairsAll = items.reduce((s,i) => s + i.pairs, 0);
+            // For gender: calculate totals from rows WITH gender (excluding Unknown)
+            const itemsWithGender = items.filter(i => i.name && i.name.toLowerCase() !== 'unknown');
+            const totalRevWithGender = itemsWithGender.reduce((s,i) => s + i.revenue, 0);
+            const totalPairsWithGender = itemsWithGender.reduce((s,i) => s + i.pairs, 0);
             // Filter out Unknown for channel/marketplace/gender views
             if (groupField === 'channel' || groupField === 'marketplace' || groupField === 'gender') {
                 items = items.filter(i => i.name && i.name.toLowerCase() !== 'unknown');
@@ -9546,8 +9547,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!items.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            const totalRev = totalRevAll;  // Use total from ALL data
-            const totalPairs = totalPairsAll;  // Use total from ALL data
+            // For gender: use total WITH gender; for others use all
+            const totalRev = groupField === 'gender' ? totalRevWithGender : items.reduce((s,i) => s + i.revenue, 0);
+            const totalPairs = groupField === 'gender' ? totalPairsWithGender : items.reduce((s,i) => s + i.pairs, 0);
             const colLabel = {marketplace:'Marketplace',gender:'Gender',collection:'Series',tier:'Tier',tipe:'Tipe',area:'Area'}[groupField] || groupField;
             const tierColors = {'1':'#002A3A','2':'#0ea5e9','3':'#f59e0b','4':'#ef4444','5':'#8b5cf6'};
             const isTier = groupField === 'tier';
