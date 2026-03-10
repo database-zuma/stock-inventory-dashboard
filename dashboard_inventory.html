@@ -9533,8 +9533,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 gMap[g].revenue += Number(r.total) || 0;
             });
             let items = Object.values(gMap).sort((a,b) => b.revenue - a.revenue);
-            // Filter out Unknown for channel/marketplace views
-            if (groupField === 'channel' || groupField === 'marketplace') {
+            // Filter out Unknown for channel/marketplace/gender views
+            if (groupField === 'channel' || groupField === 'marketplace' || groupField === 'gender') {
                 items = items.filter(i => i.name && i.name.toLowerCase() !== 'unknown');
             }
             if (maxItems) items = items.slice(0, maxItems);
