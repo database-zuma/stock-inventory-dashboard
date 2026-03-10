@@ -9527,6 +9527,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!el) return;
             const gMap = {};
             rows.forEach(r => {
+                // Skip consignment for gender grouping since it doesn't have gender data
+                if (groupField === 'gender' && r.channel === 'Consignment') return;
                 const g = r[groupField] || 'Unknown';
                 if (!gMap[g]) gMap[g] = { name: g, pairs: 0, revenue: 0 };
                 gMap[g].pairs += Number(r.qty) || 0;
