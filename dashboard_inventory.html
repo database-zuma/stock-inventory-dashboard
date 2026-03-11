@@ -9613,7 +9613,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(item.revenue)}</td>
                     </tr>`;
                 }).join('') +
-                `</tbody></table></div>`;
+                `<tfoot><tr style="background:#002A3A;color:white;font-weight:700;">
+                    <td style="padding:8px;"></td>
+                    <td style="padding:8px;text-align:${isTier?'center':'left'};">TOTAL</td>
+                    <td style="padding:8px;text-align:center;">${totalPairs.toLocaleString('id-ID')}</td>
+                    <td style="padding:8px;text-align:center;">100%</td>
+                    <td style="padding:8px;text-align:right;">${fmtK(totalRev)}</td>
+                </tr></tfoot></tbody></table></div>`;
         }
 
         function renderOnlineTopProducts(rows) {
@@ -9625,20 +9631,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!kode) return;
                 const sz = r.ukuran || r.size || '-';
                 const key = kode + '|' + sz;
-                // Try various field names for product name
-                const sku = r.sku || r.product_name || r.nama_barang || r.nama || r.artikel || '-';
-                const warna = r.warna || r.color || r.collection || r.series || '';
-                if (!prodMap[key]) prodMap[key] = { kode: kode, sku: sku, warna: warna, tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
+                // Use nama_barang as primary display name (like Online view)
+                const namaDisplay = r.nama_barang || r.product_name || r.nama || r.artikel || '';
+                const collection = r.collection || r.series || '';
+                if (!prodMap[key]) prodMap[key] = { kode: kode, nama_barang: namaDisplay, collection: collection, tier: r.tier || '-', size: sz, pairs: 0, revenue: 0 };
                 prodMap[key].pairs += Number(r.qty) || 0;
                 prodMap[key].revenue += Number(r.total) || 0;
                 if (r.tier && r.tier !== '-') prodMap[key].tier = r.tier;
-                // Preserve sku/warna from any row that has them
-                if (sku && sku !== '-' && sku !== 'null' && prodMap[key].sku === '-') {
-                    prodMap[key].sku = sku;
-                }
-                if (warna && warna !== '' && warna !== 'null' && !prodMap[key].warna) {
-                    prodMap[key].warna = warna;
-                }
+                // Preserve nama_barang/collection from any row that has them
+                if (namaDisplay && !prodMap[key].nama_barang) prodMap[key].nama_barang = namaDisplay;
+                if (collection && !prodMap[key].collection) prodMap[key].collection = collection;
             });
             const products = Object.values(prodMap).sort((a,b) => b.revenue - a.revenue).slice(0, 10);
             if (!products.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data produk</div>'; return; }
@@ -9655,9 +9657,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     <th style="padding:8px;text-align:right;width:110px;">REVENUE</th>
                 </tr></thead><tbody>` +
                 products.map((p, i) => {
-                    const namaBarang = (p.warna && p.warna !== 'null' && p.warna !== 'undefined') 
-                        ? ((p.sku && p.sku !== 'null' && p.sku !== 'undefined') ? p.sku + ', ' + p.warna : p.warna) 
-                        : ((p.sku && p.sku !== 'null' && p.sku !== 'undefined') ? p.sku : '-');
+                    // Show nama_barang if available, otherwise fallback to kode + collection
+                    const namaBarang = p.nama_barang ? p.nama_barang : (p.collection ? p.kode + ', ' + p.collection : p.kode);
                     return `<tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #e2e8f0;">
                         <td style="padding:7px 8px;text-align:center;color:#64748b;font-weight:600;">${i+1}</td>
                         <td style="padding:7px 8px;font-size:0.78rem;font-weight:600;color:#1f2937;">${p.kode}</td>
@@ -9752,12 +9753,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             const months = Object.keys(monthMap).sort().map(k => monthMap[k]);
             if (!months.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data trend</div>'; return; }
+            // Calculate grand total from ALL rows (including those without dates)
+            const grandTotalRev = rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
+            const grandTotalPairs = rows.reduce((s, r) => s + (Number(r.qty) || 0), 0);
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            const maxRev = Math.max(...months.map(m => m.revenue));
+            const maxRev = Math.max(...months.map(m => m.revenue), 1);
             const trendColors = ['#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e','#ef4444','#f97316','#f59e0b','#eab308','#22c55e'];
             const barH = 38, gap = 10, labelW = 90, valW = 170;
-            const svgW = 680, svgH = months.length * (barH + gap) + 20;
+            // Add 1 extra row for TOTAL
+            const totalRows = months.length + 1;
+            const svgW = 680, svgH = totalRows * (barH + gap) + 20;
             const barW = svgW - labelW - valW - 20;
             let html = '<div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">';
             html += '<svg width="100%" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '" style="max-width:100%;">';
@@ -9771,6 +9777,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const valLabel = fmtK(m.revenue) + ' | ' + (m.pairs||0).toLocaleString('id-ID') + ' psg';
                 html += `<text x="${labelW + barW + 10}" y="${y + barH/2 + 5}" font-size="11" fill="${color}" font-weight="700">${valLabel}</text>`;
             });
+            // TOTAL bar
+            const yTotal = months.length * (barH + gap);
+            html += `<line x1="${labelW}" y1="${yTotal - 4}" x2="${labelW + barW}" y2="${yTotal - 4}" stroke="#cbd5e1" stroke-width="1"/>`;
+            html += `<text x="${labelW - 8}" y="${yTotal + barH/2 + 5}" text-anchor="end" font-size="13" fill="#002A3A" font-weight="800">TOTAL</text>`;
+            html += `<rect x="${labelW}" y="${yTotal}" width="${barW}" height="${barH}" fill="#002A3A" rx="7" opacity="0.15"/>`;
+            html += `<rect x="${labelW}" y="${yTotal}" width="${barW}" height="${barH}" fill="#002A3A" rx="7" opacity="0.85"/>`;
+            const totalLabel = fmtK(grandTotalRev) + ' | ' + grandTotalPairs.toLocaleString('id-ID') + ' psg';
+            html += `<text x="${labelW + barW + 10}" y="${yTotal + barH/2 + 5}" font-size="12" fill="#002A3A" font-weight="800">${totalLabel}</text>`;
             html += '</svg></div>';
             el.innerHTML = html;
         }
@@ -9907,7 +9921,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             var data = Object.values(byArea).sort(function(a,b) { return b.revenue - a.revenue; });
             if (!data.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data area</div>'; return; }
-            var areaColors = {'Bali':'#10b981','Batam':'#06b6d4','Jakarta':'#f59e0b','Jawa Timur':'#3b82f6','Jatim':'#3b82f6','Lombok':'#8b5cf6','Sulawesi':'#ec4899','Sumatera':'#ef4444','Sumatra':'#ef4444'};
+            var areaColors = {'Bali':'#10b981','Bali 1':'#f59e0b','Bali 2':'#3b82f6','Bali 3':'#8b5cf6','Batam':'#06b6d4','Jakarta':'#ec4899','Jawa Timur':'#ef4444','Jatim':'#ef4444','Lombok':'#22c55e','Sulawesi':'#f97316','Sumatera':'#a855f7','Sumatra':'#a855f7'};
             var fmtK = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             var totalRev = data.reduce(function(s,i) { return s + i.revenue; }, 0);
             var maxRev = data[0].revenue;
