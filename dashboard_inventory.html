@@ -9591,8 +9591,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // ── Sales by Area (computed from row data) ──
             renderOnlineAreaChart(rows);
 
-            // ── Daily Trend ──
-            renderOnlineDailyTrend(rows);
+            // ── Daily Trend (hidden for Global view) ──
+            var dailyEl = document.getElementById('onlineDailyTrend');
+            if (dailyEl) {
+                var dailyRow = dailyEl.parentElement.parentElement;
+                if (isGlobalChannel) {
+                    dailyRow.style.display = 'none';
+                } else {
+                    dailyRow.style.display = '';
+                    renderOnlineDailyTrend(rows);
+                }
+            }
 
             // ── Size Distribution by Gender ──
             renderOnlineSizeDistribution(rows);
@@ -9649,13 +9658,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         <td style="padding:7px 8px;text-align:right;font-weight:600;color:#002A3A;white-space:nowrap;width:120px;">${fmtK(item.revenue)}</td>
                     </tr>`;
                 }).join('') +
-                `<tfoot><tr style="background:#002A3A;color:white;font-weight:700;">
+                (groupField !== 'collection' ? `<tfoot><tr style="background:#002A3A;color:white;font-weight:700;">
                     <td style="padding:8px;"></td>
                     <td style="padding:8px;text-align:${isTier?'center':'left'};">TOTAL</td>
                     <td style="padding:8px;text-align:center;">${totalPairs.toLocaleString('id-ID')}</td>
                     <td style="padding:8px;text-align:center;">100%</td>
                     <td style="padding:8px;text-align:right;">${fmtK(totalRev)}</td>
-                </tr></tfoot></tbody></table></div>`;
+                </tr></tfoot>` : '') + `</tbody></table></div>`;
         }
 
         function renderOnlineTopProducts(rows) {
@@ -9954,14 +9963,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const byArea = {};
             rows.forEach(function(r) {
                 var area = (r.area || '').trim();
-                if (!area || area === '-' || area === '') return;
+                if (!area || area === '-' || area === '') area = 'Lainnya';
                 if (!byArea[area]) byArea[area] = { area: area, revenue: 0, pairs: 0 };
                 byArea[area].revenue += r.total || 0;
                 byArea[area].pairs += r.qty || 0;
             });
             var data = Object.values(byArea).sort(function(a,b) { return b.revenue - a.revenue; });
             if (!data.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data area</div>'; return; }
-            var areaColors = {'Bali':'#10b981','Bali 1':'#f59e0b','Bali 2':'#3b82f6','Bali 3':'#8b5cf6','Batam':'#06b6d4','Jakarta':'#ec4899','Jawa Timur':'#ef4444','Jatim':'#ef4444','Lombok':'#22c55e','Sulawesi':'#f97316','Sumatera':'#a855f7','Sumatra':'#a855f7'};
+            var areaColors = {'Bali':'#10b981','Bali 1':'#f59e0b','Bali 2':'#3b82f6','Bali 3':'#8b5cf6','Batam':'#06b6d4','Jakarta':'#ec4899','Jawa Timur':'#ef4444','Jatim':'#ef4444','Lombok':'#22c55e','Sulawesi':'#f97316','Sumatera':'#a855f7','Sumatra':'#a855f7','Lainnya':'#64748b'};
             var fmtK = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             var totalRev = data.reduce(function(s,i) { return s + i.revenue; }, 0);
             var maxRev = data[0].revenue;
@@ -10000,9 +10009,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var salesCards = document.getElementById('salesSummaryCards');
 
             if (channel === 'global') {
-                // Global: show combined sales from all channels
-                salesFilters.style.display = '';
-                salesCards.style.display = 'grid';
+                // Global: hide Retail filters and summary cards
+                salesFilters.style.display = 'none';
+                salesCards.style.display = 'none';
                 retailTabWrapper.style.display = '';
                 // Hide all children - global shows summary only
                 Array.from(retailTabWrapper.children).forEach(function(child) {
