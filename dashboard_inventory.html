@@ -9155,7 +9155,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         warna: s.warna || s.color || '',
                         ukuran: s.ukuran || s.size || '-',
                         tier: s.tier || '-',
-                        gender: s.gender || s.jenis_kelamin || s.jk || ''
+                        gender: s.gender || s.jenis_kelamin || s.jk || '',
+                        tipe: s.tipe || '',
+                        collection: s.collection || s.series || ''
                     });
                 });
                 
@@ -9163,6 +9165,25 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 
                 // Enrich all rows: derive missing gender, tipe, tier from nama_barang/collection
                 enrichGlobalData(allData);
+
+                // [DEBUG] Diagnostic: check total per channel & area coverage
+                console.log('[GLOBAL DEBUG] Total rows:', allData.length);
+                var debugByChannel = {};
+                allData.forEach(function(r) {
+                    var ch = r.channel || 'Unknown';
+                    if (!debugByChannel[ch]) debugByChannel[ch] = { rows: 0, total: 0, hasArea: 0, emptyArea: 0 };
+                    debugByChannel[ch].rows++;
+                    debugByChannel[ch].total += (r.total || 0);
+                    if (r.area && r.area.trim() && r.area !== '-') debugByChannel[ch].hasArea++;
+                    else debugByChannel[ch].emptyArea++;
+                });
+                console.table(debugByChannel);
+                var totalAll = allData.reduce(function(s,r) { return s + (r.total||0); }, 0);
+                var totalWithArea = allData.filter(function(r) { return r.area && r.area.trim() && r.area !== '-'; }).reduce(function(s,r) { return s + (r.total||0); }, 0);
+                console.log('[GLOBAL DEBUG] Total revenue all:', totalAll, '(' + (totalAll/1e9).toFixed(2) + 'B)');
+                console.log('[GLOBAL DEBUG] Total revenue with area:', totalWithArea, '(' + (totalWithArea/1e9).toFixed(2) + 'B)');
+                console.log('[GLOBAL DEBUG] Revenue lost (empty area):', (totalAll-totalWithArea), '(' + ((totalAll-totalWithArea)/1e6).toFixed(1) + 'M)');
+                // [/DEBUG]
                 globalRawData = allData;
                 currentOnlineDataSource = 'global';
                 
