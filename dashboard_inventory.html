@@ -9091,6 +9091,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
 
+                // Derive tier from skuTierMap if missing (Retail API rows have no tier)
+                if (!r.tier || r.tier === '' || r.tier === '-') {
+                    var sku = (r.sku || r.kode_kecil || '').toUpperCase();
+                    if (sku) {
+                        var articleKey = sku.replace(/Z\d{2,3}$/, '');
+                        r.tier = skuTierMap[sku] || skuTierMap[articleKey] || r.tier || '';
+                    }
+                }
+
                 // Normalize marketplace for Global view: show channel name for non-Online
                 if (!r.marketplace || r.marketplace === '') {
                     r.marketplace = r.channel || 'Unknown';
