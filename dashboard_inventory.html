@@ -9050,6 +9050,52 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // === GLOBAL CHANNEL (All channels combined) ===
         let globalRawData = null;
+
+        // ── Enrich Global Data: derive missing gender, tipe, tier from nama_barang/collection ──
+        function enrichGlobalData(rows) {
+            // Collections that are 'Jepit' type (all others = Fashion)
+            const jepitCollections = new Set(['CLASSIC','CLASSIC METALIC','CLASSICEARTH','BLACKSERIES','STRIPE','BATMAN','TOY STORY','MICKEY & FRIENDS','MICKEY']);
+
+            rows.forEach(function(r) {
+                var nama = (r.nama_barang || r.product_name || '').trim().toUpperCase();
+
+                // Derive gender from nama_barang first word if missing
+                if (!r.gender || r.gender === '' || r.gender === '-') {
+                    if (nama) {
+                        var parts = nama.split(' ');
+                        var first = parts[0];
+                        // Handle compound: 'BABY GIRLS', 'BABY BOYS', 'BABY CLOGS'
+                        if (first === 'BABY') {
+                            r.gender = 'BABY';
+                        } else if (['MEN','LADIES','BOYS','GIRLS','JUNIOR','KIDS'].indexOf(first) >= 0) {
+                            r.gender = first;
+                        }
+                    }
+                }
+
+                // Derive tipe from collection if missing
+                if (!r.tipe || r.tipe === '' || r.tipe === '-') {
+                    var coll = (r.collection || '').trim().toUpperCase();
+                    if (coll) {
+                        r.tipe = jepitCollections.has(coll) ? 'Jepit' : 'Fashion';
+                    } else if (nama) {
+                        // Fallback: check nama_barang for known Jepit keywords
+                        if (nama.indexOf('CLASSIC') >= 0 || nama.indexOf('STRIPE') >= 0 || nama.indexOf('BLACK SERIES') >= 0) {
+                            r.tipe = 'Jepit';
+                        } else {
+                            r.tipe = 'Fashion';
+                        }
+                    }
+                }
+
+                // Normalize marketplace for Global view: show channel name for non-Online
+                if (!r.marketplace || r.marketplace === '') {
+                    r.marketplace = r.channel || 'Unknown';
+                }
+            });
+            return rows;
+        }
+
         async function loadGlobalChannel() {
             const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data global...</div>'; });
@@ -9070,19 +9116,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (retailData||[]).forEach(r => { r.channel = 'Retail'; allData.push(r); });
                 (onlineData||[]).forEach(r => { r.channel = 'Online'; allData.push(r); });
                 
-                // Helper function to parse gender from product_name or sku
-            function parseGenderFromProduct(productName, sku) {
-                const text = (productName || sku || '').toUpperCase();
-                if (text.includes('MEN ') || text.startsWith('M1') || text.startsWith('M2')) return 'Men';
-                if (text.includes('LADIES') || text.startsWith('L1') || text.startsWith('L2')) return 'Ladies';
-                if (text.includes('BOYS')) return 'Boys';
-                if (text.includes('GIRLS')) return 'Girls';
-                if (text.includes('BABY')) return 'Baby';
-                if (text.includes('JUNIOR')) return 'Junior';
-                return null;
-            }
-            
-            // Consignment API returns object format with stores array, transform to flat array
+                // Consignment API returns object format with stores array, transform to flat array
                 // Handle both object and array formats - also handle empty object {}
                 let consigArr = [];
                 if (consigData && typeof consigData === 'object') {
@@ -9093,8 +9127,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
                 consigArr.forEach(s => {
-                    // Try to get gender from various field names, or parse from product_name/sku
-                    const gender = s.gender || s.jenis_kelamin || s.jk || parseGenderFromProduct(s.product_name, s.sku) || '';
                     allData.push({
                         channel: 'Consignment',
                         qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
@@ -9104,22 +9136,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         partner: s.partner || '',
                         kode_kecil: s.kode_kecil || s.kode || '',
                         sku: s.sku || s.nama_barang || '',
+                        nama_barang: s.product_name || s.nama_barang || '',
                         warna: s.warna || s.color || '',
                         ukuran: s.ukuran || s.size || '-',
                         tier: s.tier || '-',
-                        gender: gender
+                        gender: s.gender || s.jenis_kelamin || s.jk || ''
                     });
                 });
-                console.log('Transformed consignment items:', allData.filter(r => r.channel === 'consignment').length);
                 
                 (wholesaleData||[]).forEach(r => { r.channel = 'Wholesale'; allData.push(r); });
                 
-                // Debug: log data counts
-                console.log('Global load - retail:', (retailData||[]).length, 'online:', (onlineData||[]).length, 'consig:', (consigData||[]).length, 'wholesale:', (wholesaleData||[]).length);
-                console.log('Consignment data keys:', consigData ? Object.keys(consigData) : 'null');
-                console.log('Consignment stores:', consigData?.stores?.length || 0);
-                if (consigData?.stores?.length > 0) console.log('First store:', consigData.stores[0]);
-                
+                // Enrich all rows: derive missing gender, tipe, tier from nama_barang/collection
+                enrichGlobalData(allData);
                 globalRawData = allData;
                 currentOnlineDataSource = 'global';
                 
@@ -9524,8 +9552,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // ── Sales by Tipe (horizontal bar chart) ──
             renderOnlineTipeChart(rows);
 
-            // ── Sales by Area (horizontal bar chart, from separate endpoint) ──
-            renderOnlineAreaChart();
+            // ── Sales by Area (computed from row data) ──
+            renderOnlineAreaChart(rows);
 
             // ── Daily Trend ──
             renderOnlineDailyTrend(rows);
@@ -9790,11 +9818,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function renderOnlineTierChart(rows) {
             const el = document.getElementById('onlineByTier');
             if (!el) return;
-            const tierColors = {'1':'#002A3A','2':'#0ea5e9','3':'#f59e0b','4':'#ef4444','5':'#8b5cf6','8':'#6b7280'};
+            const tierColors = {'1':'#002A3A','2':'#0ea5e9','3':'#f59e0b','4':'#ef4444','5':'#8b5cf6','8':'#6b7280','N/A':'#94a3b8'};
             const byTier = {};
             rows.forEach(r => {
-                const tier = r.tier || 'Unknown';
-                if (tier === '-' || tier === '' || tier === 'Unknown') return;
+                var tier = (r.tier || '').toString().trim();
+                if (tier === '-' || tier === '' || tier === 'Unknown') tier = 'N/A';
                 if (!byTier[tier]) byTier[tier] = { sales: 0, qty: 0 };
                 byTier[tier].sales += r.total || 0;
                 byTier[tier].qty += r.qty || 0;
@@ -9828,11 +9856,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function renderOnlineTipeChart(rows) {
             const el = document.getElementById('onlineByTipe');
             if (!el) return;
-            const tipeColors = {'Jepit':'#f59e0b','Fashion':'#8b5cf6','Baby':'#ec4899','Ladies':'#10b981','Kids':'#06b6d4','Men':'#3b82f6'};
+            const tipeColors = {'Jepit':'#f59e0b','Fashion':'#8b5cf6','Baby':'#ec4899','Ladies':'#10b981','Kids':'#06b6d4','Men':'#3b82f6','Unknown':'#94a3b8'};
             const byTipe = {};
             rows.forEach(r => {
-                const tipe = r.tipe || 'Unknown';
-                if (tipe === '-' || tipe === '' || tipe === 'Unknown') return;
+                var tipe = (r.tipe || '').trim();
+                if (tipe === '-' || tipe === '') tipe = 'Unknown';
                 if (!byTipe[tipe]) byTipe[tipe] = { sales: 0, qty: 0 };
                 byTipe[tipe].sales += r.total || 0;
                 byTipe[tipe].qty += r.qty || 0;
@@ -9862,39 +9890,45 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             el.innerHTML = html;
         }
 
-        // ── Area chart (SVG horizontal bars, from separate endpoint) ──
-        async function renderOnlineAreaChart() {
+        // ── Area chart (SVG horizontal bars, computed from row data) ──
+        function renderOnlineAreaChart(rows) {
             const el = document.getElementById('onlineByArea');
             if (!el) return;
-            el.innerHTML = '<div style="color:#64748b;padding:8px;">⏳ Memuat data area...</div>';
-            try {
-                const data = await fetchAPI('/api/sales/online-area?from=2026-01-01&to=' + new Date().toISOString().slice(0,10) + '&_t=' + Date.now());
-                if (!data || !data.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data area</div>'; return; }
-                const areaColors = {'Bali':'#10b981','Batam':'#06b6d4','Jakarta':'#f59e0b','Jawa Timur':'#3b82f6','Jatim':'#3b82f6','Lombok':'#8b5cf6','Sulawesi':'#ec4899','Sumatera':'#ef4444','Sumatra':'#ef4444'};
-                const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-                const totalRev = data.reduce((s,i) => s + i.revenue, 0);
-                const maxRev = data[0].revenue;
-                const barH = 38, gap = 10, labelW = 105, valW = 170;
-                const svgW = 680, svgH = data.length * (barH + gap) + 20;
-                const barW = svgW - labelW - valW - 20;
-                let html = '<div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">';
-                html += `<svg width="100%" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="max-width:100%;">`; 
-                data.sort((a,b) => b.revenue - a.revenue).forEach((item, i) => {
-                    const y = i * (barH + gap);
-                    const color = areaColors[item.area] || '#94a3b8';
-                    const filled = maxRev > 0 ? (item.revenue / maxRev) * barW : 0;
-                    const pct = totalRev > 0 ? ((item.revenue / totalRev) * 100).toFixed(1) : '0.0';
-                    html += `<text x="${labelW - 8}" y="${y + barH/2 + 5}" text-anchor="end" font-size="13" fill="${color}" font-weight="700">${item.area}</text>`;
-                    html += `<rect x="${labelW}" y="${y}" width="${barW}" height="${barH}" fill="#e5e7eb" rx="7"/>`;
-                    if (filled > 0) html += `<rect x="${labelW}" y="${y}" width="${filled}" height="${barH}" fill="${color}" rx="7" opacity="0.85"/>`;
-                    const valLabel = fmtK(item.revenue) + ' | ' + (item.pairs||0).toLocaleString('id-ID') + ' psg (' + pct + '%)';
-                    html += `<text x="${labelW + barW + 10}" y="${y + barH/2 + 5}" font-size="11" fill="${color}" font-weight="700">${valLabel}</text>`;
-                });
-                html += '</svg></div>';
-                el.innerHTML = html;
-            } catch(e) {
-                el.innerHTML = '<div style="color:#ef4444;padding:8px;">❌ Gagal memuat area: ' + e.message + '</div>';
-            }
+            // If no rows passed, try globalRawData or onlineRawData
+            if (!rows) rows = globalRawData || onlineRawData || [];
+            // Aggregate area data from rows
+            const byArea = {};
+            rows.forEach(function(r) {
+                var area = (r.area || '').trim();
+                if (!area || area === '-' || area === '') return;
+                if (!byArea[area]) byArea[area] = { area: area, revenue: 0, pairs: 0 };
+                byArea[area].revenue += r.total || 0;
+                byArea[area].pairs += r.qty || 0;
+            });
+            var data = Object.values(byArea).sort(function(a,b) { return b.revenue - a.revenue; });
+            if (!data.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data area</div>'; return; }
+            var areaColors = {'Bali':'#10b981','Batam':'#06b6d4','Jakarta':'#f59e0b','Jawa Timur':'#3b82f6','Jatim':'#3b82f6','Lombok':'#8b5cf6','Sulawesi':'#ec4899','Sumatera':'#ef4444','Sumatra':'#ef4444'};
+            var fmtK = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            var totalRev = data.reduce(function(s,i) { return s + i.revenue; }, 0);
+            var maxRev = data[0].revenue;
+            var barH = 38, gap = 10, labelW = 105, valW = 170;
+            var svgW = 680, svgH = data.length * (barH + gap) + 20;
+            var barW = svgW - labelW - valW - 20;
+            var html = '<div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">';
+            html += '<svg width="100%" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '" style="max-width:100%;">';
+            data.forEach(function(item, i) {
+                var y = i * (barH + gap);
+                var color = areaColors[item.area] || '#94a3b8';
+                var filled = maxRev > 0 ? (item.revenue / maxRev) * barW : 0;
+                var pct = totalRev > 0 ? ((item.revenue / totalRev) * 100).toFixed(1) : '0.0';
+                html += '<text x="' + (labelW - 8) + '" y="' + (y + barH/2 + 5) + '" text-anchor="end" font-size="13" fill="' + color + '" font-weight="700">' + item.area + '</text>';
+                html += '<rect x="' + labelW + '" y="' + y + '" width="' + barW + '" height="' + barH + '" fill="#e5e7eb" rx="7"/>';
+                if (filled > 0) html += '<rect x="' + labelW + '" y="' + y + '" width="' + filled + '" height="' + barH + '" fill="' + color + '" rx="7" opacity="0.85"/>';
+                var valLabel = fmtK(item.revenue) + ' | ' + (item.pairs||0).toLocaleString('id-ID') + ' psg (' + pct + '%)';
+                html += '<text x="' + (labelW + barW + 10) + '" y="' + (y + barH/2 + 5) + '" font-size="11" fill="' + color + '" font-weight="700">' + valLabel + '</text>';
+            });
+            html += '</svg></div>';
+            el.innerHTML = html;
         }
 
         // Sidebar channel nav for Sales (Retail/Consig/Wholesale/Online)
