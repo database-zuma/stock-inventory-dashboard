@@ -9128,12 +9128,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 (retailData||[]).forEach(r => { r.channel = 'Retail'; allData.push(r); });
                 (onlineData||[]).forEach(r => { r.channel = 'Online'; allData.push(r); });
                 
-                // Consignment API returns object format with stores array, transform to flat array
-                // Handle both object and array formats - also handle empty object {}
+                // Consignment API returns object format with detail_rows (individual dated rows) and stores (aggregated)
+                // Prefer detail_rows for Global view (has date for trend chart)
                 let consigArr = [];
                 if (consigData && typeof consigData === 'object') {
                     if (Array.isArray(consigData)) {
                         consigArr = consigData;
+                    } else if (Array.isArray(consigData?.detail_rows) && consigData.detail_rows.length > 0) {
+                        consigArr = consigData.detail_rows;
                     } else if (Array.isArray(consigData?.stores)) {
                         consigArr = consigData.stores;
                     }
@@ -9141,8 +9143,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 consigArr.forEach(s => {
                     allData.push({
                         channel: 'Consignment',
-                        qty: Number(s.total_qty) || Number(s.qty) || Number(s.sales_qty) || 0,
-                        total: Number(s.total_sales) || Number(s.sales) || Number(s.total) || 0,
+                        date: s.date || s.sale_date || '',
+                        qty: Number(s.qty) || Number(s.total_qty) || Number(s.sales_qty) || 0,
+                        total: Number(s.sales) || Number(s.total_sales) || Number(s.total) || 0,
                         area: s.area || '',
                         store_name: s.store_name || s.store || '',
                         partner: s.partner || '',
