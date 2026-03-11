@@ -9085,6 +9085,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         } else {
                             r.tipe = 'Fashion';
                         }
+                    } else {
+                        // No collection and no nama_barang (e.g. Consignment data) → default to Fashion
+                        r.tipe = 'Fashion';
                     }
                 }
 
@@ -9587,9 +9590,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!items.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
-            // For gender: use total WITH gender; for others use all
-            const totalRev = groupField === 'gender' ? totalRevWithGender : items.reduce((s,i) => s + i.revenue, 0);
-            const totalPairs = groupField === 'gender' ? totalPairsWithGender : items.reduce((s,i) => s + i.pairs, 0);
+            // For gender: use grand total from ALL items (including Unknown) so TOTAL matches Rp 20.6M
+            const totalRev = items.reduce((s,i) => s + i.revenue, 0) + (groupField === 'gender' ? (gMap['Unknown'] ? gMap['Unknown'].revenue : 0) : 0);
+            const totalPairs = items.reduce((s,i) => s + i.pairs, 0) + (groupField === 'gender' ? (gMap['Unknown'] ? gMap['Unknown'].pairs : 0) : 0);
             const colLabel = {marketplace:'Marketplace',gender:'Gender',collection:'Series',tier:'Tier',tipe:'Tipe',area:'Area'}[groupField] || groupField;
             const tierColors = {'1':'#002A3A','2':'#0ea5e9','3':'#f59e0b','4':'#ef4444','5':'#8b5cf6'};
             const isTier = groupField === 'tier';
@@ -9841,6 +9844,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 byTier[tier].sales += r.total || 0;
                 byTier[tier].qty += r.qty || 0;
             });
+            // Remove N/A tier (rows without tier data) from display
+            delete byTier['N/A'];
             const tierData = Object.keys(byTier).map(t => ({ tier: t, sales: byTier[t].sales, qty: byTier[t].qty })).sort((a,b) => b.sales - a.sales);
             if (!tierData.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
             const totalSales = tierData.reduce((s,t) => s + t.sales, 0);
@@ -9879,6 +9884,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 byTipe[tipe].sales += r.total || 0;
                 byTipe[tipe].qty += r.qty || 0;
             });
+            // Safety: remove Unknown tipe from display (should not exist after enrichment fix)
+            delete byTipe['Unknown'];
             const tipeData = Object.keys(byTipe).map(t => ({ tipe: t, sales: byTipe[t].sales, qty: byTipe[t].qty })).sort((a,b) => b.sales - a.sales);
             if (!tipeData.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
             const totalSales = tipeData.reduce((s,t) => s + t.sales, 0);
