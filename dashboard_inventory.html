@@ -7129,9 +7129,9 @@
             areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Area</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Toko</th>';
+            areaHtml += '<th style="padding:8px 10px;text-align:center;">Qty</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Revenue</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:center;">Share</th>';
-            areaHtml += '<th style="padding:8px 10px;text-align:center;">Pairs</th>';
             areaHtml += '<th style="padding:8px 10px;text-align:center;min-width:100px;">Bar</th>';
             areaHtml += '</tr></thead><tbody>';
             areaArr.forEach((a, i) => {
@@ -7141,9 +7141,9 @@
                 areaHtml += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
                 areaHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + a.area + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:center;color:#6b7280;">' + a.stores + '</td>';
+                areaHtml += '<td style="padding:8px 10px;text-align:center;">' + a.qty.toLocaleString('id-ID') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (a.sales / 1e6).toFixed(1) + 'jt</td>';
                 areaHtml += '<td style="padding:8px 10px;text-align:center;color:#6b7280;">' + share + '%</td>';
-                areaHtml += '<td style="padding:8px 10px;text-align:center;">' + a.qty.toLocaleString('id-ID') + '</td>';
                 areaHtml += '<td style="padding:8px 10px;"><div style="height:8px;background:#00E273;border-radius:4px;width:' + bar + 'px;"></div></td>';
                 areaHtml += '</tr>';
             });
