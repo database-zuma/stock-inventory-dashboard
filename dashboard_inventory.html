@@ -1450,18 +1450,16 @@
                             </div>
                         </div>
 
-                        <!-- Sales by Event Section -->
-                        <div style="margin-bottom:24px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                <h4 id="salesByEventTitle" style="margin:0;color:#1f2937;font-size:0.95rem;">🎪 Sales by Event</h4>
+                        <!-- Sales by Event + Sales by Area side by side -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+                            <div>
+                                <h4 id="salesByEventTitle" style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🎪 Sales by Event</h4>
+                                <div id="salesByEventTable" style="max-height:420px;overflow-y:auto;"></div>
                             </div>
-                            <div id="salesByEventTable" style="max-height:420px;overflow-y:auto;"></div>
-                        </div>
-
-                        <!-- Row 2: Sales by Area (rapi — tabel) -->
-                        <div style="margin-bottom:24px;">
-                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
-                            <div id="salesByAreaTable"></div>
+                            <div>
+                                <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area</h4>
+                                <div id="salesByAreaTable"></div>
+                            </div>
                         </div>
 
                         <!-- Row 3: Daily Trend + Sales by Hour side by side -->
@@ -7159,31 +7157,32 @@
             })).sort((a, b) => b.sales - a.sales);
             let eventHtml = '';
             if (eventArr.length > 0) {
-                eventHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #e2e8f0;">';
-                eventHtml += '<thead><tr style="background:#7c3aed;color:white;">';
-                eventHtml += '<th style="text-align:center;padding:5px 4px;">No</th>';
-                eventHtml += '<th style="text-align:left;padding:5px 4px;">Area</th>';
-                eventHtml += '<th style="text-align:left;padding:5px 4px;">Event</th>';
-                eventHtml += '<th style="text-align:center;padding:5px 4px;">Pairs</th>';
-                eventHtml += '<th style="text-align:center;padding:5px 4px;">Trx</th>';
-                eventHtml += '<th style="text-align:right;padding:5px 4px;">Sales</th>';
+                eventHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.83rem;border:1px solid #000;">';
+                eventHtml += '<thead><tr style="background:#002A3A;color:white;">';
+                eventHtml += '<th style="padding:8px 10px;text-align:center;">No</th>';
+                eventHtml += '<th style="padding:8px 10px;text-align:left;">Area</th>';
+                eventHtml += '<th style="padding:8px 10px;text-align:left;">Event</th>';
+                eventHtml += '<th style="padding:8px 10px;text-align:center;">Pairs</th>';
+                eventHtml += '<th style="padding:8px 10px;text-align:center;">Trx</th>';
+                eventHtml += '<th style="padding:8px 10px;text-align:right;">Sales</th>';
                 eventHtml += '</tr></thead><tbody>';
                 let eventTotal = { sales: 0, qty: 0, trx: 0 };
                 eventArr.forEach((s, i) => {
                     eventTotal.sales += s.sales; eventTotal.qty += s.qty; eventTotal.trx += s.trx;
-                    eventHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + (i+1) + '</td>';
-                    eventHtml += '<td style="padding:5px 4px;font-size:0.72rem;">' + s.area + '</td>';
-                    eventHtml += '<td style="padding:5px 4px;font-weight:600;">' + s.store.replace('Zuma ','') + '</td>';
-                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + s.qty.toLocaleString('id-ID') + '</td>';
-                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + s.trx + '</td>';
-                    eventHtml += '<td style="text-align:right;padding:5px 4px;font-weight:600;">Rp ' + (s.sales/1e6).toFixed(1) + 'jt</td>';
+                    const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+                    eventHtml += '<tr style="background:' + bg + ';border-bottom:1px solid #e2e8f0;">';
+                    eventHtml += '<td style="padding:8px 10px;text-align:center;">' + (i+1) + '</td>';
+                    eventHtml += '<td style="padding:8px 10px;font-size:0.78rem;color:#6b7280;">' + s.area + '</td>';
+                    eventHtml += '<td style="padding:8px 10px;font-weight:600;color:#1f2937;">' + s.store.replace('Zuma ','') + '</td>';
+                    eventHtml += '<td style="padding:8px 10px;text-align:center;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                    eventHtml += '<td style="padding:8px 10px;text-align:center;">' + s.trx + '</td>';
+                    eventHtml += '<td style="padding:8px 10px;text-align:right;font-weight:700;color:#10b981;">Rp ' + (s.sales/1e6).toFixed(1) + 'jt</td>';
                     eventHtml += '</tr>';
                 });
-                eventHtml += '<tr style="background:#f3f0ff;font-weight:700;"><td colspan="3" style="padding:5px 4px;">TOTAL (' + eventArr.length + ' event)</td>';
-                eventHtml += '<td style="text-align:center;padding:5px 4px;">' + eventTotal.qty.toLocaleString('id-ID') + '</td>';
-                eventHtml += '<td style="text-align:center;padding:5px 4px;">' + eventTotal.trx + '</td>';
-                eventHtml += '<td style="text-align:right;padding:5px 4px;">Rp ' + (eventTotal.sales/1e6).toFixed(1) + 'jt</td></tr>';
+                eventHtml += '<tr style="background:#e8f5f0;font-weight:700;"><td colspan="3" style="padding:8px 10px;">TOTAL</td>';
+                eventHtml += '<td style="text-align:center;padding:8px 10px;">' + eventTotal.qty.toLocaleString('id-ID') + '</td>';
+                eventHtml += '<td style="text-align:center;padding:8px 10px;">' + eventTotal.trx + '</td>';
+                eventHtml += '<td style="text-align:right;padding:8px 10px;">Rp ' + (eventTotal.sales/1e6).toFixed(1) + 'jt</td></tr>';
                 eventHtml += '</tbody></table>';
             } else {
                 eventHtml = '<div style="text-align:center;padding:20px;color:#9ca3af;">Tidak ada data event untuk periode ini</div>';
@@ -7191,7 +7190,7 @@
             const eventEl = document.getElementById('salesByEventTable');
             if (eventEl) eventEl.innerHTML = eventHtml;
             const eventTitleEl = document.getElementById('salesByEventTitle');
-            if (eventTitleEl) eventTitleEl.textContent = '\uD83C\uDFAA Sales by Event (' + eventArr.length + ' event)';
+            if (eventTitleEl) eventTitleEl.textContent = '\uD83C\uDFAA Sales by Event';
 
             // Sales by Area
             const byArea = {};
