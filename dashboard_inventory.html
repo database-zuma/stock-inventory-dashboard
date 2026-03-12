@@ -9153,7 +9153,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         sku: s.sku || s.nama_barang || '',
                         nama_barang: s.product_name || s.nama_barang || '',
                         warna: s.warna || s.color || '',
-                        ukuran: s.ukuran || s.size || (function(sku){ var m = (sku||'').match(/Z(\d+(?:\/\d+)?)$/i); return m ? m[1] : '-'; })(s.sku),
+                        // Size extraction: 1) field ukuran/size, 2) SKU suffix Z{size} (e.g. L1CAV201Z36→36), 3) product_name comma pattern (e.g. 'MEN CLASSIC 27, 41, GREY'→41)
+                        ukuran: s.ukuran || s.size || (function(sku, pname){ var m = (sku||'').match(/Z(\d+(?:\/\d+)?)$/i); if (m) return m[1]; var m2 = (pname||'').match(/,\s*(\d+(?:\/\d+)?)\s*,/); return m2 ? m2[1] : '-'; })(s.sku, s.product_name),
                         tier: s.tier || '-',
                         gender: s.gender || s.jenis_kelamin || s.jk || '',
                         tipe: s.tipe || '',
