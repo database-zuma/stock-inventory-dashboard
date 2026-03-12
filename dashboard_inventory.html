@@ -7271,13 +7271,13 @@
             })).sort((a, b) => a.date.localeCompare(b.date));
 
             let dailyHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
-            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th></tr></thead><tbody>';
+            dailyHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;"><th style="text-align:left;padding:6px;color:white;background:#002A3A;">Tanggal</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th></tr></thead><tbody>';
             dateArr.forEach(d => {
                 const dayName = new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' });
                 dailyHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px;color:#374151;">' + d.date + ' (' + dayName + ')</td>';
-                dailyHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + d.sales.toLocaleString('id-ID') + '</td>';
                 dailyHtml += '<td style="text-align:center;padding:6px;color:#374151;">' + d.qty.toLocaleString('id-ID') + '</td>';
-                dailyHtml += '<td style="text-align:center;padding:6px;color:#374151;">' + d.trx.toLocaleString('id-ID') + '</td></tr>';
+                dailyHtml += '<td style="text-align:center;padding:6px;color:#374151;">' + d.trx.toLocaleString('id-ID') + '</td>';
+                dailyHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + d.sales.toLocaleString('id-ID') + '</td></tr>';
             });
             dailyHtml += '</tbody></table>';
             document.getElementById('salesDailyTrend').innerHTML = dailyHtml;
