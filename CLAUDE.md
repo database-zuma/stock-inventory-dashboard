@@ -47,7 +47,8 @@ Browser (GitHub Pages)
 | `/api/sales/detail?channel=online&from=...&to=...` | GET | — | Online channel filter |
 | `/api/sales/online-area?from=...&to=...` | GET | — | Online area breakdown |
 | `/api/sales/consignment?from=...&to=...` | GET | — | Consignment data |
-| `/api/refund` | GET | — | ❌ NOT BUILT (returns 404) |
+| `/api/sales/refunds?year=...&channel=retail` | GET | — | Refund summary, by_store, by_spg, by_area, by_article, detail |
+| `/api/new-stores` | GET | — | New store detection results from latest sync |
 
 ---
 
@@ -225,9 +226,13 @@ loadDashboardData() → stores data in global variables
 | API_BASE declaration | ~1953 | Tunnel URL goes here |
 | API_KEY declaration | ~1955 | Auth key |
 | fetchAPI() function | ~1957-1963 | No timeout set |
-| loadDashboardData() | ~2105-2179 | Phase 1 + Phase 2 data loading |
-| Sidebar navigation | ~563-566 | Retail → Online → Consignment → Wholesale |
-| renderSalesDashboard() | ~5464-5489 | Entry point for sales rendering |
+| loadDashboardData() | ~2392 | Phase 1 (7 parallel) + Phase 2 (monthly detail) |
+| New store banner HTML | ~2231-2234 | Amber gradient, click to dismiss |
+| checkNewStores() | ~2500-2523 | Calls /api/new-stores, shows banner if new stores found |
+| DOMContentLoaded | ~2525-2528 | Calls loadDashboardData() + checkNewStores() |
+| Sidebar navigation | ~570 | Retail & Event → Online → Consignment → Wholesale |
+| renderSalesPerformance() | ~6977 | Sales by Store (RETAIL), Sales by Event, Sales by Area |
+| renderRefundTab() | ~8723 | All 5 refund sections from single API call |
 | switchSalesChannel() | ~8113 | Tab switching logic |
 | renderSalesChannel() | ~7526-7645 | Per-channel rendering |
 
@@ -259,3 +264,7 @@ git push origin main
 | "Failed to fetch" | Wrong tunnel URL in API_BASE | Updated to current `trycloudflare.com` URL | `4d060da` |
 | Sales tables showing 0 rows | `document.getElementById('salesPeriodRange').textContent` crashes (element doesn't exist) | Added null check | `2ce6a28` |
 | API timeout on /api/sales/aggregate | Stuck DELETE query locking database tables | Killed stuck PID via `pg_terminate_backend()` | (runtime fix) |
+| Refund sections empty | Backend missing by_area, by_article, detail queries | Added full refund breakdown to /api/sales/refunds | (VPS fix) |
+| Event stores in retail data | No category filter in sales queries | Added `store_category = 'RETAIL'` filter + separate Event section | `3fae497` |
+| Store area mismatches | portal.store/stock_capacity had wrong areas | Fixed 6 areas + 10 inactive stores + trailing spaces | (DB fix) |
+| New stores undetected | No monitoring for new iSeller stores | Added check_new_stores.py + cron + banner notification | `3fae497` |
