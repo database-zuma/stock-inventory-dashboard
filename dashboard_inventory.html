@@ -1413,19 +1413,41 @@
                         </div>
                         <!-- Row 1: By Store (full width, rapi) -->
                         <div style="margin-bottom:24px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                                 <h4 id="salesByStoreTitle" style="margin:0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <label style="font-size:0.85rem;color:#6b7280;">Target Bulan:</label>
-                                    <select id="salesTargetMonth" onchange="renderSalesPerformance(); renderSalesTarget()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
-                                        <option value="">Semua (Q1)</option>
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                    <label style="font-size:0.85rem;color:#6b7280;">Tahun:</label>
+                                    <select id="salesTargetYear" onchange="updateStoreQuarterMonthOptions(); renderSalesPerformance(); renderSalesTarget()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                        <option value="2026" selected>2026</option>
+                                        <option value="2025">2025</option>
+                                    </select>
+                                    <label style="font-size:0.85rem;color:#6b7280;">Kuartal:</label>
+                                    <select id="salesTargetQuarter" onchange="updateStoreMonthOptions(); renderSalesPerformance(); renderSalesTarget()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                        <option value="Q1" selected>Q1</option>
+                                        <option value="Q2">Q2</option>
+                                        <option value="Q3">Q3</option>
+                                        <option value="Q4">Q4</option>
+                                    </select>
+                                    <label style="font-size:0.85rem;color:#6b7280;">Bulan:</label>
+                                    <select id="salesTargetMonth" onchange="renderSalesPerformance(); renderSalesTarget()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;">
+                                        <option value="">Semua</option>
                                         <option value="jan">Januari</option>
                                         <option value="feb">Februari</option>
                                         <option value="mar">Maret</option>
                                     </select>
                                 </div>
                             </div>
-                            <div id="salesByStoreTable" style="max-height:420px;overflow-y:auto;"></div>
+                            <!-- Two side-by-side tables: Achieved & Belum Achieved -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                <div>
+                                    <h5 style="margin:0 0 8px 0;color:#10b981;font-size:0.85rem;">✅ Achieved (≥100%)</h5>
+                                    <div id="salesByStoreAchieved" style="max-height:420px;overflow-y:auto;"></div>
+                                </div>
+                                <div>
+                                    <h5 style="margin:0 0 8px 0;color:#ef4444;font-size:0.85rem;">⚠️ Belum Achieved (&lt;100%)</h5>
+                                    <div id="salesByStoreBelum" style="max-height:420px;overflow-y:auto;"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Row 2: Sales by Area (rapi — tabel) -->
@@ -6928,23 +6950,64 @@
             document.getElementById('salesSummaryCards').innerHTML = html;
         }
 
+        // Helper: update Quarter and Month dropdown options based on Year selection
+        function updateStoreQuarterMonthOptions() {
+            // For now, all quarters available for any year
+            updateStoreMonthOptions();
+        }
+
+        // Helper: update Month dropdown options based on Quarter selection
+        function updateStoreMonthOptions() {
+            const quarter = (document.getElementById('salesTargetQuarter') || {}).value || 'Q1';
+            const monthEl = document.getElementById('salesTargetMonth');
+            if (!monthEl) return;
+            const quarterMonths = {
+                'Q1': [['jan','Januari'],['feb','Februari'],['mar','Maret']],
+                'Q2': [['apr','April'],['may','Mei'],['jun','Juni']],
+                'Q3': [['jul','Juli'],['aug','Agustus'],['sep','September']],
+                'Q4': [['oct','Oktober'],['nov','November'],['dec','Desember']]
+            };
+            const months = quarterMonths[quarter] || quarterMonths['Q1'];
+            monthEl.innerHTML = '<option value="">Semua</option>';
+            months.forEach(([val, label]) => {
+                monthEl.innerHTML += '<option value="' + val + '">' + label + '</option>';
+            });
+        }
+
         function renderSalesPerformance() {
-            // Read Target Bulan filter — filter sales data by month if selected
+            // Read Year/Quarter/Month filters for Sales by Store
+            const targetYear = (document.getElementById('salesTargetYear') || {}).value || '2026';
+            const targetQuarter = (document.getElementById('salesTargetQuarter') || {}).value || 'Q1';
             const targetMonth = (document.getElementById('salesTargetMonth') || {}).value || '';
+            
+            // Determine which months to use based on Quarter + Month filter
+            const quarterMonthKeys = {
+                'Q1': ['jan','feb','mar'],
+                'Q2': ['apr','may','jun'],
+                'Q3': ['jul','aug','sep'],
+                'Q4': ['oct','nov','dec']
+            };
+            const activeMonths = targetMonth ? [targetMonth] : (quarterMonthKeys[targetQuarter] || ['jan','feb','mar']);
+            
+            // Filter sales data by selected months
             let data;
+            const allMonthKeys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
             if (targetMonth) {
-                const monthIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(targetMonth);
+                const monthIdx = allMonthKeys.indexOf(targetMonth);
                 data = filteredSalesData.filter(item => {
                     const d = new Date(item.date || item.sale_date);
                     return d.getMonth() === monthIdx;
                 });
             } else {
-                data = filteredSalesData;
+                // Filter by quarter months
+                const monthIndices = activeMonths.map(m => allMonthKeys.indexOf(m));
+                data = filteredSalesData.filter(item => {
+                    const d = new Date(item.date || item.sale_date);
+                    return monthIndices.includes(d.getMonth());
+                });
             }
 
-            // Sales by Store - show all stores with Target and Achv columns
-            const salesArea = document.getElementById('salesFilterArea').value;
-            const salesStore = document.getElementById('salesFilterStore').value;
+            // Sales by Store - split into Achieved and Belum Achieved tables
             const byStore = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
@@ -6956,23 +7019,17 @@
                 byStore[store].trx.add(item.order_no);
             });
 
-            // Build target lookup map using simple string replace
+            // Build target lookup map
             const targetMap = {};
-
-            // Store name aliases for matching (sales name -> target name)
             const storeAliases = {
                 'mall bali icon': 'icon bali',
                 'icon mall gresik': 'icon gresik',
                 'bintaro xchange': 'bintaro exchange',
                 'nagoya hill batam': 'nagoya hills'
             };
-
             function normalizeStoreName(name) {
                 let normalized = name.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
-                // Apply aliases
-                if (storeAliases[normalized]) {
-                    normalized = storeAliases[normalized];
-                }
+                if (storeAliases[normalized]) normalized = storeAliases[normalized];
                 return normalized;
             }
 
@@ -6980,59 +7037,77 @@
                 Object.values(targetData).forEach(t => {
                     if (t && t.store) {
                         const normalizedName = normalizeStoreName(t.store);
-                        targetMap[normalizedName] = targetMonth ? (Number(t[targetMonth]) || 0) : getTargetForStore(t);
+                        // Sum target for active months only
+                        targetMap[normalizedName] = activeMonths.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
                     }
                 });
             }
 
-            // Only show stores that have data (already filtered by getFilteredSalesData)
             const storeArr = Object.entries(byStore)
-                .filter(([store, _]) => !store.toLowerCase().includes('pameran') && !store.toLowerCase().includes('ksquare'))
+                .filter(([store]) => !store.toLowerCase().includes('pameran') && !store.toLowerCase().includes('ksquare'))
                 .map(([store, val]) => {
-                    // Find target for this store
                     const normalizedStore = normalizeStoreName(store);
                     let target = targetMap[normalizedStore] || 0;
-                    // Try partial match if exact match not found
                     if (!target) {
                         for (const [key, tgt] of Object.entries(targetMap)) {
                             if (key.includes(normalizedStore) || normalizedStore.includes(key)) {
-                                target = tgt;
-                                break;
+                                target = tgt; break;
                             }
                         }
                     }
                     const achv = target > 0 ? (val.sales / target * 100) : 0;
                     const area = getAreaFromStore(store);
                     return { store, area, sales: val.sales, qty: val.qty, trx: val.trx.size, target, achv };
-                }).sort((a, b) => b.sales - a.sales);  // All stores, sorted by sales descending
+                });
 
-            let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
-            storeHtml += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
-            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;width:40px;">No</th>';
-            storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Toko</th>';
-            storeHtml += '<th style="text-align:left;padding:6px;color:white;background:#002A3A;">Area</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Sales</th>';
-            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Qty</th>';
-            storeHtml += '<th style="text-align:center;padding:6px;color:white;background:#002A3A;">Trx</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Target</th>';
-            storeHtml += '<th style="text-align:right;padding:6px;color:white;background:#002A3A;">Achv</th>';
-            storeHtml += '</tr></thead><tbody>';
-            storeArr.forEach((s, i) => {
-                const achvColor = s.achv >= 100 ? '#10b981' : s.achv >= 80 ? '#f59e0b' : '#ef4444';
-                storeHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
-                storeHtml += '<td style="text-align:center;padding:6px;color:#6b7280;">' + (i+1) + '</td>';
-                storeHtml += '<td style="padding:6px;">' + s.store + '</td>';
-                storeHtml += '<td style="padding:6px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:600;color:#10b981;">Rp ' + (s.sales / 1000000).toFixed(2) + 'jt</td>';
-                storeHtml += '<td style="text-align:center;padding:6px;">' + s.qty.toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:center;padding:6px;">' + s.trx.toLocaleString('id-ID') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(2) + 'jt' : '-') + '</td>';
-                storeHtml += '<td style="text-align:right;padding:6px;font-weight:700;color:' + achvColor + ';">' + (s.target > 0 ? s.achv.toFixed(1) + '%' : '-') + '</td></tr>';
-            });
-            storeHtml += '</tbody></table>';
-            document.getElementById('salesByStoreTable').innerHTML = storeHtml;
+            // Split into Achieved (>=100%) and Belum (<100%), both sorted by achv descending
+            const achievedStores = storeArr.filter(s => s.achv >= 100).sort((a, b) => b.achv - a.achv);
+            const belumStores = storeArr.filter(s => s.achv < 100).sort((a, b) => b.achv - a.achv);
+
+            // Helper: build store table HTML with columns No, Area, Toko, Pairs, Trx, Sales, Target, Achv
+            function buildStoreTable(stores) {
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #e2e8f0;">';
+                html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;color:white;">';
+                html += '<th style="text-align:center;padding:5px 4px;color:white;background:#002A3A;width:32px;">No</th>';
+                html += '<th style="text-align:left;padding:5px 4px;color:white;background:#002A3A;">Area</th>';
+                html += '<th style="text-align:left;padding:5px 4px;color:white;background:#002A3A;">Toko</th>';
+                html += '<th style="text-align:center;padding:5px 4px;color:white;background:#002A3A;">Pairs</th>';
+                html += '<th style="text-align:center;padding:5px 4px;color:white;background:#002A3A;">Trx</th>';
+                html += '<th style="text-align:right;padding:5px 4px;color:white;background:#002A3A;">Sales</th>';
+                html += '<th style="text-align:right;padding:5px 4px;color:white;background:#002A3A;">Target</th>';
+                html += '<th style="text-align:right;padding:5px 4px;color:white;background:#002A3A;">Achv</th>';
+                html += '</tr></thead><tbody>';
+                if (stores.length === 0) {
+                    html += '<tr><td colspan="8" style="text-align:center;padding:20px;color:#9ca3af;">Tidak ada data</td></tr>';
+                }
+                stores.forEach((s, i) => {
+                    const achvColor = s.achv >= 100 ? '#10b981' : s.achv >= 80 ? '#f59e0b' : '#ef4444';
+                    html += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                    html += '<td style="text-align:center;padding:5px 4px;color:#6b7280;">' + (i+1) + '</td>';
+                    html += '<td style="padding:5px 4px;color:#6b7280;font-size:0.75rem;">' + (s.area || '-') + '</td>';
+                    html += '<td style="padding:5px 4px;font-size:0.75rem;">' + s.store + '</td>';
+                    html += '<td style="text-align:center;padding:5px 4px;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:center;padding:5px 4px;">' + s.trx.toLocaleString('id-ID') + '</td>';
+                    html += '<td style="text-align:right;padding:5px 4px;font-weight:600;color:#1f2937;">Rp ' + (s.sales / 1000000).toFixed(1) + 'jt</td>';
+                    html += '<td style="text-align:right;padding:5px 4px;color:#6b7280;">' + (s.target > 0 ? 'Rp ' + (s.target / 1000000).toFixed(1) + 'jt' : '-') + '</td>';
+                    html += '<td style="text-align:right;padding:5px 4px;font-weight:700;color:' + achvColor + ';">' + (s.target > 0 ? s.achv.toFixed(1) + '%' : '-') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                return html;
+            }
+
+            // Render both tables
+            const achievedEl = document.getElementById('salesByStoreAchieved');
+            const belumEl = document.getElementById('salesByStoreBelum');
+            if (achievedEl) achievedEl.innerHTML = buildStoreTable(achievedStores);
+            if (belumEl) belumEl.innerHTML = buildStoreTable(belumStores);
+
+            // Update title with filter info
             const monthLabels = {jan:'Januari',feb:'Februari',mar:'Maret',apr:'April',may:'Mei',jun:'Juni',jul:'Juli',aug:'Agustus',sep:'September',oct:'Oktober',nov:'November',dec:'Desember'};
-            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store' + (targetMonth ? ' — ' + monthLabels[targetMonth] : '');
+            let titleSuffix = ' — ' + targetQuarter;
+            if (targetMonth) titleSuffix = ' — ' + monthLabels[targetMonth];
+            const titleEl = document.getElementById('salesByStoreTitle');
+            if (titleEl) titleEl.textContent = '🏪 Sales by Store' + titleSuffix + ' (' + achievedStores.length + ' achieved, ' + belumStores.length + ' belum)';
 
             // Sales by Area
             const byArea = {};
