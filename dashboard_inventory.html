@@ -1407,8 +1407,8 @@
                         <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                             <span style="font-size:1.5rem;">🏬</span>
                             <div>
-                                <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Retail</h3>
-                                <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data Penjualan Toko Retail</p>
+                                <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Retail & Event</h3>
+                                <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data Penjualan Toko Retail & Event</p>
                             </div>
                         </div>
                         <!-- Row 1: By Store (full width, rapi) -->
@@ -1448,6 +1448,14 @@
                                     <div id="salesByStoreBelum" style="max-height:420px;overflow-y:auto;"></div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Sales by Event Section -->
+                        <div style="margin-bottom:24px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <h4 id="salesByEventTitle" style="margin:0;color:#1f2937;font-size:0.95rem;">🎪 Sales by Event</h4>
+                            </div>
+                            <div id="salesByEventTable" style="max-height:420px;overflow-y:auto;"></div>
                         </div>
 
                         <!-- Row 2: Sales by Area (rapi — tabel) -->
@@ -7011,8 +7019,8 @@
             const byStore = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
-                // Skip Pameran and KSquare stores
-                if (store.toLowerCase().includes('pameran') || store.toLowerCase().includes('ksquare')) return;
+                // Skip non-RETAIL stores (EVENT, INACTIVE, etc.)
+                if (item.category && item.category !== 'RETAIL') return;
                 if (!byStore[store]) byStore[store] = { sales: 0, qty: 0, trx: new Set() };
                 byStore[store].sales += item.total || 0;
                 byStore[store].qty += item.qty || 0;
@@ -7044,7 +7052,7 @@
             }
 
             const storeArr = Object.entries(byStore)
-                .filter(([store]) => !store.toLowerCase().includes('pameran') && !store.toLowerCase().includes('ksquare'))
+                .filter(([store]) => byStore[store] !== undefined) // Already filtered in data.forEach above
                 .map(([store, val]) => {
                     const normalizedStore = normalizeStoreName(store);
                     let target = targetMap[normalizedStore] || 0;
@@ -7109,9 +7117,58 @@
             const titleEl = document.getElementById('salesByStoreTitle');
             if (titleEl) titleEl.textContent = '🏪 Sales by Store' + titleSuffix + ' (' + achievedStores.length + ' achieved, ' + belumStores.length + ' belum)';
 
+            // === Sales by Event ===
+            const byEvent = {};
+            data.forEach(item => {
+                if (item.category !== 'EVENT') return;
+                const store = item.store || 'Unknown';
+                if (!byEvent[store]) byEvent[store] = { sales: 0, qty: 0, trx: new Set(), area: item.area || '-' };
+                byEvent[store].sales += item.total || 0;
+                byEvent[store].qty += item.qty || 0;
+                byEvent[store].trx.add(item.order_no);
+            });
+            const eventArr = Object.entries(byEvent).map(([store, val]) => ({
+                store, area: val.area, sales: val.sales, qty: val.qty, trx: val.trx.size
+            })).sort((a, b) => b.sales - a.sales);
+            let eventHtml = '';
+            if (eventArr.length > 0) {
+                eventHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #e2e8f0;">';
+                eventHtml += '<thead><tr style="background:#7c3aed;color:white;">';
+                eventHtml += '<th style="text-align:center;padding:5px 4px;">No</th>';
+                eventHtml += '<th style="text-align:left;padding:5px 4px;">Area</th>';
+                eventHtml += '<th style="text-align:left;padding:5px 4px;">Event</th>';
+                eventHtml += '<th style="text-align:center;padding:5px 4px;">Pairs</th>';
+                eventHtml += '<th style="text-align:center;padding:5px 4px;">Trx</th>';
+                eventHtml += '<th style="text-align:right;padding:5px 4px;">Sales</th>';
+                eventHtml += '</tr></thead><tbody>';
+                let eventTotal = { sales: 0, qty: 0, trx: 0 };
+                eventArr.forEach((s, i) => {
+                    eventTotal.sales += s.sales; eventTotal.qty += s.qty; eventTotal.trx += s.trx;
+                    eventHtml += '<tr style="border-bottom:1px solid #e2e8f0;">';
+                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + (i+1) + '</td>';
+                    eventHtml += '<td style="padding:5px 4px;font-size:0.72rem;">' + s.area + '</td>';
+                    eventHtml += '<td style="padding:5px 4px;font-weight:600;">' + s.store.replace('Zuma ','') + '</td>';
+                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + s.qty.toLocaleString('id-ID') + '</td>';
+                    eventHtml += '<td style="text-align:center;padding:5px 4px;">' + s.trx + '</td>';
+                    eventHtml += '<td style="text-align:right;padding:5px 4px;font-weight:600;">Rp ' + (s.sales/1e6).toFixed(1) + 'jt</td>';
+                    eventHtml += '</tr>';
+                });
+                eventHtml += '<tr style="background:#f3f0ff;font-weight:700;"><td colspan="3" style="padding:5px 4px;">TOTAL (' + eventArr.length + ' event)</td>';
+                eventHtml += '<td style="text-align:center;padding:5px 4px;">' + eventTotal.qty.toLocaleString('id-ID') + '</td>';
+                eventHtml += '<td style="text-align:center;padding:5px 4px;">' + eventTotal.trx + '</td>';
+                eventHtml += '<td style="text-align:right;padding:5px 4px;">Rp ' + (eventTotal.sales/1e6).toFixed(1) + 'jt</td></tr>';
+                eventHtml += '</tbody></table>';
+            } else {
+                eventHtml = '<div style="text-align:center;padding:20px;color:#9ca3af;">Tidak ada data event untuk periode ini</div>';
+            }
+            const eventEl = document.getElementById('salesByEventTable');
+            if (eventEl) eventEl.innerHTML = eventHtml;
+            const eventTitleEl = document.getElementById('salesByEventTitle');
+            if (eventTitleEl) eventTitleEl.textContent = '\uD83C\uDFAA Sales by Event (' + eventArr.length + ' event)';
+
             // Sales by Area
             const byArea = {};
-            data.forEach(item => {
+            data.filter(item => !item.category || item.category === 'RETAIL').forEach(item => {
                 const area = getAreaFromStore(item.store);
                 if (!byArea[area]) byArea[area] = { sales: 0, qty: 0, stores: new Set() };
                 byArea[area].sales += item.total || 0;
