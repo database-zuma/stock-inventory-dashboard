@@ -2228,6 +2228,10 @@
         <p style="font-size:1rem;color:#002A3A;font-weight:600;">Memuat data inventori…</p>
     </div>
     <div id="api-error-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;z-index:10000;text-align:center;font-weight:600;"></div>
+    <div id="new-store-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:12px 20px;z-index:9998;text-align:center;font-weight:600;font-size:0.85rem;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;" onclick="this.style.display='none'">
+        <span id="new-store-banner-text"></span>
+        <span style="margin-left:12px;opacity:0.8;font-size:0.75rem;">| klik untuk tutup</span>
+    </div>
     <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     <script>
@@ -2496,8 +2500,31 @@
             updateDisplay();
         }
 
+        // Check for new/unrecognized stores and show notification banner
+        async function checkNewStores() {
+            try {
+                const data = await fetchAPI('/api/new-stores');
+                if (data && data.total_new > 0) {
+                    const banner = document.getElementById('new-store-banner');
+                    const text = document.getElementById('new-store-banner-text');
+                    if (banner && text) {
+                        const names = data.new_stores.map(s => s.name).join(', ');
+                        const reviewCount = data.needs_review || 0;
+                        let msg = '\u26A0\uFE0F Toko baru terdeteksi (' + data.total_new + '): ' + names;
+                        if (data.auto_added > 0) msg += ' | ' + data.auto_added + ' otomatis ditambah sebagai EVENT';
+                        if (reviewCount > 0) msg += ' | ' + reviewCount + ' perlu review manual';
+                        text.textContent = msg;
+                        banner.style.display = 'block';
+                    }
+                }
+            } catch(e) {
+                console.log('New store check skipped:', e.message);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadDashboardData();
+            checkNewStores();
         });
 
         function updateEntityCounts() {
