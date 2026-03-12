@@ -1417,7 +1417,7 @@
                                 <h4 id="salesByStoreTitle" style="margin:0;color:#1f2937;font-size:0.95rem;">🏪 Sales by Store</h4>
                                 <div style="display:flex;align-items:center;gap:8px;">
                                     <label style="font-size:0.85rem;color:#6b7280;">Target Bulan:</label>
-                                    <select id="salesTargetMonth" onchange="renderSalesTarget()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                                    <select id="salesTargetMonth" onchange="renderSalesPerformance(); renderSalesTarget()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
                                         <option value="">Semua (Q1)</option>
                                         <option value="jan">Januari</option>
                                         <option value="feb">Februari</option>
@@ -6929,12 +6929,22 @@
         }
 
         function renderSalesPerformance() {
-            const data = filteredSalesData;
+            // Read Target Bulan filter — filter sales data by month if selected
+            const targetMonth = (document.getElementById('salesTargetMonth') || {}).value || '';
+            let data;
+            if (targetMonth) {
+                const monthIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(targetMonth);
+                data = filteredSalesData.filter(item => {
+                    const d = new Date(item.date || item.sale_date);
+                    return d.getMonth() === monthIdx;
+                });
+            } else {
+                data = filteredSalesData;
+            }
 
             // Sales by Store - show all stores with Target and Achv columns
             const salesArea = document.getElementById('salesFilterArea').value;
             const salesStore = document.getElementById('salesFilterStore').value;
-
             const byStore = {};
             data.forEach(item => {
                 const store = item.store || 'Unknown';
@@ -6970,7 +6980,7 @@
                 Object.values(targetData).forEach(t => {
                     if (t && t.store) {
                         const normalizedName = normalizeStoreName(t.store);
-                        targetMap[normalizedName] = getTargetForStore(t);
+                        targetMap[normalizedName] = targetMonth ? (Number(t[targetMonth]) || 0) : getTargetForStore(t);
                     }
                 });
             }
@@ -7021,7 +7031,8 @@
             });
             storeHtml += '</tbody></table>';
             document.getElementById('salesByStoreTable').innerHTML = storeHtml;
-            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store';
+            const monthLabels = {jan:'Januari',feb:'Februari',mar:'Maret',apr:'April',may:'Mei',jun:'Juni',jul:'Juli',aug:'Agustus',sep:'September',oct:'Oktober',nov:'November',dec:'Desember'};
+            document.getElementById('salesByStoreTitle').textContent = '🏪 Sales by Store' + (targetMonth ? ' — ' + monthLabels[targetMonth] : '');
 
             // Sales by Area
             const byArea = {};
