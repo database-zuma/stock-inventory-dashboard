@@ -9153,7 +9153,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         sku: s.sku || s.nama_barang || '',
                         nama_barang: s.product_name || s.nama_barang || '',
                         warna: s.warna || s.color || '',
-                        ukuran: s.ukuran || s.size || '-',
+                        ukuran: s.ukuran || s.size || (function(sku){ var m = (sku||'').match(/Z(\d+(?:\/\d+)?)$/i); return m ? m[1] : '-'; })(s.sku),
                         tier: s.tier || '-',
                         gender: s.gender || s.jenis_kelamin || s.jk || '',
                         tipe: s.tipe || '',
@@ -9161,7 +9161,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     });
                 });
                 
-                (wholesaleData||[]).forEach(r => { r.channel = 'Wholesale'; allData.push(r); });
+                (wholesaleData||[]).forEach(r => {
+                    r.channel = 'Wholesale';
+                    if (!r.ukuran || r.ukuran === '') { var m = (r.product_name || r.sku || '').match(/,\s*(\d+(?:\/\d+)?)\s*,/); if (m) r.ukuran = m[1]; }
+                    allData.push(r);
+                });
                 
                 // Enrich all rows: derive missing gender, tipe, tier from nama_barang/collection
                 enrichGlobalData(allData);
@@ -9963,7 +9967,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const byArea = {};
             rows.forEach(function(r) {
                 var area = (r.area || '').trim();
-                if (!area || area === '-' || area === '') area = 'Lainnya';
+                if (!area || area === '-' || area === '') return;
                 if (!byArea[area]) byArea[area] = { area: area, revenue: 0, pairs: 0 };
                 byArea[area].revenue += r.total || 0;
                 byArea[area].pairs += r.qty || 0;
