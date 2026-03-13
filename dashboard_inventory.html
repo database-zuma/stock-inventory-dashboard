@@ -5023,8 +5023,9 @@
                 function getWarehouseArea(whName) {
                     if (!whName) return 'Jawa Timur';
                     var whLower = whName.toLowerCase();
-                    if (storeAreaMap[whLower]) return normalizeArea(storeAreaMap[whLower]);
+                    // Online Bali = gudang terpisah, harus dicek SEBELUM storeAreaMap (yg return 'Bali')
                     if (whLower.indexOf('online bali') >= 0) return 'Online Bali';
+                    if (storeAreaMap[whLower]) return normalizeArea(storeAreaMap[whLower]);
                     if (whLower.indexOf('bali') >= 0 || whLower.indexOf('gatsu') >= 0) return 'Bali';
                     if (whLower.indexOf('jakarta') >= 0 || whLower.indexOf('pluit') >= 0) return 'Jakarta';
                     if (whLower.indexOf('pusat') >= 0) return 'Jawa Timur';
