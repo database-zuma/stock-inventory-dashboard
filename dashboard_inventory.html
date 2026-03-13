@@ -4893,6 +4893,8 @@
                         if (!store) continue;
                         var storeLower = store.toLowerCase();
                         if (storeLower.indexOf('warehouse') >= 0) continue;
+                        // Skip MOI - toko sudah off (per user request)
+                        if (storeLower.indexOf('mall of indonesia') >= 0) continue;
 
                         var area = getAreaFromStore(store);
                         if (area) {
@@ -5214,6 +5216,8 @@
                             if (!store) continue;
                             var storeLower = store.toLowerCase();
                             if (storeLower.indexOf('warehouse') >= 0) continue;
+                            // Skip MOI - toko sudah off (per user request)
+                            if (storeLower.indexOf('mall of indonesia') >= 0) continue;
 
                             var stock = item.store_stock[store];
 
