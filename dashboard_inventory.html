@@ -997,6 +997,7 @@
                     <select id="msWHFilterArea" onchange="updateMaxStockAnalysis()">
                         <option value="">Semua Area</option>
                         <option value="Bali">Bali</option>
+                        <option value="Online Bali">Online Bali</option>
                         <option value="Jakarta">Jakarta</option>
                         <option value="Jawa Timur">Jawa Timur</option>
                     </select>
@@ -5008,11 +5009,11 @@
                 var whTiers = {};      // {whName: {tier: stock}}
                 var whArticles = {};   // {whName: {tier: [articles]}}
                 var whEntityStock = {};  // {whName: {entity: stock}} - NEW: track per entity
-                var areaStock = { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0 };
-                var areaTiers = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {} };
-                var areaEntityStock = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {} };  // NEW: track per entity per area
-                var maxStockArea = { 'Bali': 72000, 'Jakarta': 48000, 'Jawa Timur': 120000 };
-                var warehousesByArea = { 'Bali': [], 'Jakarta': [], 'Jawa Timur': [] };
+                var areaStock = { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Online Bali': 0 };
+                var areaTiers = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {}, 'Online Bali': {} };
+                var areaEntityStock = { 'Bali': {}, 'Jakarta': {}, 'Jawa Timur': {}, 'Online Bali': {} };
+                var maxStockArea = { 'Bali': 72000, 'Jakarta': 48000, 'Jawa Timur': 120000, 'Online Bali': 5000 };
+                var warehousesByArea = { 'Bali': [], 'Jakarta': [], 'Jawa Timur': [], 'Online Bali': [] };
 
                 // Get filter values
                 var filterArea = document.getElementById('msWHFilterArea').value;
@@ -5023,6 +5024,7 @@
                     if (!whName) return 'Jawa Timur';
                     var whLower = whName.toLowerCase();
                     if (storeAreaMap[whLower]) return normalizeArea(storeAreaMap[whLower]);
+                    if (whLower.indexOf('online bali') >= 0) return 'Online Bali';
                     if (whLower.indexOf('bali') >= 0 || whLower.indexOf('gatsu') >= 0) return 'Bali';
                     if (whLower.indexOf('jakarta') >= 0 || whLower.indexOf('pluit') >= 0) return 'Jakarta';
                     if (whLower.indexOf('pusat') >= 0) return 'Jawa Timur';
@@ -5153,7 +5155,7 @@
                 }
 
                 // Add area totals
-                var areaOrder = ['Bali', 'Jakarta', 'Jawa Timur'];
+                var areaOrder = ['Bali', 'Online Bali', 'Jakarta', 'Jawa Timur'];
                 for (var a = 0; a < areaOrder.length; a++) {
                     var areaName = areaOrder[a];
                     if (filterArea && areaName !== filterArea) continue;
@@ -5458,7 +5460,7 @@
 
             if (isWarehouseData) {
                 // Warehouse: Group by area with totals
-                const areaOrder = ['Bali', 'Jakarta', 'Jawa Timur'];
+                const areaOrder = ['Bali', 'Online Bali', 'Jakarta', 'Jawa Timur'];
                 let html = '';
 
                 areaOrder.forEach(areaName => {
