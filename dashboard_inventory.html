@@ -1831,13 +1831,6 @@
                         <div id="saMomStoreTable" style="max-height:500px;overflow-y:auto;"></div>
                     </div>
 
-                    <!-- Sales by Area Trend (moved from Performance) -->
-                    <hr style="border:none;border-top:2px solid #e2e8f0;margin:24px 0;">
-                    <div style="margin-bottom:24px;">
-                        <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">🗺️ Sales by Area (Trend)</h4>
-                        <div id="perfAreaFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"></div>
-                        <div id="salesAreaTrend"></div>
-                    </div>
                 </div>
 
                 <!-- SPG Tab -->
@@ -9034,15 +9027,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // ========== 2. YOY STORE TABLE ==========
                 let h2 = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #e2e8f0;">';
                 h2 += '<thead><tr style="background:#002A3A;color:white;">';
-                h2 += '<th style="'+thC+'">#</th><th style="'+thL+'">Store</th><th style="'+thL+'">Area</th><th style="'+thC+'">Status</th>';
+                h2 += '<th style="'+thC+'">#</th><th style="'+thL+'">Store</th><th style="'+thL+'">Area</th>';
                 months.forEach(m => { h2 += '<th style="'+thStyle+'">'+monthNames[m]+"'"+pY+'</th><th style="'+thStyle+'">'+monthNames[m]+"'"+cY+'</th><th style="'+thC+'">YOY</th>'; });
                 h2 += '<th style="'+thStyle+'">'+qL+"'"+pY+'</th><th style="'+thStyle+'">'+qL+"'"+cY+'</th><th style="'+thC+'">YOY</th>';
                 h2 += '</tr></thead><tbody>';
                 d.stores.forEach((s,i) => {
                     const bg=i%2===0?'#fff':'#f8fafc', nm=s.store.replace(/^Zuma /i,'');
-                    const stLbl=s.status==='new'?'\uD83C\uDD95':'\u2705';
                     h2 += '<tr style="background:'+bg+';border-bottom:1px solid #e2e8f0;">';
-                    h2 += tdC(i+1,'color:#9ca3af;')+td(nm,'font-weight:600;white-space:nowrap;')+td(s.area_group,'font-size:0.72rem;color:#6b7280;')+tdC(stLbl);
+                    h2 += tdC(i+1,'color:#9ca3af;')+td(nm,'font-weight:600;white-space:nowrap;')+td(s.area_group,'font-size:0.72rem;color:#6b7280;');
                     months.forEach(m => {
                         const ms=String(m), mp=(s.monthly[ms]||{prev:{sales:0}}).prev.sales||0, mc=(s.monthly[ms]||{curr:{sales:0}}).curr.sales||0;
                         h2 += tdR(fmtS(mp),'color:#6b7280;')+tdR(fmtS(mc),'font-weight:600;');
@@ -9090,15 +9082,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // ========== 4. MOM STORE TABLE ==========
                 let h4 = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #e2e8f0;">';
                 h4 += '<thead><tr style="background:#002A3A;color:white;">';
-                h4 += '<th style="'+thC+'">#</th><th style="'+thL+'">Store</th><th style="'+thL+'">Area</th><th style="'+thC+'">Status</th>';
+                h4 += '<th style="'+thC+'">#</th><th style="'+thL+'">Store</th><th style="'+thL+'">Area</th>';
                 months.forEach((m,mi) => { h4 += '<th style="'+thStyle+'">'+monthNames[m]+"'"+cY+'</th>'; if(mi>0) h4+='<th style="'+thC+'">MOM</th>'; });
                 h4 += '<th style="'+thStyle+'">'+qL+' Total</th>';
                 h4 += '</tr></thead><tbody>';
                 d.stores.forEach((s,i) => {
                     const bg=i%2===0?'#fff':'#f8fafc', nm=s.store.replace(/^Zuma /i,'');
-                    const stLbl=s.status==='new'?'\uD83C\uDD95':'\u2705';
                     h4 += '<tr style="background:'+bg+';border-bottom:1px solid #e2e8f0;">';
-                    h4 += tdC(i+1,'color:#9ca3af;')+td(nm,'font-weight:600;white-space:nowrap;')+td(s.area_group,'font-size:0.72rem;color:#6b7280;')+tdC(stLbl);
+                    h4 += tdC(i+1,'color:#9ca3af;')+td(nm,'font-weight:600;white-space:nowrap;')+td(s.area_group,'font-size:0.72rem;color:#6b7280;');
                     let prevMoS = 0;
                     months.forEach((m,mi) => {
                         const ms=String(m), mc=(s.monthly[ms]||{curr:{sales:0}}).curr.sales||0;
