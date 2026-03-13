@@ -559,6 +559,10 @@
             <button class="view-btn" data-view="stockcontrol" onclick="switchView('stockcontrol')">
                 📋 Control Stock
             </button>
+            <div class="entity-toggle-bar dimmed" id="controlStockBar">
+                <button class="entity-toggle-btn active" data-csview="retail" onclick="switchView('stockcontrol')">› 🏪 Retail</button>
+                <button class="entity-toggle-btn" data-csview="online" onclick="switchView('stockcontrolonline')">› 🌐 Online</button>
+            </div>
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
             </button>
@@ -1335,6 +1339,187 @@
                 </div>
             </div>
         </div> <!-- End stockControlView -->
+
+        <!-- ==================== STOCK CONTROL ONLINE VIEW ==================== -->
+        <div class="view-container" id="stockcontrolonlineView">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#e0f2fe 0%,#bae6fd 50%,#7dd3fc 100%);border-radius:16px;padding:20px;margin-bottom:15px;">
+                <h2 style="margin:0 0 5px 0;color:#0c4a6e;font-size:1.4rem;">🌐 Control Stock Online - Turnover Analysis</h2>
+                <p style="margin:0;color:#0369a1;font-size:0.85rem;">Data sales online (Accurate ERP): 3 bulan terakhir — excludes refund</p>
+            </div>
+
+            <!-- View Mode Toggle -->
+            <div style="display:flex;gap:10px;margin-bottom:20px;justify-content:center;">
+                <button id="scoViewSku" onclick="switchStockControlOnlineView('sku')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #0284c7;background:#0284c7;color:white;transition:all 0.2s;">
+                    Turnover Analysis By SKU
+                </button>
+                <button id="scoViewKodeKecil" onclick="switchStockControlOnlineView('kodeKecil')" style="padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;border:2px solid #0284c7;background:white;color:#0284c7;transition:all 0.2s;">
+                    Turnover Analysis By Kode Kecil
+                </button>
+            </div>
+
+            <!-- Summary Cards (3 cards: WH Online Bali, WH Online Jakarta, Online Total) -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg,#fef9c3 0%,#fde047 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#854d0e;margin-bottom:5px;">📦 WH Online Bali</div>
+                    <div id="scoWhOnlineBali" style="font-size:1.8rem;font-weight:700;color:#713f12;">0</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#e0f2fe 0%,#7dd3fc 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#0c4a6e;margin-bottom:5px;">📦 WH Online Jakarta</div>
+                    <div id="scoWhOnlineJakarta" style="font-size:1.8rem;font-weight:700;color:#082f49;">0</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🌐 Online Total</div>
+                    <div id="scoOnlineTotal" style="font-size:1.8rem;font-weight:700;color:#4c1d95;">0</div>
+                </div>
+            </div>
+
+            <!-- KPI Summary Cards (GAP Analysis) -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+                <div id="scoKpiUnderstock" onclick="document.getElementById('scoFilterGAP').value='understock';renderStockControlOnlineTable();" style="cursor:pointer;background:linear-gradient(135deg,#fef2f2 0%,#fecaca 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#ef4444'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#991b1b;margin-bottom:5px;">🔴 Understock</div>
+                    <div id="scoKpiUnderstockCount" style="font-size:1.8rem;font-weight:700;color:#dc2626;">0</div>
+                    <div style="font-size:0.7rem;color:#b91c1c;margin-top:3px;">GAP &lt; 0</div>
+                </div>
+                <div id="scoKpiTipis" onclick="document.getElementById('scoFilterGAP').value='tipis';renderStockControlOnlineTable();" style="cursor:pointer;background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#f59e0b'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#92400e;margin-bottom:5px;">🟡 Tipis</div>
+                    <div id="scoKpiTipisCount" style="font-size:1.8rem;font-weight:700;color:#d97706;">0</div>
+                    <div style="font-size:0.7rem;color:#b45309;margin-top:3px;">0 ≤ GAP &lt; AvgSales</div>
+                </div>
+                <div id="scoKpiAman" onclick="document.getElementById('scoFilterGAP').value='aman';renderStockControlOnlineTable();" style="cursor:pointer;background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#22c55e'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#166534;margin-bottom:5px;">🟢 Aman</div>
+                    <div id="scoKpiAmanCount" style="font-size:1.8rem;font-weight:700;color:#16a34a;">0</div>
+                    <div style="font-size:0.7rem;color:#15803d;margin-top:3px;">GAP ≥ AvgSales</div>
+                </div>
+                <div id="scoKpiDead" onclick="document.getElementById('scoFilterGAP').value='dead';renderStockControlOnlineTable();" style="cursor:pointer;background:linear-gradient(135deg,#f3f4f6 0%,#e5e7eb 100%);border-radius:12px;padding:15px;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='#6b7280'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'">
+                    <div style="font-size:0.8rem;color:#374151;margin-bottom:5px;">💀 Dead Stock</div>
+                    <div id="scoKpiDeadCount" style="font-size:1.8rem;font-weight:700;color:#4b5563;">0</div>
+                    <div style="font-size:0.7rem;color:#6b7280;margin-top:3px;">Avg Sales = 0 & Stock &gt; 0</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div style="background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 50%,#e0f2fe 100%);border-radius:12px;padding:15px;margin-bottom:20px;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Gender:</label>
+                        <select id="scoFilterGender" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="BABY">Baby</option>
+                            <option value="BOYS">Boys</option>
+                            <option value="GIRLS">Girls</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="LADIES">Ladies</option>
+                            <option value="MEN">Men</option>
+                        </select>
+                    </div>
+                    <div style="min-width:80px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Tier:</label>
+                        <select id="scoFilterTier" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                            <option value="4">Tier 4</option>
+                            <option value="5">Tier 5</option>
+                        </select>
+                    </div>
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Series:</label>
+                        <select id="scoFilterSeries" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">TW Status:</label>
+                        <select id="scoFilterTW" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="critical">&lt;2 (Critical)</option>
+                            <option value="low">2-4 (Low)</option>
+                            <option value="normal">4-8 (Normal)</option>
+                            <option value="high">&gt;8 (High)</option>
+                        </select>
+                    </div>
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Basis Stok:</label>
+                        <select id="scoFilterBasis" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="onlineTotal">Online Total</option>
+                            <option value="onlineBali">WH Online Bali</option>
+                            <option value="onlineJkt">WH Online Jakarta</option>
+                        </select>
+                    </div>
+                    <div style="min-width:110px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">GAP Status:</label>
+                        <select id="scoFilterGAP" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="understock">🔴 Understock</option>
+                            <option value="tipis">🟡 Tipis</option>
+                            <option value="aman">🟢 Aman</option>
+                            <option value="dead">💀 Dead Stock</option>
+                        </select>
+                    </div>
+                    <div style="min-width:120px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Search:</label>
+                        <input type="text" id="scoSearch" onkeyup="renderStockControlOnlineTable()" placeholder="Cari..." style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Excel Button -->
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+                <button onclick="exportStockControlOnlineExcel()" style="padding:10px 20px;background:linear-gradient(135deg,#059669 0%,#10b981 100%);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    📥 Export Excel
+                </button>
+            </div>
+
+            <!-- Control Stock Online Table -->
+            <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+                <div style="overflow-x:auto;max-height:500px;overflow-y:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">
+                        <thead id="scoTableHead" style="position:sticky;top:0;z-index:10;">
+                        </thead>
+                        <tbody id="scoTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div style="padding:12px 15px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <div id="scoPageInfo" style="color:#6b7280;font-size:0.8rem;"></div>
+                    <div id="scoPagination" style="display:flex;gap:5px;"></div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-top:15px;border:1px solid #e2e8f0;">
+                <h4 style="margin:0 0 10px 0;color:#334155;font-size:0.9rem;">Keterangan Perhitungan & Warna:</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Rumus Perhitungan:</div>
+                        <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
+                            <li><b>TW (Turnover Weeks)</b> = Stock Online / Avg Online Sales 3 Bulan</li>
+                            <li><b>GAP</b> = Stock Online - (Avg Online Sales × 3)</li>
+                            <li><b>Sales Data</b> = Accurate ERP (online, zuma online, tiktok shop), excl. refund</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;margin-bottom:10px;">
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;1</b> Critical</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>1-2</b> Low</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>2-4</b> Normal</span>
+                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;4</b> High</span>
+                        </div>
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna GAP:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
+                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">🔴 <b>Understock</b> GAP &lt; 0</span>
+                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">🟡 <b>Tipis</b> 0 ≤ GAP &lt; Avg</span>
+                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">🟢 <b>Aman</b> GAP ≥ Avg</span>
+                            <span style="background:#1f2937;color:white;padding:3px 8px;border-radius:4px;">💀 <b>Dead Stock</b> Avg=0 & Stok&gt;0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End stockcontrolonlineView -->
 
         <!-- ==================== SALES VIEW ==================== -->
         <div class="view-container" id="salesView">
@@ -2340,6 +2525,7 @@
         let maxStockMap = {};
         let assortmentMap = {};
         let salesMap = {};
+        let onlineSalesMap = {};  // Online-only sales from /api/sales/aggregate-online
         let salesDetailData = [];
         let salesDetailByMonth = {};  // cache: 'YYYY-MM' -> records[]
         let salesAvailableMonths = []; // ['2026-01','2026-02',...] from aggregate
@@ -2460,7 +2646,7 @@
             const loadingEl = document.getElementById('api-loading-overlay');
             if (loadingEl) loadingEl.style.display = 'flex';
             try {
-                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData] = await Promise.all([
+                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData] = await Promise.all([
                     fetchAPI('/api/stock'),
                     fetchAPI('/api/stores'),
                     fetchAPI('/api/store-areas'),
@@ -2468,6 +2654,7 @@
                     fetchAPI('/api/sales/aggregate'),
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
+                    fetchAPI('/api/sales/aggregate-online').catch(() => ({})),
                 ]);
                 allData = stockData;
                 // Update 'Data per' date from API metadata
@@ -2510,6 +2697,30 @@
                 salesMap['_months'] = allMonthKeys.length >= 3 ? allMonthKeys.slice(-3) : allMonthKeys;
                 targetData = targetsData;
                 assortmentMap = assortmentData;
+                // Online sales map (from /api/sales/aggregate-online)
+                onlineSalesMap = onlineSalesAggData || {};
+                // Extract dynamic month keys for online sales
+                if (onlineSalesMap['_months']) {
+                    // API already provides _months
+                } else {
+                    const onlineMonthSet = new Set();
+                    Object.values(onlineSalesMap).forEach(skuData => {
+                        if (typeof skuData === 'object' && !Array.isArray(skuData)) {
+                            Object.keys(skuData).forEach(k => onlineMonthSet.add(k));
+                        }
+                    });
+                    const onlineMonthKeys = [...onlineMonthSet].filter(k => ID_MONTH_ORDER.includes(k));
+                    if (hasEarly && hasLate) {
+                        onlineMonthKeys.sort((a, b) => {
+                            const ai = ID_MONTH_ORDER.indexOf(a);
+                            const bi = ID_MONTH_ORDER.indexOf(b);
+                            return (ai >= 9 ? ai - 12 : ai) - (bi >= 9 ? bi - 12 : bi);
+                        });
+                    } else {
+                        onlineMonthKeys.sort((a, b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
+                    }
+                    onlineSalesMap['_months'] = onlineMonthKeys.length >= 3 ? onlineMonthKeys.slice(-3) : onlineMonthKeys;
+                }
                 // Load sales detail per-month (Jan 2026 → current month) to avoid LIMIT issues
                 const todayM = new Date();
                 const months = [];
@@ -4808,11 +5019,49 @@
             // Entity bar always active — clickable from any view
             var entityBar = document.getElementById('entityToggleBar');
             var salesBar = document.getElementById('salesChannelBar');
+            var csBar = document.getElementById('controlStockBar');
             entityBar.classList.remove('dimmed');
             if (view === 'sales') {
                 salesBar.classList.remove('dimmed');
             } else {
                 salesBar.classList.add('dimmed');
+            }
+            // Control Stock sub-menu: show when either stockcontrol or stockcontrolonline
+            if (view === 'stockcontrol' || view === 'stockcontrolonline') {
+                csBar.classList.remove('dimmed');
+                // Also highlight parent Control Stock button for both views
+                var csParentBtn = document.querySelector('.view-btn[data-view="stockcontrol"]');
+                if (csParentBtn) csParentBtn.classList.add('active');
+                // Highlight correct sub-item
+                var csBtns = csBar.querySelectorAll('.entity-toggle-btn');
+                for (var ci = 0; ci < csBtns.length; ci++) {
+                    var csb = csBtns[ci];
+                    if ((view === 'stockcontrol' && csb.dataset.csview === 'retail') ||
+                        (view === 'stockcontrolonline' && csb.dataset.csview === 'online')) {
+                        csb.classList.add('active');
+                        csb.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
+                        csb.style.color = '#fff';
+                        csb.style.fontWeight = '700';
+                    } else {
+                        csb.classList.remove('active');
+                        csb.style.background = '';
+                        csb.style.color = '';
+                        csb.style.fontWeight = '';
+                    }
+                }
+            } else {
+                csBar.classList.add('dimmed');
+                // Reset sub-item styles
+                var csBtnsReset = csBar.querySelectorAll('.entity-toggle-btn');
+                for (var cr = 0; cr < csBtnsReset.length; cr++) {
+                    csBtnsReset[cr].classList.remove('active');
+                    csBtnsReset[cr].style.background = '';
+                    csBtnsReset[cr].style.color = '';
+                    csBtnsReset[cr].style.fontWeight = '';
+                }
+                // Set retail as default active
+                var defBtn = csBar.querySelector('.entity-toggle-btn[data-csview="retail"]');
+                if (defBtn) defBtn.classList.add('active');
             }
 
             // Highlight SKU Search button in entityBar when skusearch view is active
@@ -4847,6 +5096,15 @@
                         initStockControl();
                     } catch(e) {
                         console.error('Error initStockControl:', e);
+                        alert('Error: ' + e.message);
+                    }
+                }, 100);
+            } else if (view === 'stockcontrolonline') {
+                setTimeout(function() {
+                    try {
+                        initStockControlOnline();
+                    } catch(e) {
+                        console.error('Error initStockControlOnline:', e);
                         alert('Error: ' + e.message);
                     }
                 }, 100);
@@ -6739,6 +6997,557 @@
             XLSX.utils.book_append_sheet(wb, ws, 'Control Stock');
             const dateStr = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, 'Control_Stock_' + basisLabel + '_' + dateStr + '.xlsx');
+        }
+
+        // ==================== STOCK CONTROL ONLINE FUNCTIONS ====================
+        let scoItems = [];
+        let scoKodeKecilItems = [];
+        let scoFilteredItems = [];
+        let scoCurrentPage = 1;
+        const scoItemsPerPage = 50;
+        let scoViewMode = 'sku';
+        let scoSortColumn = '';
+        let scoSortAsc = true;
+
+        // Build Kode Kecil aggregation for online (sum all sizes)
+        function buildKodeKecilItemsOnline() {
+            const kodeKecilMap = {};
+            scoItems.forEach(item => {
+                const kk = (item.kode || item.kodeKecil || item.sku || '').toUpperCase();
+                if (!kk) return;
+                if (!kodeKecilMap[kk]) {
+                    kodeKecilMap[kk] = {
+                        kodeKecil: kk,
+                        name: item.name,
+                        series: item.series,
+                        gender: item.gender,
+                        tier: item.tier,
+                        WHOB: 0, WHOJ: 0, whOnlineTotal: 0,
+                        skuList: []
+                    };
+                }
+                kodeKecilMap[kk].WHOB += item.WHOB || 0;
+                kodeKecilMap[kk].WHOJ += item.WHOJ || 0;
+                kodeKecilMap[kk].skuList.push(item.kodeKecil || item.sku);
+            });
+            Object.values(kodeKecilMap).forEach(item => {
+                item.whOnlineTotal = item.WHOB + item.WHOJ;
+            });
+            return Object.values(kodeKecilMap);
+        }
+
+        // Get online sales for a single SKU
+        function getOnlineSales(sku, kodeKecil) {
+            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
+            const [m1, m2, m3] = months;
+            const key = (kodeKecil || sku || '').toLowerCase();
+            const s = onlineSalesMap[key] || {};
+            const v1 = s[m1] || 0, v2 = s[m2] || 0, v3 = s[m3] || 0;
+            const avg = (v1 + v2 + v3) / 3;
+            return { m1: v1, m2: v2, m3: v3, avg: avg };
+        }
+
+        // Get online sales for Kode Kecil (sum all SKU sales)
+        function getKodeKecilOnlineSales(skuList) {
+            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
+            const [m1, m2, m3] = months;
+            let s1 = 0, s2 = 0, s3 = 0;
+            skuList.forEach(sku => {
+                const key = (sku || '').toLowerCase();
+                const s = onlineSalesMap[key] || {};
+                s1 += s[m1] || 0;
+                s2 += s[m2] || 0;
+                s3 += s[m3] || 0;
+            });
+            const avg = (s1 + s2 + s3) / 3;
+            return { m1: s1, m2: s2, m3: s3, avg: avg };
+        }
+
+        // Get sales for current item (handles both modes)
+        function getScoItemSales(item) {
+            if (scoViewMode === 'kodeKecil') {
+                return getKodeKecilOnlineSales(item.skuList || []);
+            } else {
+                return getOnlineSales(item.sku, item.kodeKecil);
+            }
+        }
+
+        function initStockControlOnline() {
+            // Reuse scItems from the retail control stock (already built by buildSkuItems)
+            // We just need the WHOB, WHOJ, whOnlineTotal fields
+            if (!scItems || scItems.length === 0) {
+                scItems = buildSkuItems();
+                scKodeKecilItems = buildKodeKecilItems();
+            }
+            // Copy items — we only need online-relevant fields
+            scoItems = scItems.map(item => ({
+                sku: item.sku,
+                kodeKecil: item.kodeKecil,
+                kode: item.kode,
+                name: item.name,
+                size: item.size || '',
+                series: item.series,
+                gender: item.gender,
+                tier: item.tier,
+                WHOB: item.WHOB || 0,
+                WHOJ: item.WHOJ || 0,
+                whOnlineTotal: item.whOnlineTotal || 0
+            }));
+            scoKodeKecilItems = buildKodeKecilItemsOnline();
+
+            // Populate series filter
+            const seriesSet = new Set();
+            scoItems.forEach(item => { if (item.series) seriesSet.add(item.series); });
+            const seriesSelect = document.getElementById('scoFilterSeries');
+            if (seriesSelect) {
+                seriesSelect.innerHTML = '<option value="">Semua</option>';
+                [...seriesSet].sort().forEach(s => {
+                    seriesSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
+                });
+            }
+            renderStockControlOnlineHeader();
+            renderStockControlOnlineTable();
+        }
+
+        function switchStockControlOnlineView(mode) {
+            scoViewMode = mode;
+            scoCurrentPage = 1;
+            const btnSku = document.getElementById('scoViewSku');
+            const btnKK = document.getElementById('scoViewKodeKecil');
+            if (mode === 'sku') {
+                btnSku.style.background = '#0284c7';
+                btnSku.style.color = 'white';
+                btnKK.style.background = 'white';
+                btnKK.style.color = '#0284c7';
+            } else {
+                btnSku.style.background = 'white';
+                btnSku.style.color = '#0284c7';
+                btnKK.style.background = '#0284c7';
+                btnKK.style.color = 'white';
+            }
+            renderStockControlOnlineTable();
+        }
+
+        function renderStockControlOnlineHeader() {
+            const thead = document.getElementById('scoTableHead');
+            if (!thead) return;
+            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
+            const mLabels = months.map(m => m.toUpperCase());
+            const hs = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
+
+            if (scoViewMode === 'sku') {
+                thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
+                    '<th style="' + hs + 'text-align:left;white-space:nowrap;" onclick="sortStockControlOnline(\'sku\')">KODE BARANG</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'size\')">SIZE</th>' +
+                    '<th style="' + hs + 'text-align:left;max-width:200px;">ARTICLE</th>' +
+                    '<th style="' + hs + '">SERIES</th>' +
+                    '<th style="' + hs + '">GENDER</th>' +
+                    '<th style="' + hs + '">TIER</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m1\')">' + mLabels[0] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
+                '</tr>';
+            } else {
+                thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
+                    '<th style="' + hs + 'text-align:left;white-space:nowrap;" onclick="sortStockControlOnline(\'kodeKecil\')">KODE KECIL</th>' +
+                    '<th style="' + hs + 'text-align:left;max-width:200px;">ARTICLE</th>' +
+                    '<th style="' + hs + '">SERIES</th>' +
+                    '<th style="' + hs + '">GENDER</th>' +
+                    '<th style="' + hs + '">TIER</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m1\')">' + mLabels[0] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
+                '</tr>';
+            }
+        }
+
+        function renderStockControlOnlineTable() {
+            renderStockControlOnlineHeader();
+
+            const gender = document.getElementById('scoFilterGender')?.value || '';
+            const tier = document.getElementById('scoFilterTier')?.value || '';
+            const series = document.getElementById('scoFilterSeries')?.value || '';
+            const twFilter = document.getElementById('scoFilterTW')?.value || '';
+            const search = (document.getElementById('scoSearch')?.value || '').toLowerCase();
+            const basisStok = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
+            const gapFilter = document.getElementById('scoFilterGAP')?.value || '';
+
+            // Helper: get stock basis for online
+            function getScoStockBasis(item) {
+                if (basisStok === 'onlineBali') return item.WHOB || 0;
+                if (basisStok === 'onlineJkt') return item.WHOJ || 0;
+                return item.whOnlineTotal || 0; // default: onlineTotal
+            }
+
+            // Choose source data
+            const sourceItems = scoViewMode === 'kodeKecil' ? scoKodeKecilItems : scoItems;
+
+            // Filter items
+            scoFilteredItems = sourceItems.filter(item => {
+                if (gender && item.gender !== gender) return false;
+                if (tier && String(item.tier) !== tier) return false;
+                if (series && item.series !== series) return false;
+
+                if (search) {
+                    if (scoViewMode === 'kodeKecil') {
+                        if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    } else {
+                        if (!item.sku?.toLowerCase().includes(search) && !item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    }
+                }
+
+                // TW filter
+                if (twFilter) {
+                    const sales = getScoItemSales(item);
+                    const onlineStock = getScoStockBasis(item);
+                    const tw = sales.avg > 0 ? (onlineStock / sales.avg) : 999;
+                    if (twFilter === 'critical' && tw >= 2) return false;
+                    if (twFilter === 'low' && (tw < 2 || tw >= 4)) return false;
+                    if (twFilter === 'normal' && (tw < 4 || tw >= 8)) return false;
+                    if (twFilter === 'high' && tw < 8) return false;
+                }
+
+                // GAP filter
+                if (gapFilter) {
+                    const sales = getScoItemSales(item);
+                    const bStock = getScoStockBasis(item);
+                    const avgSales = sales.avg;
+                    const gap = bStock - (avgSales * 3);
+                    if (gapFilter === 'understock' && gap >= 0) return false;
+                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales)) return false;
+                    if (gapFilter === 'aman' && gap < avgSales) return false;
+                    if (gapFilter === 'dead' && !(avgSales === 0 && bStock > 0)) return false;
+                }
+
+                return true;
+            });
+
+            // Pagination
+            const totalPages = Math.ceil(scoFilteredItems.length / scoItemsPerPage);
+            if (scoCurrentPage > totalPages) scoCurrentPage = 1;
+            const start = (scoCurrentPage - 1) * scoItemsPerPage;
+            const pageData = scoFilteredItems.slice(start, start + scoItemsPerPage);
+
+            // Update summary cards
+            let totalWHOB = 0, totalWHOJ = 0, totalOnline = 0;
+            scoFilteredItems.forEach(item => {
+                totalWHOB += item.WHOB || 0;
+                totalWHOJ += item.WHOJ || 0;
+                totalOnline += item.whOnlineTotal || 0;
+            });
+            const scoWhOBEl = document.getElementById('scoWhOnlineBali');
+            if (scoWhOBEl) scoWhOBEl.textContent = totalWHOB.toLocaleString();
+            const scoWhOJEl = document.getElementById('scoWhOnlineJakarta');
+            if (scoWhOJEl) scoWhOJEl.textContent = totalWHOJ.toLocaleString();
+            const scoTotalEl = document.getElementById('scoOnlineTotal');
+            if (scoTotalEl) scoTotalEl.textContent = totalOnline.toLocaleString();
+
+            // KPI Summary Cards
+            let kpiUnderstock = 0, kpiTipis = 0, kpiAman = 0, kpiDead = 0;
+            const kpiItems = sourceItems.filter(item => {
+                if (gender && item.gender !== gender) return false;
+                if (tier && String(item.tier) !== tier) return false;
+                if (series && item.series !== series) return false;
+                if (search) {
+                    if (scoViewMode === 'kodeKecil') {
+                        if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    } else {
+                        if (!item.sku?.toLowerCase().includes(search) && !item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                    }
+                }
+                if (twFilter) {
+                    const s = getScoItemSales(item);
+                    const onS = getScoStockBasis(item);
+                    const twV = s.avg > 0 ? (onS / s.avg) : 999;
+                    if (twFilter === 'critical' && twV >= 2) return false;
+                    if (twFilter === 'low' && (twV < 2 || twV >= 4)) return false;
+                    if (twFilter === 'normal' && (twV < 4 || twV >= 8)) return false;
+                    if (twFilter === 'high' && twV < 8) return false;
+                }
+                return true;
+            });
+            kpiItems.forEach(item => {
+                const kSales = getScoItemSales(item);
+                const kBasis = getScoStockBasis(item);
+                const kAvg = kSales.avg;
+                const kGap = kBasis - (kAvg * 3);
+                if (kAvg === 0 && kBasis > 0) { kpiDead++; }
+                else if (kGap < 0) { kpiUnderstock++; }
+                else if (kGap < kAvg) { kpiTipis++; }
+                else { kpiAman++; }
+            });
+            const kpiUEl = document.getElementById('scoKpiUnderstockCount');
+            const kpiTEl = document.getElementById('scoKpiTipisCount');
+            const kpiAEl = document.getElementById('scoKpiAmanCount');
+            const kpiDEl = document.getElementById('scoKpiDeadCount');
+            if (kpiUEl) kpiUEl.textContent = kpiUnderstock.toLocaleString();
+            if (kpiTEl) kpiTEl.textContent = kpiTipis.toLocaleString();
+            if (kpiAEl) kpiAEl.textContent = kpiAman.toLocaleString();
+            if (kpiDEl) kpiDEl.textContent = kpiDead.toLocaleString();
+
+            // Highlight active KPI card
+            ['scoKpiUnderstock','scoKpiTipis','scoKpiAman','scoKpiDead'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.borderColor = 'transparent';
+            });
+            if (gapFilter === 'understock') { const e = document.getElementById('scoKpiUnderstock'); if(e) e.style.borderColor='#ef4444'; }
+            if (gapFilter === 'tipis') { const e = document.getElementById('scoKpiTipis'); if(e) e.style.borderColor='#f59e0b'; }
+            if (gapFilter === 'aman') { const e = document.getElementById('scoKpiAman'); if(e) e.style.borderColor='#22c55e'; }
+            if (gapFilter === 'dead') { const e = document.getElementById('scoKpiDead'); if(e) e.style.borderColor='#6b7280'; }
+
+            // Render table rows
+            const tbody = document.getElementById('scoTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = pageData.map(item => {
+                const sales = getScoItemSales(item);
+                const s1 = sales.m1, s2 = sales.m2, s3 = sales.m3, avgSales = sales.avg;
+                const whob = item.WHOB || 0;
+                const whoj = item.WHOJ || 0;
+                const onlineTotal = item.whOnlineTotal || 0;
+
+                const basisStock = getScoStockBasis(item);
+                const gap = basisStock - (avgSales * 3);
+                const tw = avgSales > 0 ? (onlineTotal / avgSales).toFixed(1) : 0;
+                const twVal = parseFloat(tw) || 0;
+                const isDeadStock = avgSales === 0 && basisStock > 0;
+
+                // GAP color
+                let gapStyle = '';
+                if (gap < 0) gapStyle = 'background:#dc2626;color:white;';
+                else if (gap < avgSales) gapStyle = 'background:#eab308;color:black;';
+                else gapStyle = 'background:#16a34a;color:white;';
+
+                // TW color
+                let twStyle = '';
+                if (avgSales > 0) {
+                    if (twVal < 1) twStyle = 'background:#dc2626;color:white;';
+                    else if (twVal <= 2) twStyle = 'background:#eab308;color:black;';
+                    else if (twVal <= 4) twStyle = 'background:#16a34a;color:white;';
+                    else twStyle = 'background:#7c3aed;color:white;';
+                }
+
+                const cs = 'padding:8px;text-align:center;border-right:1px solid #000000;';
+
+                if (scoViewMode === 'kodeKecil') {
+                    return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
+                        '<td style="' + cs + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="' + cs + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
+                    '</tr>';
+                } else {
+                    return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
+                        '<td style="' + cs + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil || item.sku) + '</td>' +
+                        '<td style="' + cs + 'font-weight:500;color:#374151;">' + (item.size||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5563;text-align:left;" title="' + (item.name||'') + '">' + (item.name||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
+                        '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
+                        '<td style="' + cs + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
+                    '</tr>';
+                }
+            }).join('');
+
+            // Page info
+            const itemLabel = scoViewMode === 'kodeKecil' ? 'Artikel' : 'SKUs';
+            const pageInfoEl = document.getElementById('scoPageInfo');
+            if (pageInfoEl) {
+                pageInfoEl.textContent = 'Showing ' + (start + 1) + '-' + Math.min(start + scoItemsPerPage, scoFilteredItems.length) + ' of ' + scoFilteredItems.length + ' ' + itemLabel;
+            }
+            renderScoPagination(totalPages);
+        }
+
+        function renderScoPagination(totalPages) {
+            const container = document.getElementById('scoPagination');
+            if (!container) return;
+            let html = '';
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+            html += '<button onclick="scoGoToPage(1)" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scoCurrentPage === 1 ? ' disabled' : '') + '>&laquo;</button>';
+            html += '<button onclick="scoGoToPage(' + (scoCurrentPage - 1) + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scoCurrentPage === 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+
+            let startPage = Math.max(1, scoCurrentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += '<button onclick="scoGoToPage(' + i + ')" style="padding:5px 10px;border:1px solid ' + (i === scoCurrentPage ? '#0284c7' : '#d1d5db') + ';background:' + (i === scoCurrentPage ? '#0284c7' : 'white') + ';color:' + (i === scoCurrentPage ? 'white' : '#374151') + ';border-radius:4px;cursor:pointer;">' + i + '</button>';
+            }
+
+            html += '<button onclick="scoGoToPage(' + (scoCurrentPage + 1) + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scoCurrentPage === totalPages ? ' disabled' : '') + '>&rsaquo;</button>';
+            html += '<button onclick="scoGoToPage(' + totalPages + ')" style="padding:5px 10px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;"' + (scoCurrentPage === totalPages ? ' disabled' : '') + '>&raquo;</button>';
+
+            container.innerHTML = html;
+        }
+
+        function scoGoToPage(page) {
+            scoCurrentPage = page;
+            renderStockControlOnlineTable();
+        }
+
+        function sortStockControlOnline(column) {
+            if (scoSortColumn === column) {
+                scoSortAsc = !scoSortAsc;
+            } else {
+                scoSortColumn = column;
+                scoSortAsc = true;
+            }
+
+            const sortBasis = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
+
+            function getSortBasis(item) {
+                if (sortBasis === 'onlineBali') return item.WHOB || 0;
+                if (sortBasis === 'onlineJkt') return item.WHOJ || 0;
+                return item.whOnlineTotal || 0;
+            }
+
+            function getSortSales(item) {
+                if (scoViewMode === 'kodeKecil') {
+                    return getKodeKecilOnlineSales(item.skuList || []);
+                } else {
+                    return getOnlineSales(item.sku, item.kodeKecil);
+                }
+            }
+
+            scoFilteredItems.sort((a, b) => {
+                let valA, valB;
+                const salesA = getSortSales(a);
+                const salesB = getSortSales(b);
+                const avgA = salesA.avg || 0;
+                const avgB = salesB.avg || 0;
+
+                switch(column) {
+                    case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
+                    case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
+                    case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
+                    case 'm1': valA = salesA.m1; valB = salesB.m1; break;
+                    case 'm2': valA = salesA.m2; valB = salesB.m2; break;
+                    case 'm3': valA = salesA.m3; valB = salesB.m3; break;
+                    case 'avg': valA = avgA; valB = avgB; break;
+                    case 'whob': valA = a.WHOB || 0; valB = b.WHOB || 0; break;
+                    case 'whoj': valA = a.WHOJ || 0; valB = b.WHOJ || 0; break;
+                    case 'onlineTotal': valA = a.whOnlineTotal || 0; valB = b.whOnlineTotal || 0; break;
+                    case 'gap':
+                        valA = getSortBasis(a) - (avgA * 3);
+                        valB = getSortBasis(b) - (avgB * 3);
+                        break;
+                    case 'tw':
+                        valA = avgA > 0 ? ((a.whOnlineTotal || 0) / avgA) : 999;
+                        valB = avgB > 0 ? ((b.whOnlineTotal || 0) / avgB) : 999;
+                        break;
+                    default:
+                        valA = scoViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
+                        valB = scoViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
+                }
+
+                if (typeof valA === 'string') {
+                    return scoSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                return scoSortAsc ? valA - valB : valB - valA;
+            });
+
+            scoCurrentPage = 1;
+            renderStockControlOnlineTable();
+        }
+
+        function exportStockControlOnlineExcel() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS library not loaded. Please refresh the page.'); return; }
+            if (!scoFilteredItems || scoFilteredItems.length === 0) { alert('Tidak ada data untuk di-export.'); return; }
+
+            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
+            const [eM1, eM2, eM3] = months;
+            const basisLabel = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
+
+            function getExpSales(item) {
+                if (scoViewMode === 'kodeKecil') {
+                    return getKodeKecilOnlineSales(item.skuList || []);
+                } else {
+                    return getOnlineSales(item.sku, item.kodeKecil);
+                }
+            }
+
+            function getExpBasis(item) {
+                if (basisLabel === 'onlineBali') return item.WHOB || 0;
+                if (basisLabel === 'onlineJkt') return item.WHOJ || 0;
+                return item.whOnlineTotal || 0;
+            }
+
+            const m1Label = eM1.charAt(0).toUpperCase() + eM1.slice(1);
+            const m2Label = eM2.charAt(0).toUpperCase() + eM2.slice(1);
+            const m3Label = eM3.charAt(0).toUpperCase() + eM3.slice(1);
+
+            const rows = scoFilteredItems.map(item => {
+                const sales = getExpSales(item);
+                const basisStock = getExpBasis(item);
+                const avgSales = sales.avg;
+                const gap = basisStock - (avgSales * 3);
+                const tw = avgSales > 0 ? ((item.whOnlineTotal || 0) / avgSales) : 0;
+                const isDead = avgSales === 0 && basisStock > 0;
+                let gapStatus = 'Aman';
+                if (isDead) gapStatus = 'Dead Stock';
+                else if (gap < 0) gapStatus = 'Understock';
+                else if (gap < avgSales) gapStatus = 'Tipis';
+
+                const row = {};
+                if (scoViewMode === 'kodeKecil') {
+                    row['KODE BARANG'] = item.kodeKecil || '';
+                } else {
+                    row['KODE BARANG'] = item.kodeKecil || item.sku || '';
+                    row['SIZE'] = item.size || '';
+                }
+                row['ARTICLE'] = item.name || '';
+                row['SERIES'] = item.series || '';
+                row['GENDER'] = item.gender || '';
+                row['TIER'] = item.tier || '';
+                row[m1Label] = sales.m1;
+                row[m2Label] = sales.m2;
+                row[m3Label] = sales.m3;
+                row['AVG 3M'] = Math.round(avgSales * 100) / 100;
+                row['WH O.BALI'] = item.WHOB || 0;
+                row['WH O.JKT'] = item.WHOJ || 0;
+                row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
+                row['TW'] = Math.round(tw * 100) / 100;
+                row['GAP'] = Math.round(gap);
+                row['GAP STATUS'] = gapStatus;
+                return row;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Control Stock Online');
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, 'Control_Stock_Online_' + basisLabel + '_' + dateStr + '.xlsx');
         }
 
         // ============ SALES DASHBOARD FUNCTIONS ============
