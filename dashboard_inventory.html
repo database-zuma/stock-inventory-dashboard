@@ -1450,6 +1450,13 @@
                             </div>
                         </div>
 
+                        <!-- Store Performance YOY & MOM -->
+                        <div style="margin-bottom:24px;">
+                            <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">📊 Store Performance — YOY & MOM</h4>
+                            <div id="perfByAreaTable" style="margin-bottom:16px;"></div>
+                            <div id="perfByStoreTable" style="max-height:500px;overflow-y:auto;"></div>
+                        </div>
+
                         <!-- Sales by Event + Sales by Area side by side -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
                             <div>
@@ -7141,6 +7148,120 @@
             if (targetMonth) titleSuffix = ' — ' + monthLabels[targetMonth];
             const titleEl = document.getElementById('salesByStoreTitle');
             if (titleEl) titleEl.textContent = '🏪 Sales by Store' + titleSuffix + ' (' + achievedStores.length + ' achieved, ' + belumStores.length + ' belum)';
+
+            // === Store Performance YOY & MOM ===
+            (async function loadStorePerformance() {
+                try {
+                    const perfResp = await fetchAPI('/api/sales/store-performance?year=2026&quarter=1');
+                    if (!perfResp || !perfResp.areas) return;
+                    const monthNames = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'};
+                    const months = perfResp.months || [1,2,3];
+                    const prevY = String(perfResp.prev_year).slice(-2);
+                    const currY = String(perfResp.year).slice(-2);
+                    const qLabel = 'Q' + perfResp.quarter;
+                    const fmtSales = v => v >= 1e9 ? (v/1e9).toFixed(1)+'M' : (v/1e6).toFixed(0)+'jt';
+                    const fmtPct = (curr,prev) => { if(!prev) return '-'; const p=Math.round((curr-prev)/prev*100); return (p>0?'+':'')+p+'%'; };
+                    const pctColor = (curr,prev) => { if(!prev) return '#6b7280'; const p=(curr-prev)/prev*100; return p>=0?'#10b981':'#ef4444'; };
+                    const pctBg = (curr,prev) => { if(!prev) return 'transparent'; const p=(curr-prev)/prev*100; return p>=0?'#ecfdf5':'#fef2f2'; };
+
+                    // --- Area YOY Table ---
+                    let areaHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #000;">';
+                    areaHtml += '<thead><tr style="background:#002A3A;color:white;">';
+                    areaHtml += '<th style="padding:6px 8px;text-align:left;">Area</th>';
+                    areaHtml += '<th style="padding:6px 8px;text-align:center;">Toko</th>';
+                    months.forEach(m => {
+                        areaHtml += '<th style="padding:6px 8px;text-align:right;">' + monthNames[m] + "'" + prevY + '</th>';
+                        areaHtml += '<th style="padding:6px 8px;text-align:right;">' + monthNames[m] + "'" + currY + '</th>';
+                        areaHtml += '<th style="padding:6px 8px;text-align:center;">YOY</th>';
+                    });
+                    areaHtml += '<th style="padding:6px 8px;text-align:right;">' + qLabel + "'" + prevY + '</th>';
+                    areaHtml += '<th style="padding:6px 8px;text-align:right;">' + qLabel + "'" + currY + '</th>';
+                    areaHtml += '<th style="padding:6px 8px;text-align:center;">YOY</th>';
+                    areaHtml += '</tr></thead><tbody>';
+                    let areaTotals = {prev:{},curr:{},qp:0,qc:0};
+                    months.forEach(m => { areaTotals.prev[m]=0; areaTotals.curr[m]=0; });
+                    perfResp.areas.forEach((a,i) => {
+                        const bg = i%2===0?'#fff':'#f8fafc';
+                        areaHtml += '<tr style="background:'+bg+';border-bottom:1px solid #e2e8f0;">';
+                        areaHtml += '<td style="padding:6px 8px;font-weight:600;">'+a.area+'</td>';
+                        areaHtml += '<td style="padding:6px 8px;text-align:center;font-size:0.75rem;color:#6b7280;">'+a.stores_prev+'→'+a.stores_curr+'</td>';
+                        months.forEach(m => {
+                            const ms = String(m);
+                            const mp = (a.monthly[ms]||{prev:{sales:0}}).prev.sales||0;
+                            const mc = (a.monthly[ms]||{curr:{sales:0}}).curr.sales||0;
+                            areaTotals.prev[m]+=mp; areaTotals.curr[m]+=mc;
+                            areaHtml += '<td style="padding:6px 8px;text-align:right;color:#6b7280;">'+fmtSales(mp)+'</td>';
+                            areaHtml += '<td style="padding:6px 8px;text-align:right;font-weight:600;">'+fmtSales(mc)+'</td>';
+                            areaHtml += '<td style="padding:6px 8px;text-align:center;font-weight:700;color:'+pctColor(mc,mp)+';background:'+pctBg(mc,mp)+';border-radius:4px;">'+fmtPct(mc,mp)+'</td>';
+                        });
+                        areaTotals.qp+=a.q_prev.sales; areaTotals.qc+=a.q_curr.sales;
+                        areaHtml += '<td style="padding:6px 8px;text-align:right;color:#6b7280;">'+fmtSales(a.q_prev.sales)+'</td>';
+                        areaHtml += '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#10b981;">'+fmtSales(a.q_curr.sales)+'</td>';
+                        areaHtml += '<td style="padding:6px 8px;text-align:center;font-weight:700;color:'+pctColor(a.q_curr.sales,a.q_prev.sales)+';background:'+pctBg(a.q_curr.sales,a.q_prev.sales)+';border-radius:4px;">'+fmtPct(a.q_curr.sales,a.q_prev.sales)+'</td>';
+                        areaHtml += '</tr>';
+                    });
+                    // Area total row
+                    areaHtml += '<tr style="background:#e8f5f0;font-weight:700;border-top:2px solid #000;">';
+                    areaHtml += '<td style="padding:6px 8px;">TOTAL</td><td></td>';
+                    months.forEach(m => {
+                        areaHtml += '<td style="padding:6px 8px;text-align:right;">'+fmtSales(areaTotals.prev[m])+'</td>';
+                        areaHtml += '<td style="padding:6px 8px;text-align:right;">'+fmtSales(areaTotals.curr[m])+'</td>';
+                        areaHtml += '<td style="padding:6px 8px;text-align:center;color:'+pctColor(areaTotals.curr[m],areaTotals.prev[m])+'">'+fmtPct(areaTotals.curr[m],areaTotals.prev[m])+'</td>';
+                    });
+                    areaHtml += '<td style="padding:6px 8px;text-align:right;">'+fmtSales(areaTotals.qp)+'</td>';
+                    areaHtml += '<td style="padding:6px 8px;text-align:right;">'+fmtSales(areaTotals.qc)+'</td>';
+                    areaHtml += '<td style="padding:6px 8px;text-align:center;color:'+pctColor(areaTotals.qc,areaTotals.qp)+'">'+fmtPct(areaTotals.qc,areaTotals.qp)+'</td>';
+                    areaHtml += '</tr></tbody></table>';
+                    const areaEl = document.getElementById('perfByAreaTable');
+                    if (areaEl) areaEl.innerHTML = areaHtml;
+
+                    // --- Store YOY + MOM Table ---
+                    let storeHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;border:1px solid #000;">';
+                    storeHtml += '<thead><tr style="background:#002A3A;color:white;">';
+                    storeHtml += '<th style="padding:5px 6px;text-align:center;">#</th>';
+                    storeHtml += '<th style="padding:5px 6px;text-align:left;">Store</th>';
+                    storeHtml += '<th style="padding:5px 6px;text-align:left;">Area</th>';
+                    storeHtml += '<th style="padding:5px 6px;text-align:center;">Status</th>';
+                    months.forEach((m,mi) => {
+                        storeHtml += '<th style="padding:5px 6px;text-align:right;">' + monthNames[m] + "'" + currY + '</th>';
+                        if (mi > 0) storeHtml += '<th style="padding:5px 6px;text-align:center;">MOM</th>';
+                    });
+                    storeHtml += '<th style="padding:5px 6px;text-align:right;">' + qLabel + "'" + currY + '</th>';
+                    storeHtml += '<th style="padding:5px 6px;text-align:right;">' + qLabel + "'" + prevY + '</th>';
+                    storeHtml += '<th style="padding:5px 6px;text-align:center;">YOY</th>';
+                    storeHtml += '</tr></thead><tbody>';
+                    perfResp.stores.forEach((s,i) => {
+                        const bg = i%2===0?'#fff':'#f8fafc';
+                        const statusLabel = s.status==='new'?'\uD83C\uDD95':'\u2705';
+                        const name = s.store.replace(/^Zuma /i,'').replace(/^ZUMA /i,'');
+                        storeHtml += '<tr style="background:'+bg+';border-bottom:1px solid #e2e8f0;">';
+                        storeHtml += '<td style="padding:5px 6px;text-align:center;color:#9ca3af;">'+(i+1)+'</td>';
+                        storeHtml += '<td style="padding:5px 6px;font-weight:600;white-space:nowrap;">'+name+'</td>';
+                        storeHtml += '<td style="padding:5px 6px;font-size:0.72rem;color:#6b7280;">'+s.area_group+'</td>';
+                        storeHtml += '<td style="padding:5px 6px;text-align:center;">'+statusLabel+'</td>';
+                        let prevMonthSales = 0;
+                        months.forEach((m,mi) => {
+                            const ms = String(m);
+                            const mc = (s.monthly[ms]||{curr:{sales:0}}).curr.sales||0;
+                            storeHtml += '<td style="padding:5px 6px;text-align:right;font-weight:600;">'+fmtSales(mc)+'</td>';
+                            if (mi > 0) {
+                                storeHtml += '<td style="padding:5px 6px;text-align:center;font-weight:700;font-size:0.72rem;color:'+pctColor(mc,prevMonthSales)+';background:'+pctBg(mc,prevMonthSales)+';border-radius:3px;">'+fmtPct(mc,prevMonthSales)+'</td>';
+                            }
+                            prevMonthSales = mc;
+                        });
+                        storeHtml += '<td style="padding:5px 6px;text-align:right;font-weight:700;color:#10b981;">'+fmtSales(s.q_curr.sales)+'</td>';
+                        storeHtml += '<td style="padding:5px 6px;text-align:right;color:#6b7280;">'+fmtSales(s.q_prev.sales)+'</td>';
+                        const yoyColor = s.status==='new'?'#3b82f6':pctColor(s.q_curr.sales,s.q_prev.sales);
+                        const yoyLabel = s.status==='new'?'BARU':fmtPct(s.q_curr.sales,s.q_prev.sales);
+                        const yoyBg = s.status==='new'?'#eff6ff':pctBg(s.q_curr.sales,s.q_prev.sales);
+                        storeHtml += '<td style="padding:5px 6px;text-align:center;font-weight:700;font-size:0.72rem;color:'+yoyColor+';background:'+yoyBg+';border-radius:3px;">'+yoyLabel+'</td>';
+                        storeHtml += '</tr>';
+                    });
+                    storeHtml += '</tbody></table>';
+                    const storeEl = document.getElementById('perfByStoreTable');
+                    if (storeEl) storeEl.innerHTML = storeHtml;
+                } catch(e) { console.warn('Store performance load failed:', e); }
+            })();
 
             // === Sales by Event ===
             const byEventRaw = {};
