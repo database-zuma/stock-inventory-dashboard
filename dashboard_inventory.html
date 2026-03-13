@@ -3024,8 +3024,8 @@
             if (!rawArea) return 'Jawa Timur';
             const a = rawArea.toLowerCase().trim();
             if (a.includes('bali') || a.includes('whb')) return 'Bali';
-            if (a.includes('jakarta')) return 'Jakarta';
-            if (a.includes('jatim') || a.includes('jawa timur') || a === 'whs') return 'Jawa Timur';
+            if (a.includes('jakarta') || a === 'whj' || a.includes('whj ')) return 'Jakarta';
+            if (a.includes('jatim') || a.includes('jawa timur') || a === 'whs' || a.includes('whs ')) return 'Jawa Timur';
             if (a.includes('batam')) return 'Batam';
             if (a.includes('lombok')) return 'Lombok';
             if (a.includes('sulawesi') || a.includes('manado')) return 'Sulawesi';
