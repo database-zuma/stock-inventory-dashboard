@@ -448,7 +448,7 @@
             background: #f8fafc; border-radius: 10px; margin-bottom: 10px;
             transition: all 0.2s ease; cursor: pointer;
         }
-        .store-analysis-item:hover { background: #f1f5f9; transform: translateX(5px); }
+        .store-analysis-item:hover { background: #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .store-info { flex: 1; }
         .store-info .name { font-weight: 600; color: #1f2937; font-size: 0.9rem; }
         .store-info .area { font-size: 0.75rem; color: #9ca3af; }
@@ -5048,6 +5048,10 @@
                             var whNames = Object.keys(item.store_stock);
                             for (var w = 0; w < whNames.length; w++) {
                                 var whName = whNames[w];
+                                var whNameLower = whName.toLowerCase();
+                                // Skip Bali Gatsu & Palembang — toko off (per user request)
+                                if (whNameLower.indexOf('bali gatsu') >= 0) continue;
+                                if (whNameLower.indexOf('palembang') >= 0) continue;
                                 var stock = item.store_stock[whName];
 
                                 var area = getWarehouseArea(whName);
@@ -5669,7 +5673,7 @@
                 html += `
                     <tr style="background:${'#ffffff'};">
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:500;">${item.store}</td>
-                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${item.kode_kecil || item.sku}</td>
+                        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-family:monospace;font-size:0.8rem;">${(item.kode_kecil || item.sku || '').toUpperCase()}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${item.nama}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${item.size}</td>
                         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;">${item.stock.toLocaleString('id-ID')}</td>
