@@ -7079,14 +7079,14 @@
             const allMonthKeys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
             if (targetMonth) {
                 const monthIdx = allMonthKeys.indexOf(targetMonth);
-                data = filteredSalesData.filter(item => {
+                data = salesDetailData.filter(item => {
                     const d = new Date(item.date || item.sale_date);
                     return d.getMonth() === monthIdx;
                 });
             } else {
                 // Filter by quarter months
                 const monthIndices = activeMonths.map(m => allMonthKeys.indexOf(m));
-                data = filteredSalesData.filter(item => {
+                data = salesDetailData.filter(item => {
                     const d = new Date(item.date || item.sale_date);
                     return monthIndices.includes(d.getMonth());
                 });
@@ -7187,12 +7187,8 @@
             if (achievedEl) achievedEl.innerHTML = buildStoreTable(achievedStores);
             if (belumEl) belumEl.innerHTML = buildStoreTable(belumStores);
 
-            // Update title with filter info
-            const monthLabels = {jan:'Januari',feb:'Februari',mar:'Maret',apr:'April',may:'Mei',jun:'Juni',jul:'Juli',aug:'Agustus',sep:'September',oct:'Oktober',nov:'November',dec:'Desember'};
-            let titleSuffix = ' — ' + targetQuarter;
-            if (targetMonth) titleSuffix = ' — ' + monthLabels[targetMonth];
             const titleEl = document.getElementById('salesByStoreTitle');
-            if (titleEl) titleEl.textContent = '🏪 Sales by Store' + titleSuffix + ' (' + achievedStores.length + ' achieved, ' + belumStores.length + ' belum)';
+            if (titleEl) titleEl.textContent = '🏪 Sales by Store';
 
 
             // === Sales by Event ===
