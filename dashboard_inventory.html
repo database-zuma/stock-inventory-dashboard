@@ -1255,7 +1255,7 @@
                             <option value="jkt">WH Jakarta</option>
                             <option value="onlineBali">WH Online Bali</option>
                             <option value="onlineJkt">WH Online Jakarta</option>
-                            <option value="onlineTotal">WH Online Total</option>
+                            <option value="onlineTotal">Online Total</option>
                         </select>
                     </div>
                     <div style="min-width:110px;">
@@ -5970,7 +5970,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
                     '<th style="' + headerStyle + '">WH O.BALI</th>' +
                     '<th style="' + headerStyle + '">WH O.JKT</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">WH ONLINE</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -5996,7 +5996,7 @@
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
                     '<th style="' + headerStyle + '">WH O.BALI</th>' +
                     '<th style="' + headerStyle + '">WH O.JKT</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">WH ONLINE</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -6039,10 +6039,12 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
+                        WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
                         globalStock: 0,
-                        whTotal: 0
+                        whTotal: 0,
+                        whOnlineTotal: 0
                     };
                 }
                 if (item.store_stock) {
@@ -6067,10 +6069,12 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
+                        WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
                         globalStock: 0,
-                        whTotal: 0
+                        whTotal: 0,
+                        whOnlineTotal: 0
                     };
                 }
                 if (item.store_stock) {
@@ -6718,7 +6722,7 @@
                 row['WH TOTAL'] = item.whTotal || 0;
                 row['WH O.BALI'] = item.WHOB || 0;
                 row['WH O.JKT'] = item.WHOJ || 0;
-                row['WH ONLINE'] = item.whOnlineTotal || 0;
+                row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
                 row['STOK RETAIL'] = item.stokRetail || 0;
                 row['STOK CONSIG'] = item.stokConsignment || 0;
                 row['GLOBAL'] = item.globalStock || 0;
