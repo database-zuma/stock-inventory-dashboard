@@ -7143,15 +7143,18 @@
             if (titleEl) titleEl.textContent = '🏪 Sales by Store' + titleSuffix + ' (' + achievedStores.length + ' achieved, ' + belumStores.length + ' belum)';
 
             // === Sales by Event ===
-            const byEvent = {};
+            const byEventRaw = {};
             data.forEach(item => {
                 if (item.category !== 'EVENT') return;
-                const store = item.store || 'Unknown';
-                if (!byEvent[store]) byEvent[store] = { sales: 0, qty: 0, trx: new Set(), area: item.area || '-' };
-                byEvent[store].sales += item.total || 0;
-                byEvent[store].qty += item.qty || 0;
-                byEvent[store].trx.add(item.order_no);
+                // Gabungkan Wilbex variants (Wilbex, Wilbex 2, Wilbex GC, Wilbex PTC) jadi satu
+                let store = item.store || 'Unknown';
+                if (/wilbex/i.test(store)) store = 'Zuma Event Wilbex';
+                if (!byEventRaw[store]) byEventRaw[store] = { sales: 0, qty: 0, trx: new Set(), area: item.area || '-' };
+                byEventRaw[store].sales += item.total || 0;
+                byEventRaw[store].qty += item.qty || 0;
+                byEventRaw[store].trx.add(item.order_no);
             });
+            const byEvent = byEventRaw;
             const eventArr = Object.entries(byEvent).map(([store, val]) => ({
                 store, area: val.area, sales: val.sales, qty: val.qty, trx: val.trx.size
             })).sort((a, b) => b.sales - a.sales);
