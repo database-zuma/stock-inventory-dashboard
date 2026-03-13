@@ -5049,8 +5049,11 @@
                             for (var w = 0; w < whNames.length; w++) {
                                 var whName = whNames[w];
                                 var whNameLower = whName.toLowerCase();
-                                // Skip Bali Gatsu & Palembang — toko off (per user request)
-                                if (whNameLower.indexOf('bali gatsu') >= 0) continue;
+                                // Skip specific Bali warehouses (revised 2026-03-13)
+                                // Exclude: plain "Warehouse Bali"/"Warehouse Bali (UBB)", Bali Gatsu parent (MBB)/(UBB), Bali Gatsu - Non Sandal
+                                // Keep: Bali Gatsu - Box, Protol/Protolan, Reject, Online Bali
+                                if (whNameLower.startsWith('warehouse bali') && whNameLower.indexOf('gatsu') < 0 && whNameLower.indexOf('online') < 0) continue;
+                                if (whNameLower.indexOf('bali gatsu') >= 0 && (whNameLower.indexOf('(mbb)') >= 0 || whNameLower.indexOf('(ubb)') >= 0 || whNameLower.indexOf('non sandal') >= 0)) continue;
                                 if (whNameLower.indexOf('palembang') >= 0) continue;
                                 var stock = item.store_stock[whName];
 
