@@ -1128,7 +1128,7 @@
             </div>
 
             <!-- Summary Cards -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
                 <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:15px;">
                     <div style="font-size:0.8rem;color:#92400e;margin-bottom:5px;">🏭 WH Pusat (Jatim)</div>
                     <div id="scWhPusat" style="font-size:1.8rem;font-weight:700;color:#78350f;">0</div>
@@ -1140,6 +1140,16 @@
                 <div style="background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);border-radius:12px;padding:15px;">
                     <div style="font-size:0.8rem;color:#1e40af;margin-bottom:5px;">🏭 WH Jakarta</div>
                     <div id="scWhJakarta" style="font-size:1.8rem;font-weight:700;color:#1e3a8a;">0</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg,#fef9c3 0%,#fde047 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#854d0e;margin-bottom:5px;">📦 WH Online Bali</div>
+                    <div id="scWhOnlineBali" style="font-size:1.8rem;font-weight:700;color:#713f12;">0</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#e0f2fe 0%,#7dd3fc 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#0c4a6e;margin-bottom:5px;">📦 WH Online Jakarta</div>
+                    <div id="scWhOnlineJakarta" style="font-size:1.8rem;font-weight:700;color:#082f49;">0</div>
                 </div>
                 <div style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-radius:12px;padding:15px;">
                     <div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🏪 Total Stok Toko</div>
@@ -1243,6 +1253,9 @@
                             <option value="pusat">WH Pusat</option>
                             <option value="bali">WH Bali</option>
                             <option value="jkt">WH Jakarta</option>
+                            <option value="onlineBali">WH Online Bali</option>
+                            <option value="onlineJkt">WH Online Jakarta</option>
+                            <option value="onlineTotal">WH Online Total</option>
                         </select>
                     </div>
                     <div style="min-width:110px;">
@@ -1297,7 +1310,6 @@
                             <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
                             <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
                             <li><b>GAP</b> = Stock Global - (Avg Sales × 3)</li>
-                            <li><b>STR (Sell Through Rate)</b> = (Avg Sales × 3) / ((Avg Sales × 3) + Stock Global) × 100%</li>
                         </ul>
                         
                     </div>
@@ -5860,10 +5872,12 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
+                        WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0,
+                        whOnlineTotal: 0,
                         skuList: []
                     };
                 }
@@ -5872,6 +5886,8 @@
                 kodeKecilMap[kk].WHS += item.WHS || 0;
                 kodeKecilMap[kk].WHB += item.WHB || 0;
                 kodeKecilMap[kk].WHJ += item.WHJ || 0;
+                kodeKecilMap[kk].WHOB += item.WHOB || 0;
+                kodeKecilMap[kk].WHOJ += item.WHOJ || 0;
                 kodeKecilMap[kk].stokRetail += item.stokRetail || 0;
                 kodeKecilMap[kk].stokConsignment += item.stokConsignment || 0;
                 kodeKecilMap[kk].skuList.push(item.kodeKecil || item.sku);
@@ -5880,7 +5896,8 @@
             // Calculate totals
             Object.values(kodeKecilMap).forEach(item => {
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
-                item.globalStock = item.whTotal + item.stokRetail + item.stokConsignment;
+                item.whOnlineTotal = item.WHOB + item.WHOJ;
+                item.globalStock = item.whTotal + item.whOnlineTotal + item.stokRetail + item.stokConsignment;
             });
 
             return Object.values(kodeKecilMap);
@@ -5951,6 +5968,9 @@
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + '">WH O.BALI</th>' +
+                    '<th style="' + headerStyle + '">WH O.JKT</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">WH ONLINE</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -5974,6 +5994,9 @@
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
+                    '<th style="' + headerStyle + '">WH O.BALI</th>' +
+                    '<th style="' + headerStyle + '">WH O.JKT</th>' +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">WH ONLINE</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -6075,19 +6098,24 @@
                         gender: item.gender,
                         tier: item.tier,
                         WHS: 0, WHB: 0, WHJ: 0,
+                        WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
                         globalStock: 0,
-                        whTotal: 0
+                        whTotal: 0,
+                        whOnlineTotal: 0
                     };
                 }
                 // Sum warehouse stock
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, stock]) => {
                         const w = wh.toLowerCase();
-                        if (w.includes('pusat')) skuMap[sku].WHS += stock;
+                        // Online warehouses FIRST (before bali/jakarta catch-all)
+                        if (w.includes('online') && w.includes('bali')) skuMap[sku].WHOB += stock;
+                        else if (w.includes('online') && (w.includes('jakarta') || w.includes('jkt'))) skuMap[sku].WHOJ += stock;
+                        else if (w.includes('pusat')) skuMap[sku].WHS += stock;
                         else if (w.includes('bali') || w.includes('gatsu')) skuMap[sku].WHB += stock;
-                        else if (w.includes('jakarta') || w.includes('pluit') || w.includes('palembang') || w.includes('online')) skuMap[sku].WHJ += stock;
+                        else if (w.includes('jakarta') || w.includes('pluit') || w.includes('palembang')) skuMap[sku].WHJ += stock;
                     });
                 }
             });
@@ -6095,7 +6123,8 @@
             // Calculate totals
             Object.values(skuMap).forEach(item => {
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
-                item.globalStock = item.whTotal + item.stokRetail + item.stokConsignment;
+                item.whOnlineTotal = item.WHOB + item.WHOJ;
+                item.globalStock = item.whTotal + item.whOnlineTotal + item.stokRetail + item.stokConsignment;
             });
 
             return Object.values(skuMap);
@@ -6147,6 +6176,9 @@
                 if (basisStok === 'pusat') return item.WHS || 0;
                 if (basisStok === 'bali') return item.WHB || 0;
                 if (basisStok === 'jkt') return item.WHJ || 0;
+                if (basisStok === 'onlineBali') return item.WHOB || 0;
+                if (basisStok === 'onlineJkt') return item.WHOJ || 0;
+                if (basisStok === 'onlineTotal') return item.whOnlineTotal || 0;
                 return item.globalStock || 0; // default: global
             }
 
@@ -6242,10 +6274,13 @@
 
             // Update summary cards
             let totalWHS = 0, totalWHB = 0, totalWHJ = 0, totalToko = 0;
+            let totalWHOB = 0, totalWHOJ = 0;
             scFilteredItems.forEach(item => {
                 if (!area || area === 'Jawa Timur') totalWHS += item.WHS;
                 if (!area || area === 'Bali') totalWHB += item.WHB;
                 if (!area || area === 'Jakarta') totalWHJ += item.WHJ;
+                if (!area || area === 'Bali') totalWHOB += item.WHOB || 0;
+                if (!area || area === 'Jakarta') totalWHOJ += item.WHOJ || 0;
                 if (!area) totalToko += item.stokToko;
                 else if (area === 'Bali') totalToko += item.stokTokoBali;
                 else if (area === 'Jakarta') totalToko += item.stokTokoJakarta;
@@ -6258,6 +6293,10 @@
             document.getElementById('scWhPusat').textContent = totalWHS.toLocaleString();
             document.getElementById('scWhBali').textContent = totalWHB.toLocaleString();
             document.getElementById('scWhJakarta').textContent = totalWHJ.toLocaleString();
+            const scWhOBEl = document.getElementById('scWhOnlineBali');
+            if (scWhOBEl) scWhOBEl.textContent = totalWHOB.toLocaleString();
+            const scWhOJEl = document.getElementById('scWhOnlineJakarta');
+            if (scWhOJEl) scWhOJEl.textContent = totalWHOJ.toLocaleString();
             document.getElementById('scStokToko').textContent = totalToko.toLocaleString();
 
             // KPI Summary Cards — count by GAP category (using ALL filtered items, ignoring GAP/STR filter)
@@ -6403,14 +6442,22 @@
                 }
 
                 let whPusat = '-', whBali = '-', whJkt = '-';
+                let whOB = '-', whOJ = '-', whOnline = '-';
                 if (!area) {
                     whPusat = (item.WHS || 0).toLocaleString();
                     whBali = (item.WHB || 0).toLocaleString();
                     whJkt = (item.WHJ || 0).toLocaleString();
+                    whOB = (item.WHOB || 0).toLocaleString();
+                    whOJ = (item.WHOJ || 0).toLocaleString();
+                    whOnline = (item.whOnlineTotal || 0).toLocaleString();
                 } else if (area === 'Bali') {
                     whBali = (item.WHB || 0).toLocaleString();
+                    whOB = (item.WHOB || 0).toLocaleString();
+                    whOnline = (item.WHOB || 0).toLocaleString();
                 } else if (area === 'Jakarta') {
                     whJkt = (item.WHJ || 0).toLocaleString();
+                    whOJ = (item.WHOJ || 0).toLocaleString();
+                    whOnline = (item.WHOJ || 0).toLocaleString();
                 } else if (area === 'Jawa Timur') {
                     whPusat = (item.WHS || 0).toLocaleString();
                 }
@@ -6437,6 +6484,9 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whOB + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whOJ + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:#fde68a;color:#92400e;">' + whOnline + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
@@ -6460,6 +6510,9 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whOB + '</td>' +
+                        '<td style="' + cellStyle + 'color:#374151;">' + whOJ + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:#fde68a;color:#92400e;">' + whOnline + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
@@ -6530,6 +6583,9 @@
                 if (sortBasis === 'pusat') return item.WHS || 0;
                 if (sortBasis === 'bali') return item.WHB || 0;
                 if (sortBasis === 'jkt') return item.WHJ || 0;
+                if (sortBasis === 'onlineBali') return item.WHOB || 0;
+                if (sortBasis === 'onlineJkt') return item.WHOJ || 0;
+                if (sortBasis === 'onlineTotal') return item.whOnlineTotal || 0;
                 return item.globalStock || 0;
             }
 
@@ -6561,6 +6617,9 @@
                     case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
+                    case 'whOnlineTotal': valA = a.whOnlineTotal || 0; valB = b.whOnlineTotal || 0; break;
+                    case 'stokRetail': valA = a.stokRetail || 0; valB = b.stokRetail || 0; break;
+                    case 'stokConsignment': valA = a.stokConsignment || 0; valB = b.stokConsignment || 0; break;
                     case 'stokToko': valA = a.stokToko; valB = b.stokToko; break;
                     case 'global': valA = a.globalStock; valB = b.globalStock; break;
                     case 'gap':
@@ -6620,6 +6679,9 @@
                 if (basisLabel === 'pusat') return item.WHS || 0;
                 if (basisLabel === 'bali') return item.WHB || 0;
                 if (basisLabel === 'jkt') return item.WHJ || 0;
+                if (basisLabel === 'onlineBali') return item.WHOB || 0;
+                if (basisLabel === 'onlineJkt') return item.WHOJ || 0;
+                if (basisLabel === 'onlineTotal') return item.whOnlineTotal || 0;
                 return item.globalStock || 0;
             }
 
@@ -6654,6 +6716,9 @@
                 row[m3Label] = sales.m3;
                 row['AVG'] = Math.round(avgSales * 100) / 100;
                 row['WH TOTAL'] = item.whTotal || 0;
+                row['WH O.BALI'] = item.WHOB || 0;
+                row['WH O.JKT'] = item.WHOJ || 0;
+                row['WH ONLINE'] = item.whOnlineTotal || 0;
                 row['STOK RETAIL'] = item.stokRetail || 0;
                 row['STOK CONSIG'] = item.stokConsignment || 0;
                 row['GLOBAL'] = item.globalStock || 0;
