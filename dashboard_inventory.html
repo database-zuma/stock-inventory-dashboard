@@ -12899,7 +12899,31 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             ws['!cols'] = cols;
         }
 
-        function addTierSummary(ws, rows, tierIdx) {
+        function addTierSummaryNoPercent(ws, rows, tierIdx) {
+            var tierQty = {}, total = 0;
+            rows.forEach(function(r) { var tier=(Array.isArray(r)?r[tierIdx]:r.tier)||'-'; var stock=Array.isArray(r)?r[r.length-1]:r.stock; if (!tierQty[tier]) tierQty[tier]=0; tierQty[tier]+=(stock||0); total+=(stock||0); });
+            var startCol = tierIdx + 4;
+            var sc = function(r,c) { return XLSX.utils.encode_cell({r:r,c:c}); };
+            var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+            var bdr = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+            var totalS = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border};
+            ws[sc(0,startCol)] = {v:'TIER',t:'s',s:hdr};
+            ws[sc(0,startCol+1)] = {v:'QTY',t:'s',s:hdr};
+            var tiers = Object.keys(tierQty).sort();
+            for (var i=0;i<tiers.length;i++) { ws[sc(i+1,startCol)]={v:tiers[i],t:'s',s:bdr}; ws[sc(i+1,startCol+1)]={v:tierQty[tiers[i]],t:'n',s:bdr}; }
+            var tr = tiers.length+1;
+            ws[sc(tr,startCol)]={v:'TOTAL',t:'s',s:totalS}; ws[sc(tr,startCol+1)]={v:total,t:'n',s:totalS};
+            var range = XLSX.utils.decode_range(ws['!ref']||'A1');
+            if (startCol+1>range.e.c) range.e.c=startCol+1;
+            if (tr>range.e.r) range.e.r=tr;
+            ws['!ref']=XLSX.utils.encode_range(range);
+            if (!ws['!cols']) ws['!cols']=[];
+            while (ws['!cols'].length<=startCol+1) ws['!cols'].push({wch:10});
+            ws['!cols'][startCol]={wch:10}; ws['!cols'][startCol+1]={wch:12};
+        }
+
+        function addTierSummary(ws, rows, tierIdx, forceStartCol) {
             var tierQty = {};
             var total = 0;
             rows.forEach(function(r) {
@@ -12909,7 +12933,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 tierQty[tier] += (stock || 0);
                 total += (stock || 0);
             });
-            var startCol = 13;
+            var startCol = forceStartCol || 14;
             var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
             var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
             var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
@@ -12945,7 +12969,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var entityData = allData[entity];
             if (!entityData) { alert('Data ' + entity + ' belum dimuat'); return; }
             var wb = XLSX.utils.book_new();
-            var headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Version', 'Stock'];
+            var headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Kode Mix Size', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Version', 'Stock'];
             var allRows = [];
             var minusRows = [];
             var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
@@ -12963,7 +12987,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         store: store, area: getAreaFromStore(store),
                         kodeBarang: (item.kode_kecil || '').toUpperCase(),
                         kodeKecil: (item.kode || '').toUpperCase(),
-                        kodeMix: (item.sku || '').toUpperCase(),
+                        kodeMix: (item.kode_mix || '').toUpperCase(),
+                        kodeMixSize: (item.sku || '').toUpperCase(),
                         nama: item.name || '', gender: item.gender || '',
                         series: item.series || '', tipe: item.tipe || '',
                         tier: item.tier || '', version: item.version || '',
@@ -12978,22 +13003,22 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             minusRows.sort(function(a,b) { return a.stock - b.stock; });
             var toAoa = function(rows) {
                 return [headers].concat(rows.map(function(r) {
-                    return [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.version, r.stock];
+                    return [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.kodeMixSize, r.nama, r.gender, r.series, r.tipe, r.tier, r.version, r.stock];
                 }));
             };
             var wsSemua = XLSX.utils.aoa_to_sheet(toAoa(allRows));
-            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 9);
+            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 10);
             XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
             if (minusRows.length > 0) {
                 var wsMinus = XLSX.utils.aoa_to_sheet(toAoa(minusRows));
-                applyTableStyle(wsMinus); addTierSummary(wsMinus, minusRows, 9);
+                applyTableStyle(wsMinus); addTierSummaryNoPercent(wsMinus, minusRows, 10);
                 XLSX.utils.book_append_sheet(wb, wsMinus, 'MINUS ON HAND');
             }
             var storeMap = {};
             allRows.forEach(function(r) { var k = r.store || 'Other'; if (!storeMap[k]) storeMap[k] = []; storeMap[k].push(r); });
             Object.keys(storeMap).sort().forEach(function(s) {
                 var wsStore = XLSX.utils.aoa_to_sheet(toAoa(storeMap[s]));
-                applyTableStyle(wsStore); addTierSummary(wsStore, storeMap[s], 9);
+                applyTableStyle(wsStore); addTierSummary(wsStore, storeMap[s], 10);
                 XLSX.utils.book_append_sheet(wb, wsStore, s.substring(0,31));
             });
             XLSX.writeFile(wb, 'stock_' + entity + '_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
@@ -13004,28 +13029,32 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var items = (consignmentStockItems || []).filter(function(i) { return (i.entity||'').toUpperCase() === entity; });
             if (!items.length) { alert('Tidak ada data consignment ' + entity); return; }
             var wb = XLSX.utils.book_new();
-            var headers = ['Store', 'Partner', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Stock'];
+            var headers = ['Nama Toko', 'Partner', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Kode Mix Size', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Version', 'Stock'];
             var allRows = [];
             items.forEach(function(i) {
                 if (!i.store_stock) {
-                    allRows.push(['-', i.partner||'', (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.total||0]);
+                    allRows.push(['-', i.partner||'', getAreaFromStore('-'), (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.kode_mix||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tipe||'', i.tier||'', i.version||'', i.total||0]);
                 } else {
                     Object.entries(i.store_stock).forEach(function(entry) {
                         var store = entry[0], stock = entry[1];
                         if (stock === 0) return;
-                        allRows.push([store, i.partner||'', (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', stock]);
+                        allRows.push([store, i.partner||'', getAreaFromStore(store), (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.kode_mix||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tipe||'', i.tier||'', i.version||'', stock]);
                     });
                 }
             });
-            allRows.sort(function(a,b) { return b[10] - a[10]; });
+            allRows.sort(function(a,b) { return b[13] - a[13]; });
+            function applyConsigStyle(ws) {
+                applyTableStyle(ws);
+                ws['!cols'] = [{wch:22},{wch:14},{wch:10},{wch:14},{wch:12},{wch:14},{wch:16},{wch:30},{wch:8},{wch:10},{wch:8},{wch:6},{wch:6},{wch:8}];
+            }
             var wsSemua = XLSX.utils.aoa_to_sheet([headers].concat(allRows));
-            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 8);
+            applyConsigStyle(wsSemua); addTierSummary(wsSemua, allRows, 11, 15);
             XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
             var storeMap = {};
             allRows.forEach(function(r) { var s = r[0]||'Other'; if (!storeMap[s]) storeMap[s] = []; storeMap[s].push(r); });
             Object.keys(storeMap).sort().forEach(function(s) {
                 var wsS = XLSX.utils.aoa_to_sheet([headers].concat(storeMap[s]));
-                applyTableStyle(wsS); addTierSummary(wsS, storeMap[s], 8);
+                applyConsigStyle(wsS); addTierSummary(wsS, storeMap[s], 11, 15);
                 XLSX.utils.book_append_sheet(wb, wsS, s.substring(0,31));
             });
             XLSX.writeFile(wb, 'stock_consig_' + entity + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
@@ -13035,7 +13064,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var entities = ['DDD', 'MBB', 'LJBB', 'UBB'];
             var wb = XLSX.utils.book_new();
-            var headers = ['Warehouse', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Stock'];
+            var headers = ['Warehouse', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Kode Mix Size', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Stock'];
             var baliRows = [], jktRows = [];
             entities.forEach(function(entity) {
                 var wh = (allData[entity] && allData[entity].warehouse) || [];
@@ -13048,22 +13077,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         var isBali = sl.indexOf('online bali') >= 0;
                         var isJkt = sl.indexOf('online jakarta') >= 0 || sl.indexOf('online jkt') >= 0;
                         if (!isBali && !isJkt) return;
-                        var row = [store, (item.kode_kecil||'').toUpperCase(), (item.kode||'').toUpperCase(), (item.sku||'').toUpperCase(), item.name||'', item.gender||'', item.series||'', item.tier||'', item.version||'', stock];
+                        var row = [store, (item.kode_kecil||'').toUpperCase(), (item.kode||'').toUpperCase(), (item.kode_mix||'').toUpperCase(), (item.sku||'').toUpperCase(), item.name||'', item.gender||'', item.series||'', item.tier||'', item.version||'', stock];
                         if (isBali) baliRows.push(row);
                         if (isJkt) jktRows.push(row);
                     });
                 });
             });
-            baliRows.sort(function(a,b) { return b[9] - a[9]; });
-            jktRows.sort(function(a,b) { return b[9] - a[9]; });
+            baliRows.sort(function(a,b) { return b[10] - a[10]; });
+            jktRows.sort(function(a,b) { return b[10] - a[10]; });
+            function applyWHOnlineStyle(ws) {
+                applyTableStyle(ws);
+                ws['!cols'] = [{wch:22},{wch:14},{wch:12},{wch:14},{wch:16},{wch:30},{wch:8},{wch:8},{wch:6},{wch:6},{wch:10}];
+            }
             if (baliRows.length > 0) {
                 var wsBali = XLSX.utils.aoa_to_sheet([headers].concat(baliRows));
-                applyTableStyle(wsBali); addTierSummary(wsBali, baliRows, 7);
+                applyWHOnlineStyle(wsBali); addTierSummary(wsBali, baliRows, 8, 12);
                 XLSX.utils.book_append_sheet(wb, wsBali, 'WH Online Bali');
             }
             if (jktRows.length > 0) {
                 var wsJkt = XLSX.utils.aoa_to_sheet([headers].concat(jktRows));
-                applyTableStyle(wsJkt); addTierSummary(wsJkt, jktRows, 7);
+                applyWHOnlineStyle(wsJkt); addTierSummary(wsJkt, jktRows, 8, 12);
                 XLSX.utils.book_append_sheet(wb, wsJkt, 'WH Online Jakarta');
             }
             if (baliRows.length === 0 && jktRows.length === 0) { alert('Tidak ada data WH Online'); return; }
