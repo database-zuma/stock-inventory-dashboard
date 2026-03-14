@@ -2460,17 +2460,6 @@
                 </div>
             </div>
 
-            <!-- ALERT -->
-            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
-                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">🚨 Stock Alert</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="exportAlertList('understock')" style="padding:10px 20px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Understock List (Retail)</button>
-                    <button onclick="exportAlertList('dead')" style="padding:10px 20px;background:linear-gradient(135deg,#1e3a5f,#0f2942);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Dead Stock List (Retail)</button>
-                    <button onclick="exportAlertList('understock_online')" style="padding:10px 20px;background:linear-gradient(135deg,#dc2626,#991b1b);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Understock List (Online)</button>
-                    <button onclick="exportAlertList('dead_online')" style="padding:10px 20px;background:linear-gradient(135deg,#1e3a5f,#172554);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Dead Stock List (Online)</button>
-                </div>
-            </div>
-
             <!-- TOP & BOTTOM -->
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">🏆 Top & Bottom Artikel</h3>
@@ -13214,6 +13203,64 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             XLSX.writeFile(wb, 'control_stock_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
+        function addSideSummary(ws, rows, tierIdx, qtyIdx, nameIdx, startCol) {
+            var tierQty = {}, total = 0;
+            rows.forEach(function(r) {
+                var tier = (Array.isArray(r) ? r[tierIdx] : '') || '-';
+                var qty = (Array.isArray(r) ? r[qtyIdx] : 0) || 0;
+                if (!tierQty[tier]) tierQty[tier] = 0;
+                tierQty[tier] += qty;
+                total += qty;
+            });
+            var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
+            var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+            var bdr = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+            var totalS = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border};
+            ws[sc(0,startCol)] = {v:'TIER',t:'s',s:hdr};
+            ws[sc(0,startCol+1)] = {v:'QTY',t:'s',s:hdr};
+            ws[sc(0,startCol+2)] = {v:'%',t:'s',s:hdr};
+            var tiers = Object.keys(tierQty).sort();
+            for (var i = 0; i < tiers.length; i++) {
+                ws[sc(i+1,startCol)] = {v:tiers[i],t:'s',s:bdr};
+                ws[sc(i+1,startCol+1)] = {v:tierQty[tiers[i]],t:'n',s:bdr};
+                ws[sc(i+1,startCol+2)] = {v:total>0?Math.round(tierQty[tiers[i]]/total*1000)/10+'%':'0%',t:'s',s:bdr};
+            }
+            var tr = tiers.length + 1;
+            ws[sc(tr,startCol)] = {v:'TOTAL',t:'s',s:totalS};
+            ws[sc(tr,startCol+1)] = {v:total,t:'n',s:totalS};
+            ws[sc(tr,startCol+2)] = {v:'100%',t:'s',s:totalS};
+            var topRow = tr + 2;
+            ws[sc(topRow,startCol)] = {v:'TOP 5 ARTIKEL',t:'s',s:hdr};
+            ws[sc(topRow,startCol+1)] = {v:'QTY',t:'s',s:hdr};
+            ws[sc(topRow,startCol+2)] = {v:'SALES',t:'s',s:hdr};
+            var artAgg = {};
+            rows.forEach(function(r) {
+                var name = Array.isArray(r) ? r[nameIdx] : '';
+                var qty = Array.isArray(r) ? r[qtyIdx] : 0;
+                var sales = Array.isArray(r) ? r[qtyIdx+1] : 0;
+                if (!name) return;
+                if (!artAgg[name]) artAgg[name] = {qty:0,sales:0};
+                artAgg[name].qty += (qty||0);
+                artAgg[name].sales += (sales||0);
+            });
+            var topArts = Object.entries(artAgg).sort(function(a,b){return b[1].qty-a[1].qty;}).slice(0,5);
+            for (var j = 0; j < topArts.length; j++) {
+                ws[sc(topRow+1+j,startCol)] = {v:topArts[j][0],t:'s',s:{alignment:{horizontal:'left',vertical:'center'},font:{sz:9},border:border}};
+                ws[sc(topRow+1+j,startCol+1)] = {v:topArts[j][1].qty,t:'n',s:bdr};
+                ws[sc(topRow+1+j,startCol+2)] = {v:topArts[j][1].sales,t:'n',s:bdr};
+            }
+            var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            if (startCol+2 > range.e.c) range.e.c = startCol+2;
+            if (topRow+5 > range.e.r) range.e.r = topRow+5;
+            ws['!ref'] = XLSX.utils.encode_range(range);
+            if (!ws['!cols']) ws['!cols'] = [];
+            while (ws['!cols'].length <= startCol+2) ws['!cols'].push({wch:10});
+            ws['!cols'][startCol] = {wch:28};
+            ws['!cols'][startCol+1] = {wch:10};
+            ws['!cols'][startCol+2] = {wch:14};
+        }
+
         function exportSalesSummary(channel) {
             if (!salesDetailData || salesDetailData.length === 0) {
                 alert('Data sales belum dimuat. Buka halaman Sales terlebih dahulu.');
@@ -13227,13 +13274,65 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             else if (channel === 'consig') data = salesDetailData.filter(function(i) { return (i.channel||'').toLowerCase()==='consignment'; });
             else if (channel === 'wholesale') data = salesDetailData.filter(function(i) { return (i.channel||'').toLowerCase()==='wholesale'; });
             if (data.length === 0) { alert('Tidak ada data sales untuk channel: ' + channel); return; }
-            var rows = data.map(function(i) {
-                return { 'TANGGAL':i.date||'','ORDER NO':i.order_no||'','STORE':i.store||'','CHANNEL':i.channel||'','SKU':i.sku||'','KODE KECIL':i.kode_kecil||'','ARTICLE':i.name||'','SERIES':i.series||'','GENDER':i.gender||'','TIER':i.tier||'','SIZE':i.size||'','QTY':i.qty||0,'HARGA':i.price||0,'TOTAL':i.total||0 };
-            });
-            var ws = XLSX.utils.json_to_sheet(rows);
-            var wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Sales ' + channel);
-            XLSX.writeFile(wb, 'sales_' + channel + '_export.xlsx');
+
+            if (channel === 'retail') {
+                var wb = XLSX.utils.book_new();
+                var headers = ['TANGGAL','ORDER NO','KODE BARANG','KODE KECIL','KODE MIX','NAMA BARANG','SIZE','GENDER','SERIES','TIER','QTY','TOTAL'];
+                var toRow = function(i) {
+                    return [i.date||'',i.order_no||'',(i.kode_kecil||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.sku||'').toUpperCase(),i.nama_barang||i.product_name||i.name||'',i.ukuran||i.size||'',i.gender||'',i.collection||i.series||'',i.tier||'',i.qty||0,i.total||0];
+                };
+                var summHeaders = ['RANK','KODE BARANG','KODE KECIL','KODE MIX','NAMA BARANG','SIZE','GENDER','SERIES','QTY','SALES'];
+                var artMap = {};
+                data.forEach(function(i) {
+                    var key = (i.sku||'').toUpperCase();
+                    if (!artMap[key]) artMap[key] = {kode:(i.kode_kecil||'').toUpperCase(),kodeKecil:(i.kode_kecil||'').toUpperCase(),kodeMix:key,name:i.nama_barang||i.product_name||'',size:i.ukuran||'',gender:i.gender||'',series:i.collection||'',qty:0,sales:0};
+                    artMap[key].qty += (i.qty||0);
+                    artMap[key].sales += (i.total||0);
+                });
+                var topAll = Object.values(artMap).sort(function(a,b){return b.qty-a.qty;});
+                var summRows = topAll.slice(0,10).map(function(a,idx) {
+                    return [idx+1,a.kode,a.kodeKecil,a.kodeMix,a.name,a.size,a.gender,a.series,a.qty,a.sales];
+                });
+                var areaAgg = {};
+                data.forEach(function(i) { var area=i.area||'-'; if (!areaAgg[area]) areaAgg[area]={qty:0,sales:0}; areaAgg[area].qty+=(i.qty||0); areaAgg[area].sales+=(i.total||0); });
+                var areaRows = Object.entries(areaAgg).sort(function(a,b){return b[1].qty-a[1].qty;});
+                var tierAgg = {};
+                var tierTotal = 0;
+                data.forEach(function(i) { var t=i.tier||'-'; if (!tierAgg[t]) tierAgg[t]={qty:0,sales:0}; tierAgg[t].qty+=(i.qty||0); tierAgg[t].sales+=(i.total||0); tierTotal+=(i.qty||0); });
+                var summAoa = [summHeaders].concat(summRows);
+                summAoa.push([]);
+                summAoa.push(['','AREA','','','','','','','QTY','SALES']);
+                areaRows.forEach(function(a) { summAoa.push(['',a[0],'','','','','','',a[1].qty,a[1].sales]); });
+                summAoa.push([]);
+                summAoa.push(['','TIER','','','','','','','QTY','%']);
+                Object.keys(tierAgg).sort().forEach(function(t) { summAoa.push(['',t,'','','','','','',tierAgg[t].qty,tierTotal>0?Math.round(tierAgg[t].qty/tierTotal*1000)/10+'%':'0%']); });
+                summAoa.push(['','TOTAL','','','','','','',tierTotal,'100%']);
+                var wsSumm = XLSX.utils.aoa_to_sheet(summAoa);
+                applyTableStyle(wsSumm);
+                XLSX.utils.book_append_sheet(wb, wsSumm, 'SUMMARY');
+                var storeMap = {};
+                data.forEach(function(i) { var s=i.store||'Other'; if (!storeMap[s]) storeMap[s]=[]; storeMap[s].push(i); });
+                Object.keys(storeMap).sort().forEach(function(store) {
+                    var storeData = storeMap[store];
+                    var rows = storeData.map(toRow);
+                    rows.sort(function(a,b){return b[10]-a[10];});
+                    var aoa = [headers].concat(rows);
+                    var ws = XLSX.utils.aoa_to_sheet(aoa);
+                    applyTableStyle(ws);
+                    addSideSummary(ws, rows, 9, 10, 5, 13);
+                    XLSX.utils.book_append_sheet(wb, ws, store.substring(0,31));
+                });
+                XLSX.writeFile(wb, 'sales_retail_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            } else {
+                var rows = data.map(function(i) {
+                    return { 'TANGGAL':i.date||'','ORDER NO':i.order_no||'','STORE':i.store||'','KODE BARANG':(i.kode_kecil||'').toUpperCase(),'KODE MIX':(i.sku||'').toUpperCase(),'NAMA BARANG':i.nama_barang||i.product_name||i.name||'','SIZE':i.ukuran||i.size||'','GENDER':i.gender||'','SERIES':i.collection||i.series||'','TIER':i.tier||'','QTY':i.qty||0,'TOTAL':i.total||0 };
+                });
+                var ws = XLSX.utils.json_to_sheet(rows);
+                applyTableStyle(ws);
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Sales ' + channel);
+                XLSX.writeFile(wb, 'sales_' + channel + '_export.xlsx');
+            }
         }
 
         function exportMaxStockSummary() {
