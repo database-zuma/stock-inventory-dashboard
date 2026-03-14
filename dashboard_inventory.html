@@ -2836,8 +2836,7 @@
             // Hide retail section for non-DDD entities
             document.getElementById('retailSectionWrapper').style.display = (entity === 'DDD') ? 'block' : 'none';
 
-            // Clear consignment cache so it reloads for the new entity
-            consignmentStockData = null;
+            // Note: consignmentStockData is shared across all entities (API returns all), no need to clear
 
             // Auto-select appropriate stock type and show data immediately
             if (hasRetail) {
@@ -4192,8 +4191,14 @@
             warehouseSection.style.display = type === 'warehouse' ? '' : 'none';
             consignmentSection.style.display = type === 'consignment' ? '' : 'none';
             
-            if (type === 'consignment' && !consignmentStockData) {
-                loadConsignmentStock();
+            if (type === 'consignment') {
+                if (!consignmentStockData) {
+                    loadConsignmentStock();
+                } else {
+                    // Data already pre-loaded, render immediately
+                    populateConsignmentFilters(consignmentStockData);
+                    applyConsignmentFilters();
+                }
             }
         }
 
