@@ -2401,9 +2401,10 @@
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📦 Stock On-Hand</h3>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="exportData('retail')" style="padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Retail (DDD)</button>
-                    <button onclick="exportData('warehouse')" style="padding:10px 20px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Warehouse (DDD)</button>
-                    <button onclick="exportData('consignment')" style="padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Consignment</button>
+                    <button onclick="exportSummaryStockOnHand('retail')" style="padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Retail (All Entity)</button>
+                    <button onclick="exportSummaryStockOnHand('warehouse')" style="padding:10px 20px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Warehouse (All Entity)</button>
+                    <button onclick="exportSummaryConsignment()" style="padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Consignment</button>
+                    <button onclick="exportSummaryWHOnline()" style="padding:10px 20px;background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 WH Online (Bali + Jakarta)</button>
                 </div>
             </div>
 
@@ -12869,18 +12870,237 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             XLSX.writeFile(wb, 'rd_transfer_recs_' + (rdData.snapshot_date || 'export') + '.xlsx');
         }
 
-        function exportSummaryControlRetail() {
-            if (typeof scItems === 'undefined' || scItems.length === 0) {
-                initStockControl();
+        function exportSummaryStockOnHand(type) {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var entities = ['DDD', 'MBB', 'LJBB', 'UBB'];
+            var wb = XLSX.utils.book_new();
+            var headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Version', 'Stock'];
+            var allRows = [];
+            var minusRows = [];
+            entities.forEach(function(entity) {
+                var entityData = allData[entity];
+                if (!entityData) return;
+                var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+                rawData.forEach(function(item) {
+                    if (!item.store_stock) return;
+                    Object.entries(item.store_stock).forEach(function(entry) {
+                        var store = entry[0], stock = entry[1];
+                        if (stock === 0) return;
+                        if (isExcludedLocation(store)) return;
+                        if (type === 'retail' && isWarehouseLocation(store)) return;
+                        if (type === 'warehouse' && !isWarehouseLocation(store)) return;
+                        var row = {
+                            store: store, area: getAreaFromStore(store),
+                            kodeBarang: (item.kode_kecil || '').toUpperCase(),
+                            kodeKecil: (item.kode || '').toUpperCase(),
+                            kodeMix: (item.sku || '').toUpperCase(),
+                            nama: item.name || '', gender: item.gender || '',
+                            series: item.series || '', tipe: item.tipe || '',
+                            tier: item.tier || '', version: item.version || '',
+                            stock: stock
+                        };
+                        allRows.push(row);
+                        if (stock < 0) minusRows.push(row);
+                    });
+                });
+            });
+            if (!allRows.length) { alert('Tidak ada data'); return; }
+            allRows.sort(function(a,b) { return b.stock - a.stock; });
+            minusRows.sort(function(a,b) { return a.stock - b.stock; });
+            var toAoa = function(rows) {
+                return [headers].concat(rows.map(function(r) {
+                    return [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.version, r.stock];
+                }));
+            };
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(allRows)), 'SEMUA');
+            if (minusRows.length > 0) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(minusRows)), 'MINUS ON HAND');
             }
-            exportStockControlExcel();
+            var storeMap = {};
+            allRows.forEach(function(r) { var k = r.store || 'Other'; if (!storeMap[k]) storeMap[k] = []; storeMap[k].push(r); });
+            Object.keys(storeMap).sort().forEach(function(s) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(storeMap[s])), s.substring(0,31));
+            });
+            XLSX.writeFile(wb, 'stock_ALL_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportSummaryConsignment() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var items = consignmentStockItems || [];
+            if (!items.length) { alert('Data consignment belum dimuat'); return; }
+            var wb = XLSX.utils.book_new();
+            var headers = ['Entity', 'SKU', 'Kode Kecil', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Partner', 'Total Stock'];
+            var allRows = items.map(function(i) {
+                return [i.entity||'', i.sku||'', i.kode_kecil||'', i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.partner||'', i.total||0];
+            });
+            allRows.sort(function(a,b) { return b[9] - a[9]; });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(allRows)), 'SEMUA');
+            var entityMap = {};
+            allRows.forEach(function(r) { var e = r[0]||'Other'; if (!entityMap[e]) entityMap[e] = []; entityMap[e].push(r); });
+            Object.keys(entityMap).sort().forEach(function(e) {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(entityMap[e])), e);
+            });
+            XLSX.writeFile(wb, 'stock_consignment_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportSummaryWHOnline() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var entities = ['DDD', 'MBB', 'LJBB', 'UBB'];
+            var wb = XLSX.utils.book_new();
+            var headers = ['Warehouse', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Stock'];
+            var baliRows = [], jktRows = [];
+            entities.forEach(function(entity) {
+                var wh = (allData[entity] && allData[entity].warehouse) || [];
+                wh.forEach(function(item) {
+                    if (!item.store_stock) return;
+                    Object.entries(item.store_stock).forEach(function(entry) {
+                        var store = entry[0], stock = entry[1];
+                        if (stock === 0) return;
+                        var sl = store.toLowerCase();
+                        var isBali = sl.indexOf('online bali') >= 0;
+                        var isJkt = sl.indexOf('online jakarta') >= 0 || sl.indexOf('online jkt') >= 0;
+                        if (!isBali && !isJkt) return;
+                        var row = [store, (item.kode_kecil||'').toUpperCase(), (item.kode||'').toUpperCase(), (item.sku||'').toUpperCase(), item.name||'', item.gender||'', item.series||'', item.tier||'', item.version||'', stock];
+                        if (isBali) baliRows.push(row);
+                        if (isJkt) jktRows.push(row);
+                    });
+                });
+            });
+            baliRows.sort(function(a,b) { return b[9] - a[9]; });
+            jktRows.sort(function(a,b) { return b[9] - a[9]; });
+            if (baliRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(baliRows)), 'WH Online Bali');
+            if (jktRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(jktRows)), 'WH Online Jakarta');
+            if (baliRows.length === 0 && jktRows.length === 0) { alert('Tidak ada data WH Online'); return; }
+            XLSX.writeFile(wb, 'stock_wh_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportSummaryControlRetail() {
+            if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var wb = XLSX.utils.book_new();
+            var scMonths = salesMap['_months'] || ['nov','des','jan'];
+            var m1L = scMonths[0].charAt(0).toUpperCase() + scMonths[0].slice(1);
+            var m2L = scMonths[1].charAt(0).toUpperCase() + scMonths[1].slice(1);
+            var m3L = scMonths[2].charAt(0).toUpperCase() + scMonths[2].slice(1);
+            function buildRows(items, mode) {
+                return items.map(function(item) {
+                    var sales;
+                    if (mode === 'kodeKecil') { sales = getKodeKecilSales(item.skuList || []); }
+                    else { var k = (item.kodeKecil || item.sku || '').toLowerCase(); var s = salesMap[k] || {}; var v1=s[scMonths[0]]||0,v2=s[scMonths[1]]||0,v3=s[scMonths[2]]||0; sales={m1:v1,m2:v2,m3:v3,avg:(v1+v2+v3)/3}; }
+                    var avg = sales.avg; var gap = (item.globalStock||0) - (avg*3);
+                    var tw = avg > 0 ? (item.whTotal||0)/avg : 0;
+                    var to = avg > 0 ? (item.stokRetail||0)/avg : 0;
+                    var dead = avg === 0 && (item.globalStock||0) > 0;
+                    var gs = dead ? 'Dead Stock' : gap < 0 ? 'Understock' : gap < avg ? 'Tipis' : 'Aman';
+                    var row = {};
+                    row['KODE BARANG'] = item.kodeKecil || item.sku || '';
+                    if (mode !== 'kodeKecil') row['SIZE'] = item.size || '';
+                    row['ARTICLE'] = item.name || '';
+                    row['GENDER'] = item.gender || '';
+                    row['TIER'] = item.tier || '';
+                    row[m1L] = sales.m1; row[m2L] = sales.m2; row[m3L] = sales.m3;
+                    row['AVG 3M'] = Math.round(avg*100)/100;
+                    row['WH TOTAL'] = item.whTotal||0;
+                    row['STOK RETAIL'] = item.stokRetail||0;
+                    row['STOK CONSIG'] = item.stokConsignment||0;
+                    row['STOK GLOBAL'] = item.globalStock||0;
+                    row['GAP'] = Math.round(gap); row['TW'] = Math.round(tw*100)/100;
+                    row['TO'] = Math.round(to*100)/100; row['GAP STATUS'] = gs;
+                    return row;
+                });
+            }
+            var skuRows = buildRows(scItems || [], 'sku');
+            var kkItems = buildKodeKecilItems ? buildKodeKecilItems() : [];
+            var kkRows = buildRows(kkItems, 'kodeKecil');
+            function addColoredSheet(wb, rows, name) {
+                var ws = XLSX.utils.json_to_sheet(rows);
+                var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+                var gapCol = -1;
+                for (var c = range.s.c; c <= range.e.c; c++) {
+                    var cell = ws[XLSX.utils.encode_cell({r:0,c:c})];
+                    if (cell && cell.v === 'GAP STATUS') { gapCol = c; break; }
+                }
+                if (gapCol >= 0) {
+                    for (var r = 1; r <= range.e.r; r++) {
+                        var addr = XLSX.utils.encode_cell({r:r,c:gapCol});
+                        if (ws[addr]) {
+                            var val = ws[addr].v;
+                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'FFDC2626'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'FFEAB308'}},font:{bold:true}};
+                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'FF16A34A'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'FF1E3A5F'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                        }
+                    }
+                }
+                XLSX.utils.book_append_sheet(wb, ws, name);
+            }
+            addColoredSheet(wb, skuRows, 'By SKU');
+            addColoredSheet(wb, kkRows, 'By Kode Kecil');
+            XLSX.writeFile(wb, 'control_stock_retail_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function exportSummaryControlOnline() {
-            if (typeof scoItems === 'undefined' || scoItems.length === 0) {
-                initStockControlOnline();
+            if (typeof scoItems === 'undefined' || scoItems.length === 0) initStockControlOnline();
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var wb = XLSX.utils.book_new();
+            var oMonths = onlineSalesMap['_months'] || ['nov','des','jan'];
+            var m1L = oMonths[0].charAt(0).toUpperCase() + oMonths[0].slice(1);
+            var m2L = oMonths[1].charAt(0).toUpperCase() + oMonths[1].slice(1);
+            var m3L = oMonths[2].charAt(0).toUpperCase() + oMonths[2].slice(1);
+            function buildRows(items, mode) {
+                return items.map(function(item) {
+                    var sales;
+                    if (mode === 'kodeKecil') { sales = getKodeKecilOnlineSales(item.skuList || []); }
+                    else { sales = getOnlineSales(item.sku, item.kodeKecil); }
+                    var avg = (sales.m1+sales.m2+sales.m3)/3;
+                    var onTotal = item.whOnlineTotal||0;
+                    var gap = onTotal - (avg*3);
+                    var tw = avg > 0 ? onTotal/avg : 0;
+                    var dead = avg === 0 && onTotal > 0;
+                    var gs = dead ? 'Dead Stock' : gap < 0 ? 'Understock' : gap < avg ? 'Tipis' : 'Aman';
+                    var row = {};
+                    row['KODE BARANG'] = item.kodeKecil || item.sku || '';
+                    if (mode !== 'kodeKecil') row['SIZE'] = item.size || '';
+                    row['ARTICLE'] = item.name || '';
+                    row['GENDER'] = item.gender || '';
+                    row['TIER'] = item.tier || '';
+                    row[m1L] = sales.m1; row[m2L] = sales.m2; row[m3L] = sales.m3;
+                    row['AVG 3M'] = Math.round(avg*100)/100;
+                    row['WH O.BALI'] = item.WHOB||0; row['WH O.JKT'] = item.WHOJ||0;
+                    row['ONLINE TOTAL'] = onTotal;
+                    row['GAP'] = Math.round(gap); row['TW'] = Math.round(tw*100)/100;
+                    row['GAP STATUS'] = gs;
+                    return row;
+                });
             }
-            exportStockControlOnlineExcel();
+            var skuRows = buildRows(scoItems || [], 'sku');
+            var kkItems = typeof buildKodeKecilItemsOnline === 'function' ? buildKodeKecilItemsOnline() : [];
+            var kkRows = buildRows(kkItems, 'kodeKecil');
+            function addColoredSheet(wb, rows, name) {
+                var ws = XLSX.utils.json_to_sheet(rows);
+                var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+                var gapCol = -1;
+                for (var c = range.s.c; c <= range.e.c; c++) {
+                    var cell = ws[XLSX.utils.encode_cell({r:0,c:c})];
+                    if (cell && cell.v === 'GAP STATUS') { gapCol = c; break; }
+                }
+                if (gapCol >= 0) {
+                    for (var r = 1; r <= range.e.r; r++) {
+                        var addr = XLSX.utils.encode_cell({r:r,c:gapCol});
+                        if (ws[addr]) {
+                            var val = ws[addr].v;
+                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'FFDC2626'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'FFEAB308'}},font:{bold:true}};
+                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'FF16A34A'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'FF1E3A5F'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                        }
+                    }
+                }
+                XLSX.utils.book_append_sheet(wb, ws, name);
+            }
+            addColoredSheet(wb, skuRows, 'By SKU');
+            addColoredSheet(wb, kkRows, 'By Kode Kecil');
+            XLSX.writeFile(wb, 'control_stock_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function exportSalesSummary(channel) {
@@ -12890,38 +13110,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var data = [];
-            if (channel === 'global') {
-                data = salesDetailData;
-            } else if (channel === 'retail') {
-                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'retail' || (i.channel || '').toLowerCase() === 'event'; });
-            } else if (channel === 'online') {
-                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'online'; });
-            } else if (channel === 'consig') {
-                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'consignment'; });
-            } else if (channel === 'wholesale') {
-                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'wholesale'; });
-            }
-            if (data.length === 0) {
-                alert('Tidak ada data sales untuk channel: ' + channel);
-                return;
-            }
+            if (channel === 'global') data = salesDetailData;
+            else if (channel === 'retail') data = salesDetailData.filter(function(i) { var c=(i.channel||'').toLowerCase(); return c==='retail'||c==='event'; });
+            else if (channel === 'online') data = salesDetailData.filter(function(i) { return (i.channel||'').toLowerCase()==='online'; });
+            else if (channel === 'consig') data = salesDetailData.filter(function(i) { return (i.channel||'').toLowerCase()==='consignment'; });
+            else if (channel === 'wholesale') data = salesDetailData.filter(function(i) { return (i.channel||'').toLowerCase()==='wholesale'; });
+            if (data.length === 0) { alert('Tidak ada data sales untuk channel: ' + channel); return; }
             var rows = data.map(function(i) {
-                return {
-                    'TANGGAL': i.date || '',
-                    'ORDER NO': i.order_no || '',
-                    'STORE': i.store || '',
-                    'CHANNEL': i.channel || '',
-                    'SKU': i.sku || '',
-                    'KODE KECIL': i.kode_kecil || '',
-                    'ARTICLE': i.name || '',
-                    'SERIES': i.series || '',
-                    'GENDER': i.gender || '',
-                    'TIER': i.tier || '',
-                    'SIZE': i.size || '',
-                    'QTY': i.qty || 0,
-                    'HARGA': i.price || 0,
-                    'TOTAL': i.total || 0
-                };
+                return { 'TANGGAL':i.date||'','ORDER NO':i.order_no||'','STORE':i.store||'','CHANNEL':i.channel||'','SKU':i.sku||'','KODE KECIL':i.kode_kecil||'','ARTICLE':i.name||'','SERIES':i.series||'','GENDER':i.gender||'','TIER':i.tier||'','SIZE':i.size||'','QTY':i.qty||0,'HARGA':i.price||0,'TOTAL':i.total||0 };
             });
             var ws = XLSX.utils.json_to_sheet(rows);
             var wb = XLSX.utils.book_new();
@@ -12932,101 +13128,53 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function exportMaxStockSummary() {
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var wb = XLSX.utils.book_new();
-            var whRows = [];
-            var retailRows = [];
             var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
-            var whAgg = {};
-            for (var i = 0; i < entities.length; i++) {
-                var entity = entities[i];
-                var entityData = allData[entity];
-                if (!entityData || !entityData.warehouse) continue;
-                entityData.warehouse.forEach(function(item) {
-                    Object.entries(item.warehouse_stock || {}).forEach(function(entry) {
-                        var wh = entry[0], stock = entry[1];
-                        if (!whAgg[wh]) whAgg[wh] = 0;
-                        whAgg[wh] += stock;
-                    });
+            var whAgg = {}, storeAgg = {};
+            entities.forEach(function(entity) {
+                var ed = allData[entity]; if (!ed) return;
+                (ed.warehouse||[]).forEach(function(item) {
+                    if (!item.store_stock) return;
+                    Object.entries(item.store_stock).forEach(function(e) { if (!whAgg[e[0]]) whAgg[e[0]]=0; whAgg[e[0]]+=e[1]; });
                 });
-            }
-            Object.keys(whAgg).sort().forEach(function(wh) {
-                var ms = getMaxStockForStore(wh);
-                var actual = whAgg[wh];
-                var pct = ms > 0 ? Math.round(actual / ms * 100) : 0;
-                whRows.push({ 'WAREHOUSE': wh, 'ACTUAL STOCK': actual, 'MAX STOCK': ms || '-', 'FILL RATE (%)': pct });
-            });
-            var storeAgg = {};
-            var dddRetail = (allData.DDD && allData.DDD.retail) || [];
-            dddRetail.forEach(function(item) {
-                if (!item.store_stock) return;
-                Object.entries(item.store_stock).forEach(function(entry) {
-                    var store = entry[0], stock = entry[1];
-                    if (!storeAgg[store]) storeAgg[store] = 0;
-                    storeAgg[store] += stock;
+                (ed.retail||[]).forEach(function(item) {
+                    if (!item.store_stock) return;
+                    Object.entries(item.store_stock).forEach(function(e) { if (!storeAgg[e[0]]) storeAgg[e[0]]=0; storeAgg[e[0]]+=e[1]; });
                 });
             });
-            Object.keys(storeAgg).sort().forEach(function(store) {
-                var ms = getMaxStockForStore(store);
-                var actual = storeAgg[store];
-                var pct = ms > 0 ? Math.round(actual / ms * 100) : 0;
-                retailRows.push({ 'STORE': store, 'ACTUAL STOCK': actual, 'MAX STOCK': ms || '-', 'FILL RATE (%)': pct });
-            });
+            var whRows = []; Object.keys(whAgg).sort().forEach(function(wh) { var ms=getMaxStockForStore(wh); var a=whAgg[wh]; whRows.push({'WAREHOUSE':wh,'ACTUAL STOCK':a,'MAX STOCK':ms||'-','FILL RATE (%)':ms>0?Math.round(a/ms*100):0}); });
+            var rtRows = []; Object.keys(storeAgg).sort().forEach(function(s) { var ms=getMaxStockForStore(s); var a=storeAgg[s]; rtRows.push({'STORE':s,'ACTUAL STOCK':a,'MAX STOCK':ms||'-','FILL RATE (%)':ms>0?Math.round(a/ms*100):0}); });
             if (whRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(whRows), 'Warehouse');
-            if (retailRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(retailRows), 'Retail Store');
+            if (rtRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rtRows), 'Retail Store');
             XLSX.writeFile(wb, 'max_stock_analysis_export.xlsx');
         }
 
         function exportAlertList(type) {
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
-            var items = [];
-            var sheetName = '';
-            var fileName = '';
-            if (type === 'understock' || type === 'dead') {
-                if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
-                items = scItems || [];
-            } else {
-                if (typeof scoItems === 'undefined' || scoItems.length === 0) initStockControlOnline();
-                items = scoItems || [];
-            }
             var isOnline = type.indexOf('online') >= 0;
             var isDead = type.indexOf('dead') >= 0;
+            if (isOnline) { if (typeof scoItems === 'undefined' || scoItems.length === 0) initStockControlOnline(); }
+            else { if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl(); }
+            var items = isOnline ? (scoItems || []) : (scItems || []);
             var filtered = items.filter(function(item) {
-                var salesArr = [];
-                if (isOnline) {
-                    var s = getOnlineSales(item.sku, item.kodeKecil);
-                    salesArr = [s.m1, s.m2, s.m3];
-                } else {
-                    salesArr = getSales(item.sku, item.kodeKecil);
-                }
-                var avg = salesArr.reduce(function(a,b){return a+b;}, 0) / (salesArr.length || 1);
-                var stock = isOnline ? (item.whOnlineTotal || 0) : (item.globalStock || 0);
-                var gap = stock - (avg * 3);
-                item._avgSales = avg;
-                item._gap = gap;
-                item._stock = stock;
-                if (isDead) return avg === 0 && stock > 0;
-                return gap < 0;
+                var salesArr;
+                if (isOnline) { var s=getOnlineSales(item.sku,item.kodeKecil); salesArr=[s.m1,s.m2,s.m3]; }
+                else { salesArr=getSales(item.sku,item.kodeKecil); }
+                var avg = salesArr.reduce(function(a,b){return a+b;},0)/(salesArr.length||1);
+                var stock = isOnline ? (item.whOnlineTotal||0) : (item.globalStock||0);
+                item._avgSales=avg; item._gap=stock-(avg*3); item._stock=stock;
+                if (isDead) return avg===0 && stock>0;
+                return item._gap < 0;
             });
             filtered.sort(function(a,b) { return a._gap - b._gap; });
-            sheetName = isDead ? 'Dead Stock' : 'Understock';
-            fileName = (isDead ? 'dead_stock_' : 'understock_') + (isOnline ? 'online' : 'retail') + '_export.xlsx';
-            var rows = filtered.map(function(item) {
-                return {
-                    'KODE BARANG': item.kodeKecil || item.sku || '',
-                    'SIZE': item.size || '',
-                    'ARTICLE': item.name || '',
-                    'SERIES': item.series || '',
-                    'GENDER': item.gender || '',
-                    'TIER': item.tier || '',
-                    'AVG SALES 3M': Math.round(item._avgSales * 100) / 100,
-                    'STOCK': item._stock,
-                    'GAP': Math.round(item._gap)
-                };
+            var sheetName = isDead ? 'Dead Stock' : 'Understock';
+            var rows = filtered.map(function(i) {
+                return {'KODE BARANG':i.kodeKecil||i.sku||'','SIZE':i.size||'','ARTICLE':i.name||'','SERIES':i.series||'','GENDER':i.gender||'','TIER':i.tier||'','AVG SALES 3M':Math.round(i._avgSales*100)/100,'STOCK':i._stock,'GAP':Math.round(i._gap)};
             });
-            if (rows.length === 0) { alert('Tidak ada data ' + sheetName); return; }
+            if (rows.length===0) { alert('Tidak ada data '+sheetName); return; }
             var ws = XLSX.utils.json_to_sheet(rows);
             var wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
-            XLSX.writeFile(wb, fileName);
+            XLSX.writeFile(wb, (isDead?'dead_stock_':'understock_')+(isOnline?'online':'retail')+'_export.xlsx');
         }
 
         function exportTopBottom() {
@@ -13034,44 +13182,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
             var wb = XLSX.utils.book_new();
             var channels = {
-                'Retail': function(i) {
-                    var s = getSales(i.sku, i.kodeKecil);
-                    return { avg: s.reduce(function(a,b){return a+b;},0) / (s.length||1), stock: i.stokRetail || 0 };
-                },
-                'Online': function(i) {
-                    var s = getOnlineSales(i.sku, i.kodeKecil);
-                    return { avg: (s.m1+s.m2+s.m3)/3, stock: i.whOnlineTotal || 0 };
-                },
-                'Consignment': function(i) {
-                    return { avg: 0, stock: i.stokConsignment || 0 };
-                },
-                'Warehouse': function(i) {
-                    return { avg: 0, stock: i.whTotal || 0 };
-                }
+                'Retail': function(i) { var s=getSales(i.sku,i.kodeKecil); return {avg:s.reduce(function(a,b){return a+b;},0)/(s.length||1),stock:i.stokRetail||0}; },
+                'Online': function(i) { var s=getOnlineSales(i.sku,i.kodeKecil); return {avg:(s.m1+s.m2+s.m3)/3,stock:i.whOnlineTotal||0}; },
+                'Consignment': function(i) { return {avg:0,stock:i.stokConsignment||0}; },
+                'Warehouse': function(i) { return {avg:0,stock:i.whTotal||0}; }
             };
             Object.keys(channels).forEach(function(ch) {
                 var fn = channels[ch];
-                var data = (scItems || []).map(function(item) {
-                    var r = fn(item);
-                    return { kode: item.kodeKecil || item.sku, name: item.name, series: item.series, gender: item.gender, tier: item.tier, avg: r.avg, stock: r.stock };
-                });
-                var topSales = data.filter(function(d){return d.avg > 0;}).sort(function(a,b){return b.avg - a.avg;}).slice(0,20);
-                var bottomSales = data.filter(function(d){return d.avg > 0;}).sort(function(a,b){return a.avg - b.avg;}).slice(0,20);
-                var topStock = data.filter(function(d){return d.stock > 0;}).sort(function(a,b){return b.stock - a.stock;}).slice(0,20);
-                var makeRows = function(arr, label) {
-                    return arr.map(function(d,idx) {
-                        return { 'RANK': idx+1, 'KODE BARANG': d.kode, 'ARTICLE': d.name, 'SERIES': d.series, 'GENDER': d.gender, 'TIER': d.tier, 'AVG SALES': Math.round(d.avg*100)/100, 'STOCK': d.stock };
-                    });
-                };
-                var rows = [];
-                rows.push({'RANK':'--- TOP 20 BY SALES ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
-                rows = rows.concat(makeRows(topSales));
+                var data = (scItems||[]).map(function(item) { var r=fn(item); return {kode:item.kodeKecil||item.sku,name:item.name,series:item.series,gender:item.gender,tier:item.tier,avg:r.avg,stock:r.stock}; });
+                var topS = data.filter(function(d){return d.avg>0;}).sort(function(a,b){return b.avg-a.avg;}).slice(0,20);
+                var botS = data.filter(function(d){return d.avg>0;}).sort(function(a,b){return a.avg-b.avg;}).slice(0,20);
+                var topSt = data.filter(function(d){return d.stock>0;}).sort(function(a,b){return b.stock-a.stock;}).slice(0,20);
+                var mk = function(arr) { return arr.map(function(d,i) { return {'RANK':i+1,'KODE BARANG':d.kode,'ARTICLE':d.name,'SERIES':d.series,'GENDER':d.gender,'TIER':d.tier,'AVG SALES':Math.round(d.avg*100)/100,'STOCK':d.stock}; }); };
+                var rows = [{'RANK':'--- TOP 20 BY SALES ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''}];
+                rows=rows.concat(mk(topS));
                 rows.push({'RANK':'','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
                 rows.push({'RANK':'--- BOTTOM 20 BY SALES ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
-                rows = rows.concat(makeRows(bottomSales));
+                rows=rows.concat(mk(botS));
                 rows.push({'RANK':'','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
                 rows.push({'RANK':'--- TOP 20 BY STOCK ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
-                rows = rows.concat(makeRows(topStock));
+                rows=rows.concat(mk(topSt));
                 if (rows.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), ch);
             });
             XLSX.writeFile(wb, 'top_bottom_per_channel.xlsx');
