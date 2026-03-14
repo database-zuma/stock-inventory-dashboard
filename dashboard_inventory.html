@@ -2399,12 +2399,26 @@
 
             <!-- STOCK ON-HAND -->
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
-                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📦 Stock On-Hand</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="exportSummaryStockOnHand('retail')" style="padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Retail (All Entity)</button>
-                    <button onclick="exportSummaryStockOnHand('warehouse')" style="padding:10px 20px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Warehouse (All Entity)</button>
-                    <button onclick="exportSummaryConsignment()" style="padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Consignment</button>
-                    <button onclick="exportSummaryWHOnline()" style="padding:10px 20px;background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 WH Online (Bali + Jakarta)</button>
+                <h3 style="margin:0 0 10px 0;color:#1f2937;font-size:1.1rem;">📦 Stock On-Hand</h3>
+                <div style="font-size:0.8rem;color:#6b7280;margin-bottom:8px;">Retail (DDD)</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <button onclick="exportSummaryStockOnHand('retail','DDD')" style="padding:8px 16px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 Retail DDD</button>
+                </div>
+                <div style="font-size:0.8rem;color:#6b7280;margin-bottom:8px;">Warehouse</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <button onclick="exportSummaryStockOnHand('warehouse','DDD')" style="padding:8px 16px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 WH DDD</button>
+                    <button onclick="exportSummaryStockOnHand('warehouse','MBB')" style="padding:8px 16px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 WH MBB</button>
+                    <button onclick="exportSummaryStockOnHand('warehouse','LJBB')" style="padding:8px 16px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 WH LJBB</button>
+                    <button onclick="exportSummaryStockOnHand('warehouse','UBB')" style="padding:8px 16px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 WH UBB</button>
+                </div>
+                <div style="font-size:0.8rem;color:#6b7280;margin-bottom:8px;">Consignment</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <button onclick="exportSummaryConsignment('DDD')" style="padding:8px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 Consig DDD</button>
+                    <button onclick="exportSummaryConsignment('MBB')" style="padding:8px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 Consig MBB</button>
+                </div>
+                <div style="font-size:0.8rem;color:#6b7280;margin-bottom:8px;">WH Online (MBB)</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <button onclick="exportSummaryWHOnline()" style="padding:8px 16px;background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">📥 WH Online Bali + Jakarta</button>
                 </div>
             </div>
 
@@ -12870,6 +12884,27 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             XLSX.writeFile(wb, 'rd_transfer_recs_' + (rdData.snapshot_date || 'export') + '.xlsx');
         }
 
+        function applyTableStyle(ws) {
+            if (!ws['!ref']) return;
+            var range = XLSX.utils.decode_range(ws['!ref']);
+            var center = {alignment:{horizontal:'center',vertical:'center'}};
+            var headerStyle = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true},fill:{fgColor:{rgb:'FF1F2937'}},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            var borderStyle = {border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            for (var r = range.s.r; r <= range.e.r; r++) {
+                for (var c = range.s.c; c <= range.e.c; c++) {
+                    var addr = XLSX.utils.encode_cell({r:r,c:c});
+                    if (!ws[addr]) continue;
+                    if (r === 0) { ws[addr].s = headerStyle; }
+                    else { ws[addr].s = Object.assign({}, borderStyle, center); }
+                }
+            }
+            var cols = [];
+            for (var ci = range.s.c; ci <= range.e.c; ci++) {
+                cols.push({wch: ci === 5 ? 30 : ci <= 4 ? 18 : 12});
+            }
+            ws['!cols'] = cols;
+        }
+
         function addTierSummary(ws, rows, tierIdx) {
             var tierQty = {};
             var total = 0;
@@ -12882,61 +12917,61 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             var startCol = 13;
             var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
-            ws[sc(0, startCol)] = {v: 'TIER', t: 's'};
-            ws[sc(0, startCol+1)] = {v: 'QTY', t: 's'};
-            ws[sc(0, startCol+2)] = {v: '%', t: 's'};
+            var ctr = {alignment:{horizontal:'center',vertical:'center'}};
+            var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true},fill:{fgColor:{rgb:'FF1F2937'}},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            var bdr = {alignment:{horizontal:'center',vertical:'center'},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            ws[sc(0, startCol)] = {v:'TIER',t:'s',s:hdr};
+            ws[sc(0, startCol+1)] = {v:'QTY',t:'s',s:hdr};
+            ws[sc(0, startCol+2)] = {v:'%',t:'s',s:hdr};
             var tiers = Object.keys(tierQty).sort();
             for (var i = 0; i < tiers.length; i++) {
                 var r = i + 1;
-                ws[sc(r, startCol)] = {v: tiers[i], t: 's'};
-                ws[sc(r, startCol+1)] = {v: tierQty[tiers[i]], t: 'n'};
-                ws[sc(r, startCol+2)] = {v: total > 0 ? Math.round(tierQty[tiers[i]] / total * 100 * 10) / 10 + '%' : '0%', t: 's'};
+                ws[sc(r, startCol)] = {v:tiers[i],t:'s',s:bdr};
+                ws[sc(r, startCol+1)] = {v:tierQty[tiers[i]],t:'n',s:bdr};
+                ws[sc(r, startCol+2)] = {v:total>0?Math.round(tierQty[tiers[i]]/total*1000)/10+'%':'0%',t:'s',s:bdr};
             }
             var totalR = tiers.length + 1;
-            ws[sc(totalR, startCol)] = {v: 'TOTAL', t: 's'};
-            ws[sc(totalR, startCol+1)] = {v: total, t: 'n'};
-            ws[sc(totalR, startCol+2)] = {v: '100%', t: 's'};
+            ws[sc(totalR, startCol)] = {v:'TOTAL',t:'s',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
+            ws[sc(totalR, startCol+1)] = {v:total,t:'n',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
+            ws[sc(totalR, startCol+2)] = {v:'100%',t:'s',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
             var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
             if (startCol + 2 > range.e.c) range.e.c = startCol + 2;
             if (totalR > range.e.r) range.e.r = totalR;
             ws['!ref'] = XLSX.utils.encode_range(range);
         }
 
-        function exportSummaryStockOnHand(type) {
+        function exportSummaryStockOnHand(type, entity) {
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
-            var entities = ['DDD', 'MBB', 'LJBB', 'UBB'];
+            var entityData = allData[entity];
+            if (!entityData) { alert('Data ' + entity + ' belum dimuat'); return; }
             var wb = XLSX.utils.book_new();
             var headers = ['Store', 'Area', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tipe', 'Tier', 'Version', 'Stock'];
             var allRows = [];
             var minusRows = [];
-            entities.forEach(function(entity) {
-                var entityData = allData[entity];
-                if (!entityData) return;
-                var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
-                rawData.forEach(function(item) {
-                    if (!item.store_stock) return;
-                    Object.entries(item.store_stock).forEach(function(entry) {
-                        var store = entry[0], stock = entry[1];
-                        if (stock === 0) return;
-                        if (isExcludedLocation(store)) return;
-                        if (type === 'retail' && isWarehouseLocation(store)) return;
-                        if (type === 'warehouse' && !isWarehouseLocation(store)) return;
-                        var row = {
-                            store: store, area: getAreaFromStore(store),
-                            kodeBarang: (item.kode_kecil || '').toUpperCase(),
-                            kodeKecil: (item.kode || '').toUpperCase(),
-                            kodeMix: (item.sku || '').toUpperCase(),
-                            nama: item.name || '', gender: item.gender || '',
-                            series: item.series || '', tipe: item.tipe || '',
-                            tier: item.tier || '', version: item.version || '',
-                            stock: stock
-                        };
-                        allRows.push(row);
-                        if (stock < 0) minusRows.push(row);
-                    });
+            var rawData = type === 'warehouse' ? (entityData.warehouse || []) : (entityData.retail || []);
+            rawData.forEach(function(item) {
+                if (!item.store_stock) return;
+                Object.entries(item.store_stock).forEach(function(entry) {
+                    var store = entry[0], stock = entry[1];
+                    if (stock === 0) return;
+                    if (isExcludedLocation(store)) return;
+                    if (type === 'retail' && isWarehouseLocation(store)) return;
+                    if (type === 'warehouse' && !isWarehouseLocation(store)) return;
+                    var row = {
+                        store: store, area: getAreaFromStore(store),
+                        kodeBarang: (item.kode_kecil || '').toUpperCase(),
+                        kodeKecil: (item.kode || '').toUpperCase(),
+                        kodeMix: (item.sku || '').toUpperCase(),
+                        nama: item.name || '', gender: item.gender || '',
+                        series: item.series || '', tipe: item.tipe || '',
+                        tier: item.tier || '', version: item.version || '',
+                        stock: stock
+                    };
+                    allRows.push(row);
+                    if (stock < 0) minusRows.push(row);
                 });
             });
-            if (!allRows.length) { alert('Tidak ada data'); return; }
+            if (!allRows.length) { alert('Tidak ada data ' + type + ' untuk ' + entity); return; }
             allRows.sort(function(a,b) { return b.stock - a.stock; });
             minusRows.sort(function(a,b) { return a.stock - b.stock; });
             var toAoa = function(rows) {
@@ -12945,44 +12980,44 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }));
             };
             var wsSemua = XLSX.utils.aoa_to_sheet(toAoa(allRows));
-            addTierSummary(wsSemua, allRows, 9);
+            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 9);
             XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
             if (minusRows.length > 0) {
                 var wsMinus = XLSX.utils.aoa_to_sheet(toAoa(minusRows));
-                addTierSummary(wsMinus, minusRows, 9);
+                applyTableStyle(wsMinus); addTierSummary(wsMinus, minusRows, 9);
                 XLSX.utils.book_append_sheet(wb, wsMinus, 'MINUS ON HAND');
             }
             var storeMap = {};
             allRows.forEach(function(r) { var k = r.store || 'Other'; if (!storeMap[k]) storeMap[k] = []; storeMap[k].push(r); });
             Object.keys(storeMap).sort().forEach(function(s) {
                 var wsStore = XLSX.utils.aoa_to_sheet(toAoa(storeMap[s]));
-                addTierSummary(wsStore, storeMap[s], 9);
+                applyTableStyle(wsStore); addTierSummary(wsStore, storeMap[s], 9);
                 XLSX.utils.book_append_sheet(wb, wsStore, s.substring(0,31));
             });
-            XLSX.writeFile(wb, 'stock_ALL_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            XLSX.writeFile(wb, 'stock_' + entity + '_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
-        function exportSummaryConsignment() {
+        function exportSummaryConsignment(entity) {
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
-            var items = consignmentStockItems || [];
-            if (!items.length) { alert('Data consignment belum dimuat'); return; }
+            var items = (consignmentStockItems || []).filter(function(i) { return (i.entity||'').toUpperCase() === entity; });
+            if (!items.length) { alert('Tidak ada data consignment ' + entity); return; }
             var wb = XLSX.utils.book_new();
-            var headers = ['Entity', 'SKU', 'Kode Kecil', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Partner', 'Total Stock'];
+            var headers = ['SKU', 'Kode Kecil', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Partner', 'Total Stock'];
             var allRows = items.map(function(i) {
-                return [i.entity||'', i.sku||'', i.kode_kecil||'', i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.partner||'', i.total||0];
+                return [i.sku||'', i.kode_kecil||'', i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.partner||'', i.total||0];
             });
-            allRows.sort(function(a,b) { return b[9] - a[9]; });
+            allRows.sort(function(a,b) { return b[8] - a[8]; });
             var wsSemua = XLSX.utils.aoa_to_sheet([headers].concat(allRows));
-            addTierSummary(wsSemua, allRows, 6);
+            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 5);
             XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
-            var entityMap = {};
-            allRows.forEach(function(r) { var e = r[0]||'Other'; if (!entityMap[e]) entityMap[e] = []; entityMap[e].push(r); });
-            Object.keys(entityMap).sort().forEach(function(e) {
-                var wsE = XLSX.utils.aoa_to_sheet([headers].concat(entityMap[e]));
-                addTierSummary(wsE, entityMap[e], 6);
-                XLSX.utils.book_append_sheet(wb, wsE, e);
+            var partnerMap = {};
+            allRows.forEach(function(r) { var p = r[7]||'Other'; if (!partnerMap[p]) partnerMap[p] = []; partnerMap[p].push(r); });
+            Object.keys(partnerMap).sort().forEach(function(p) {
+                var wsP = XLSX.utils.aoa_to_sheet([headers].concat(partnerMap[p]));
+                applyTableStyle(wsP); addTierSummary(wsP, partnerMap[p], 5);
+                XLSX.utils.book_append_sheet(wb, wsP, p.substring(0,31));
             });
-            XLSX.writeFile(wb, 'stock_consignment_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            XLSX.writeFile(wb, 'stock_consig_' + entity + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function exportSummaryWHOnline() {
@@ -13012,12 +13047,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             jktRows.sort(function(a,b) { return b[9] - a[9]; });
             if (baliRows.length > 0) {
                 var wsBali = XLSX.utils.aoa_to_sheet([headers].concat(baliRows));
-                addTierSummary(wsBali, baliRows, 7);
+                applyTableStyle(wsBali); addTierSummary(wsBali, baliRows, 7);
                 XLSX.utils.book_append_sheet(wb, wsBali, 'WH Online Bali');
             }
             if (jktRows.length > 0) {
                 var wsJkt = XLSX.utils.aoa_to_sheet([headers].concat(jktRows));
-                addTierSummary(wsJkt, jktRows, 7);
+                applyTableStyle(wsJkt); addTierSummary(wsJkt, jktRows, 7);
                 XLSX.utils.book_append_sheet(wb, wsJkt, 'WH Online Jakarta');
             }
             if (baliRows.length === 0 && jktRows.length === 0) { alert('Tidak ada data WH Online'); return; }
