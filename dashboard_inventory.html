@@ -1146,10 +1146,18 @@
                     <div id="scWhJakarta" style="font-size:1.8rem;font-weight:700;color:#1e3a8a;">0</div>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(1,1fr);gap:15px;margin-bottom:20px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg,#cffafe 0%,#67e8f9 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#155e75;margin-bottom:5px;">🏪 Stok Retail</div>
+                    <div id="scStokRetail" style="font-size:1.8rem;font-weight:700;color:#0e7490;">0</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#fce7f3 0%,#f9a8d4 100%);border-radius:12px;padding:15px;">
+                    <div style="font-size:0.8rem;color:#9d174d;margin-bottom:5px;">📦 Stok Consig</div>
+                    <div id="scStokConsig" style="font-size:1.8rem;font-weight:700;color:#be185d;">0</div>
+                </div>
                 <div style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-radius:12px;padding:15px;">
-                    <div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🏪 Total Stok Toko</div>
-                    <div id="scStokToko" style="font-size:1.8rem;font-weight:700;color:#4c1d95;">0</div>
+                    <div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🌍 Stok Global</div>
+                    <div id="scStokGlobal" style="font-size:1.8rem;font-weight:700;color:#4c1d95;">0</div>
                 </div>
             </div>
 
@@ -6515,27 +6523,22 @@
             const pageData = scFilteredItems.slice(start, start + scItemsPerPage);
 
             // Update summary cards
-            let totalWHS = 0, totalWHB = 0, totalWHJ = 0, totalToko = 0;
-            let totalWHOB = 0, totalWHOJ = 0;
+            let totalWHS = 0, totalWHB = 0, totalWHJ = 0;
+            let totalRetail = 0, totalConsig = 0, totalGlobal = 0;
             scFilteredItems.forEach(item => {
                 if (!area || area === 'Jawa Timur') totalWHS += item.WHS;
                 if (!area || area === 'Bali') totalWHB += item.WHB;
                 if (!area || area === 'Jakarta') totalWHJ += item.WHJ;
-                if (!area || area === 'Bali') totalWHOB += item.WHOB || 0;
-                if (!area || area === 'Jakarta') totalWHOJ += item.WHOJ || 0;
-                if (!area) totalToko += (item.stokRetail || 0);
-                else if (area === 'Bali') totalToko += item.stokTokoBali;
-                else if (area === 'Jakarta') totalToko += item.stokTokoJakarta;
-                else if (area === 'Jawa Timur') totalToko += item.stokTokoJatim;
-                else if (area === 'Batam') totalToko += item.stokTokoBatam;
-                else if (area === 'Sulawesi') totalToko += item.stokTokoSulawesi;
-                else if (area === 'Sumatera') totalToko += item.stokTokoSumatera;
-                else if (area === 'Lombok') totalToko += item.stokTokoLombok || 0;
+                totalRetail += (item.stokRetail || 0);
+                totalConsig += (item.stokConsignment || 0);
+                totalGlobal += (item.globalStock || 0);
             });
             document.getElementById('scWhPusat').textContent = totalWHS.toLocaleString();
             document.getElementById('scWhBali').textContent = totalWHB.toLocaleString();
             document.getElementById('scWhJakarta').textContent = totalWHJ.toLocaleString();
-            document.getElementById('scStokToko').textContent = totalToko.toLocaleString();
+            document.getElementById('scStokRetail').textContent = totalRetail.toLocaleString();
+            document.getElementById('scStokConsig').textContent = totalConsig.toLocaleString();
+            document.getElementById('scStokGlobal').textContent = totalGlobal.toLocaleString();
 
             // KPI Summary Cards — count by GAP category (using ALL filtered items, ignoring GAP/STR filter)
             let kpiUnderstock = 0, kpiTipis = 0, kpiAman = 0, kpiDead = 0;
@@ -7118,7 +7121,6 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'to\')">TO</th>' +
                 '</tr>';
             } else {
                 thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
@@ -7136,7 +7138,6 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'to\')">TO</th>' +
                 '</tr>';
             }
         }
@@ -7290,8 +7291,6 @@
                 const gap = basisStock - (avgSales * 3);
                 const tw = avgSales > 0 ? (onlineTotal / avgSales).toFixed(1) : 0;
                 const twVal = parseFloat(tw) || 0;
-                const to = avgSales > 0 ? (basisStock / avgSales).toFixed(1) : 0;
-                const toVal = parseFloat(to) || 0;
                 const isDeadStock = avgSales === 0 && basisStock > 0;
 
                 // GAP color
@@ -7307,15 +7306,6 @@
                     else if (twVal <= 2) twStyle = 'background:#eab308;color:black;';
                     else if (twVal <= 4) twStyle = 'background:#16a34a;color:white;';
                     else twStyle = 'background:#7c3aed;color:white;';
-                }
-
-                // TO color
-                let toStyle = '';
-                if (avgSales > 0) {
-                    if (toVal < 1) toStyle = 'background:#dc2626;color:white;';
-                    else if (toVal <= 2) toStyle = 'background:#eab308;color:black;';
-                    else if (toVal <= 4) toStyle = 'background:#16a34a;color:white;';
-                    else toStyle = 'background:#7c3aed;color:white;';
                 }
 
                 const cs = 'padding:8px;text-align:center;border-right:1px solid #000000;';
@@ -7336,7 +7326,6 @@
                         '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
-                        '<td style="' + cs + 'font-weight:600;' + toStyle + '">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
@@ -7355,7 +7344,6 @@
                         '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
-                        '<td style="' + cs + 'font-weight:600;' + toStyle + '">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
@@ -7447,10 +7435,6 @@
                         valA = avgA > 0 ? ((a.whOnlineTotal || 0) / avgA) : 999;
                         valB = avgB > 0 ? ((b.whOnlineTotal || 0) / avgB) : 999;
                         break;
-                    case 'to':
-                        valA = avgA > 0 ? (getSortBasis(a) / avgA) : 999;
-                        valB = avgB > 0 ? (getSortBasis(b) / avgB) : 999;
-                        break;
                     default:
                         valA = scoViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
                         valB = scoViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
@@ -7498,7 +7482,6 @@
                 const avgSales = sales.avg;
                 const gap = basisStock - (avgSales * 3);
                 const tw = avgSales > 0 ? ((item.whOnlineTotal || 0) / avgSales) : 0;
-                const to = avgSales > 0 ? (basisStock / avgSales) : 0;
                 const isDead = avgSales === 0 && basisStock > 0;
                 let gapStatus = 'Aman';
                 if (isDead) gapStatus = 'Dead Stock';
@@ -7524,7 +7507,6 @@
                 row['WH O.JKT'] = item.WHOJ || 0;
                 row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
                 row['TW'] = Math.round(tw * 100) / 100;
-                row['TO'] = Math.round(to * 100) / 100;
                 row['GAP'] = Math.round(gap);
                 row['GAP STATUS'] = gapStatus;
                 return row;
