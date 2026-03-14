@@ -12902,7 +12902,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             var cols = [];
             for (var ci = range.s.c; ci <= range.e.c; ci++) {
-                cols.push({wch: ci === 5 ? 32 : ci <= 4 ? 18 : 12});
+                if (ci === 5) cols.push({wch: 32});
+                else if (ci === 0 || ci === 1) cols.push({wch: 22});
+                else if (ci >= 2 && ci <= 4) cols.push({wch: 16});
+                else cols.push({wch: 10});
             }
             ws['!cols'] = cols;
         }
@@ -12965,6 +12968,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (isExcludedLocation(store)) return;
                     if (type === 'retail' && isWarehouseLocation(store)) return;
                     if (type === 'warehouse' && !isWarehouseLocation(store)) return;
+                    var sl = store.toLowerCase();
+                    if (type === 'warehouse' && (sl.indexOf('online bali') >= 0 || sl.indexOf('online jakarta') >= 0 || sl.indexOf('online jkt') >= 0)) return;
                     var row = {
                         store: store, area: getAreaFromStore(store),
                         kodeBarang: (item.kode_kecil || '').toUpperCase(),
@@ -13010,20 +13015,29 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var items = (consignmentStockItems || []).filter(function(i) { return (i.entity||'').toUpperCase() === entity; });
             if (!items.length) { alert('Tidak ada data consignment ' + entity); return; }
             var wb = XLSX.utils.book_new();
-            var headers = ['SKU', 'Kode Kecil', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Partner', 'Total Stock'];
-            var allRows = items.map(function(i) {
-                return [i.sku||'', i.kode_kecil||'', i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.partner||'', i.total||0];
+            var headers = ['Store', 'Partner', 'Kode Barang', 'Kode Kecil', 'Kode Mix', 'Nama Barang', 'Gender', 'Series', 'Tier', 'Version', 'Stock'];
+            var allRows = [];
+            items.forEach(function(i) {
+                if (!i.store_stock) {
+                    allRows.push(['-', i.partner||'', (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.total||0]);
+                } else {
+                    Object.entries(i.store_stock).forEach(function(entry) {
+                        var store = entry[0], stock = entry[1];
+                        if (stock === 0) return;
+                        allRows.push([store, i.partner||'', (i.kode_kecil||'').toUpperCase(), (i.kode||'').toUpperCase(), (i.sku||'').toUpperCase(), i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', stock]);
+                    });
+                }
             });
-            allRows.sort(function(a,b) { return b[8] - a[8]; });
+            allRows.sort(function(a,b) { return b[10] - a[10]; });
             var wsSemua = XLSX.utils.aoa_to_sheet([headers].concat(allRows));
-            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 5);
+            applyTableStyle(wsSemua); addTierSummary(wsSemua, allRows, 8);
             XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
-            var partnerMap = {};
-            allRows.forEach(function(r) { var p = r[7]||'Other'; if (!partnerMap[p]) partnerMap[p] = []; partnerMap[p].push(r); });
-            Object.keys(partnerMap).sort().forEach(function(p) {
-                var wsP = XLSX.utils.aoa_to_sheet([headers].concat(partnerMap[p]));
-                applyTableStyle(wsP); addTierSummary(wsP, partnerMap[p], 5);
-                XLSX.utils.book_append_sheet(wb, wsP, p.substring(0,31));
+            var storeMap = {};
+            allRows.forEach(function(r) { var s = r[0]||'Other'; if (!storeMap[s]) storeMap[s] = []; storeMap[s].push(r); });
+            Object.keys(storeMap).sort().forEach(function(s) {
+                var wsS = XLSX.utils.aoa_to_sheet([headers].concat(storeMap[s]));
+                applyTableStyle(wsS); addTierSummary(wsS, storeMap[s], 8);
+                XLSX.utils.book_append_sheet(wb, wsS, s.substring(0,31));
             });
             XLSX.writeFile(wb, 'stock_consig_' + entity + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
