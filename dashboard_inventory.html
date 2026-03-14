@@ -2523,6 +2523,7 @@
         let assortmentMap = {};
         let salesMap = {};
         let onlineSalesMap = {};  // Online-only sales from /api/sales/aggregate-online
+        let consignmentStockItems = []; // Consignment stock from /api/stock/consignment
         let salesDetailData = [];
         let salesDetailByMonth = {};  // cache: 'YYYY-MM' -> records[]
         let salesAvailableMonths = []; // ['2026-01','2026-02',...] from aggregate
@@ -2643,7 +2644,7 @@
             const loadingEl = document.getElementById('api-loading-overlay');
             if (loadingEl) loadingEl.style.display = 'flex';
             try {
-                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData] = await Promise.all([
+                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData, consigStockData] = await Promise.all([
                     fetchAPI('/api/stock'),
                     fetchAPI('/api/stores'),
                     fetchAPI('/api/store-areas'),
@@ -2652,6 +2653,7 @@
                     fetchAPI('/api/targets'),
                     fetchAPI('/api/assortment'),
                     fetchAPI('/api/sales/aggregate-online').catch(() => ({})),
+                    fetchAPI('/api/stock/consignment').catch(() => ({ data: [] })),
                 ]);
                 allData = stockData;
                 // Update 'Data per' date from API metadata
@@ -2696,6 +2698,12 @@
                 assortmentMap = assortmentData;
                 // Online sales map (from /api/sales/aggregate-online)
                 onlineSalesMap = onlineSalesAggData || {};
+                // Consignment stock items (from /api/stock/consignment)
+                consignmentStockItems = (consigStockData && consigStockData.data) ? consigStockData.data : [];
+                // Also cache for Consignment tab (so it doesn't need to re-fetch)
+                if (consignmentStockItems.length > 0 && !consignmentStockData) {
+                    consignmentStockData = consigStockData;
+                }
                 // Extract dynamic month keys for online sales
                 if (onlineSalesMap['_months']) {
                     // API already provides _months
@@ -6303,8 +6311,8 @@
                 }
             });
 
-            // MBB = Consignment stores
-            retailMBB.forEach(item => {
+            // Consignment stock from /api/stock/consignment (NON-RETAIL stores: AEON, Grand Lucky, Pepito, etc.)
+            consignmentStockItems.forEach(item => {
                 const sku = item.sku;
                 if (!sku) return;
                 if (!skuMap[sku]) {
@@ -6326,11 +6334,7 @@
                         whOnlineTotal: 0
                     };
                 }
-                if (item.store_stock) {
-                    Object.entries(item.store_stock).forEach(([store, stock]) => {
-                        skuMap[sku].stokConsignment += stock;
-                    });
-                }
+                skuMap[sku].stokConsignment += (item.total || 0);
             });
 
             // Process warehouse data - ALL entities (DDD, LJBB, MBB, UBB)
