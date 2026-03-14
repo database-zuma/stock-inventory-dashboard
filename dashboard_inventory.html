@@ -579,6 +579,9 @@
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
             </button>
+            <button class="view-btn" data-view="summaryreport" onclick="switchView('summaryreport')">
+                📋 Summary Report
+            </button>
             </div><!-- end nav-wrapper -->
         </div><!-- end view-toggle -->
         <div class="view-content-area">
@@ -2384,6 +2387,85 @@
             </div>
         </div>
         <!-- End redistribusiView -->
+
+        <!-- ==================== SUMMARY REPORT VIEW ==================== -->
+        <div class="view-container" id="summaryreportView">
+            <div style="background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:2px solid #16a34a;border-radius:16px;padding:25px;margin-bottom:30px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;padding:10px 20px;border-radius:10px;font-weight:700;font-size:1.2rem;">📋 Summary Report</div>
+                    <span style="color:#15803d;font-size:0.9rem;">Download semua laporan dari 1 halaman</span>
+                </div>
+            </div>
+
+            <!-- STOCK ON-HAND -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📦 Stock On-Hand</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportData('retail')" style="padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Retail (DDD)</button>
+                    <button onclick="exportData('warehouse')" style="padding:10px 20px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Warehouse (DDD)</button>
+                    <button onclick="exportData('consignment')" style="padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Stock Consignment</button>
+                </div>
+            </div>
+
+            <!-- CONTROL STOCK -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📊 Control Stock</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportSummaryControlRetail()" style="padding:10px 20px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Control Stock Retail</button>
+                    <button onclick="exportSummaryControlOnline()" style="padding:10px 20px;background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Control Stock Online</button>
+                </div>
+            </div>
+
+            <!-- SALES -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">💰 Sales</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportSalesSummary('global')" style="padding:10px 20px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Sales Global</button>
+                    <button onclick="exportSalesSummary('retail')" style="padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Sales Retail & Event</button>
+                    <button onclick="exportSalesSummary('online')" style="padding:10px 20px;background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Sales Online</button>
+                    <button onclick="exportSalesSummary('consig')" style="padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Sales Consignment</button>
+                    <button onclick="exportSalesSummary('wholesale')" style="padding:10px 20px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Sales Wholesale</button>
+                </div>
+            </div>
+
+            <!-- MAX STOCK -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📈 Max Stock Analysis</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportMaxStockSummary()" style="padding:10px 20px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Max Stock Analysis</button>
+                </div>
+            </div>
+
+            <!-- REDISTRIBUTION -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📊 Stock Redistribution</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportRdDetail()" style="padding:10px 20px;background:linear-gradient(135deg,#db2777,#be185d);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Redistribution Detail</button>
+                    <button onclick="exportRdTransfer()" style="padding:10px 20px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Transfer Recommendation</button>
+                </div>
+            </div>
+
+            <!-- ALERT -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">🚨 Stock Alert</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportAlertList('understock')" style="padding:10px 20px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Understock List (Retail)</button>
+                    <button onclick="exportAlertList('dead')" style="padding:10px 20px;background:linear-gradient(135deg,#1e3a5f,#0f2942);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Dead Stock List (Retail)</button>
+                    <button onclick="exportAlertList('understock_online')" style="padding:10px 20px;background:linear-gradient(135deg,#dc2626,#991b1b);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Understock List (Online)</button>
+                    <button onclick="exportAlertList('dead_online')" style="padding:10px 20px;background:linear-gradient(135deg,#1e3a5f,#172554);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Dead Stock List (Online)</button>
+                </div>
+            </div>
+
+            <!-- TOP & BOTTOM -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">🏆 Top & Bottom Artikel</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportTopBottom()" style="padding:10px 20px;background:linear-gradient(135deg,#eab308,#ca8a04);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Top & Bottom per Channel</button>
+                </div>
+            </div>
+
+        </div>
+        <!-- End summaryreportView -->
 
         <!-- ==================== SKU SEARCH VIEW ==================== -->
         <div class="view-container" id="skusearchView">
@@ -12781,6 +12863,214 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             XLSX.writeFile(wb, 'rd_transfer_recs_' + (rdData.snapshot_date || 'export') + '.xlsx');
+        }
+
+        function exportSummaryControlRetail() {
+            if (typeof scItems === 'undefined' || scItems.length === 0) {
+                initStockControl();
+            }
+            exportStockControlExcel();
+        }
+
+        function exportSummaryControlOnline() {
+            if (typeof scoItems === 'undefined' || scoItems.length === 0) {
+                initStockControlOnline();
+            }
+            exportStockControlOnlineExcel();
+        }
+
+        function exportSalesSummary(channel) {
+            if (!salesDetailData || salesDetailData.length === 0) {
+                alert('Data sales belum dimuat. Buka halaman Sales terlebih dahulu.');
+                return;
+            }
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var data = [];
+            if (channel === 'global') {
+                data = salesDetailData;
+            } else if (channel === 'retail') {
+                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'retail' || (i.channel || '').toLowerCase() === 'event'; });
+            } else if (channel === 'online') {
+                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'online'; });
+            } else if (channel === 'consig') {
+                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'consignment'; });
+            } else if (channel === 'wholesale') {
+                data = salesDetailData.filter(function(i) { return (i.channel || '').toLowerCase() === 'wholesale'; });
+            }
+            if (data.length === 0) {
+                alert('Tidak ada data sales untuk channel: ' + channel);
+                return;
+            }
+            var rows = data.map(function(i) {
+                return {
+                    'TANGGAL': i.date || '',
+                    'ORDER NO': i.order_no || '',
+                    'STORE': i.store || '',
+                    'CHANNEL': i.channel || '',
+                    'SKU': i.sku || '',
+                    'KODE KECIL': i.kode_kecil || '',
+                    'ARTICLE': i.name || '',
+                    'SERIES': i.series || '',
+                    'GENDER': i.gender || '',
+                    'TIER': i.tier || '',
+                    'SIZE': i.size || '',
+                    'QTY': i.qty || 0,
+                    'HARGA': i.price || 0,
+                    'TOTAL': i.total || 0
+                };
+            });
+            var ws = XLSX.utils.json_to_sheet(rows);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sales ' + channel);
+            XLSX.writeFile(wb, 'sales_' + channel + '_export.xlsx');
+        }
+
+        function exportMaxStockSummary() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var wb = XLSX.utils.book_new();
+            var whRows = [];
+            var retailRows = [];
+            var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
+            var whAgg = {};
+            for (var i = 0; i < entities.length; i++) {
+                var entity = entities[i];
+                var entityData = allData[entity];
+                if (!entityData || !entityData.warehouse) continue;
+                entityData.warehouse.forEach(function(item) {
+                    Object.entries(item.warehouse_stock || {}).forEach(function(entry) {
+                        var wh = entry[0], stock = entry[1];
+                        if (!whAgg[wh]) whAgg[wh] = 0;
+                        whAgg[wh] += stock;
+                    });
+                });
+            }
+            Object.keys(whAgg).sort().forEach(function(wh) {
+                var ms = getMaxStockForStore(wh);
+                var actual = whAgg[wh];
+                var pct = ms > 0 ? Math.round(actual / ms * 100) : 0;
+                whRows.push({ 'WAREHOUSE': wh, 'ACTUAL STOCK': actual, 'MAX STOCK': ms || '-', 'FILL RATE (%)': pct });
+            });
+            var storeAgg = {};
+            var dddRetail = (allData.DDD && allData.DDD.retail) || [];
+            dddRetail.forEach(function(item) {
+                if (!item.store_stock) return;
+                Object.entries(item.store_stock).forEach(function(entry) {
+                    var store = entry[0], stock = entry[1];
+                    if (!storeAgg[store]) storeAgg[store] = 0;
+                    storeAgg[store] += stock;
+                });
+            });
+            Object.keys(storeAgg).sort().forEach(function(store) {
+                var ms = getMaxStockForStore(store);
+                var actual = storeAgg[store];
+                var pct = ms > 0 ? Math.round(actual / ms * 100) : 0;
+                retailRows.push({ 'STORE': store, 'ACTUAL STOCK': actual, 'MAX STOCK': ms || '-', 'FILL RATE (%)': pct });
+            });
+            if (whRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(whRows), 'Warehouse');
+            if (retailRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(retailRows), 'Retail Store');
+            XLSX.writeFile(wb, 'max_stock_analysis_export.xlsx');
+        }
+
+        function exportAlertList(type) {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            var items = [];
+            var sheetName = '';
+            var fileName = '';
+            if (type === 'understock' || type === 'dead') {
+                if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
+                items = scItems || [];
+            } else {
+                if (typeof scoItems === 'undefined' || scoItems.length === 0) initStockControlOnline();
+                items = scoItems || [];
+            }
+            var isOnline = type.indexOf('online') >= 0;
+            var isDead = type.indexOf('dead') >= 0;
+            var filtered = items.filter(function(item) {
+                var salesArr = [];
+                if (isOnline) {
+                    var s = getOnlineSales(item.sku, item.kodeKecil);
+                    salesArr = [s.m1, s.m2, s.m3];
+                } else {
+                    salesArr = getSales(item.sku, item.kodeKecil);
+                }
+                var avg = salesArr.reduce(function(a,b){return a+b;}, 0) / (salesArr.length || 1);
+                var stock = isOnline ? (item.whOnlineTotal || 0) : (item.globalStock || 0);
+                var gap = stock - (avg * 3);
+                item._avgSales = avg;
+                item._gap = gap;
+                item._stock = stock;
+                if (isDead) return avg === 0 && stock > 0;
+                return gap < 0;
+            });
+            filtered.sort(function(a,b) { return a._gap - b._gap; });
+            sheetName = isDead ? 'Dead Stock' : 'Understock';
+            fileName = (isDead ? 'dead_stock_' : 'understock_') + (isOnline ? 'online' : 'retail') + '_export.xlsx';
+            var rows = filtered.map(function(item) {
+                return {
+                    'KODE BARANG': item.kodeKecil || item.sku || '',
+                    'SIZE': item.size || '',
+                    'ARTICLE': item.name || '',
+                    'SERIES': item.series || '',
+                    'GENDER': item.gender || '',
+                    'TIER': item.tier || '',
+                    'AVG SALES 3M': Math.round(item._avgSales * 100) / 100,
+                    'STOCK': item._stock,
+                    'GAP': Math.round(item._gap)
+                };
+            });
+            if (rows.length === 0) { alert('Tidak ada data ' + sheetName); return; }
+            var ws = XLSX.utils.json_to_sheet(rows);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function exportTopBottom() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
+            var wb = XLSX.utils.book_new();
+            var channels = {
+                'Retail': function(i) {
+                    var s = getSales(i.sku, i.kodeKecil);
+                    return { avg: s.reduce(function(a,b){return a+b;},0) / (s.length||1), stock: i.stokRetail || 0 };
+                },
+                'Online': function(i) {
+                    var s = getOnlineSales(i.sku, i.kodeKecil);
+                    return { avg: (s.m1+s.m2+s.m3)/3, stock: i.whOnlineTotal || 0 };
+                },
+                'Consignment': function(i) {
+                    return { avg: 0, stock: i.stokConsignment || 0 };
+                },
+                'Warehouse': function(i) {
+                    return { avg: 0, stock: i.whTotal || 0 };
+                }
+            };
+            Object.keys(channels).forEach(function(ch) {
+                var fn = channels[ch];
+                var data = (scItems || []).map(function(item) {
+                    var r = fn(item);
+                    return { kode: item.kodeKecil || item.sku, name: item.name, series: item.series, gender: item.gender, tier: item.tier, avg: r.avg, stock: r.stock };
+                });
+                var topSales = data.filter(function(d){return d.avg > 0;}).sort(function(a,b){return b.avg - a.avg;}).slice(0,20);
+                var bottomSales = data.filter(function(d){return d.avg > 0;}).sort(function(a,b){return a.avg - b.avg;}).slice(0,20);
+                var topStock = data.filter(function(d){return d.stock > 0;}).sort(function(a,b){return b.stock - a.stock;}).slice(0,20);
+                var makeRows = function(arr, label) {
+                    return arr.map(function(d,idx) {
+                        return { 'RANK': idx+1, 'KODE BARANG': d.kode, 'ARTICLE': d.name, 'SERIES': d.series, 'GENDER': d.gender, 'TIER': d.tier, 'AVG SALES': Math.round(d.avg*100)/100, 'STOCK': d.stock };
+                    });
+                };
+                var rows = [];
+                rows.push({'RANK':'--- TOP 20 BY SALES ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
+                rows = rows.concat(makeRows(topSales));
+                rows.push({'RANK':'','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
+                rows.push({'RANK':'--- BOTTOM 20 BY SALES ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
+                rows = rows.concat(makeRows(bottomSales));
+                rows.push({'RANK':'','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
+                rows.push({'RANK':'--- TOP 20 BY STOCK ---','KODE BARANG':'','ARTICLE':'','SERIES':'','GENDER':'','TIER':'','AVG SALES':'','STOCK':''});
+                rows = rows.concat(makeRows(topStock));
+                if (rows.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), ch);
+            });
+            XLSX.writeFile(wb, 'top_bottom_per_channel.xlsx');
         }
     </script>
 
