@@ -2460,13 +2460,7 @@
                 </div>
             </div>
 
-            <!-- TOP & BOTTOM -->
-            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
-                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">🏆 Top & Bottom Artikel</h3>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="exportTopBottom()" style="padding:10px 20px;background:linear-gradient(135deg,#eab308,#ca8a04);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Top & Bottom per Channel</button>
-                </div>
-            </div>
+
 
         </div>
         <!-- End summaryreportView -->
@@ -13256,19 +13250,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
             var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
             var bdr = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+            var bdrNum = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
             var totalS = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border};
+            var totalSNum = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border,numFmt:'#,##0'};
             ws[sc(0,startCol)] = {v:'TIER',t:'s',s:hdr};
             ws[sc(0,startCol+1)] = {v:'QTY',t:'s',s:hdr};
             ws[sc(0,startCol+2)] = {v:'%',t:'s',s:hdr};
             var tiers = Object.keys(tierQty).sort();
             for (var i = 0; i < tiers.length; i++) {
                 ws[sc(i+1,startCol)] = {v:tiers[i],t:'s',s:bdr};
-                ws[sc(i+1,startCol+1)] = {v:tierQty[tiers[i]],t:'n',s:bdr};
+                ws[sc(i+1,startCol+1)] = {v:tierQty[tiers[i]],t:'n',s:bdrNum};
                 ws[sc(i+1,startCol+2)] = {v:total>0?Math.round(tierQty[tiers[i]]/total*1000)/10+'%':'0%',t:'s',s:bdr};
             }
             var tr = tiers.length + 1;
             ws[sc(tr,startCol)] = {v:'TOTAL',t:'s',s:totalS};
-            ws[sc(tr,startCol+1)] = {v:total,t:'n',s:totalS};
+            ws[sc(tr,startCol+1)] = {v:total,t:'n',s:totalSNum};
             ws[sc(tr,startCol+2)] = {v:'100%',t:'s',s:totalS};
             var topRow = tr + 2;
             ws[sc(topRow,startCol)] = {v:'TOP 5 ARTIKEL',t:'s',s:hdr};
@@ -13282,13 +13278,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!name) return;
                 if (!artAgg[name]) artAgg[name] = {qty:0,sales:0};
                 artAgg[name].qty += (qty||0);
-                artAgg[name].sales += (sales||0);
+                artAgg[name].sales += Math.round(sales||0);
             });
             var topArts = Object.entries(artAgg).sort(function(a,b){return b[1].qty-a[1].qty;}).slice(0,5);
             for (var j = 0; j < topArts.length; j++) {
                 ws[sc(topRow+1+j,startCol)] = {v:topArts[j][0],t:'s',s:{alignment:{horizontal:'left',vertical:'center'},font:{sz:9},border:border}};
-                ws[sc(topRow+1+j,startCol+1)] = {v:topArts[j][1].qty,t:'n',s:bdr};
-                ws[sc(topRow+1+j,startCol+2)] = {v:topArts[j][1].sales,t:'n',s:bdr};
+                ws[sc(topRow+1+j,startCol+1)] = {v:topArts[j][1].qty,t:'n',s:bdrNum};
+                ws[sc(topRow+1+j,startCol+2)] = {v:topArts[j][1].sales,t:'n',s:bdrNum};
             }
             var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
             if (startCol+2 > range.e.c) range.e.c = startCol+2;
@@ -13317,11 +13313,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             if (channel === 'retail') {
                 var wb = XLSX.utils.book_new();
-                var headers = ['TANGGAL','ORDER NO','KODE BARANG','KODE KECIL','NAMA BARANG','SIZE','GENDER','SERIES','TIER','QTY','TOTAL'];
+                var headers = ['TANGGAL','ORDER NO','KODE BARANG','KODE KECIL','NAMA BARANG','SIZE','GENDER','SERIES','TIER','QTY','HARGA','TOTAL'];
                 var salesLeftCols = [0,1,2,3,4,5,6,7];
-                var salesColWidths = [{wch:12},{wch:14},{wch:14},{wch:12},{wch:30},{wch:8},{wch:8},{wch:12},{wch:6},{wch:8},{wch:14}];
+                var salesColWidths = [{wch:12},{wch:14},{wch:14},{wch:12},{wch:30},{wch:8},{wch:8},{wch:12},{wch:6},{wch:8},{wch:14},{wch:14}];
                 var toRow = function(i) {
-                    return [i.date||'',i.order_no||'',(i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),i.nama_barang||i.product_name||i.name||'',i.ukuran||i.size||'',i.gender||'',i.collection||i.series||'',i.tier||'',i.qty||0,Math.round(i.total||0)];
+                    return [i.date||'',i.order_no||'',(i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),i.nama_barang||i.product_name||i.name||'',i.ukuran||i.size||'',i.gender||'',i.collection||i.series||'',i.tier||'',i.qty||0,Math.round(i.price||0),Math.round(i.total||0)];
                 };
                 var summHeaders = ['RANK','KODE BARANG','KODE KECIL','NAMA BARANG','GENDER','SERIES','QTY','SALES'];
                 var artMap = {};
@@ -13363,16 +13359,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var ws = XLSX.utils.aoa_to_sheet(aoa);
                     ws['!cols'] = salesColWidths.slice();
                     applyTableStyle(ws, salesLeftCols);
-                    addSideSummary(ws, rows, 8, 9, 4, 12);
+                    addSideSummary(ws, rows, 8, 9, 4, 13);
                     XLSX.utils.book_append_sheet(wb, ws, store.substring(0,31));
                 });
                 XLSX.writeFile(wb, 'sales_retail_' + new Date().toISOString().split('T')[0] + '.xlsx');
             } else {
                 var rows = data.map(function(i) {
-                    return { 'TANGGAL':i.date||'','ORDER NO':i.order_no||'','STORE':i.store||'','KODE BARANG':(i.sku||'').toUpperCase(),'KODE KECIL':(i.kode_kecil||'').toUpperCase(),'NAMA BARANG':i.nama_barang||i.product_name||i.name||'','SIZE':i.ukuran||i.size||'','GENDER':i.gender||'','SERIES':i.collection||i.series||'','TIER':i.tier||'','QTY':i.qty||0,'TOTAL':Math.round(i.total||0) };
+                    return { 'TANGGAL':i.date||'','ORDER NO':i.order_no||'','STORE':i.store||'','KODE BARANG':(i.sku||'').toUpperCase(),'KODE KECIL':(i.kode_kecil||'').toUpperCase(),'NAMA BARANG':i.nama_barang||i.product_name||i.name||'','SIZE':i.ukuran||i.size||'','GENDER':i.gender||'','SERIES':i.collection||i.series||'','TIER':i.tier||'','QTY':i.qty||0,'HARGA':Math.round(i.price||0),'TOTAL':Math.round(i.total||0) };
                 });
                 var ws = XLSX.utils.json_to_sheet(rows);
-                ws['!cols'] = [{wch:12},{wch:14},{wch:22},{wch:14},{wch:12},{wch:30},{wch:8},{wch:8},{wch:12},{wch:6},{wch:8},{wch:14}];
+                ws['!cols'] = [{wch:12},{wch:14},{wch:22},{wch:14},{wch:12},{wch:30},{wch:8},{wch:8},{wch:12},{wch:6},{wch:8},{wch:14},{wch:14}];
                 applyTableStyle(ws, [0,1,2,3,4,5,6,7,8]);
                 var wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Sales ' + channel);
@@ -13449,6 +13445,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 }
             }
+            for (var r2 = 1; r2 <= rangeWH.e.r; r2++) {
+                var fillAddr = XLSX.utils.encode_cell({r:r2,c:4});
+                if (wsWH[fillAddr] && typeof wsWH[fillAddr].v === 'string' && wsWH[fillAddr].v.indexOf('%') >= 0) {
+                    var pct = parseInt(wsWH[fillAddr].v);
+                    if (pct >= 100) wsWH[fillAddr].s = {fill:{fgColor:{rgb:'DC2626'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                    else if (pct >= 80) wsWH[fillAddr].s = {fill:{fgColor:{rgb:'EAB308'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                    else wsWH[fillAddr].s = {fill:{fgColor:{rgb:'16A34A'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                }
+            }
             XLSX.utils.book_append_sheet(wb, wsWH, 'Warehouse');
             var rtHeaders = ['STORE', 'AREA', 'ACTUAL STOCK', 'MAX STOCK', 'FILL RATE'];
             var rtRows = [];
@@ -13462,6 +13467,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var wsRT = XLSX.utils.aoa_to_sheet([rtHeaders].concat(rtRows));
             wsRT['!cols'] = [{wch:28},{wch:12},{wch:14},{wch:12},{wch:10}];
             applyTableStyle(wsRT, [0,1]);
+            var rangeRT = XLSX.utils.decode_range(wsRT['!ref']);
+            var borderRT = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            for (var r3 = 1; r3 <= rangeRT.e.r; r3++) {
+                var fillAddrRT = XLSX.utils.encode_cell({r:r3,c:4});
+                if (wsRT[fillAddrRT] && typeof wsRT[fillAddrRT].v === 'string' && wsRT[fillAddrRT].v.indexOf('%') >= 0) {
+                    var pctRT = parseInt(wsRT[fillAddrRT].v);
+                    if (pctRT >= 100) wsRT[fillAddrRT].s = {fill:{fgColor:{rgb:'DC2626'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:borderRT};
+                    else if (pctRT >= 80) wsRT[fillAddrRT].s = {fill:{fgColor:{rgb:'EAB308'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:borderRT};
+                    else wsRT[fillAddrRT].s = {fill:{fgColor:{rgb:'16A34A'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:borderRT};
+                }
+            }
             XLSX.utils.book_append_sheet(wb, wsRT, 'Retail Store');
             XLSX.writeFile(wb, 'max_stock_analysis_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
