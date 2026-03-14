@@ -6523,7 +6523,7 @@
                 if (!area || area === 'Jakarta') totalWHJ += item.WHJ;
                 if (!area || area === 'Bali') totalWHOB += item.WHOB || 0;
                 if (!area || area === 'Jakarta') totalWHOJ += item.WHOJ || 0;
-                if (!area) totalToko += item.stokToko;
+                if (!area) totalToko += (item.stokRetail || 0);
                 else if (area === 'Bali') totalToko += item.stokTokoBali;
                 else if (area === 'Jakarta') totalToko += item.stokTokoJakarta;
                 else if (area === 'Jawa Timur') totalToko += item.stokTokoJatim;
