@@ -1146,15 +1146,7 @@
                     <div id="scWhJakarta" style="font-size:1.8rem;font-weight:700;color:#1e3a8a;">0</div>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
-                <div style="background:linear-gradient(135deg,#fef9c3 0%,#fde047 100%);border-radius:12px;padding:15px;">
-                    <div style="font-size:0.8rem;color:#854d0e;margin-bottom:5px;">📦 WH Online Bali</div>
-                    <div id="scWhOnlineBali" style="font-size:1.8rem;font-weight:700;color:#713f12;">0</div>
-                </div>
-                <div style="background:linear-gradient(135deg,#e0f2fe 0%,#7dd3fc 100%);border-radius:12px;padding:15px;">
-                    <div style="font-size:0.8rem;color:#0c4a6e;margin-bottom:5px;">📦 WH Online Jakarta</div>
-                    <div id="scWhOnlineJakarta" style="font-size:1.8rem;font-weight:700;color:#082f49;">0</div>
-                </div>
+            <div style="display:grid;grid-template-columns:repeat(1,1fr);gap:15px;margin-bottom:20px;">
                 <div style="background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);border-radius:12px;padding:15px;">
                     <div style="font-size:0.8rem;color:#5b21b6;margin-bottom:5px;">🏪 Total Stok Toko</div>
                     <div id="scStokToko" style="font-size:1.8rem;font-weight:700;color:#4c1d95;">0</div>
@@ -1257,9 +1249,6 @@
                             <option value="pusat">WH Pusat</option>
                             <option value="bali">WH Bali</option>
                             <option value="jkt">WH Jakarta</option>
-                            <option value="onlineBali">WH Online Bali</option>
-                            <option value="onlineJkt">WH Online Jakarta</option>
-                            <option value="onlineTotal">Online Total</option>
                         </select>
                     </div>
                     <div style="min-width:110px;">
@@ -6226,9 +6215,6 @@
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + '">WH O.BALI</th>' +
-                    '<th style="' + headerStyle + '">WH O.JKT</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -6252,9 +6238,6 @@
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'whTotal\')">WH TOTAL</th>' +
-                    '<th style="' + headerStyle + '">WH O.BALI</th>' +
-                    '<th style="' + headerStyle + '">WH O.JKT</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'whOnlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokRetail\')">STOK RETAIL</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'stokConsignment\')">STOK CONSIG</th>' +
                     '<th style="' + headerStyle + '" onclick="sortStockControl(\'global\')">STOK GLOBAL</th>' +
@@ -6438,9 +6421,6 @@
                 if (basisStok === 'pusat') return item.WHS || 0;
                 if (basisStok === 'bali') return item.WHB || 0;
                 if (basisStok === 'jkt') return item.WHJ || 0;
-                if (basisStok === 'onlineBali') return item.WHOB || 0;
-                if (basisStok === 'onlineJkt') return item.WHOJ || 0;
-                if (basisStok === 'onlineTotal') return item.whOnlineTotal || 0;
                 return item.globalStock || 0; // default: global
             }
 
@@ -6555,10 +6535,6 @@
             document.getElementById('scWhPusat').textContent = totalWHS.toLocaleString();
             document.getElementById('scWhBali').textContent = totalWHB.toLocaleString();
             document.getElementById('scWhJakarta').textContent = totalWHJ.toLocaleString();
-            const scWhOBEl = document.getElementById('scWhOnlineBali');
-            if (scWhOBEl) scWhOBEl.textContent = totalWHOB.toLocaleString();
-            const scWhOJEl = document.getElementById('scWhOnlineJakarta');
-            if (scWhOJEl) scWhOJEl.textContent = totalWHOJ.toLocaleString();
             document.getElementById('scStokToko').textContent = totalToko.toLocaleString();
 
             // KPI Summary Cards — count by GAP category (using ALL filtered items, ignoring GAP/STR filter)
@@ -6746,9 +6722,6 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + whOB + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + whOJ + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:#fde68a;color:#92400e;">' + whOnline + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
@@ -6772,9 +6745,6 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + whOB + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + whOJ + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:#fde68a;color:#92400e;">' + whOnline + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
@@ -6879,7 +6849,6 @@
                     case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
-                    case 'whOnlineTotal': valA = a.whOnlineTotal || 0; valB = b.whOnlineTotal || 0; break;
                     case 'stokRetail': valA = a.stokRetail || 0; valB = b.stokRetail || 0; break;
                     case 'stokConsignment': valA = a.stokConsignment || 0; valB = b.stokConsignment || 0; break;
                     case 'stokToko': valA = a.stokToko; valB = b.stokToko; break;
@@ -6978,9 +6947,6 @@
                 row[m3Label] = sales.m3;
                 row['AVG'] = Math.round(avgSales * 100) / 100;
                 row['WH TOTAL'] = item.whTotal || 0;
-                row['WH O.BALI'] = item.WHOB || 0;
-                row['WH O.JKT'] = item.WHOJ || 0;
-                row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
                 row['STOK RETAIL'] = item.stokRetail || 0;
                 row['STOK CONSIG'] = item.stokConsignment || 0;
                 row['GLOBAL'] = item.globalStock || 0;
@@ -7152,6 +7118,7 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'to\')">TO</th>' +
                 '</tr>';
             } else {
                 thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
@@ -7169,6 +7136,7 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'to\')">TO</th>' +
                 '</tr>';
             }
         }
@@ -7322,6 +7290,8 @@
                 const gap = basisStock - (avgSales * 3);
                 const tw = avgSales > 0 ? (onlineTotal / avgSales).toFixed(1) : 0;
                 const twVal = parseFloat(tw) || 0;
+                const to = avgSales > 0 ? (basisStock / avgSales).toFixed(1) : 0;
+                const toVal = parseFloat(to) || 0;
                 const isDeadStock = avgSales === 0 && basisStock > 0;
 
                 // GAP color
@@ -7337,6 +7307,15 @@
                     else if (twVal <= 2) twStyle = 'background:#eab308;color:black;';
                     else if (twVal <= 4) twStyle = 'background:#16a34a;color:white;';
                     else twStyle = 'background:#7c3aed;color:white;';
+                }
+
+                // TO color
+                let toStyle = '';
+                if (avgSales > 0) {
+                    if (toVal < 1) toStyle = 'background:#dc2626;color:white;';
+                    else if (toVal <= 2) toStyle = 'background:#eab308;color:black;';
+                    else if (toVal <= 4) toStyle = 'background:#16a34a;color:white;';
+                    else toStyle = 'background:#7c3aed;color:white;';
                 }
 
                 const cs = 'padding:8px;text-align:center;border-right:1px solid #000000;';
@@ -7357,6 +7336,7 @@
                         '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + toStyle + '">' + to + '</td>' +
                     '</tr>';
                 } else {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
@@ -7375,6 +7355,7 @@
                         '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;' + toStyle + '">' + to + '</td>' +
                     '</tr>';
                 }
             }).join('');
@@ -7466,6 +7447,10 @@
                         valA = avgA > 0 ? ((a.whOnlineTotal || 0) / avgA) : 999;
                         valB = avgB > 0 ? ((b.whOnlineTotal || 0) / avgB) : 999;
                         break;
+                    case 'to':
+                        valA = avgA > 0 ? (getSortBasis(a) / avgA) : 999;
+                        valB = avgB > 0 ? (getSortBasis(b) / avgB) : 999;
+                        break;
                     default:
                         valA = scoViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
                         valB = scoViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
@@ -7513,6 +7498,7 @@
                 const avgSales = sales.avg;
                 const gap = basisStock - (avgSales * 3);
                 const tw = avgSales > 0 ? ((item.whOnlineTotal || 0) / avgSales) : 0;
+                const to = avgSales > 0 ? (basisStock / avgSales) : 0;
                 const isDead = avgSales === 0 && basisStock > 0;
                 let gapStatus = 'Aman';
                 if (isDead) gapStatus = 'Dead Stock';
@@ -7538,6 +7524,7 @@
                 row['WH O.JKT'] = item.WHOJ || 0;
                 row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
                 row['TW'] = Math.round(tw * 100) / 100;
+                row['TO'] = Math.round(to * 100) / 100;
                 row['GAP'] = Math.round(gap);
                 row['GAP STATUS'] = gapStatus;
                 return row;
