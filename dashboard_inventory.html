@@ -13240,23 +13240,81 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var wb = XLSX.utils.book_new();
             var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
-            var whAgg = {}, storeAgg = {};
+            var maxStockArea = {'Bali':72000,'Jakarta':48000,'Jawa Timur':120000,'Online Bali':5000};
+            var whAgg = {}, whAreaAgg = {}, storeAgg = {};
+            function getWhArea(wh) {
+                if (!wh) return 'Jawa Timur';
+                var wl = wh.toLowerCase();
+                if (wl.indexOf('online bali') >= 0) return 'Online Bali';
+                if (storeAreaMap[wl]) return normalizeArea(storeAreaMap[wl]);
+                if (wl.indexOf('bali') >= 0 || wl.indexOf('gatsu') >= 0) return 'Bali';
+                if (wl.indexOf('jakarta') >= 0 || wl.indexOf('pluit') >= 0) return 'Jakarta';
+                return 'Jawa Timur';
+            }
             entities.forEach(function(entity) {
                 var ed = allData[entity]; if (!ed) return;
                 (ed.warehouse||[]).forEach(function(item) {
                     if (!item.store_stock) return;
-                    Object.entries(item.store_stock).forEach(function(e) { if (!whAgg[e[0]]) whAgg[e[0]]=0; whAgg[e[0]]+=e[1]; });
+                    Object.entries(item.store_stock).forEach(function(e) {
+                        var wh = e[0], stock = e[1];
+                        if (!whAgg[wh]) whAgg[wh] = 0;
+                        whAgg[wh] += stock;
+                        var area = getWhArea(wh);
+                        if (!whAreaAgg[area]) whAreaAgg[area] = {};
+                        if (!whAreaAgg[area][wh]) whAreaAgg[area][wh] = 0;
+                        whAreaAgg[area][wh] += stock;
+                    });
                 });
                 (ed.retail||[]).forEach(function(item) {
                     if (!item.store_stock) return;
-                    Object.entries(item.store_stock).forEach(function(e) { if (!storeAgg[e[0]]) storeAgg[e[0]]=0; storeAgg[e[0]]+=e[1]; });
+                    Object.entries(item.store_stock).forEach(function(e) {
+                        if (isWarehouseLocation(e[0])) return;
+                        if (!storeAgg[e[0]]) storeAgg[e[0]] = 0;
+                        storeAgg[e[0]] += e[1];
+                    });
                 });
             });
-            var whRows = []; Object.keys(whAgg).sort().forEach(function(wh) { var ms=getMaxStockForStore(wh); var a=whAgg[wh]; whRows.push({'WAREHOUSE':wh,'ACTUAL STOCK':a,'MAX STOCK':ms||'-','FILL RATE (%)':ms>0?Math.round(a/ms*100):0}); });
-            var rtRows = []; Object.keys(storeAgg).sort().forEach(function(s) { var ms=getMaxStockForStore(s); var a=storeAgg[s]; rtRows.push({'STORE':s,'ACTUAL STOCK':a,'MAX STOCK':ms||'-','FILL RATE (%)':ms>0?Math.round(a/ms*100):0}); });
-            if (whRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(whRows), 'Warehouse');
-            if (rtRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rtRows), 'Retail Store');
-            XLSX.writeFile(wb, 'max_stock_analysis_export.xlsx');
+            var whHeaders = ['AREA', 'WAREHOUSE', 'ACTUAL STOCK', 'MAX STOCK', 'FILL RATE'];
+            var whRows = [];
+            var areas = ['Jawa Timur', 'Bali', 'Jakarta', 'Online Bali'];
+            areas.forEach(function(area) {
+                var warehouses = whAreaAgg[area] || {};
+                var areaTotal = 0;
+                Object.keys(warehouses).sort().forEach(function(wh) {
+                    var stock = warehouses[wh];
+                    var ms = getMaxStockForStore(wh);
+                    areaTotal += stock;
+                    whRows.push([area, wh, stock, ms || '-', ms > 0 ? Math.round(stock/ms*100) + '%' : '-']);
+                });
+                var areaMax = maxStockArea[area] || 0;
+                whRows.push([area, '▸ TOTAL ' + area.toUpperCase(), areaTotal, areaMax, areaMax > 0 ? Math.round(areaTotal/areaMax*100) + '%' : '-']);
+                whRows.push(['', '', '', '', '']);
+            });
+            var wsWH = XLSX.utils.aoa_to_sheet([whHeaders].concat(whRows));
+            applyTableStyle(wsWH);
+            var rangeWH = XLSX.utils.decode_range(wsWH['!ref']);
+            var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            for (var r = 1; r <= rangeWH.e.r; r++) {
+                var cellA = wsWH[XLSX.utils.encode_cell({r:r,c:1})];
+                if (cellA && typeof cellA.v === 'string' && cellA.v.indexOf('▸ TOTAL') >= 0) {
+                    for (var c = 0; c <= rangeWH.e.c; c++) {
+                        var addr = XLSX.utils.encode_cell({r:r,c:c});
+                        if (wsWH[addr]) wsWH[addr].s = {font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},alignment:{horizontal:'center',vertical:'center'},border:border};
+                    }
+                }
+            }
+            XLSX.utils.book_append_sheet(wb, wsWH, 'Warehouse');
+            var rtHeaders = ['STORE', 'AREA', 'ACTUAL STOCK', 'MAX STOCK', 'FILL RATE'];
+            var rtRows = [];
+            Object.keys(storeAgg).sort().forEach(function(s) {
+                var ms = getMaxStockForStore(s);
+                var a = storeAgg[s];
+                rtRows.push([s, getAreaFromStore(s), a, ms || '-', ms > 0 ? Math.round(a/ms*100) + '%' : '-']);
+            });
+            var wsRT = XLSX.utils.aoa_to_sheet([rtHeaders].concat(rtRows));
+            applyTableStyle(wsRT);
+            XLSX.utils.book_append_sheet(wb, wsRT, 'Retail Store');
+            XLSX.writeFile(wb, 'max_stock_analysis_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function exportAlertList(type) {
