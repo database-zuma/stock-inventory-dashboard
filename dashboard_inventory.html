@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Dashboard Operasional - Zuma Indonesia</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12887,20 +12887,22 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function applyTableStyle(ws) {
             if (!ws['!ref']) return;
             var range = XLSX.utils.decode_range(ws['!ref']);
-            var center = {alignment:{horizontal:'center',vertical:'center'}};
-            var headerStyle = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true},fill:{fgColor:{rgb:'FF1F2937'}},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
-            var borderStyle = {border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            var headerStyle = {alignment:{horizontal:'center',vertical:'center',wrapText:true},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+            var cellCenter = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+            var cellLeft = {alignment:{horizontal:'left',vertical:'center'},font:{sz:10},border:border};
             for (var r = range.s.r; r <= range.e.r; r++) {
                 for (var c = range.s.c; c <= range.e.c; c++) {
                     var addr = XLSX.utils.encode_cell({r:r,c:c});
-                    if (!ws[addr]) continue;
+                    if (!ws[addr]) { ws[addr] = {v:'',t:'s'}; }
                     if (r === 0) { ws[addr].s = headerStyle; }
-                    else { ws[addr].s = Object.assign({}, borderStyle, center); }
+                    else if (c === 5) { ws[addr].s = cellLeft; }
+                    else { ws[addr].s = cellCenter; }
                 }
             }
             var cols = [];
             for (var ci = range.s.c; ci <= range.e.c; ci++) {
-                cols.push({wch: ci === 5 ? 30 : ci <= 4 ? 18 : 12});
+                cols.push({wch: ci === 5 ? 32 : ci <= 4 ? 18 : 12});
             }
             ws['!cols'] = cols;
         }
@@ -12917,9 +12919,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             var startCol = 13;
             var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
-            var ctr = {alignment:{horizontal:'center',vertical:'center'}};
-            var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true},fill:{fgColor:{rgb:'FF1F2937'}},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
-            var bdr = {alignment:{horizontal:'center',vertical:'center'},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}};
+            var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+            var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+            var bdr = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+            var totalStyle = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border};
             ws[sc(0, startCol)] = {v:'TIER',t:'s',s:hdr};
             ws[sc(0, startCol+1)] = {v:'QTY',t:'s',s:hdr};
             ws[sc(0, startCol+2)] = {v:'%',t:'s',s:hdr};
@@ -12931,13 +12934,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 ws[sc(r, startCol+2)] = {v:total>0?Math.round(tierQty[tiers[i]]/total*1000)/10+'%':'0%',t:'s',s:bdr};
             }
             var totalR = tiers.length + 1;
-            ws[sc(totalR, startCol)] = {v:'TOTAL',t:'s',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
-            ws[sc(totalR, startCol+1)] = {v:total,t:'n',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
-            ws[sc(totalR, startCol+2)] = {v:'100%',t:'s',s:{alignment:{horizontal:'center',vertical:'center'},font:{bold:true},border:{top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}}}};
+            ws[sc(totalR, startCol)] = {v:'TOTAL',t:'s',s:totalStyle};
+            ws[sc(totalR, startCol+1)] = {v:total,t:'n',s:totalStyle};
+            ws[sc(totalR, startCol+2)] = {v:'100%',t:'s',s:totalStyle};
             var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
             if (startCol + 2 > range.e.c) range.e.c = startCol + 2;
             if (totalR > range.e.r) range.e.r = totalR;
             ws['!ref'] = XLSX.utils.encode_range(range);
+            if (!ws['!cols']) ws['!cols'] = [];
+            while (ws['!cols'].length <= startCol + 2) ws['!cols'].push({wch:12});
+            ws['!cols'][startCol] = {wch:10};
+            ws['!cols'][startCol+1] = {wch:12};
+            ws['!cols'][startCol+2] = {wch:8};
         }
 
         function exportSummaryStockOnHand(type, entity) {
@@ -13099,21 +13107,23 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var kkRows = buildRows(kkItems, 'kodeKecil');
             function addColoredSheet(wb, rows, name) {
                 var ws = XLSX.utils.json_to_sheet(rows);
+                applyTableStyle(ws);
                 var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
                 var gapCol = -1;
                 for (var c = range.s.c; c <= range.e.c; c++) {
                     var cell = ws[XLSX.utils.encode_cell({r:0,c:c})];
                     if (cell && cell.v === 'GAP STATUS') { gapCol = c; break; }
                 }
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
                 if (gapCol >= 0) {
                     for (var r = 1; r <= range.e.r; r++) {
                         var addr = XLSX.utils.encode_cell({r:r,c:gapCol});
                         if (ws[addr]) {
                             var val = ws[addr].v;
-                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'FFDC2626'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
-                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'FFEAB308'}},font:{bold:true}};
-                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'FF16A34A'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
-                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'FF1E3A5F'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'DC2626'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'EAB308'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'16A34A'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'1E3A5F'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
                         }
                     }
                 }
@@ -13161,30 +13171,32 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var skuRows = buildRows(scoItems || [], 'sku');
             var kkItems = typeof buildKodeKecilItemsOnline === 'function' ? buildKodeKecilItemsOnline() : [];
             var kkRows = buildRows(kkItems, 'kodeKecil');
-            function addColoredSheet(wb, rows, name) {
+            function addColoredSheetOnline(wb, rows, name) {
                 var ws = XLSX.utils.json_to_sheet(rows);
+                applyTableStyle(ws);
                 var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
                 var gapCol = -1;
                 for (var c = range.s.c; c <= range.e.c; c++) {
                     var cell = ws[XLSX.utils.encode_cell({r:0,c:c})];
                     if (cell && cell.v === 'GAP STATUS') { gapCol = c; break; }
                 }
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
                 if (gapCol >= 0) {
                     for (var r = 1; r <= range.e.r; r++) {
                         var addr = XLSX.utils.encode_cell({r:r,c:gapCol});
                         if (ws[addr]) {
                             var val = ws[addr].v;
-                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'FFDC2626'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
-                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'FFEAB308'}},font:{bold:true}};
-                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'FF16A34A'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
-                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'FF1E3A5F'}},font:{color:{rgb:'FFFFFFFF'},bold:true}};
+                            if (val === 'Understock') ws[addr].s = {fill:{fgColor:{rgb:'DC2626'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Tipis') ws[addr].s = {fill:{fgColor:{rgb:'EAB308'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Aman') ws[addr].s = {fill:{fgColor:{rgb:'16A34A'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
+                            else if (val === 'Dead Stock') ws[addr].s = {fill:{fgColor:{rgb:'1E3A5F'}},font:{color:{rgb:'FFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'},border:border};
                         }
                     }
                 }
                 XLSX.utils.book_append_sheet(wb, ws, name);
             }
-            addColoredSheet(wb, skuRows, 'By SKU');
-            addColoredSheet(wb, kkRows, 'By Kode Kecil');
+            addColoredSheetOnline(wb, skuRows, 'By SKU');
+            addColoredSheetOnline(wb, kkRows, 'By Kode Kecil');
             XLSX.writeFile(wb, 'control_stock_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
