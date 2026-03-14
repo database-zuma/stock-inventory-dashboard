@@ -12870,6 +12870,38 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             XLSX.writeFile(wb, 'rd_transfer_recs_' + (rdData.snapshot_date || 'export') + '.xlsx');
         }
 
+        function addTierSummary(ws, rows, tierIdx) {
+            var tierQty = {};
+            var total = 0;
+            rows.forEach(function(r) {
+                var tier = (Array.isArray(r) ? r[tierIdx] : r.tier) || '-';
+                var stock = Array.isArray(r) ? r[r.length - 1] : r.stock;
+                if (!tierQty[tier]) tierQty[tier] = 0;
+                tierQty[tier] += (stock || 0);
+                total += (stock || 0);
+            });
+            var startCol = 13;
+            var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
+            ws[sc(0, startCol)] = {v: 'TIER', t: 's'};
+            ws[sc(0, startCol+1)] = {v: 'QTY', t: 's'};
+            ws[sc(0, startCol+2)] = {v: '%', t: 's'};
+            var tiers = Object.keys(tierQty).sort();
+            for (var i = 0; i < tiers.length; i++) {
+                var r = i + 1;
+                ws[sc(r, startCol)] = {v: tiers[i], t: 's'};
+                ws[sc(r, startCol+1)] = {v: tierQty[tiers[i]], t: 'n'};
+                ws[sc(r, startCol+2)] = {v: total > 0 ? Math.round(tierQty[tiers[i]] / total * 100 * 10) / 10 + '%' : '0%', t: 's'};
+            }
+            var totalR = tiers.length + 1;
+            ws[sc(totalR, startCol)] = {v: 'TOTAL', t: 's'};
+            ws[sc(totalR, startCol+1)] = {v: total, t: 'n'};
+            ws[sc(totalR, startCol+2)] = {v: '100%', t: 's'};
+            var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            if (startCol + 2 > range.e.c) range.e.c = startCol + 2;
+            if (totalR > range.e.r) range.e.r = totalR;
+            ws['!ref'] = XLSX.utils.encode_range(range);
+        }
+
         function exportSummaryStockOnHand(type) {
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var entities = ['DDD', 'MBB', 'LJBB', 'UBB'];
@@ -12912,14 +12944,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     return [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.nama, r.gender, r.series, r.tipe, r.tier, r.version, r.stock];
                 }));
             };
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(allRows)), 'SEMUA');
+            var wsSemua = XLSX.utils.aoa_to_sheet(toAoa(allRows));
+            addTierSummary(wsSemua, allRows, 9);
+            XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
             if (minusRows.length > 0) {
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(minusRows)), 'MINUS ON HAND');
+                var wsMinus = XLSX.utils.aoa_to_sheet(toAoa(minusRows));
+                addTierSummary(wsMinus, minusRows, 9);
+                XLSX.utils.book_append_sheet(wb, wsMinus, 'MINUS ON HAND');
             }
             var storeMap = {};
             allRows.forEach(function(r) { var k = r.store || 'Other'; if (!storeMap[k]) storeMap[k] = []; storeMap[k].push(r); });
             Object.keys(storeMap).sort().forEach(function(s) {
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(storeMap[s])), s.substring(0,31));
+                var wsStore = XLSX.utils.aoa_to_sheet(toAoa(storeMap[s]));
+                addTierSummary(wsStore, storeMap[s], 9);
+                XLSX.utils.book_append_sheet(wb, wsStore, s.substring(0,31));
             });
             XLSX.writeFile(wb, 'stock_ALL_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
@@ -12934,11 +12972,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return [i.entity||'', i.sku||'', i.kode_kecil||'', i.name||'', i.gender||'', i.series||'', i.tier||'', i.version||'', i.partner||'', i.total||0];
             });
             allRows.sort(function(a,b) { return b[9] - a[9]; });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(allRows)), 'SEMUA');
+            var wsSemua = XLSX.utils.aoa_to_sheet([headers].concat(allRows));
+            addTierSummary(wsSemua, allRows, 6);
+            XLSX.utils.book_append_sheet(wb, wsSemua, 'SEMUA');
             var entityMap = {};
             allRows.forEach(function(r) { var e = r[0]||'Other'; if (!entityMap[e]) entityMap[e] = []; entityMap[e].push(r); });
             Object.keys(entityMap).sort().forEach(function(e) {
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(entityMap[e])), e);
+                var wsE = XLSX.utils.aoa_to_sheet([headers].concat(entityMap[e]));
+                addTierSummary(wsE, entityMap[e], 6);
+                XLSX.utils.book_append_sheet(wb, wsE, e);
             });
             XLSX.writeFile(wb, 'stock_consignment_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
@@ -12968,8 +13010,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             baliRows.sort(function(a,b) { return b[9] - a[9]; });
             jktRows.sort(function(a,b) { return b[9] - a[9]; });
-            if (baliRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(baliRows)), 'WH Online Bali');
-            if (jktRows.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(jktRows)), 'WH Online Jakarta');
+            if (baliRows.length > 0) {
+                var wsBali = XLSX.utils.aoa_to_sheet([headers].concat(baliRows));
+                addTierSummary(wsBali, baliRows, 7);
+                XLSX.utils.book_append_sheet(wb, wsBali, 'WH Online Bali');
+            }
+            if (jktRows.length > 0) {
+                var wsJkt = XLSX.utils.aoa_to_sheet([headers].concat(jktRows));
+                addTierSummary(wsJkt, jktRows, 7);
+                XLSX.utils.book_append_sheet(wb, wsJkt, 'WH Online Jakarta');
+            }
             if (baliRows.length === 0 && jktRows.length === 0) { alert('Tidak ada data WH Online'); return; }
             XLSX.writeFile(wb, 'stock_wh_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
