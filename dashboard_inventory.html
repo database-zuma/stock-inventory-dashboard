@@ -12893,7 +12893,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var headerStyle = {alignment:{horizontal:'center',vertical:'center',wrapText:true},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
             var cellCenter = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
             var cellLeft = {alignment:{horizontal:'left',vertical:'center'},font:{sz:10},border:border};
-            var numFormat = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
+            var numFormat = {alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
             var left = leftCols || [];
             for (var r = range.s.r; r <= range.e.r; r++) {
                 for (var c = range.s.c; c <= range.e.c; c++) {
@@ -13370,6 +13370,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     return [i.date||'',ch,i.store||i.store_name||'',(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.ukuran||i.size||'',i.nama_barang||i.product_name||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.price||i.sales||0),Math.round(i.total||i.sales||0)];
                 };
             }
+            var qtyIdx = baseHeaders.indexOf('QTY');
+            var tierIdx = baseHeaders.indexOf('Tier');
+            var nameIdx = baseHeaders.indexOf('Nama Barang');
             var sizeIdx = baseHeaders.indexOf('Size');
             var verIdx = baseHeaders.indexOf('Version');
             var salesLeftCols = [];
@@ -13377,9 +13380,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (lc === sizeIdx || lc === tierIdx || lc === verIdx || lc >= qtyIdx) continue;
                 salesLeftCols.push(lc);
             }
-            var qtyIdx = baseHeaders.indexOf('QTY');
-            var tierIdx = baseHeaders.indexOf('Tier');
-            var nameIdx = baseHeaders.indexOf('Nama Barang');
             var wb = XLSX.utils.book_new();
             // Retail-only: filter out EVENT stores
             var eventStores = {};
