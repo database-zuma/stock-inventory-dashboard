@@ -13332,35 +13332,55 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             if (data.length === 0) { alert('Data sales ' + channel + ' belum tersedia. Dashboard masih loading atau tidak ada data.'); return; }
 
-            // Common row builder
             var isRetail = channel === 'retail';
             var isOnline = channel === 'online';
-            var baseHeaders = isRetail
-                ? ['TANGGAL','ORDER NO','STORE','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL']
-                : ['TANGGAL','STORE','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
-            if (isOnline) baseHeaders.splice(1, 0, 'MARKETPLACE');
-            var toRow = function(i) {
-                var kb = (i.kode_besar || i.sku || '').toUpperCase();
-                var kk = (i.kode_kecil || '').toUpperCase();
-                var km = (i.kode_mix || '').toUpperCase();
-                var kms = (i.kode_mix_size || '').toUpperCase();
-                var nb = i.nama_barang || i.product_name || i.name || '';
-                var row = [i.date||''];
-                if (isOnline) row.push(i.marketplace || '');
-                if (isRetail) row.push(i.order_no || '');
-                row.push(i.store || i.store_name || '');
-                row = row.concat([kb, kk, km, kms, i.ukuran||i.size||'', nb, i.gender||'', i.collection||i.series||'', i.tipe||'', i.tier||'', i.version||'', i.qty||0, Math.round(i.price||i.sales||0), Math.round(i.total||i.sales||0)]);
-                return row;
-            };
-            var leftEnd = isRetail ? 13 : (isOnline ? 13 : 12);
-            var salesLeftCols = []; for (var lc=0;lc<=leftEnd;lc++) salesLeftCols.push(lc);
+            var isConsig = channel === 'consig';
+            var isWholesale = channel === 'wholesale';
+            var baseHeaders, toRow;
+
+            if (isRetail) {
+                baseHeaders = ['TANGGAL','ORDER NO','STORE','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
+                toRow = function(i) {
+                    return [i.date||'',i.order_no||'',i.store||'',(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.ukuran||i.size||'',i.nama_barang||i.product_name||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.price||0),Math.round(i.total||0)];
+                };
+            } else if (isOnline) {
+                baseHeaders = ['TANGGAL','MARKETPLACE','AREA','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
+                toRow = function(i) {
+                    var storeName = (i.area||'')==='Jakarta' ? 'Online Jakarta' : ((i.area||'')==='Bali' ? 'Online Bali' : 'Online');
+                    return [i.date||'',i.marketplace||'',storeName,(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.ukuran||i.size||'',i.nama_barang||i.product_name||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.price||0),Math.round(i.total||0)];
+                };
+            } else if (isConsig) {
+                baseHeaders = ['TANGGAL','STORE','PARTNER','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
+                toRow = function(i) {
+                    return [i.date||'',i.store_name||i.store||'',i.partner||'',(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.size||i.ukuran||'',i.product_name||i.nama_barang||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.sales||i.price||0),Math.round(i.sales||i.total||0)];
+                };
+            } else {
+                baseHeaders = ['TANGGAL','AREA','PELANGGAN','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
+                toRow = function(i) {
+                    return [i.date||'',i.area||'',i.customer||'',(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.ukuran||i.size||'',i.nama_barang||i.product_name||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.price||0),Math.round(i.total||0)];
+                };
+            }
+            var salesLeftCols = []; for (var lc=0;lc<=13;lc++) salesLeftCols.push(lc);
             var qtyIdx = baseHeaders.indexOf('QTY');
             var tierIdx = baseHeaders.indexOf('Tier');
             var nameIdx = baseHeaders.indexOf('Nama Barang');
             var wb = XLSX.utils.book_new();
+            // Retail-only: filter out EVENT stores
+            var eventStores = {};
+            if (isRetail) {
+                data.forEach(function(i) { if ((i.category||'').toUpperCase() === 'EVENT') eventStores[i.store]=true; });
+                data = data.filter(function(i) { return !eventStores[i.store]; });
+            }
+            function makeSheet(rows, name) {
+                rows.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
+                var ws = XLSX.utils.aoa_to_sheet([baseHeaders].concat(rows));
+                applyTableStyle(ws, salesLeftCols);
+                addSideSummary(ws, rows, tierIdx, qtyIdx, nameIdx, baseHeaders.length + 1);
+                XLSX.utils.book_append_sheet(wb, ws, name.substring(0,31));
+            }
 
             if (isRetail) {
-                // Summary sheet
+                // SUMMARY sheet
                 var summHeaders = ['RANK','Kode Barang','Kode Kecil','Nama Barang','Gender','Series','QTY','SALES'];
                 var artMap = {};
                 data.forEach(function(i) {
@@ -13383,55 +13403,38 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 Object.keys(tierAgg).sort().forEach(function(t) { summAoa.push(['',t,'','','','',tierAgg[t].qty,tierTotal>0?Math.round(tierAgg[t].qty/tierTotal*1000)/10+'%':'0%']); });
                 summAoa.push(['','TOTAL','','','','',tierTotal,'100%']);
                 var wsSumm = XLSX.utils.aoa_to_sheet(summAoa);
-                wsSumm['!cols'] = [{wch:6},{wch:14},{wch:12},{wch:30},{wch:8},{wch:12},{wch:10},{wch:14}];
+                wsSumm['!cols'] = [{wch:6},{wch:16},{wch:12},{wch:30},{wch:8},{wch:12},{wch:10},{wch:14}];
                 applyTableStyle(wsSumm, [1,2,3,4,5]);
                 XLSX.utils.book_append_sheet(wb, wsSumm, 'SUMMARY');
-                // Per store sheets
+                // Per retail store sheets (no EVENT stores)
                 var storeMap = {};
                 data.forEach(function(i) { var s=i.store||'Other'; if (!storeMap[s]) storeMap[s]=[]; storeMap[s].push(i); });
-                Object.keys(storeMap).sort().forEach(function(store) {
-                    var rows = storeMap[store].map(toRow);
-                    rows.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                    var ws = XLSX.utils.aoa_to_sheet([baseHeaders].concat(rows));
-                    applyTableStyle(ws, salesLeftCols);
-                    addSideSummary(ws, rows, tierIdx, qtyIdx, nameIdx, baseHeaders.length + 1);
-                    XLSX.utils.book_append_sheet(wb, ws, store.substring(0,31));
-                });
+                Object.keys(storeMap).sort().forEach(function(store) { makeSheet(storeMap[store].map(toRow), store); });
             } else if (isOnline) {
-                // Online: 3 sheets (SEMUA, Jakarta, Bali)
-                var allRows = data.map(toRow);
-                allRows.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                var jktRows = allRows.filter(function(r) { var area = data[allRows.indexOf(r)] ? (data[allRows.indexOf(r)].area||'') : ''; return area === 'Jakarta'; });
-                var baliRows = allRows.filter(function(r) { var area = data[allRows.indexOf(r)] ? (data[allRows.indexOf(r)].area||'') : ''; return area === 'Bali'; });
-                // Better: use index mapping
-                var jktR = [], baliR = [];
-                data.forEach(function(i, idx) {
+                var allR = [], jktR = [], baliR = [];
+                data.forEach(function(i) {
                     var row = toRow(i);
+                    allR.push(row);
                     if ((i.area||'') === 'Jakarta') jktR.push(row);
                     else if ((i.area||'') === 'Bali') baliR.push(row);
                 });
+                makeSheet(allR, 'SEMUA');
+                if (jktR.length) makeSheet(jktR, 'Jakarta');
+                if (baliR.length) makeSheet(baliR, 'Bali');
+            } else if (isConsig) {
+                // SEMUA + per partner sheets
                 var allR = data.map(toRow);
-                allR.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                jktR.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                baliR.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                function addOnlineSheet(rows, name) {
-                    if (!rows.length) return;
-                    var ws = XLSX.utils.aoa_to_sheet([baseHeaders].concat(rows));
-                    applyTableStyle(ws, salesLeftCols);
-                    addSideSummary(ws, rows, tierIdx, qtyIdx, nameIdx, baseHeaders.length + 1);
-                    XLSX.utils.book_append_sheet(wb, ws, name);
-                }
-                addOnlineSheet(allR, 'SEMUA');
-                addOnlineSheet(jktR, 'Jakarta');
-                addOnlineSheet(baliR, 'Bali');
-            } else {
-                // Consig / Wholesale
-                var allRows = data.map(toRow);
-                allRows.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
-                var ws = XLSX.utils.aoa_to_sheet([baseHeaders].concat(allRows));
-                applyTableStyle(ws, salesLeftCols);
-                addSideSummary(ws, allRows, tierIdx, qtyIdx, nameIdx, baseHeaders.length + 1);
-                XLSX.utils.book_append_sheet(wb, ws, 'Sales ' + channel);
+                makeSheet(allR, 'SEMUA');
+                var partnerMap = {};
+                data.forEach(function(i) { var p=i.partner||'Other'; if (!partnerMap[p]) partnerMap[p]=[]; partnerMap[p].push(i); });
+                Object.keys(partnerMap).sort().forEach(function(p) { makeSheet(partnerMap[p].map(toRow), p); });
+            } else if (isWholesale) {
+                // SEMUA + per area sheets
+                var allR = data.map(toRow);
+                makeSheet(allR, 'SEMUA');
+                var areaMap = {};
+                data.forEach(function(i) { var a=i.area||'Other'; if (!areaMap[a]) areaMap[a]=[]; areaMap[a].push(i); });
+                Object.keys(areaMap).sort().forEach(function(a) { makeSheet(areaMap[a].map(toRow), a); });
             }
             XLSX.writeFile(wb, 'sales_' + channel + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
