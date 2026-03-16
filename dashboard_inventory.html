@@ -10367,7 +10367,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             try {
-                const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10) + '&_t=' + Date.now());
+                const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
                 onlineRawData = rawData;
                 currentOnlineDataSource = 'online';
                 populateOnlineFilters(rawData);
@@ -10440,6 +10440,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         async function loadGlobalChannel() {
             const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data global...</div>'; });
+
+            // Cache check - return early if data already loaded
+            if (globalRawData && globalRawData.length > 0) {
+                populateOnlineFilters(globalRawData);
+                applyOnlineFilters();
+                return;
+            }
 
             try {
                 // Load all channels in parallel
