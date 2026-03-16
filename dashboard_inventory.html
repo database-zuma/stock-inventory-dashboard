@@ -10359,12 +10359,47 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const containers = ['onlineSummaryCards','onlineByMarketplace','onlineTopProducts','onlineByGender','onlineBySeries','onlineTrend','onlineByTier','onlineDailyTrend','onlineSizeDistribution'];
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data online...</div>'; });
 
+            // Cache check - return early if data already loaded
             if (onlineRawData) { 
-                currentOnlineDataSource = 'online'; // Make sure to use online data
+                currentOnlineDataSource = 'online';
                 populateOnlineFilters(onlineRawData); 
                 applyOnlineFilters(); 
                 return; 
             }
+
+            // Check if we have online data from Global channel
+            if (globalRawData && globalRawData.length > 0) {
+                const onlineFromGlobal = globalRawData.filter(r => r.channel === 'Online');
+                if (onlineFromGlobal.length > 0) {
+                    onlineRawData = onlineFromGlobal;
+                    currentOnlineDataSource = 'online';
+                    populateOnlineFilters(onlineRawData);
+                    applyOnlineFilters();
+                    return;
+                }
+            }
+
+            // Fetch with retry logic
+            const maxRetries = 3;
+            let lastError = null;
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
+                    onlineRawData = rawData;
+                    currentOnlineDataSource = 'online';
+                    populateOnlineFilters(rawData);
+                    applyOnlineFilters();
+                    return;
+                } catch(e) {
+                    lastError = e;
+                    console.error('Online API attempt ' + attempt + ' failed:', e.message);
+                    if (attempt < maxRetries) {
+                        await new Promise(r => setTimeout(r, 1000 * attempt)); // exponential backoff
+                    }
+                }
+            }
+            containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat setelah ' + maxRetries + 'x percobaan: ' + lastError.message + '</div>'; });
+        }
 
             try {
                 const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
