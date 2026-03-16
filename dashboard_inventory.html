@@ -10360,7 +10360,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data online...</div>'; });
 
             // Cache check - return early if data already loaded
-            if (onlineRawData) { 
+            if (onlineRawData && onlineRawData.length > 0) { 
                 currentOnlineDataSource = 'online';
                 populateOnlineFilters(onlineRawData); 
                 applyOnlineFilters(); 
@@ -10379,12 +10379,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }
             }
 
-            // Fetch with retry logic
+            // Fetch with retry - use direct fetch like Consignment
             const maxRetries = 3;
             let lastError = null;
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
+                    const url = API_BASE_LOCAL + '/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10);
+                    const resp = await fetch(url, { headers: { 'x-api-key': API_KEY } });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const rawData = await resp.json();
                     onlineRawData = rawData;
                     currentOnlineDataSource = 'online';
                     populateOnlineFilters(rawData);
@@ -10394,11 +10397,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     lastError = e;
                     console.error('Online API attempt ' + attempt + ' failed:', e.message);
                     if (attempt < maxRetries) {
-                        await new Promise(r => setTimeout(r, 1000 * attempt)); // exponential backoff
+                        await new Promise(r => setTimeout(r, 1000 * attempt));
                     }
                 }
             }
-            containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat setelah ' + maxRetries + 'x percobaan: ' + lastError.message + '</div>'; });
+            containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat setelah ' + maxRetries + 'x: ' + (lastError?.message || 'Unknown') + '</div>'; });
         }
 
         // === GLOBAL CHANNEL (All channels combined) ===
