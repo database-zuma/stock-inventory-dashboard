@@ -10470,6 +10470,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Cache check - return early if data already loaded
             if (globalRawData && globalRawData.length > 0) {
+                currentOnlineDataSource = 'global';
                 populateOnlineFilters(globalRawData);
                 applyOnlineFilters();
                 return;
