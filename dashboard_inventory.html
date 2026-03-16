@@ -10401,17 +10401,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat setelah ' + maxRetries + 'x percobaan: ' + lastError.message + '</div>'; });
         }
 
-            try {
-                const rawData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + new Date().toISOString().slice(0,10));
-                onlineRawData = rawData;
-                currentOnlineDataSource = 'online';
-                populateOnlineFilters(rawData);
-                applyOnlineFilters();
-            } catch(e) {
-                containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#ef4444;padding:12px;">❌ Gagal memuat: ' + e.message + '</div>'; });
-            }
-        }
-
         // === GLOBAL CHANNEL (All channels combined) ===
         let globalRawData = null;
 
