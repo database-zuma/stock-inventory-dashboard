@@ -9,21 +9,20 @@
 Browser (GitHub Pages)
   └─ dashboard_inventory.html (~9,870 lines, single-file HTML+CSS+JS)
        └─ fetchAPI() calls
-            └─ Cloudflare Tunnel (trycloudflare.com — EPHEMERAL URL)
-                 └─ cloudflared on VPS (systemd: cloudflared-zuma.service)
-                      └─ nginx on VPS (localhost:8443)
-                           └─ gunicorn (unix socket: /run/zuma-api/gunicorn.sock)
-                                └─ Python FastAPI app (/opt/zuma-api/main.py)
-                                     └─ PostgreSQL (openclaw_ops database)
+            └─ HTTPS (permanent: srv1346756.hstgr.cloud, Let's Encrypt cert)
+                 └─ nginx on VPS (port 443 SSL → unix socket)
+                      └─ gunicorn (unix socket: /run/zuma-api/gunicorn.sock)
+                           └─ Python FastAPI app (/opt/zuma-api/main.py)
+                                └─ PostgreSQL (openclaw_ops database)
 ```
 
 ### Key Constants in dashboard_inventory.html
 
 | Variable | Line | Current Value |
 |----------|------|---------------|
-| `API_BASE` | ~1953 | `https://roommate-stage-apartment-popular.trycloudflare.com` |
-| `API_BASE_LOCAL` | ~1954 | same as API_BASE |
-| `API_KEY` | ~1955 | `97d25067-a2ca-44ba-ac5b-61539b627271` |
+| `API_BASE` | ~2562 | `https://srv1346756.hstgr.cloud` |
+| `API_BASE_LOCAL` | ~2563 | same as API_BASE |
+| `API_KEY` | ~2564 | `97d25067-a2ca-44ba-ac5b-61539b627271` |
 
 ### VPS Access
 
