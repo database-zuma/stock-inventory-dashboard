@@ -2791,18 +2791,21 @@
                     consignmentStockData = consigStockData;
                 }
                 // START background pre-fetch for Global/Online channels EARLY (don't wait for Phase 2)
+                // Include retail so Global view doesn't depend on Phase 2 salesDetailData
                 var pfFrom = '2026-01-01';
                 var pfTo = new Date().toISOString().slice(0,10);
                 _channelPreFetchPromise = Promise.all([
+                    fetchAPI('/api/sales/detail?channel=retail&from=' + pfFrom + '&to=' + pfTo).catch(function() { return []; }),
                     fetchAPI('/api/sales/detail?channel=online&from=' + pfFrom + '&to=' + pfTo).catch(function() { return []; }),
                     fetch(API_BASE_LOCAL + '/api/sales/consignment?from=' + pfFrom + '&to=' + pfTo, { headers: { 'x-api-key': API_KEY } })
                         .then(function(r) { return r.ok ? r.json() : {}; }).catch(function() { return {}; }),
                     fetchAPI('/api/sales/detail?channel=wholesale&from=' + pfFrom + '&to=' + pfTo).catch(function() { return []; })
                 ]).then(function(res) {
-                    salesOnlineData = Array.isArray(res[0]) ? res[0] : (res[0].data || res[0] || []);
-                    var cr = res[1] || {}; salesConsigData = cr.detail_rows || (Array.isArray(cr) ? cr : []);
-                    salesWholesaleData = Array.isArray(res[2]) ? res[2] : (res[2].data || res[2] || []);
-                    console.log('[PRE-FETCH] Channels ready: online=' + salesOnlineData.length + ', consig=' + salesConsigData.length + ', wholesale=' + salesWholesaleData.length);
+                    window._preFetchRetailData = Array.isArray(res[0]) ? res[0] : (res[0].data || res[0] || []);
+                    salesOnlineData = Array.isArray(res[1]) ? res[1] : (res[1].data || res[1] || []);
+                    var cr = res[2] || {}; salesConsigData = cr.detail_rows || (Array.isArray(cr) ? cr : []);
+                    salesWholesaleData = Array.isArray(res[3]) ? res[3] : (res[3].data || res[3] || []);
+                    console.log('[PRE-FETCH] Channels ready: retail=' + window._preFetchRetailData.length + ', online=' + salesOnlineData.length + ', consig=' + salesConsigData.length + ', wholesale=' + salesWholesaleData.length);
                 }).catch(function(e) { console.error('[PRE-FETCH] Failed:', e); });
                 // Extract dynamic month keys for online sales
                 if (onlineSalesMap['_months']) {
@@ -10517,7 +10520,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 if (hasPreFetched) {
                     console.log('[Global] Using pre-fetched data');
-                    retailData = salesDetailData || [];
+                    retailData = (window._preFetchRetailData && window._preFetchRetailData.length > 0) ? window._preFetchRetailData : (salesDetailData || []);
                     onlineData = salesOnlineData || [];
                     var prefetchedConsig = salesConsigData || [];
                     consigData = Array.isArray(prefetchedConsig) ? prefetchedConsig : { detail_rows: prefetchedConsig };
