@@ -10480,7 +10480,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // Load channels sequentially to avoid DB connection pool exhaustion
                 // (parallel requests caused 500 on heavy online query)
                 const today = new Date().toISOString().slice(0,10);
-                const retailData = await fetchAPI('/api/sales/detail?channel=retail&months=2').catch(e => { console.error('Retail API error:', e); return []; });
+                const retailData = await fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + today).catch(e => { console.error('Retail API error:', e); return []; });
                 const onlineData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + today).catch(e => { console.error('Online API error:', e); return []; });
                 const [consigData, wholesaleData] = await Promise.all([
                     fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + today, { headers: { 'x-api-key': API_KEY } })
@@ -10669,7 +10669,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return;
             }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
 
             // Search ALL raw data
             const allData = globalRawData || onlineRawData;
@@ -10773,7 +10773,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const data = globalRawData || onlineRawData; if (!data) return;
             const displayQuery = exactKode || query;
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
             const isGlobal = currentOnlineDataSource === 'global';
 
@@ -11052,7 +11052,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (maxItems) items = items.slice(0, maxItems);
             if (!items.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             // For gender: use grand total from ALL items (including Unknown) so TOTAL matches Rp 20.6M
             const totalRev = items.reduce((s,i) => s + i.revenue, 0) + (groupField === 'gender' ? (gMap['Unknown'] ? gMap['Unknown'].revenue : 0) : 0);
             const totalPairs = items.reduce((s,i) => s + i.pairs, 0) + (groupField === 'gender' ? (gMap['Unknown'] ? gMap['Unknown'].pairs : 0) : 0);
@@ -11111,7 +11111,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (maxItems) items = items.slice(0, maxItems);
             if (!items.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const totalRev = items.reduce((s,i) => s + i.revenue, 0);
             const totalPairs = items.reduce((s,i) => s + i.pairs, 0);
 
@@ -11162,7 +11162,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const products = Object.values(prodMap).sort((a,b) => b.pairs - a.pairs).slice(0, 10);
             if (!products.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data produk</div>'; return; }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
                 <thead style="position:sticky;top:0;z-index:10;"><tr style="background:#002A3A;color:white;">
                     <th style="padding:8px;text-align:center;width:35px;">NO</th>
@@ -11274,7 +11274,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const grandTotalRev = rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
             const grandTotalPairs = rows.reduce((s, r) => s + (Number(r.qty) || 0), 0);
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const maxRev = Math.max(...months.map(m => m.revenue), 1);
             const trendColors = ['#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e','#ef4444','#f97316','#f59e0b','#eab308','#22c55e'];
             const barH = 38, gap = 10, labelW = 90, valW = 170;
@@ -11319,7 +11319,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const days = Object.keys(dayMap).sort().slice(-30).map(k => dayMap[k]);
             if (!days.length) { el.innerHTML = '<div style="color:#64748b">Tidak ada data</div>'; return; }
 
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
             const maxRev = Math.max(...days.map(d => d.revenue));
             el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1px solid #000;">
@@ -11364,7 +11364,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!tierData.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
             const totalSales = tierData.reduce((s,t) => s + t.sales, 0);
             const maxSales = tierData[0].sales;
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const barH = 38, gap = 10, labelW = 60, valW = 170;
             const svgW = 680, svgH = tierData.length * (barH + gap) + 20;
             const barW = svgW - labelW - valW - 20;
@@ -11404,7 +11404,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!tipeData.length) { el.innerHTML = '<div style="color:#64748b;padding:8px;">Tidak ada data</div>'; return; }
             const totalSales = tipeData.reduce((s,t) => s + t.sales, 0);
             const maxSales = tipeData[0].sales;
-            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'Mrd'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const barH = 38, gap = 10, labelW = 90, valW = 170;
             const svgW = 680, svgH = tipeData.length * (barH + gap) + 20;
             const barW = svgW - labelW - valW - 20;
