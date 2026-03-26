@@ -13433,54 +13433,102 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             if (isRetail) {
-                // SUMMARY sheet
-                var summHeaders = ['RANK','Kode Barang','Kode Kecil','Nama Barang','Gender','Series','QTY','SALES'];
-                var artMap = {};
-                data.forEach(function(i) {
-                    var key = (i.kode_besar||i.sku||'').toUpperCase();
-                    if (!artMap[key]) artMap[key] = {kode:key,kodeKecil:(i.kode_kecil||'').toUpperCase(),name:i.nama_barang||i.product_name||'',gender:i.gender||'',series:i.collection||'',qty:0,sales:0};
-                    artMap[key].qty += (i.qty||0);
-                    artMap[key].sales += Math.round(i.total||0);
-                });
-                var topAll = Object.values(artMap).sort(function(a,b){return b.qty-a.qty;});
-                var summRows = topAll.map(function(a,idx) { return [idx+1,a.kode,a.kodeKecil,a.name,a.gender,a.series,a.qty,a.sales]; });
-                var areaAgg = {};
-                data.forEach(function(i) { var area=i.area||'-'; if (!areaAgg[area]) areaAgg[area]={qty:0,sales:0}; areaAgg[area].qty+=(i.qty||0); areaAgg[area].sales+=(i.total||0); });
-                var areaRows = Object.entries(areaAgg).sort(function(a,b){return b[1].qty-a[1].qty;});
+                // SUMMARY sheet — same columns as per-store sheets, with side summary tables
+                var summHeaders = ['STORE','Kode Barang','Kode Kecil','Kode Mix','Kode Mix Size','Size','Nama Barang','Gender','Series','Tipe','Tier','Version','QTY','HARGA','TOTAL'];
+                var summToRow = function(i) {
+                    return [i.store||'',(i.kode_besar||i.sku||'').toUpperCase(),(i.kode_kecil||'').toUpperCase(),(i.kode_mix||'').toUpperCase(),(i.kode_mix_size||'').toUpperCase(),i.ukuran||i.size||'',i.nama_barang||i.product_name||'',i.gender||'',i.collection||i.series||'',i.tipe||'',i.tier||'',i.version||'',i.qty||0,Math.round(i.price||0),Math.round(i.total||0)];
+                };
+                var summRows = data.map(summToRow);
+                summRows.sort(function(a,b) { return (a[0]||'').localeCompare(b[0]||''); });
+                // Aggregations for side summary
                 var tierAgg = {}, tierTotal = 0;
                 data.forEach(function(i) { var t=i.tier||'-'; if (!tierAgg[t]) tierAgg[t]={qty:0,sales:0}; tierAgg[t].qty+=(i.qty||0); tierAgg[t].sales+=(i.total||0); tierTotal+=(i.qty||0); });
-                // Store-level aggregation per area
-                var storeAgg = {};
+                var artMap = {};
+                data.forEach(function(i) {
+                    var name = i.nama_barang||i.product_name||'';
+                    if (!name) return;
+                    if (!artMap[name]) artMap[name] = {qty:0,sales:0};
+                    artMap[name].qty += (i.qty||0);
+                    artMap[name].sales += Math.round(i.total||0);
+                });
+                var top5 = Object.entries(artMap).sort(function(a,b){return b[1].qty-a[1].qty;}).slice(0,5);
+                var areaAgg = {};
+                data.forEach(function(i) { var area=i.area||'-'; if (!areaAgg[area]) areaAgg[area]={qty:0,sales:0}; areaAgg[area].qty+=(i.qty||0); areaAgg[area].sales+=(i.total||0); });
+                var areaRows = Object.entries(areaAgg).sort(function(a,b){return b[1].sales-a[1].sales;});
+                var storeAggS = {};
                 data.forEach(function(i) {
                     var s = i.store||'Other', area = i.area||'-';
-                    if (!storeAgg[s]) storeAgg[s] = {store:s, area:area, qty:0, sales:0};
-                    storeAgg[s].qty += (i.qty||0);
-                    storeAgg[s].sales += Math.round(i.total||0);
+                    if (!storeAggS[s]) storeAggS[s] = {store:s, area:area, qty:0, sales:0};
+                    storeAggS[s].qty += (i.qty||0);
+                    storeAggS[s].sales += Math.round(i.total||0);
                 });
-                var summAoa = [summHeaders].concat(summRows);
+                var wsSumm = XLSX.utils.aoa_to_sheet([summHeaders].concat(summRows));
+                var summLeftCols = [0,1,2,3,4,6,7,8,9];
+                applyTableStyle(wsSumm, summLeftCols);
+                // Side summary: write to the right of data (startCol = headers.length + 1)
+                var sc = function(r, c) { return XLSX.utils.encode_cell({r:r, c:c}); };
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+                var hdr = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+                var bdr = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border};
+                var bdrL = {alignment:{horizontal:'left',vertical:'center'},font:{sz:10},border:border};
+                var bdrNum = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
+                var totalS = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border};
+                var totalSNum = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10},fill:{fgColor:{rgb:'E5E7EB'}},border:border,numFmt:'#,##0'};
+                var areaHdr = {alignment:{horizontal:'left',vertical:'center'},font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'16A34A'}},border:border};
+                var areaHdrNum = {alignment:{horizontal:'center',vertical:'center'},font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'16A34A'}},border:border,numFmt:'#,##0'};
+                var sCol = summHeaders.length + 1; // start column for side summary
+                var row = 0;
                 // TIER table
-                summAoa.push([]); summAoa.push(['','TIER','','','','','QTY','%']);
-                Object.keys(tierAgg).sort().forEach(function(t) { summAoa.push(['',t,'','','','',tierAgg[t].qty,tierTotal>0?Math.round(tierAgg[t].qty/tierTotal*1000)/10+'%':'0%']); });
-                summAoa.push(['','TOTAL','','','','',tierTotal,'100%']);
+                wsSumm[sc(row,sCol)] = {v:'TIER',t:'s',s:hdr}; wsSumm[sc(row,sCol+1)] = {v:'QTY',t:'s',s:hdr}; wsSumm[sc(row,sCol+2)] = {v:'%',t:'s',s:hdr};
+                row++;
+                Object.keys(tierAgg).sort().forEach(function(t) {
+                    wsSumm[sc(row,sCol)] = {v:t,t:'s',s:bdr};
+                    wsSumm[sc(row,sCol+1)] = {v:tierAgg[t].qty,t:'n',s:bdrNum};
+                    wsSumm[sc(row,sCol+2)] = {v:tierTotal>0?Math.round(tierAgg[t].qty/tierTotal*1000)/10+'%':'0%',t:'s',s:bdr};
+                    row++;
+                });
+                wsSumm[sc(row,sCol)] = {v:'TOTAL',t:'s',s:totalS}; wsSumm[sc(row,sCol+1)] = {v:tierTotal,t:'n',s:totalSNum}; wsSumm[sc(row,sCol+2)] = {v:'100%',t:'s',s:totalS};
+                row += 2;
                 // TOP 5 ARTIKEL table
-                var top5 = topAll.slice(0,5);
-                summAoa.push([]); summAoa.push(['','TOP 5 ARTIKEL','','','','','QTY','SALES']);
-                top5.forEach(function(a) { summAoa.push(['',a.name,'','','','',a.qty,a.sales]); });
-                // PER AREA table with stores descending by sales
-                summAoa.push([]); summAoa.push(['','AREA / STORE','','','','','QTY','SALES']);
+                wsSumm[sc(row,sCol)] = {v:'TOP 5 ARTIKEL',t:'s',s:hdr}; wsSumm[sc(row,sCol+1)] = {v:'QTY',t:'s',s:hdr}; wsSumm[sc(row,sCol+2)] = {v:'SALES',t:'s',s:hdr};
+                row++;
+                top5.forEach(function(a) {
+                    wsSumm[sc(row,sCol)] = {v:a[0],t:'s',s:{alignment:{horizontal:'left',vertical:'center'},font:{sz:9},border:border}};
+                    wsSumm[sc(row,sCol+1)] = {v:a[1].qty,t:'n',s:bdrNum};
+                    wsSumm[sc(row,sCol+2)] = {v:a[1].sales,t:'n',s:bdrNum};
+                    row++;
+                });
+                row += 1;
+                // AREA / STORE table
+                wsSumm[sc(row,sCol)] = {v:'AREA / STORE',t:'s',s:hdr}; wsSumm[sc(row,sCol+1)] = {v:'QTY',t:'s',s:hdr}; wsSumm[sc(row,sCol+2)] = {v:'SALES',t:'s',s:hdr};
+                row++;
                 var areaTotalQty = 0, areaTotalSales = 0;
                 areaRows.forEach(function(ar) {
                     var areaName = ar[0];
-                    summAoa.push(['','▸ ' + areaName.toUpperCase(),'','','','',ar[1].qty,Math.round(ar[1].sales)]);
+                    wsSumm[sc(row,sCol)] = {v:'▸ ' + areaName.toUpperCase(),t:'s',s:areaHdr};
+                    wsSumm[sc(row,sCol+1)] = {v:ar[1].qty,t:'n',s:areaHdrNum};
+                    wsSumm[sc(row,sCol+2)] = {v:Math.round(ar[1].sales),t:'n',s:areaHdrNum};
                     areaTotalQty += ar[1].qty; areaTotalSales += Math.round(ar[1].sales);
-                    // Get stores in this area, sorted by sales desc
-                    var areaStores = Object.values(storeAgg).filter(function(s){return s.area===areaName;}).sort(function(a,b){return b.sales-a.sales;});
-                    areaStores.forEach(function(s) { summAoa.push(['','   ' + s.store,'','','','',s.qty,s.sales]); });
+                    row++;
+                    var areaStores = Object.values(storeAggS).filter(function(s){return s.area===areaName;}).sort(function(a,b){return b.sales-a.sales;});
+                    areaStores.forEach(function(s) {
+                        wsSumm[sc(row,sCol)] = {v:'   ' + s.store,t:'s',s:bdrL};
+                        wsSumm[sc(row,sCol+1)] = {v:s.qty,t:'n',s:bdrNum};
+                        wsSumm[sc(row,sCol+2)] = {v:s.sales,t:'n',s:bdrNum};
+                        row++;
+                    });
                 });
-                summAoa.push(['','GRAND TOTAL','','','','',areaTotalQty,Math.round(areaTotalSales)]);
-                var wsSumm = XLSX.utils.aoa_to_sheet(summAoa);
-                wsSumm['!cols'] = [{wch:6},{wch:16},{wch:12},{wch:30},{wch:8},{wch:12},{wch:10},{wch:14}];
-                applyTableStyle(wsSumm, [1,2,3,4,5]);
+                wsSumm[sc(row,sCol)] = {v:'GRAND TOTAL',t:'s',s:totalS}; wsSumm[sc(row,sCol+1)] = {v:areaTotalQty,t:'n',s:totalSNum}; wsSumm[sc(row,sCol+2)] = {v:Math.round(areaTotalSales),t:'n',s:totalSNum};
+                // Expand range and set column widths
+                var range = XLSX.utils.decode_range(wsSumm['!ref'] || 'A1');
+                if (sCol+2 > range.e.c) range.e.c = sCol+2;
+                if (row > range.e.r) range.e.r = row;
+                wsSumm['!ref'] = XLSX.utils.encode_range(range);
+                if (!wsSumm['!cols']) wsSumm['!cols'] = [];
+                while (wsSumm['!cols'].length <= sCol+2) wsSumm['!cols'].push({wch:10});
+                wsSumm['!cols'][sCol] = {wch:32};
+                wsSumm['!cols'][sCol+1] = {wch:10};
+                wsSumm['!cols'][sCol+2] = {wch:16};
                 XLSX.utils.book_append_sheet(wb, wsSumm, 'SUMMARY');
                 // Per retail store sheets (no EVENT stores)
                 var storeMap = {};
