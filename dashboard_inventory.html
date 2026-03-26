@@ -13449,12 +13449,35 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var areaRows = Object.entries(areaAgg).sort(function(a,b){return b[1].qty-a[1].qty;});
                 var tierAgg = {}, tierTotal = 0;
                 data.forEach(function(i) { var t=i.tier||'-'; if (!tierAgg[t]) tierAgg[t]={qty:0,sales:0}; tierAgg[t].qty+=(i.qty||0); tierAgg[t].sales+=(i.total||0); tierTotal+=(i.qty||0); });
+                // Store-level aggregation per area
+                var storeAgg = {};
+                data.forEach(function(i) {
+                    var s = i.store||'Other', area = i.area||'-';
+                    if (!storeAgg[s]) storeAgg[s] = {store:s, area:area, qty:0, sales:0};
+                    storeAgg[s].qty += (i.qty||0);
+                    storeAgg[s].sales += Math.round(i.total||0);
+                });
                 var summAoa = [summHeaders].concat(summRows);
-                summAoa.push([]); summAoa.push(['','AREA','','','','','QTY','SALES']);
-                areaRows.forEach(function(a) { summAoa.push(['',a[0],'','','','',a[1].qty,Math.round(a[1].sales)]); });
+                // TIER table
                 summAoa.push([]); summAoa.push(['','TIER','','','','','QTY','%']);
                 Object.keys(tierAgg).sort().forEach(function(t) { summAoa.push(['',t,'','','','',tierAgg[t].qty,tierTotal>0?Math.round(tierAgg[t].qty/tierTotal*1000)/10+'%':'0%']); });
                 summAoa.push(['','TOTAL','','','','',tierTotal,'100%']);
+                // TOP 5 ARTIKEL table
+                var top5 = topAll.slice(0,5);
+                summAoa.push([]); summAoa.push(['','TOP 5 ARTIKEL','','','','','QTY','SALES']);
+                top5.forEach(function(a) { summAoa.push(['',a.name,'','','','',a.qty,a.sales]); });
+                // PER AREA table with stores descending by sales
+                summAoa.push([]); summAoa.push(['','AREA / STORE','','','','','QTY','SALES']);
+                var areaTotalQty = 0, areaTotalSales = 0;
+                areaRows.forEach(function(ar) {
+                    var areaName = ar[0];
+                    summAoa.push(['','▸ ' + areaName.toUpperCase(),'','','','',ar[1].qty,Math.round(ar[1].sales)]);
+                    areaTotalQty += ar[1].qty; areaTotalSales += Math.round(ar[1].sales);
+                    // Get stores in this area, sorted by sales desc
+                    var areaStores = Object.values(storeAgg).filter(function(s){return s.area===areaName;}).sort(function(a,b){return b.sales-a.sales;});
+                    areaStores.forEach(function(s) { summAoa.push(['','   ' + s.store,'','','','',s.qty,s.sales]); });
+                });
+                summAoa.push(['','GRAND TOTAL','','','','',areaTotalQty,Math.round(areaTotalSales)]);
                 var wsSumm = XLSX.utils.aoa_to_sheet(summAoa);
                 wsSumm['!cols'] = [{wch:6},{wch:16},{wch:12},{wch:30},{wch:8},{wch:12},{wch:10},{wch:14}];
                 applyTableStyle(wsSumm, [1,2,3,4,5]);
