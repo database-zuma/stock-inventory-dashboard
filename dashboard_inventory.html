@@ -10380,11 +10380,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<div style="color:#64748b;padding:12px;">⏳ Memuat data online...</div>'; });
 
             // Cache check - return early if data already loaded
-            if (onlineRawData && onlineRawData.length > 0) { 
+            if (onlineRawData && onlineRawData.length > 0) {
                 currentOnlineDataSource = 'online';
-                populateOnlineFilters(onlineRawData); 
-                applyOnlineFilters(); 
-                return; 
+                populateOnlineFilters(onlineRawData);
+                applyOnlineFilters();
+                return;
             }
 
             // Check if we have online data from Global channel
@@ -10397,6 +10397,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     applyOnlineFilters();
                     return;
                 }
+            }
+
+            // Use pre-fetched data from background load (salesOnlineData) if available
+            if (typeof salesOnlineData !== 'undefined' && salesOnlineData && salesOnlineData.length > 0) {
+                console.log('[Online] Using pre-fetched salesOnlineData:', salesOnlineData.length, 'rows');
+                onlineRawData = salesOnlineData;
+                currentOnlineDataSource = 'online';
+                populateOnlineFilters(onlineRawData);
+                applyOnlineFilters();
+                return;
             }
 
             // Fetch with retry - use direct fetch like Consignment
@@ -10497,17 +10507,34 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             try {
-                // Load channels sequentially to avoid DB connection pool exhaustion
-                // (parallel requests caused 500 on heavy online query)
-                const today = new Date().toISOString().slice(0,10);
-                const retailData = await fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + today).catch(e => { console.error('Retail API error:', e); return []; });
-                const onlineData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + today).catch(e => { console.error('Online API error:', e); return []; });
-                const [consigData, wholesaleData] = await Promise.all([
-                    fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + today, { headers: { 'x-api-key': API_KEY } })
-                    .then(r => { console.log('Consignment API response status:', r.status); return r.ok ? r.json() : {}; })
-                    .catch(e => { console.error('Consignment API error:', e); return {}; }),
-                    fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + today).catch(e => { console.error('Wholesale API error:', e); return []; })
-                ]);
+                // Use pre-fetched data from background load if available, otherwise fetch fresh
+                const hasPreFetched = (typeof salesOnlineData !== 'undefined' && salesOnlineData && salesOnlineData.length > 0) ||
+                                      (typeof salesConsigData !== 'undefined' && salesConsigData && salesConsigData.length > 0) ||
+                                      (typeof salesWholesaleData !== 'undefined' && salesWholesaleData && salesWholesaleData.length > 0);
+
+                let retailData, onlineData, consigData, wholesaleData;
+
+                if (hasPreFetched) {
+                    console.log('[Global] Using pre-fetched data from background load');
+                    retailData = salesDetailData || [];
+                    onlineData = (typeof salesOnlineData !== 'undefined' && salesOnlineData) ? salesOnlineData : [];
+                    // Consignment: wrap in object format expected below
+                    var prefetchedConsig = (typeof salesConsigData !== 'undefined' && salesConsigData) ? salesConsigData : [];
+                    consigData = Array.isArray(prefetchedConsig) ? prefetchedConsig : { detail_rows: prefetchedConsig };
+                    wholesaleData = (typeof salesWholesaleData !== 'undefined' && salesWholesaleData) ? salesWholesaleData : [];
+                } else {
+                    // Load channels sequentially to avoid DB connection pool exhaustion
+                    console.log('[Global] No pre-fetched data, fetching all channels sequentially...');
+                    const today = new Date().toISOString().slice(0,10);
+                    retailData = await fetchAPI('/api/sales/detail?channel=retail&from=2026-01-01&to=' + today).catch(e => { console.error('Retail API error:', e); return []; });
+                    onlineData = await fetchAPI('/api/sales/detail?channel=online&from=2026-01-01&to=' + today).catch(e => { console.error('Online API error:', e); return []; });
+                    [consigData, wholesaleData] = await Promise.all([
+                        fetch(API_BASE_LOCAL + '/api/sales/consignment?from=2026-01-01&to=' + today, { headers: { 'x-api-key': API_KEY } })
+                        .then(r => { console.log('Consignment API response status:', r.status); return r.ok ? r.json() : {}; })
+                        .catch(e => { console.error('Consignment API error:', e); return {}; }),
+                        fetchAPI('/api/sales/detail?channel=wholesale&from=2026-01-01&to=' + today).catch(e => { console.error('Wholesale API error:', e); return []; })
+                    ]);
+                }
 
                 // Combine all data - tag each with its source channel
                 const allData = [];
