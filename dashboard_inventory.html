@@ -14006,7 +14006,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
     </div>
 
     <script>
-        const CHAT_API_URL = 'https://web-production-70a45.up.railway.app';
+        const CHAT_API_URL = API_BASE;  // Use same VPS API as dashboard
         const chatSessionId = 'session_' + Date.now();
         let dashboardContextSent = false;
 
@@ -14122,9 +14122,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             try {
-                const resp = await fetch(CHAT_API_URL + '/chat', {
+                const resp = await fetch(CHAT_API_URL + '/api/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
                     body: JSON.stringify({ message: fullMessage, session_id: chatSessionId })
                 });
                 const data = await resp.json();
