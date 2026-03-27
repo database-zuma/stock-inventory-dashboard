@@ -11150,12 +11150,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!gMap[key]) gMap[key] = { gender: gender, series: series, articleMap: {}, pairs: 0, revenue: 0 };
                 gMap[key].pairs += Number(r.qty) || 0;
                 gMap[key].revenue += Number(r.total) || 0;
-                // Collect per-article detail
+                // Collect per-article detail — normalize nama_barang (remove size from middle)
+                // e.g. "MEN STRIPE 1, 44, BLACK BLUE RED" → "MEN STRIPE 1, BLACK BLUE RED"
                 var nb = r.nama_barang || r.product_name || '';
                 if (nb) {
-                    if (!gMap[key].articleMap[nb]) gMap[key].articleMap[nb] = { pairs: 0, revenue: 0 };
-                    gMap[key].articleMap[nb].pairs += Number(r.qty) || 0;
-                    gMap[key].articleMap[nb].revenue += Number(r.total) || 0;
+                    var normalized = nb.replace(/,\s*\d{2}(?:\/\d{2})?\s*,/, ',').trim();
+                    if (!gMap[key].articleMap[normalized]) gMap[key].articleMap[normalized] = { pairs: 0, revenue: 0 };
+                    gMap[key].articleMap[normalized].pairs += Number(r.qty) || 0;
+                    gMap[key].articleMap[normalized].revenue += Number(r.total) || 0;
                 }
             });
             // Sort articles per series
@@ -11210,14 +11212,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (!item || !item.articleList) return;
             const fmtK = n => { if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             var html = '<div style="padding:8px 15px 10px 50px;max-height:250px;overflow-y:auto;">';
-            html += '<div style="font-size:0.78rem;font-weight:700;color:#1e40af;margin-bottom:6px;">' + item.gender + ' ' + item.series + ' — ' + item.articleCount + ' artikel</div>';
-            html += '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">';
-            html += '<tr style="color:#64748b;border-bottom:1px solid #cbd5e1;"><th style="padding:4px 6px;text-align:left;">NAMA BARANG</th><th style="padding:4px 6px;text-align:center;width:70px;">PAIRS</th><th style="padding:4px 6px;text-align:right;width:90px;">REVENUE</th></tr>';
+            html += '<div style="font-size:0.82rem;font-weight:700;color:#1e40af;margin-bottom:8px;">' + item.gender + ' ' + item.series + ' — ' + item.articleCount + ' artikel</div>';
+            html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+            html += '<tr style="background:#e0f2fe;border-bottom:2px solid #93c5fd;"><th style="padding:6px 8px;text-align:left;font-weight:700;color:#1e3a5f;">NAMA BARANG</th><th style="padding:6px 8px;text-align:center;width:80px;font-weight:700;color:#1e3a5f;">PAIRS</th><th style="padding:6px 8px;text-align:right;width:100px;font-weight:700;color:#1e3a5f;">REVENUE</th></tr>';
             item.articleList.forEach(function(a, i) {
-                html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i % 2 ? 'background:#f8fafc;' : '') + '">';
-                html += '<td style="padding:4px 6px;color:#334155;">' + a.name + '</td>';
-                html += '<td style="padding:4px 6px;text-align:center;font-weight:600;">' + a.pairs.toLocaleString('id-ID') + '</td>';
-                html += '<td style="padding:4px 6px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(a.revenue) + '</td>';
+                html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i % 2 ? 'background:#f0f9ff;' : 'background:#fff;') + '">';
+                html += '<td style="padding:5px 8px;color:#1f2937;font-size:0.8rem;">' + a.name + '</td>';
+                html += '<td style="padding:5px 8px;text-align:center;font-weight:600;color:#1f2937;">' + a.pairs.toLocaleString('id-ID') + '</td>';
+                html += '<td style="padding:5px 8px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(a.revenue) + '</td>';
                 html += '</tr>';
             });
             html += '</table></div>';
