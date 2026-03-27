@@ -11147,14 +11147,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const series = r.collection || '';
                 if (!gender || gender === 'Unknown' || !series) return;
                 const key = gender + '|' + series;
-                if (!gMap[key]) gMap[key] = { gender: gender, series: series, nama_barang: '', topPairs: 0, pairs: 0, revenue: 0 };
+                if (!gMap[key]) gMap[key] = { gender: gender, series: series, articles: new Set(), topName: '', topPairs: 0, pairs: 0, revenue: 0 };
                 gMap[key].pairs += Number(r.qty) || 0;
                 gMap[key].revenue += Number(r.total) || 0;
+                const kode = (r.kode_kecil || r.kode || '').toUpperCase();
+                if (kode) gMap[key].articles.add(kode);
                 const nb = r.nama_barang || r.product_name || r.nama || '';
                 const rowQty = Number(r.qty) || 0;
                 if (nb && rowQty > 0) {
-                    if (!gMap[key].nama_barang || rowQty > gMap[key].topPairs) { gMap[key].nama_barang = nb; gMap[key].topPairs = rowQty; }
+                    if (!gMap[key].topName || rowQty > gMap[key].topPairs) { gMap[key].topName = nb; gMap[key].topPairs = rowQty; }
                 }
+            });
+            // Build display nama_barang: top seller + article count
+            Object.values(gMap).forEach(g => {
+                var count = g.articles.size;
+                g.nama_barang = count > 1 ? g.topName + ' (+' + (count - 1) + ' artikel lain)' : g.topName;
             });
             let items = Object.values(gMap).sort((a,b) => b.pairs - a.pairs);
             if (maxItems) items = items.slice(0, maxItems);
@@ -11543,6 +11550,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 Array.from(retailTabWrapper.children).forEach(function(child) {
                     child.style.display = 'none';
                 });
+                // Reset filters when switching to Global (don't carry over from Online)
+                resetOnlineFilters();
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab('global');
@@ -11605,6 +11614,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 var onlineSubTab = document.getElementById('salesSubTabOnline');
                 if (onlineSubTab) onlineSubTab.style.display = 'block';
+                // Reset filters when switching to Online (don't carry over from Global)
+                resetOnlineFilters();
                 // Load online data
                 loadOnlineChannel();
             }
