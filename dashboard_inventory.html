@@ -11192,9 +11192,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const el = document.getElementById('onlineTopProducts');
             if (!el) return;
             const prodMap = {};
+            // Filter out non-sandal items (shopping bag, paper bag, inbox, etc.)
+            const nonSandalPattern = /^(SHOPBA|PAPERBAG|INBOX|SHOPBAG|PAPER)/i;
             rows.forEach(r => {
                 const kode = (r.kode_kecil || r.kode || '').toUpperCase();
                 if (!kode) return;
+                if (nonSandalPattern.test(kode)) return;
+                const prodName = (r.nama_barang || r.product_name || '').toUpperCase();
+                if (prodName.includes('SHOPPING BAG') || prodName.includes('PAPER BAG') || prodName.includes('INBOX')) return;
                 const sz = r.ukuran || r.size || '-';
                 const key = kode + '|' + sz;
                 // Use nama_barang as primary display name (like Online view)
