@@ -10720,8 +10720,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
 
-            // Search ALL raw data
-            const allData = globalRawData || onlineRawData;
+            // Search data based on current channel (Global vs Online)
+            const allData = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData);
             const matches = allData ? allData.filter(r => {
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
@@ -10819,7 +10819,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 resultEl.innerHTML = '';
                 return;
             }
-            const data = globalRawData || onlineRawData; if (!data) return;
+            const data = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData); if (!data) return;
             const displayQuery = exactKode || query;
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
@@ -11158,10 +11158,30 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (!gMap[key].topName || rowQty > gMap[key].topPairs) { gMap[key].topName = nb; gMap[key].topPairs = rowQty; }
                 }
             });
-            // Build display nama_barang: top seller + article count
+            // Build display nama_barang: list all articles sorted by pairs
             Object.values(gMap).forEach(g => {
-                var count = g.articles.size;
-                g.nama_barang = count > 1 ? g.topName + ' (+' + (count - 1) + ' artikel lain)' : g.topName;
+                // Collect per-article pairs for this series
+                var articlePairs = {};
+                rows.forEach(r => {
+                    if ((r.gender || '') !== g.gender || (r.collection || '') !== g.series) return;
+                    var nb = r.nama_barang || r.product_name || '';
+                    if (!nb) return;
+                    // Extract color from nama_barang (e.g. "MEN STRIPE 7, 42, BLACK TAN WHITE" → "BLACK TAN WHITE")
+                    var parts = nb.split(',').map(s => s.trim());
+                    var colorName = parts.length >= 3 ? parts[parts.length - 1] : (parts.length >= 2 ? parts[1] : nb);
+                    // Use article number + color as key (e.g. "STRIPE 7 - BLACK TAN WHITE")
+                    var seriesNum = parts[0].replace(g.gender, '').replace(g.series, '').trim();
+                    var displayKey = seriesNum ? seriesNum + ', ' + colorName : colorName;
+                    if (!articlePairs[displayKey]) articlePairs[displayKey] = 0;
+                    articlePairs[displayKey] += Number(r.qty) || 0;
+                });
+                // Sort by pairs descending, show top 5 + remaining count
+                var sorted = Object.entries(articlePairs).sort((a,b) => b[1] - a[1]);
+                var top5 = sorted.slice(0, 5).map(([name, qty]) => name + ' (' + qty + ' prs)');
+                var remaining = sorted.length - 5;
+                g.nama_barang = top5.join(', ');
+                if (remaining > 0) g.nama_barang += ' +' + remaining + ' lainnya';
+                if (!g.nama_barang) g.nama_barang = g.topName || '-';
             });
             let items = Object.values(gMap).sort((a,b) => b.pairs - a.pairs);
             if (maxItems) items = items.slice(0, maxItems);
@@ -11550,8 +11570,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 Array.from(retailTabWrapper.children).forEach(function(child) {
                     child.style.display = 'none';
                 });
-                // Reset filters when switching to Global (don't carry over from Online)
+                // Reset filters and SKU search when switching to Global
                 resetOnlineFilters();
+                resetOnlineSkuSearch();
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab('global');
@@ -11614,8 +11635,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 var onlineSubTab = document.getElementById('salesSubTabOnline');
                 if (onlineSubTab) onlineSubTab.style.display = 'block';
-                // Reset filters when switching to Online (don't carry over from Global)
+                // Reset filters and SKU search when switching to Online
                 resetOnlineFilters();
+                resetOnlineSkuSearch();
                 // Load online data
                 loadOnlineChannel();
             }
