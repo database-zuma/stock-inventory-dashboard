@@ -11026,6 +11026,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             resultEl.innerHTML = html;
             onlineSkuSuggestionMode = true;
+            // Apply checkbox filter if any SKUs are selected
+            if (_selectedOnlineSkus.size > 0) {
+                filterOnlineSkuRows();
+            }
         }
 
         function selectOnlineSkuFromList(kode) {
@@ -11212,6 +11216,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             resultEl.innerHTML = html;
             onlineSkuSuggestionMode = false;
+            // Apply checkbox filter if any SKUs are selected
+            if (_selectedOnlineSkus.size > 0) {
+                filterOnlineSkuRows();
+            }
         }
 
         function renderOnlineView(rows) {
