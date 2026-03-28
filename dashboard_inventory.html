@@ -10757,18 +10757,32 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function filterOnlineSkuRows() {
             var resultEl = document.getElementById('onlineSkuResults');
             if (!resultEl) return;
+
+            // Filter live suggestion rows (checkbox table)
             var rows = resultEl.querySelectorAll('tbody tr');
             if (_selectedOnlineSkus.size === 0) {
-                // No selection — show all
                 rows.forEach(function(r) { r.style.display = ''; });
-                return;
+            } else {
+                rows.forEach(function(row) {
+                    var cb = row.querySelector('input[type="checkbox"]');
+                    if (cb) {
+                        row.style.display = cb.checked ? '' : 'none';
+                    }
+                });
             }
-            rows.forEach(function(row) {
-                var cb = row.querySelector('input[type="checkbox"]');
-                if (cb) {
-                    row.style.display = cb.checked ? '' : 'none';
+
+            // Filter detail view sections (per-SKU tables)
+            var sections = resultEl.querySelectorAll('.online-sku-section');
+            if (sections.length > 0) {
+                if (_selectedOnlineSkus.size === 0) {
+                    sections.forEach(function(s) { s.style.display = ''; });
+                } else {
+                    sections.forEach(function(s) {
+                        var kode = s.getAttribute('data-sku-kode');
+                        s.style.display = _selectedOnlineSkus.has(kode) ? '' : 'none';
+                    });
                 }
-            });
+            }
             // Update summary counts for selected only
             var summEl = document.getElementById('onlineSkuSummary');
             if (!summEl) return;
@@ -11147,7 +11161,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var namaBarang = data.warna ? data.sku + ', ' + data.warna : data.sku;
 
                 // Kode container
-                html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden;">';
+                html += '<div class="online-sku-section" data-sku-kode="' + data.kode.toLowerCase() + '" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden;">';
                 if (sizeEntries.length > 0) {
                     html += '<table style="max-width:950px;border-collapse:collapse;font-size:0.82rem;">';
                     html += '<thead><tr>';
@@ -11218,6 +11232,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             resultEl.innerHTML = html;
             onlineSkuSuggestionMode = false;
+            // Apply checkbox filter to detail sections
+            if (_selectedOnlineSkus.size > 0) {
+                filterOnlineSkuRows();
+            }
         }
 
         function renderOnlineView(rows) {
