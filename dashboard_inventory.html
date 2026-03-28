@@ -10923,8 +10923,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 searchOnlineSku();
                 return;
             }
+            // While typing new search, show all results (don't filter by checkbox)
+            // so user can find and check new SKUs
+            _onlineSkuSearching = true;
             showOnlineLiveSuggestions();
         }
+        var _onlineSkuSearching = false;
 
         function showOnlineLiveSuggestions() {
             const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
@@ -11026,10 +11030,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             resultEl.innerHTML = html;
             onlineSkuSuggestionMode = true;
-            // Apply checkbox filter if any SKUs are selected
-            if (_selectedOnlineSkus.size > 0) {
-                filterOnlineSkuRows();
-            }
+            // Don't filter while typing new search — let user see all results to check new SKUs
+            _onlineSkuSearching = false;
         }
 
         function selectOnlineSkuFromList(kode) {
@@ -11216,10 +11218,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             resultEl.innerHTML = html;
             onlineSkuSuggestionMode = false;
-            // Apply checkbox filter if any SKUs are selected
-            if (_selectedOnlineSkus.size > 0) {
-                filterOnlineSkuRows();
-            }
         }
 
         function renderOnlineView(rows) {
