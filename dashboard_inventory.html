@@ -4766,8 +4766,7 @@
                     var sku = (item.sku || '').toLowerCase();
                     var name = (item.name || '').toLowerCase();
                     var kode = (item.kode || '').toLowerCase();
-                    var matched2 = queries.some(function(q) { return kk.indexOf(q) >= 0 || sku.indexOf(q) >= 0 || name.indexOf(q) >= 0 || kode.indexOf(q) >= 0; });
-                    if (!matched2) return;
+                    if (kk.indexOf(query) === -1 && sku.indexOf(query) === -1 && name.indexOf(query) === -1 && kode.indexOf(query) === -1) return;
 
                     var ent = (item.entity || '').toUpperCase();
                     var key = item.kode_kecil || item.sku || 'unknown';
