@@ -1894,15 +1894,15 @@
                         <!-- === ONLINE SKU SEARCH VIEW (blank initially, like Retail) === -->
                         <div id="onlineViewSkuSearch" style="display:none;padding:10px 0;">
                             <h4 id="onlineSkuSearchTitle" style="margin:0 0 14px 0;color:#1f2937;font-size:0.95rem;">🔍 Cari Penjualan per SKU Online</h4>
-                            <div id="onlineSkuSearchFields" style="margin-bottom:10px;">
-                                <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
-                                    <input type="text" class="online-sku-input" placeholder="Ketik kode SKU atau nama artikel..." style="flex:1;min-width:280px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleOnlineSkuKeyup(event)" autocomplete="off">
-                                </div>
-                            </div>
-                            <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
-                                <button onclick="addOnlineSkuField()" style="padding:8px 16px;background:#e0f2fe;color:#0284c7;border:1px solid #0284c7;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;">+ Tambah SKU</button>
+                            <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+                                <input type="text" id="onlineSkuSearch" placeholder="Ketik kode SKU atau nama artikel..." style="flex:1;min-width:280px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleOnlineSkuKeyup(event)" autocomplete="off">
                                 <button onclick="searchOnlineSku()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">🔍 Cari</button>
                                 <button onclick="resetOnlineSkuSearch()" style="padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.9rem;">Reset</button>
+                            </div>
+                            <!-- Selected SKUs chips -->
+                            <div id="onlineSelectedSkuChips" style="display:none;margin-bottom:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;">
+                                <div style="font-size:0.75rem;color:#166534;margin-bottom:6px;font-weight:600;">SKU Terpilih: <button onclick="showSelectedOnlineSkus()" style="margin-left:8px;padding:3px 12px;background:#16a34a;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:600;">Tampilkan Semua</button> <button onclick="clearSelectedOnlineSkus()" style="margin-left:4px;padding:3px 12px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:600;">Hapus Semua</button></div>
+                                <div id="onlineSelectedSkuList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
                             </div>
                             <div id="onlineSkuSummary" style="margin-bottom:12px;"></div>
                             <div id="onlineSkuResults" style="max-height:650px;overflow-y:auto;">
@@ -2498,15 +2498,15 @@
 
                 <!-- Search Box -->
                 <div style="position:relative;">
-                <div id="globalSkuSearchFields" style="margin-bottom:10px;">
-                    <div style="display:flex;gap:10px;margin-bottom:8px;align-items:center;">
-                        <input type="text" class="global-sku-input" placeholder="Cari SKU / Kode Kecil / Nama Barang..." autocomplete="off" style="flex:1;padding:12px 16px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="setTimeout(function(){this.style.borderColor='#cbd5e1';hideSkuAutocomplete();}.bind(this),200)" onkeydown="if(event.key==='Enter'){hideSkuAutocomplete();searchSKUGlobal();}" oninput="onSkuSearchInput(this.value)">
-                    </div>
-                </div>
-                <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
-                    <button onclick="addGlobalSkuField()" style="padding:8px 16px;background:#e0f2fe;color:#0284c7;border:1px solid #0284c7;border-radius:10px;cursor:pointer;font-weight:600;font-size:0.85rem;">+ Tambah SKU</button>
+                <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
+                    <input type="text" id="globalSkuSearchInput" placeholder="Cari SKU / Kode Kecil / Nama Barang..." autocomplete="off" style="flex:1;padding:12px 16px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="setTimeout(function(){document.getElementById('globalSkuSearchInput').style.borderColor='#cbd5e1';hideSkuAutocomplete();},200)" onkeydown="if(event.key==='Enter'){hideSkuAutocomplete();searchSKUGlobal();}" oninput="onSkuSearchInput(this.value)">
                     <button onclick="hideSkuAutocomplete();searchSKUGlobal()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:white;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:600;white-space:nowrap;">🔍 Search</button>
                     <button onclick="clearSkuSearch()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:12px 16px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:600;">✕ Clear</button>
+                </div>
+                <!-- Selected SKUs chips for inventory -->
+                <div id="globalSelectedSkuChips" style="display:none;margin-bottom:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;">
+                    <div style="font-size:0.75rem;color:#166534;margin-bottom:6px;font-weight:600;">SKU Terpilih: <button onclick="showSelectedGlobalSkus()" style="margin-left:8px;padding:3px 12px;background:#16a34a;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:600;">Tampilkan Semua</button> <button onclick="clearSelectedGlobalSkus()" style="margin-left:4px;padding:3px 12px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:600;">Hapus Semua</button></div>
+                    <div id="globalSelectedSkuList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
                 </div>
                 <!-- Autocomplete dropdown -->
                 <div id="globalSkuAutocomplete" style="display:none;position:absolute;top:52px;left:0;right:200px;background:white;border:2px solid #0284c7;border-radius:10px;max-height:320px;overflow-y:auto;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,0.15);"></div>
@@ -4692,12 +4692,13 @@
 
         // ============ GLOBAL SKU SEARCH FUNCTIONS ============
         function searchSKUGlobal() {
-            var queries = getGlobalSkuQueries();
-            if (!queries.length) {
+            var input = document.getElementById('globalSkuSearchInput');
+            if (!input) return;
+            var query = input.value.trim().toLowerCase();
+            if (query.length < 2) {
                 alert('Masukkan minimal 2 karakter untuk pencarian');
                 return;
             }
-            var query = queries[0]; // backward compat for autocomplete
 
             var results = {}; // keyed by kode_kecil → { info, warehouse: {entity: qty}, retail: {entity: qty}, consignment: {entity: qty} }
 
@@ -4713,8 +4714,7 @@
                         var sku = (item.sku || '').toLowerCase();
                         var name = (item.name || '').toLowerCase();
                         var kode = (item.kode || '').toLowerCase();
-                        var matched = queries.some(function(q) { return kk.indexOf(q) >= 0 || sku.indexOf(q) >= 0 || name.indexOf(q) >= 0 || kode.indexOf(q) >= 0; });
-                        if (!matched) return;
+                        if (kk.indexOf(query) === -1 && sku.indexOf(query) === -1 && name.indexOf(query) === -1 && kode.indexOf(query) === -1) return;
 
                         var key = item.kode_kecil || item.sku || 'unknown';
                         if (!results[key]) {
@@ -4823,11 +4823,10 @@
 
         function clearSkuSearch() {
             hideSkuAutocomplete();
-            // Reset to single field
-            var container = document.getElementById('globalSkuSearchFields');
-            if (container) {
-                container.innerHTML = '<div style="display:flex;gap:10px;margin-bottom:8px;align-items:center;"><input type="text" class="global-sku-input" placeholder="Cari SKU / Kode Kecil / Nama Barang..." autocomplete="off" style="flex:1;padding:12px 16px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.95rem;outline:none;" onkeydown="if(event.key===\'Enter\'){hideSkuAutocomplete();searchSKUGlobal();}" oninput="onSkuSearchInput(this.value)"></div>';
-            }
+            _selectedGlobalSkus.clear();
+            renderGlobalSkuChips();
+            var input = document.getElementById('globalSkuSearchInput');
+            if (input) input.value = '';
             var summaryEl = document.getElementById('globalSkuSearchSummary');
             if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
             var resultEl = document.getElementById('globalSkuSearchResults');
@@ -10740,54 +10739,129 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
         }
 
-        // Multi-field SKU search helpers
-        function addOnlineSkuField() {
-            var container = document.getElementById('onlineSkuSearchFields');
-            if (!container) return;
-            var count = container.querySelectorAll('.online-sku-input').length;
-            if (count >= 10) return; // max 10 fields
-            var row = document.createElement('div');
-            row.style.cssText = 'display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;';
-            row.innerHTML = '<input type="text" class="online-sku-input" placeholder="SKU ke-' + (count+1) + '..." style="flex:1;min-width:280px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleOnlineSkuKeyup(event)" autocomplete="off">' +
-                '<button onclick="this.parentElement.remove()" style="padding:6px 12px;background:#fef2f2;color:#ef4444;border:1px solid #ef4444;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;">✕</button>';
-            container.appendChild(row);
-            row.querySelector('input').focus();
+        // === SKU SELECTION (checkbox/chip) system ===
+        var _selectedOnlineSkus = new Set();  // kode_kecil values selected
+        var _selectedGlobalSkus = new Set();
+
+        function toggleOnlineSkuSelect(kode) {
+            if (_selectedOnlineSkus.has(kode)) {
+                _selectedOnlineSkus.delete(kode);
+            } else {
+                _selectedOnlineSkus.add(kode);
+            }
+            renderOnlineSkuChips();
+            // Update checkbox in results
+            var cb = document.getElementById('onlineSkuCb_' + kode.replace(/[^a-zA-Z0-9]/g,''));
+            if (cb) cb.checked = _selectedOnlineSkus.has(kode);
         }
 
-        function getOnlineSkuQueries() {
-            var inputs = document.querySelectorAll('.online-sku-input');
-            var queries = [];
-            inputs.forEach(function(inp) { var v = inp.value.trim().toLowerCase(); if (v && v.length >= 2) queries.push(v); });
-            return queries;
+        function renderOnlineSkuChips() {
+            var container = document.getElementById('onlineSelectedSkuChips');
+            var list = document.getElementById('onlineSelectedSkuList');
+            if (!container || !list) return;
+            if (_selectedOnlineSkus.size === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            list.innerHTML = Array.from(_selectedOnlineSkus).map(function(k) {
+                return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#dcfce7;color:#166534;border-radius:20px;font-size:0.78rem;font-weight:600;">' + k.toUpperCase() + ' <span onclick="_selectedOnlineSkus.delete(\'' + k.replace(/'/g,"\\'") + '\');renderOnlineSkuChips();" style="cursor:pointer;color:#ef4444;font-size:0.9rem;margin-left:2px;">✕</span></span>';
+            }).join('');
         }
 
-        function addGlobalSkuField() {
-            var container = document.getElementById('globalSkuSearchFields');
-            if (!container) return;
-            var count = container.querySelectorAll('.global-sku-input').length;
-            if (count >= 10) return;
-            var row = document.createElement('div');
-            row.style.cssText = 'display:flex;gap:10px;margin-bottom:8px;align-items:center;';
-            row.innerHTML = '<input type="text" class="global-sku-input" placeholder="SKU ke-' + (count+1) + '..." autocomplete="off" style="flex:1;padding:12px 16px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.95rem;outline:none;" onkeydown="if(event.key===\'Enter\'){hideSkuAutocomplete();searchSKUGlobal();}" oninput="onSkuSearchInput(this.value)">' +
-                '<button onclick="this.parentElement.remove()" style="padding:6px 12px;background:#fef2f2;color:#ef4444;border:1px solid #ef4444;border-radius:10px;cursor:pointer;font-weight:600;font-size:0.85rem;">✕</button>';
-            container.appendChild(row);
-            row.querySelector('input').focus();
+        function showSelectedOnlineSkus() {
+            if (_selectedOnlineSkus.size === 0) return;
+            var data = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData);
+            if (!data) return;
+            var selectedArr = Array.from(_selectedOnlineSkus);
+            var matches = data.filter(function(r) {
+                var kode = (r.kode_kecil || '').toLowerCase();
+                return selectedArr.some(function(q) { return kode === q; });
+            });
+            // Render using same format as live suggestions but with all selected SKUs
+            var resultEl = document.getElementById('onlineSkuResults');
+            var summEl = document.getElementById('onlineSkuSummary');
+            if (!resultEl) return;
+            var fmtK = function(n) { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            var kodeGroups = {};
+            var totalPairs = 0, totalRevenue = 0;
+            matches.forEach(function(r) {
+                var kode = (r.kode_kecil || '').toUpperCase();
+                if (!kode) return;
+                if (!kodeGroups[kode]) kodeGroups[kode] = { kode: kode, sku: r.sku || '-', warna: r.warna || '', pairs: 0, revenue: 0 };
+                kodeGroups[kode].pairs += r.qty || 0;
+                kodeGroups[kode].revenue += r.total || 0;
+                totalPairs += r.qty || 0;
+                totalRevenue += r.total || 0;
+            });
+            var sorted = Object.values(kodeGroups).sort(function(a,b) { return b.revenue - a.revenue; });
+            if (summEl) {
+                summEl.innerHTML = '<div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:6px;">' +
+                    '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;border-left:3px solid #22c55e;"><span style="font-size:0.75rem;color:#166534;">SKU Terpilih:</span> <strong style="color:#166534;">' + sorted.length + ' Artikel</strong></div>' +
+                    '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;border-left:3px solid #3b82f6;"><span style="font-size:0.75rem;color:#1e40af;">Total Pairs:</span> <strong style="color:#1e40af;">' + totalPairs.toLocaleString('id-ID') + '</strong></div>' +
+                    '<div style="background:#fef3c7;padding:8px 12px;border-radius:6px;border-left:3px solid #f59e0b;"><span style="font-size:0.75rem;color:#b45309;">Total Revenue:</span> <strong style="color:#b45309;">' + fmtK(totalRevenue) + '</strong></div></div>';
+            }
+            var html = '<table style="max-width:900px;border-collapse:collapse;font-size:0.82rem;"><thead><tr style="background:#002A3A;color:white;">' +
+                '<th style="padding:8px;text-align:center;width:35px;">NO</th><th style="padding:8px;text-align:left;width:80px;">KODE</th><th style="padding:8px;text-align:left;">NAMA BARANG</th>' +
+                '<th style="padding:8px;text-align:center;width:70px;">PAIR</th><th style="padding:8px;text-align:right;width:100px;">REVENUE</th><th style="padding:8px;text-align:center;width:45px;">%</th>' +
+                '</tr></thead><tbody>';
+            sorted.forEach(function(m, idx) {
+                var pct = totalRevenue > 0 ? (m.revenue / totalRevenue * 100).toFixed(1) : '0.0';
+                var namaBarang = m.warna ? m.sku + ', ' + m.warna : m.sku;
+                html += '<tr style="background:' + (idx%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0;">' +
+                    '<td style="padding:7px 8px;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
+                    '<td style="padding:7px 8px;font-weight:600;font-size:0.78rem;">' + m.kode + '</td>' +
+                    '<td style="padding:7px 8px;">' + namaBarang + '</td>' +
+                    '<td style="padding:7px 8px;text-align:center;font-weight:600;">' + m.pairs.toLocaleString('id-ID') + '</td>' +
+                    '<td style="padding:7px 8px;text-align:right;font-weight:600;">' + fmtK(m.revenue) + '</td>' +
+                    '<td style="padding:7px 8px;text-align:center;">' + pct + '%</td></tr>';
+            });
+            html += '</tbody></table>';
+            resultEl.innerHTML = html;
         }
 
-        function getGlobalSkuQueries() {
-            var inputs = document.querySelectorAll('.global-sku-input');
-            var queries = [];
-            inputs.forEach(function(inp) { var v = inp.value.trim().toLowerCase(); if (v && v.length >= 2) queries.push(v); });
-            return queries;
+        function clearSelectedOnlineSkus() {
+            _selectedOnlineSkus.clear();
+            renderOnlineSkuChips();
+        }
+
+        function toggleGlobalSkuSelect(kode) {
+            if (_selectedGlobalSkus.has(kode)) {
+                _selectedGlobalSkus.delete(kode);
+            } else {
+                _selectedGlobalSkus.add(kode);
+            }
+            renderGlobalSkuChips();
+            var cb = document.getElementById('globalSkuCb_' + kode.replace(/[^a-zA-Z0-9]/g,''));
+            if (cb) cb.checked = _selectedGlobalSkus.has(kode);
+        }
+
+        function renderGlobalSkuChips() {
+            var container = document.getElementById('globalSelectedSkuChips');
+            var list = document.getElementById('globalSelectedSkuList');
+            if (!container || !list) return;
+            if (_selectedGlobalSkus.size === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            list.innerHTML = Array.from(_selectedGlobalSkus).map(function(k) {
+                return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#dcfce7;color:#166534;border-radius:20px;font-size:0.78rem;font-weight:600;">' + k.toUpperCase() + ' <span onclick="_selectedGlobalSkus.delete(\'' + k.replace(/'/g,"\\'") + '\');renderGlobalSkuChips();" style="cursor:pointer;color:#ef4444;font-size:0.9rem;margin-left:2px;">✕</span></span>';
+            }).join('');
+        }
+
+        function showSelectedGlobalSkus() {
+            if (_selectedGlobalSkus.size === 0) return;
+            var input = document.getElementById('globalSkuSearchInput');
+            // Search each selected SKU
+            var allQueries = Array.from(_selectedGlobalSkus);
+            if (input) input.value = allQueries.join(' ');
+            searchSKUGlobal();
+        }
+
+        function clearSelectedGlobalSkus() {
+            _selectedGlobalSkus.clear();
+            renderGlobalSkuChips();
         }
 
         function resetOnlineSkuSearch() {
-            // Reset to single field
-            var container = document.getElementById('onlineSkuSearchFields');
-            if (container) {
-                container.innerHTML = '<div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;"><input type="text" class="online-sku-input" placeholder="Ketik kode SKU atau nama artikel..." style="flex:1;min-width:280px;padding:10px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleOnlineSkuKeyup(event)" autocomplete="off"></div>';
-            }
-            const inp = container ? container.querySelector('.online-sku-input') : null; if (inp) inp.value = '';
+            _selectedOnlineSkus.clear();
+            renderOnlineSkuChips();
+            const inp = document.getElementById('onlineSkuSearch'); if (inp) inp.value = '';
             const summ = document.getElementById('onlineSkuSummary'); if (summ) summ.innerHTML = '';
             const res = document.getElementById('onlineSkuResults');
             if (res) res.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
@@ -10801,21 +10875,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 searchOnlineSku();
                 return;
             }
-            // Live search only when 1 field — multi-field waits for Cari button
-            var fieldCount = document.querySelectorAll('.online-sku-input').length;
-            if (fieldCount <= 1) {
-                showOnlineLiveSuggestions();
-            }
+            showOnlineLiveSuggestions();
         }
 
         function showOnlineLiveSuggestions() {
-            // Use ALL queries from all fields for live search
-            var queries = getOnlineSkuQueries();
+            const query = (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
             const summEl = document.getElementById('onlineSkuSummary');
             const resultEl = document.getElementById('onlineSkuResults');
             if (!resultEl) return;
 
-            if (!queries.length || !(globalRawData || onlineRawData)) {
+            if (!query || query.length < 2 || !(globalRawData || onlineRawData)) {
                 if (summEl) summEl.innerHTML = '';
                 resultEl.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
                 return;
@@ -10823,15 +10892,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
 
-            // Search data based on current channel using ALL queries
+            // Search data based on current channel
             const allData = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData);
             const matches = allData ? allData.filter(r => {
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
                 const name = (r.product_name || r.name || '').toLowerCase();
-                return queries.some(q => kode.includes(q) || artikel.includes(q) || name.includes(q));
+                return kode.includes(query) || artikel.includes(query) || name.includes(query);
             }) : [];
-            const query = queries.join(', '); // for display
 
             if (!matches.length) {
                 if (summEl) summEl.innerHTML = '';
@@ -10872,9 +10940,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     '</div>';
             }
 
-            // Live suggestion table: NO | KODE | NAMA BARANG | PAIR | REVENUE | % | detail
-            var html = '<table style="max-width:850px;border-collapse:collapse;font-size:0.82rem;">' +
+            // Live suggestion table with checkboxes
+            var html = '<table style="max-width:900px;border-collapse:collapse;font-size:0.82rem;">' +
                 '<thead><tr style="background:#002A3A;color:white;position:sticky;top:0;">' +
+                '<th style="padding:8px 6px;text-align:center;width:30px;font-weight:600;">✓</th>' +
                 '<th style="padding:8px 8px;text-align:center;width:35px;font-weight:600;">NO</th>' +
                 '<th style="padding:8px 8px;text-align:left;width:80px;font-weight:600;">KODE</th>' +
                 '<th style="padding:8px 8px;text-align:left;font-weight:600;">NAMA BARANG</th>' +
@@ -10888,9 +10957,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 var namaBarang = m.warna ? m.sku + ', ' + m.warna : m.sku;
                 var pct = totalRevenue > 0 ? (m.revenue / totalRevenue * 100).toFixed(1) : '0.0';
-                html += '<tr onclick="selectOnlineSkuFromList(\'' + m.kode.replace(/'/g,"\\'") + '\')" style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
-                    '<td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
-                    '<td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;font-weight:600;font-size:0.78rem;">' + m.kode + '</td>' +
+                var cbId = 'onlineSkuCb_' + m.kode.replace(/[^a-zA-Z0-9]/g,'');
+                var isChecked = _selectedOnlineSkus.has(m.kode.toLowerCase());
+                html += '<tr style="cursor:pointer;background:' + bgColor + ';" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'' + bgColor + '\'">' +
+                    '<td style="padding:7px 6px;border-bottom:1px solid #e2e8f0;text-align:center;"><input type="checkbox" id="' + cbId + '" ' + (isChecked ? 'checked' : '') + ' onclick="event.stopPropagation();toggleOnlineSkuSelect(\'' + m.kode.toLowerCase().replace(/'/g,"\\'") + '\')" style="cursor:pointer;width:16px;height:16px;"></td>' +
+                    '<td onclick="selectOnlineSkuFromList(\'' + m.kode.replace(/'/g,"\\'") + '\')" style="padding:7px 8px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-weight:600;">' + (idx+1) + '</td>' +
+                    '<td onclick="selectOnlineSkuFromList(\'' + m.kode.replace(/'/g,"\\'") + '\')" style="padding:7px 8px;border-bottom:1px solid #e2e8f0;font-weight:600;font-size:0.78rem;">' + m.kode + '</td>' +
                     '<td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;">' + namaBarang + '</td>' +
                     '<td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">' + m.pairs.toLocaleString('id-ID') + '</td>' +
                     '<td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">' + fmtK(m.revenue) + '</td>' +
@@ -10917,26 +10989,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const resultEl = document.getElementById('onlineSkuResults');
             const summEl = document.getElementById('onlineSkuSummary');
             if (!resultEl) return;
-            var queries = exactKode ? [exactKode.toLowerCase()] : getOnlineSkuQueries();
-            if (!queries.length) {
+            const query = exactKode ? exactKode.toLowerCase() : (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
+            if (!query || query.length < 2) {
                 if (summEl) summEl.innerHTML = '<p style="color:#ef4444;">Masukkan minimal 2 karakter untuk dicari</p>';
                 resultEl.innerHTML = '';
                 return;
             }
             const data = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData); if (!data) return;
-            const displayQuery = queries.join(', ');
+            const displayQuery = query;
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
             const isGlobal = currentOnlineDataSource === 'global';
 
-            // Search ALL raw data with multiple queries
+            // Search raw data
             const matches = data.filter(r => {
                 if (exactKode) return (r.kode_kecil || '').toUpperCase() === exactKode.toUpperCase();
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
                 const name = (r.product_name || r.name || '').toLowerCase();
-                return queries.some(q => kode.includes(q) || artikel.includes(q) || name.includes(q));
+                return kode.includes(query) || artikel.includes(query) || name.includes(query);
             });
 
             if (!matches.length) {
