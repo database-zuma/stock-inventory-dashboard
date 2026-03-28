@@ -1306,33 +1306,8 @@
 
             <!-- Legend -->
             <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-top:15px;border:1px solid #e2e8f0;">
-                <h4 style="margin:0 0 10px 0;color:#334155;font-size:0.9rem;">Keterangan Perhitungan & Warna:</h4>
+                <h4 style="margin:0 0 10px 0;color:#334155;font-size:0.9rem;">Keterangan:</h4>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">
-                    <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Rumus Perhitungan:</div>
-                        <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.6;">
-                            <li><b>TW (Turnover Weeks)</b> = Stock WH / Avg Sales 3 Bulan</li>
-                            <li><b>TO (Turnover)</b> = Stock Toko / Avg Sales 3 Bulan</li>
-                            <li><b>GAP</b> = Stock Global - (Avg Sales × 3)</li>
-                        </ul>
-                        
-                    </div>
-                    <div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna TW/TO:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;margin-bottom:10px;">
-                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;"><b>&lt;1</b> Critical</span>
-                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;"><b>1-2</b> Low</span>
-                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;"><b>2-4</b> Normal</span>
-                            <span style="background:#eff6ff;color:#3b82f6;padding:3px 8px;border-radius:4px;"><b>&gt;4</b> High</span>
-                        </div>
-                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Arti Warna GAP:</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75rem;">
-                            <span style="background:#fef2f2;color:#ef4444;padding:3px 8px;border-radius:4px;">🔴 <b>Understock</b> GAP &lt; 0</span>
-                            <span style="background:#fffbeb;color:#f59e0b;padding:3px 8px;border-radius:4px;">🟡 <b>Tipis</b> 0 ≤ GAP &lt; Avg</span>
-                            <span style="background:#f0fdf4;color:#10b981;padding:3px 8px;border-radius:4px;">🟢 <b>Aman</b> GAP ≥ Avg</span>
-                            <span style="background:#f5f3ff;color:#7c3aed;padding:3px 8px;border-radius:4px;">💀 <b>Dead Stock</b> Avg=0 & Stok&gt;0</span>
-                        </div>
-                    </div>
                     <div>
                         <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Penjelasan Status GAP:</div>
                         <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.8;">
