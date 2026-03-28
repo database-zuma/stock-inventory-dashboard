@@ -6650,10 +6650,11 @@
                     const basisStock = getStockBasis(item);
                     const avgSales = sales.avg;
                     const gap = basisStock - (avgSales * 3);
-                    if (gapFilter === 'understock' && gap >= 0) return false;
-                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales)) return false;
-                    if (gapFilter === 'aman' && gap < avgSales) return false;
-                    if (gapFilter === 'dead' && !(avgSales === 0 && basisStock > 0)) return false;
+                    var isDeadItem = avgSales === 0 && basisStock > 0;
+                    if (gapFilter === 'understock' && (gap >= 0 || isDeadItem)) return false;
+                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales || isDeadItem)) return false;
+                    if (gapFilter === 'aman' && (gap < avgSales || isDeadItem)) return false;
+                    if (gapFilter === 'dead' && !isDeadItem) return false;
                 }
 
                 return true;
@@ -7339,10 +7340,11 @@
                     const bStock = getScoStockBasis(item);
                     const avgSales = sales.avg;
                     const gap = bStock - (avgSales * 3);
-                    if (gapFilter === 'understock' && gap >= 0) return false;
-                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales)) return false;
-                    if (gapFilter === 'aman' && gap < avgSales) return false;
-                    if (gapFilter === 'dead' && !(avgSales === 0 && bStock > 0)) return false;
+                    var isDeadItem = avgSales === 0 && bStock > 0;
+                    if (gapFilter === 'understock' && (gap >= 0 || isDeadItem)) return false;
+                    if (gapFilter === 'tipis' && (gap < 0 || gap >= avgSales || isDeadItem)) return false;
+                    if (gapFilter === 'aman' && (gap < avgSales || isDeadItem)) return false;
+                    if (gapFilter === 'dead' && !isDeadItem) return false;
                 }
 
                 return true;
