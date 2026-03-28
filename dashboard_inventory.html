@@ -10750,9 +10750,44 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 _selectedOnlineSkus.add(kode);
             }
             renderOnlineSkuChips();
-            // Update checkbox visual
-            var cb = document.getElementById('onlineSkuCb_' + kode.replace(/[^a-zA-Z0-9]/g,''));
-            if (cb) cb.checked = _selectedOnlineSkus.has(kode);
+            // Filter visible rows — hide unchecked, show checked
+            filterOnlineSkuRows();
+        }
+
+        function filterOnlineSkuRows() {
+            var resultEl = document.getElementById('onlineSkuResults');
+            if (!resultEl) return;
+            var rows = resultEl.querySelectorAll('tbody tr');
+            if (_selectedOnlineSkus.size === 0) {
+                // No selection — show all
+                rows.forEach(function(r) { r.style.display = ''; });
+                return;
+            }
+            rows.forEach(function(row) {
+                var cb = row.querySelector('input[type="checkbox"]');
+                if (cb) {
+                    row.style.display = cb.checked ? '' : 'none';
+                }
+            });
+            // Update summary counts for selected only
+            var summEl = document.getElementById('onlineSkuSummary');
+            if (!summEl) return;
+            var totalPairs = 0, totalRevenue = 0, count = 0;
+            var data = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData);
+            if (!data) return;
+            var selectedArr = Array.from(_selectedOnlineSkus);
+            data.forEach(function(r) {
+                var kode = (r.kode_kecil || '').toLowerCase();
+                if (selectedArr.some(function(q) { return kode === q; })) {
+                    totalPairs += r.qty || 0;
+                    totalRevenue += r.total || 0;
+                }
+            });
+            var fmtK = function(n) { if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
+            summEl.innerHTML = '<div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:6px;">' +
+                '<div style="background:#f0fdf4;padding:8px 12px;border-radius:6px;border-left:3px solid #22c55e;"><span style="font-size:0.75rem;color:#166534;">Terpilih:</span> <strong style="color:#166534;">' + _selectedOnlineSkus.size + ' Artikel</strong></div>' +
+                '<div style="background:#eff6ff;padding:8px 12px;border-radius:6px;border-left:3px solid #3b82f6;"><span style="font-size:0.75rem;color:#1e40af;">Total Pairs:</span> <strong style="color:#1e40af;">' + totalPairs.toLocaleString('id-ID') + '</strong></div>' +
+                '<div style="background:#fef3c7;padding:8px 12px;border-radius:6px;border-left:3px solid #f59e0b;"><span style="font-size:0.75rem;color:#b45309;">Total Revenue:</span> <strong style="color:#b45309;">' + fmtK(totalRevenue) + '</strong></div></div>';
         }
 
         function renderOnlineSkuChips() {
@@ -10829,8 +10864,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 _selectedGlobalSkus.add(kode);
             }
             renderGlobalSkuChips();
-            var cb = document.getElementById('globalSkuCb_' + kode.replace(/[^a-zA-Z0-9]/g,''));
-            if (cb) cb.checked = _selectedGlobalSkus.has(kode);
+            // Filter visible rows in inventory results
+            var resultEl = document.getElementById('globalSkuSearchResults');
+            if (!resultEl) return;
+            var tables = resultEl.querySelectorAll('table');
+            if (_selectedGlobalSkus.size === 0) {
+                // Show all tables
+                tables.forEach(function(t) { t.style.display = ''; if (t.previousElementSibling) t.previousElementSibling.style.display = ''; });
+                return;
+            }
+            // Each SKU result has a heading + table — find and filter
+            var sections = resultEl.querySelectorAll('[data-sku-kode]');
+            sections.forEach(function(sec) {
+                var skuKode = sec.getAttribute('data-sku-kode').toLowerCase();
+                sec.style.display = _selectedGlobalSkus.has(skuKode) ? '' : 'none';
+            });
         }
 
         function renderGlobalSkuChips() {
