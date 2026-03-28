@@ -11057,27 +11057,37 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const resultEl = document.getElementById('onlineSkuResults');
             const summEl = document.getElementById('onlineSkuSummary');
             if (!resultEl) return;
-            const query = exactKode ? exactKode.toLowerCase() : (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
-            if (!query || query.length < 2) {
-                if (summEl) summEl.innerHTML = '<p style="color:#ef4444;">Masukkan minimal 2 karakter untuk dicari</p>';
-                resultEl.innerHTML = '';
-                return;
-            }
             const data = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData); if (!data) return;
-            const displayQuery = query;
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
             const mpColors = { 'Shopee': '#ee4d2d', 'Tiktok & Tokopedia': '#00f2ea', 'Lazada': '#0f146d' };
             const isGlobal = currentOnlineDataSource === 'global';
 
-            // Search raw data
-            const matches = data.filter(r => {
-                if (exactKode) return (r.kode_kecil || '').toUpperCase() === exactKode.toUpperCase();
-                const kode = (r.kode_kecil || '').toLowerCase();
-                const artikel = (r.sku || '').toLowerCase();
-                const name = (r.product_name || r.name || '').toLowerCase();
-                return kode.includes(query) || artikel.includes(query) || name.includes(query);
-            });
+            // If checkboxes are selected, search ONLY those exact SKUs
+            var matches, displayQuery;
+            if (!exactKode && _selectedOnlineSkus.size > 0) {
+                var selectedArr = Array.from(_selectedOnlineSkus);
+                matches = data.filter(function(r) {
+                    var kode = (r.kode_kecil || '').toLowerCase();
+                    return selectedArr.some(function(q) { return kode === q; });
+                });
+                displayQuery = selectedArr.map(function(s) { return s.toUpperCase(); }).join(', ');
+            } else {
+                var query = exactKode ? exactKode.toLowerCase() : (document.getElementById('onlineSkuSearch')?.value || '').trim().toLowerCase();
+                if (!query || query.length < 2) {
+                    if (summEl) summEl.innerHTML = '<p style="color:#ef4444;">Masukkan minimal 2 karakter untuk dicari</p>';
+                    resultEl.innerHTML = '';
+                    return;
+                }
+                displayQuery = query;
+                matches = data.filter(r => {
+                    if (exactKode) return (r.kode_kecil || '').toUpperCase() === exactKode.toUpperCase();
+                    const kode = (r.kode_kecil || '').toLowerCase();
+                    const artikel = (r.sku || '').toLowerCase();
+                    const name = (r.product_name || r.name || '').toLowerCase();
+                    return kode.includes(query) || artikel.includes(query) || name.includes(query);
+                });
+            }
 
             if (!matches.length) {
                 if (summEl) summEl.innerHTML = '';
