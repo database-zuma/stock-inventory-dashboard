@@ -1779,7 +1779,14 @@
                         <!-- Filters (Retail-sized) -->
                         <div id="onlineFilterSection" style="background:#f8fafc;padding:15px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:18px;">
                             <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-                                <!-- Marketplace filter removed per user request -->
+                                <div style="min-width:130px;">
+                                    <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Mulai:</label>
+                                    <input type="date" id="onlineFilterDateFrom" value="2026-01-01" onchange="applyOnlineFilters()" style="width:100%;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                                </div>
+                                <div style="min-width:130px;">
+                                    <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Akhir:</label>
+                                    <input type="date" id="onlineFilterDateTo" onchange="applyOnlineFilters()" style="width:100%;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                                </div>
                                 <div style="min-width:140px;">
                                     <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Area:</label>
                                     <select id="onlineFilterArea" onchange="applyOnlineFilters()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
@@ -10617,6 +10624,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         function populateOnlineFilters(rows) {
             if (!rows) rows = globalRawData || onlineRawData;
+            // Set default date range if not already set
+            var dfTo = document.getElementById('onlineFilterDateTo');
+            if (dfTo && !dfTo.value) dfTo.value = new Date().toISOString().slice(0,10);
             const mp = [...new Set(rows.map(r => r.marketplace).filter(Boolean))].sort();
             const genders = [...new Set(rows.map(r => r.gender).filter(Boolean))].sort();
             const series = [...new Set(rows.map(r => r.collection).filter(Boolean))].sort();
@@ -10646,6 +10656,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             if (!data) data = globalRawData || onlineRawData; // fallback
             if (!data) return;
+
+            // Date filters
+            const dateFrom = document.getElementById('onlineFilterDateFrom')?.value || '';
+            const dateTo = document.getElementById('onlineFilterDateTo')?.value || '';
             const mpVal = document.getElementById('onlineFilterMarketplace')?.value || '';
             const gdVal = document.getElementById('onlineFilterGender')?.value || '';
             const srVal = document.getElementById('onlineFilterSeries')?.value || '';
@@ -10653,6 +10667,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const arVal = document.getElementById('onlineFilterArea')?.value || '';
 
             let filtered = data;
+            if (dateFrom) filtered = filtered.filter(r => (r.date || '') >= dateFrom);
+            if (dateTo) filtered = filtered.filter(r => (r.date || '') <= dateTo);
             if (mpVal) filtered = filtered.filter(r => r.marketplace === mpVal);
             if (gdVal) filtered = filtered.filter(r => r.gender === gdVal);
             if (srVal) filtered = filtered.filter(r => r.collection === srVal);
@@ -10665,6 +10681,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         function resetOnlineFilters() {
             ['onlineFilterMarketplace','onlineFilterGender','onlineFilterSeries','onlineFilterTier','onlineFilterArea'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            // Reset date filters to defaults
+            var dfFrom = document.getElementById('onlineFilterDateFrom'); if (dfFrom) dfFrom.value = '2026-01-01';
+            var dfTo = document.getElementById('onlineFilterDateTo'); if (dfTo) dfTo.value = new Date().toISOString().slice(0,10);
             applyOnlineFilters();
         }
 
