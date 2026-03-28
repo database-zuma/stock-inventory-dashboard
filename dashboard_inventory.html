@@ -1333,7 +1333,18 @@
                         </div>
                     </div>
                     <div>
-                        
+                        <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Penjelasan Status GAP:</div>
+                        <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.8;">
+                            <li><span style="color:#dc2626;font-weight:700;">Understock</span> — Stok tidak cukup untuk 3 bulan ke depan. GAP negatif artinya kekurangan stok sebanyak nilai GAP tersebut.</li>
+                            <li><span style="color:#d97706;font-weight:700;">Tipis</span> — Stok cukup tapi menipis. Masih positif tapi kurang dari rata-rata penjualan bulanan, perlu segera restock.</li>
+                            <li><span style="color:#16a34a;font-weight:700;">Aman</span> — Stok cukup lebih dari 3 bulan. GAP lebih besar dari rata-rata penjualan, tidak perlu restock mendesak.</li>
+                            <li><span style="color:#7c3aed;font-weight:700;">Dead Stock</span> — Tidak ada penjualan sama sekali selama 3 bulan terakhir tapi stok masih ada. Barang ini numpuk dan perlu tindakan (promo, redistribusi, atau retur).</li>
+                        </ul>
+                        <div style="margin-top:8px;padding:8px 12px;background:#eff6ff;border-radius:6px;font-size:0.78rem;color:#1e40af;">
+                            <b>Contoh:</b> SKU punya stok 100 prs, avg sales 20 prs/bulan → GAP = 100 - (20×3) = 40 → <b>Aman</b>.<br>
+                            SKU punya stok 30 prs, avg sales 20 prs/bulan → GAP = 30 - 60 = -30 → <b>Understock</b> (kurang 30 prs).<br>
+                            SKU punya stok 50 prs, avg sales 0 prs/bulan → <b>Dead Stock</b> (gak laku 3 bulan).
+                        </div>
                     </div>
                 </div>
             </div>
