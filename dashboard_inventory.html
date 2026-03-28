@@ -4700,7 +4700,15 @@
                 return;
             }
 
+            console.log('[SKU Search] query:', query, 'allData keys:', allData ? Object.keys(allData) : 'null');
+
             var results = {}; // keyed by kode_kecil → { info, warehouse: {entity: qty}, retail: {entity: qty}, consignment: {entity: qty} }
+
+            if (!allData || typeof allData !== 'object') {
+                var resultEl = document.getElementById('globalSkuSearchResults');
+                if (resultEl) resultEl.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Data belum selesai dimuat. Tunggu beberapa detik lalu coba lagi.</div>';
+                return;
+            }
 
             // 1. Search warehouse & retail from allData
             var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
@@ -4817,7 +4825,14 @@
                 return;
             }
 
-            renderSkuSearchResults(results, query);
+            console.log('[SKU Search] Found', Object.keys(results).length, 'results');
+            try {
+                renderSkuSearchResults(results, query);
+            } catch(e) {
+                console.error('[SKU Search] Render error:', e);
+                var resultEl = document.getElementById('globalSkuSearchResults');
+                if (resultEl) resultEl.innerHTML = '<div style="padding:20px;color:#ef4444;">Error rendering: ' + e.message + '</div>';
+            }
         }
 
         function clearSkuSearch() {
