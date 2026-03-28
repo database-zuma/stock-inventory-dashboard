@@ -6873,7 +6873,7 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (isDead ? 'background:#7c3aed;color:white;' : (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;'))) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
@@ -6896,7 +6896,7 @@
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;' + (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;')) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;' + (isDead ? 'background:#7c3aed;color:white;' : (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;'))) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (to < 1 ? 'background:#dc2626;color:white;' : (to <= 2 ? 'background:#eab308;color:black;' : (to <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + to + '</td>' +
                     '</tr>';
@@ -7438,9 +7438,10 @@
                 const twVal = parseFloat(tw) || 0;
                 const isDeadStock = avgSales === 0 && basisStock > 0;
 
-                // GAP color
+                // GAP color — Dead Stock gets purple
                 let gapStyle = '';
-                if (gap < 0) gapStyle = 'background:#dc2626;color:white;';
+                if (isDeadStock) gapStyle = 'background:#7c3aed;color:white;';
+                else if (gap < 0) gapStyle = 'background:#dc2626;color:white;';
                 else if (gap < avgSales) gapStyle = 'background:#eab308;color:black;';
                 else gapStyle = 'background:#16a34a;color:white;';
 
