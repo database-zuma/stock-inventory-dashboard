@@ -10750,7 +10750,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 _selectedOnlineSkus.add(kode);
             }
             renderOnlineSkuChips();
-            // Update checkbox in results
+            // Update checkbox visual
             var cb = document.getElementById('onlineSkuCb_' + kode.replace(/[^a-zA-Z0-9]/g,''));
             if (cb) cb.checked = _selectedOnlineSkus.has(kode);
         }
