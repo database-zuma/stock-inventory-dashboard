@@ -10801,7 +10801,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 searchOnlineSku();
                 return;
             }
-            showOnlineLiveSuggestions();
+            // Live search only when 1 field — multi-field waits for Cari button
+            var fieldCount = document.querySelectorAll('.online-sku-input').length;
+            if (fieldCount <= 1) {
+                showOnlineLiveSuggestions();
+            }
         }
 
         function showOnlineLiveSuggestions() {
