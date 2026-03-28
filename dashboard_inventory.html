@@ -10805,13 +10805,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function showOnlineLiveSuggestions() {
+            // Use ALL queries from all fields for live search
             var queries = getOnlineSkuQueries();
-            const query = queries.length > 0 ? queries[queries.length - 1] : '';
             const summEl = document.getElementById('onlineSkuSummary');
             const resultEl = document.getElementById('onlineSkuResults');
             if (!resultEl) return;
 
-            if (!query || query.length < 2 || !(globalRawData || onlineRawData)) {
+            if (!queries.length || !(globalRawData || onlineRawData)) {
                 if (summEl) summEl.innerHTML = '';
                 resultEl.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:50px 20px;font-size:0.9rem;">Ketik minimal 2 karakter untuk mencari artikel...</p>';
                 return;
@@ -10819,14 +10819,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             const fmtK = n => { if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M'; if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt'; return 'Rp ' + (n||0).toLocaleString('id-ID'); };
 
-            // Search data based on current channel (Global vs Online)
+            // Search data based on current channel using ALL queries
             const allData = currentOnlineDataSource === 'global' ? globalRawData : (onlineRawData || globalRawData);
             const matches = allData ? allData.filter(r => {
                 const kode = (r.kode_kecil || '').toLowerCase();
                 const artikel = (r.sku || '').toLowerCase();
                 const name = (r.product_name || r.name || '').toLowerCase();
-                return kode.includes(query) || artikel.includes(query) || name.includes(query);
+                return queries.some(q => kode.includes(q) || artikel.includes(q) || name.includes(q));
             }) : [];
+            const query = queries.join(', '); // for display
 
             if (!matches.length) {
                 if (summEl) summEl.innerHTML = '';
