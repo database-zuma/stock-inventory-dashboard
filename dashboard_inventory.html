@@ -1342,9 +1342,40 @@
                             <li><span style="color:#7c3aed;font-weight:700;">Dead Stock</span> — Tidak ada penjualan sama sekali selama 3 bulan terakhir tapi stok masih ada. Barang ini numpuk dan perlu tindakan (promo, redistribusi, atau retur).</li>
                         </ul>
                         <div style="margin-top:8px;padding:8px 12px;background:#eff6ff;border-radius:6px;font-size:0.78rem;color:#1e40af;">
-                            <b>Contoh:</b> SKU punya stok 100 prs, avg sales 20 prs/bulan → GAP = 100 - (20×3) = 40 → <b>Aman</b>.<br>
+                            <b>Contoh GAP:</b> SKU punya stok 100 prs, avg sales 20 prs/bulan → GAP = 100 - (20×3) = 40 → <b>Aman</b>.<br>
                             SKU punya stok 30 prs, avg sales 20 prs/bulan → GAP = 30 - 60 = -30 → <b>Understock</b> (kurang 30 prs).<br>
                             SKU punya stok 50 prs, avg sales 0 prs/bulan → <b>Dead Stock</b> (gak laku 3 bulan).
+                        </div>
+                    </div>
+                </div>
+                <!-- Penjelasan TW & TO -->
+                <div style="margin-top:15px;border-top:1px solid #e2e8f0;padding-top:15px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;">
+                        <div>
+                            <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Penjelasan TW (Turnover Warehouse):</div>
+                            <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.8;">
+                                <li><span style="color:#ef4444;font-weight:700;">Critical (&lt;1)</span> — Stok gudang tidak cukup 1 bulan. Harus segera order/produksi.</li>
+                                <li><span style="color:#f59e0b;font-weight:700;">Low (1-2)</span> — Stok gudang cukup 1-2 bulan. Perlu persiapan restock.</li>
+                                <li><span style="color:#10b981;font-weight:700;">Normal (2-4)</span> — Stok gudang sehat, cukup 2-4 bulan penjualan.</li>
+                                <li><span style="color:#3b82f6;font-weight:700;">High (&gt;4)</span> — Stok gudang berlebih, lebih dari 4 bulan. Pertimbangkan redistribusi.</li>
+                            </ul>
+                            <div style="margin-top:8px;padding:8px 12px;background:#faf5ff;border-radius:6px;font-size:0.78rem;color:#6b21a8;">
+                                <b>Rumus:</b> TW = Stok Gudang / Avg Sales 3 Bulan<br>
+                                <b>Contoh:</b> Stok WH 80 prs, avg sales 20 prs/bulan → TW = 80/20 = <b>4</b> → Normal
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-weight:600;color:#1f2937;font-size:0.85rem;margin-bottom:5px;">Penjelasan TO (Turnover Toko):</div>
+                            <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:0.8rem;line-height:1.8;">
+                                <li><span style="color:#ef4444;font-weight:700;">Critical (&lt;1)</span> — Stok toko hampir habis, tidak cukup 1 bulan.</li>
+                                <li><span style="color:#f59e0b;font-weight:700;">Low (1-2)</span> — Stok toko cukup 1-2 bulan, perlu kirim dari gudang.</li>
+                                <li><span style="color:#10b981;font-weight:700;">Normal (2-4)</span> — Stok toko sehat, cukup 2-4 bulan penjualan.</li>
+                                <li><span style="color:#3b82f6;font-weight:700;">High (&gt;4)</span> — Stok toko berlebih, lebih dari 4 bulan. Bisa redistribusi ke toko lain.</li>
+                            </ul>
+                            <div style="margin-top:8px;padding:8px 12px;background:#faf5ff;border-radius:6px;font-size:0.78rem;color:#6b21a8;">
+                                <b>Rumus:</b> TO = Stok Toko / Avg Sales 3 Bulan<br>
+                                <b>Contoh:</b> Stok toko 60 prs, avg sales 20 prs/bulan → TO = 60/20 = <b>3</b> → Normal
+                            </div>
                         </div>
                     </div>
                 </div>
