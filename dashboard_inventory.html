@@ -13433,7 +13433,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var countAssort = '-';
                     if (assortStr && assortStr !== '-') {
                         var parts = assortStr.split('-');
-                        countAssort = (sizeIdx < parts.length) ? (parseInt(parts[sizeIdx]) || '-') : '-';
+                        var pVal = parseInt(parts[sizeIdx]); countAssort = (sizeIdx < parts.length && !isNaN(pVal)) ? pVal : '-';
                     }
                     var row = {
                         store: store, area: getAreaFromStore(store),
@@ -13460,15 +13460,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     return [r.store, r.area, r.kodeBarang, r.kodeKecil, r.kodeMix, r.kodeMixSize, r.nama, r.size, r.gender, r.series, r.tipe, r.countAssort, r.tier, r.version, r.stock];
                 }));
             };
-            // Color highlight: Count Assortment=yellow, Tier=blue, Version=green
+            // Highlight Count Assortment=yellow, Tier=light blue, Version=light purple
+            // Stock column (14) = no color
             function applyHighlightCols(ws, rowCount) {
-                var colColors = { 11: 'FFF9C4', 12: 'BBDEFB', 13: 'C8E6C9' }; // Count=yellow, Tier=blue, Version=green
+                var colColors = { 11: 'FFF9C4', 12: 'DBEAFE', 13: 'E8D5F5' };
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
                 for (var ri = 1; ri <= rowCount; ri++) {
                     [11,12,13].forEach(function(ci) {
                         var ref = XLSX.utils.encode_cell({ r: ri, c: ci });
                         if (ws[ref]) {
-                            if (!ws[ref].s) ws[ref].s = {};
-                            ws[ref].s.fill = { fgColor: { rgb: colColors[ci] } };
+                            ws[ref].s = { alignment:{horizontal:'center',vertical:'center'}, font:{sz:10}, border:border, fill:{fgColor:{rgb:colColors[ci]}} };
                         }
                     });
                 }
@@ -13534,8 +13535,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             allRows.sort(function(a,b) { return b[15] - a[15]; });
             function applyConsigHighlight(ws, cnt) {
-                var cc = { 12: 'FFF9C4', 13: 'BBDEFB', 14: 'C8E6C9' };
-                for (var ri = 1; ri <= cnt; ri++) { [12,13,14].forEach(function(ci) { var ref = XLSX.utils.encode_cell({r:ri,c:ci}); if (ws[ref]) { if (!ws[ref].s) ws[ref].s = {}; ws[ref].s.fill = {fgColor:{rgb:cc[ci]}}; } }); }
+                var cc = { 12: 'FFF9C4', 13: 'DBEAFE', 14: 'E8D5F5' };
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+                for (var ri = 1; ri <= cnt; ri++) { [12,13,14].forEach(function(ci) { var ref = XLSX.utils.encode_cell({r:ri,c:ci}); if (ws[ref]) { ws[ref].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border,fill:{fgColor:{rgb:cc[ci]}}}; } }); }
             }
             function applyConsigStyle(ws) {
                 ws['!cols'] = [{wch:22},{wch:14},{wch:10},{wch:14},{wch:12},{wch:14},{wch:16},{wch:30},{wch:8},{wch:8},{wch:10},{wch:8},{wch:14},{wch:6},{wch:6},{wch:8}];
@@ -13600,8 +13602,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             baliRows.sort(function(a,b) { return b[13] - a[13]; });
             jktRows.sort(function(a,b) { return b[13] - a[13]; });
             function applyWHOnlineHighlight(ws, cnt) {
-                var cc = { 10: 'FFF9C4', 11: 'BBDEFB', 12: 'C8E6C9' };
-                for (var ri = 1; ri <= cnt; ri++) { [10,11,12].forEach(function(ci) { var ref = XLSX.utils.encode_cell({r:ri,c:ci}); if (ws[ref]) { if (!ws[ref].s) ws[ref].s = {}; ws[ref].s.fill = {fgColor:{rgb:cc[ci]}}; } }); }
+                var cc = { 10: 'FFF9C4', 11: 'DBEAFE', 12: 'E8D5F5' };
+                var border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
+                for (var ri = 1; ri <= cnt; ri++) { [10,11,12].forEach(function(ci) { var ref = XLSX.utils.encode_cell({r:ri,c:ci}); if (ws[ref]) { ws[ref].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:border,fill:{fgColor:{rgb:cc[ci]}}}; } }); }
             }
             function applyWHOnlineStyle(ws) {
                 ws['!cols'] = [{wch:22},{wch:14},{wch:12},{wch:14},{wch:16},{wch:30},{wch:8},{wch:8},{wch:8},{wch:8},{wch:14},{wch:6},{wch:6},{wch:10}];
