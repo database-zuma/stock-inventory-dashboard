@@ -2445,6 +2445,14 @@
                 </div>
             </div>
 
+            <!-- SIZE ANALYSIS -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📐 Size Analysis</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportSizeAnalysis()" style="padding:10px 20px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 Size Analysis (Retail)</button>
+                </div>
+            </div>
+
             <!-- SALES -->
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">💰 Sales</h3>
@@ -13662,6 +13670,161 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             addColoredSheetOnline(wb, skuRows, 'By SKU');
             addColoredSheetOnline(wb, kkRows, 'By Kode Kecil');
             XLSX.writeFile(wb, 'control_stock_online_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportSizeAnalysis() {
+            if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
+            if (!salesDetailData || salesDetailData.length === 0) { alert('Sales data belum dimuat. Tunggu beberapa detik lalu coba lagi.'); return; }
+            if (!allData) { alert('Stock data belum dimuat.'); return; }
+
+            // 1. Collect retail stock: keyed by kode + '|' + size + '|' + store
+            var stockMap = {};   // key → qty
+            var metaMap = {};    // kode → {name, gender, series, tipe, tier}
+            var allStoreNames = new Set();
+            var entities = ['DDD', 'LJBB', 'MBB', 'UBB'];
+
+            entities.forEach(function(ent) {
+                var items = allData[ent] && allData[ent].retail;
+                if (!items) return;
+                items.forEach(function(item) {
+                    if (!item.store_stock) return;
+                    var kode = (item.kode || '').toUpperCase();
+                    var size = item.size || '';
+                    if (!kode) return;
+                    // Store metadata
+                    if (!metaMap[kode]) metaMap[kode] = { name: item.name || '', gender: item.gender || '', series: item.series || '', tipe: item.tipe || '', tier: item.tier || '' };
+                    Object.entries(item.store_stock).forEach(function(e) {
+                        var store = e[0], stock = e[1];
+                        if (stock === 0) return;
+                        if (isExcludedLocation(store) || isWarehouseLocation(store)) return;
+                        allStoreNames.add(store);
+                        var key = kode + '|' + size + '|' + store;
+                        stockMap[key] = (stockMap[key] || 0) + stock;
+                    });
+                });
+            });
+
+            // 2. Collect retail sales: keyed by kode_kecil + '|' + ukuran + '|' + store
+            var salesMap = {};  // key → qty
+            var eventStores = new Set();
+            salesDetailData.forEach(function(r) {
+                if (r.category === 'EVENT') { eventStores.add(r.store); return; }
+            });
+            salesDetailData.forEach(function(r) {
+                if (eventStores.has(r.store)) return;
+                var kode = (r.kode_kecil || '').toUpperCase();
+                var size = r.ukuran || r.size || '';
+                var store = r.store || '';
+                if (!kode || !store) return;
+                allStoreNames.add(store);
+                var key = kode + '|' + size + '|' + store;
+                salesMap[key] = (salesMap[key] || 0) + (r.qty || 0);
+            });
+
+            // 3. Merge all keys and compute
+            var allKeys = new Set();
+            Object.keys(stockMap).forEach(function(k) { allKeys.add(k); });
+            Object.keys(salesMap).forEach(function(k) { allKeys.add(k); });
+
+            var rows = [];  // {kode, name, size, gender, series, tier, store, stok, sales, sellThrough, status}
+            allKeys.forEach(function(key) {
+                var parts = key.split('|');
+                var kode = parts[0], size = parts[1], store = parts[2];
+                var stok = stockMap[key] || 0;
+                var sales = salesMap[key] || 0;
+                var meta = metaMap[kode] || {};
+                var tier = meta.tier || '';
+                var sellThrough = (sales + stok) > 0 ? (sales / (sales + stok) * 100) : 0;
+                var status;
+                if (String(tier) === '8') { status = 'New'; }
+                else if (sales === 0 && stok > 0) { status = 'New'; }
+                else if (sellThrough > 75) { status = 'Fast Moving'; }
+                else if (sellThrough >= 50) { status = 'Normal'; }
+                else if (sellThrough >= 25) { status = 'Slow'; }
+                else { status = 'Numpuk'; }
+
+                rows.push({
+                    kode: kode, name: meta.name || '', size: size,
+                    gender: meta.gender || '', series: meta.series || '',
+                    tier: tier, store: store,
+                    stok: stok, sales: sales,
+                    sellThrough: Math.round(sellThrough * 10) / 10,
+                    status: status
+                });
+            });
+
+            if (!rows.length) { alert('Tidak ada data untuk di-export.'); return; }
+
+            // 4. Build Excel
+            var wb = XLSX.utils.book_new();
+            var headers = ['Kode Kecil', 'Nama Barang', 'Size', 'Gender', 'Series', 'Tier', 'Stok', 'Sales 3M', 'Sell-through %', 'Status'];
+            var colWidths = [{wch:14},{wch:30},{wch:8},{wch:8},{wch:12},{wch:6},{wch:10},{wch:10},{wch:14},{wch:14}];
+            var leftCols = [0,1,2,3,4];
+
+            // Status color map
+            var statusColors = { 'Fast Moving': '16A34A', 'Normal': '3B82F6', 'Slow': 'EAB308', 'Numpuk': 'DC2626', 'New': '6B7280' };
+            var statusTextColors = { 'Fast Moving': 'FFFFFF', 'Normal': 'FFFFFF', 'Slow': '1F2937', 'Numpuk': 'FFFFFF', 'New': 'FFFFFF' };
+
+            function applyStatusColors(ws, dataRows) {
+                dataRows.forEach(function(r, i) {
+                    var cellRef = XLSX.utils.encode_cell({ r: i + 1, c: 9 }); // Status column (index 9)
+                    if (ws[cellRef]) {
+                        var bg = statusColors[r.status] || '6B7280';
+                        var fg = statusTextColors[r.status] || 'FFFFFF';
+                        ws[cellRef].s = { fill: { fgColor: { rgb: bg } }, font: { color: { rgb: fg }, bold: true } };
+                    }
+                });
+            }
+
+            function rowToArray(r) {
+                return [r.kode, r.name, r.size, r.gender, r.series, r.tier, r.stok, r.sales, r.sellThrough + '%', r.status];
+            }
+
+            // SUMMARY sheet — aggregate per kode + size (all stores combined)
+            var summaryMap = {};
+            rows.forEach(function(r) {
+                var key = r.kode + '|' + r.size;
+                if (!summaryMap[key]) summaryMap[key] = { kode: r.kode, name: r.name, size: r.size, gender: r.gender, series: r.series, tier: r.tier, stok: 0, sales: 0 };
+                summaryMap[key].stok += r.stok;
+                summaryMap[key].sales += r.sales;
+            });
+            var summaryRows = Object.values(summaryMap).map(function(r) {
+                var st = (r.sales + r.stok) > 0 ? (r.sales / (r.sales + r.stok) * 100) : 0;
+                var status;
+                if (String(r.tier) === '8') { status = 'New'; }
+                else if (r.sales === 0 && r.stok > 0) { status = 'New'; }
+                else if (st > 75) { status = 'Fast Moving'; }
+                else if (st >= 50) { status = 'Normal'; }
+                else if (st >= 25) { status = 'Slow'; }
+                else { status = 'Numpuk'; }
+                return { kode: r.kode, name: r.name, size: r.size, gender: r.gender, series: r.series, tier: r.tier, stok: r.stok, sales: r.sales, sellThrough: Math.round(st * 10) / 10, status: status };
+            });
+            summaryRows.sort(function(a,b) { return a.sellThrough - b.sellThrough; }); // numpuk first
+            var summAoa = [headers].concat(summaryRows.map(rowToArray));
+            var wsSummary = XLSX.utils.aoa_to_sheet(summAoa);
+            wsSummary['!cols'] = colWidths.slice();
+            applyTableStyle(wsSummary, leftCols);
+            applyStatusColors(wsSummary, summaryRows);
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
+
+            // Per-store sheets
+            var storeMap = {};
+            rows.forEach(function(r) {
+                if (!storeMap[r.store]) storeMap[r.store] = [];
+                storeMap[r.store].push(r);
+            });
+            Object.keys(storeMap).sort().forEach(function(store) {
+                var storeRows = storeMap[store];
+                storeRows.sort(function(a,b) { return a.sellThrough - b.sellThrough; });
+                var aoa = [headers].concat(storeRows.map(rowToArray));
+                var ws = XLSX.utils.aoa_to_sheet(aoa);
+                ws['!cols'] = colWidths.slice();
+                applyTableStyle(ws, leftCols);
+                applyStatusColors(ws, storeRows);
+                XLSX.utils.book_append_sheet(wb, ws, store.substring(0, 31));
+            });
+
+            XLSX.writeFile(wb, 'size_analysis_retail_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function addSideSummary(ws, rows, tierIdx, qtyIdx, nameIdx, startCol) {
