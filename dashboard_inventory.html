@@ -13068,8 +13068,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (rdActiveType) rows = rows.filter(r => r.source_type === rdActiveType);
 
                 document.getElementById('rdRowCount').textContent = formatNum(rows.length) + ' transfers';
+                var isBoxOnly = rdActiveType === 'RO Box';
+                var colCount = isBoxOnly ? 15 : 16;
+                // Dynamic header based on filter
+                var thead = document.querySelector('#rdTransferBody').parentElement.querySelector('thead');
+                if (thead) {
+                    var ths = 'padding:4px 6px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.3);border-bottom:2px solid rgba(255,255,255,0.3);';
+                    var hdr = '<tr style="background:#1F2937;color:white;position:sticky;top:0;z-index:2;">' +
+                        '<th style="' + ths + '">Tipe</th><th style="' + ths + '">Grade</th>' +
+                        '<th style="' + ths + 'text-align:left;">Asal</th><th style="' + ths + 'text-align:left;">Tujuan</th>' +
+                        '<th style="' + ths + 'text-align:left;">Kode Mix</th><th style="' + ths + 'text-align:left;">Kode Kecil</th>' +
+                        (isBoxOnly ? '' : '<th style="' + ths + 'text-align:left;">Kode Barang</th>') +
+                        '<th style="' + ths + 'text-align:left;min-width:90px;">Nama Barang</th>' +
+                        '<th style="' + ths + '">Size</th><th style="' + ths + '">Ver</th>' +
+                        '<th style="' + ths + '">Gender</th><th style="' + ths + '">Series</th>' +
+                        '<th style="' + ths + '">Tipe</th><th style="' + ths + '">Tier</th>' +
+                        '<th style="' + ths + '">Qty</th><th style="' + ths + 'border-right:none;">Satuan</th></tr>';
+                    thead.innerHTML = hdr;
+                }
                 const tbody = document.getElementById('rdTransferBody');
-                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
+                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
 
                 // Group by source_type — urutan: WH Protol→Store, RO Box, Surplus→WH
                 var groups = [
@@ -13109,7 +13127,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (!grp.rows.length) return;
                     // Section header
                     html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
-                        '<td colspan="16" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
+                        '<td colspan="' + colCount + '" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         grp.sectionLabel + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
                         '</td></tr>';
                     var display = (grp.key === 'Store Surplus \u2192 WH') ? grp.rows.slice(0, surplusLimit) : grp.rows;
@@ -13140,7 +13158,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             '<td style="' + cs + 'white-space:nowrap;font-size:0.76rem;">' + tujuan + '</td>' +
                             '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + r.kode_mix + '</td>' +
                             '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + r.kode_kecil + '</td>' +
-                            '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + kodeBarang + '</td>' +
+                            (isBoxOnly ? '' : '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + kodeBarang + '</td>') +
                             '<td style="' + cs + 'font-size:0.76rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + r.artikel + '">' + r.artikel + '</td>' +
                             '<td style="' + cs + 'text-align:center;max-width:100px;">' + sizeDisplay + '</td>' +
                             '<td style="' + cs + 'text-align:center;background:#ccfbf1;color:#0f766e;font-weight:600;font-size:0.76rem;">' + (r.version || '-') + '</td>' +
@@ -13153,7 +13171,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             '</tr>';
                     });
                     if (grp.key === 'Store Surplus \u2192 WH' && grp.rows.length > surplusLimit) {
-                        html += '<tr><td colspan="16" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
+                        html += '<tr><td colspan="' + colCount + '" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
                     }
                 });
                 tbody.innerHTML = html;
