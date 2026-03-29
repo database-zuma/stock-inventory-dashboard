@@ -13310,25 +13310,32 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             const wb = XLSX.utils.book_new();
 
+            // Helper: build full assortment string from RO Box data
+            function getAssortmentStr(r) {
+                if (!r.assortment || typeof r.assortment !== 'object') return '-';
+                var sorted = Object.entries(r.assortment).sort(function(a,b) { return (parseInt(a[0])||0) - (parseInt(b[0])||0); });
+                return sorted.map(function(e) { return e[0] + ':' + e[1]; }).join(', ');
+            }
+
             // === Sheet: RO Protol ===
             if (roProtolItems.length > 0) {
                 var rpH = ['Asal','Tujuan','Kode Mix','Kode Kecil','Kode Barang','Nama Barang','Size','Version','Gender','Series','Tipe','Tier','Qty'];
                 var rpRows = roProtolItems.map(function(r) {
                     var m = getMeta(r.kode_mix);
-                    return [r.dari||'-', r.ke||'-', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty];
+                    return ['Warehouse Pusat Protol', r.ke||'-', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty];
                 });
                 var wsRP = XLSX.utils.aoa_to_sheet([rpH, ...rpRows]);
-                wsRP['!cols'] = [{wch:20},{wch:20},{wch:16},{wch:12},{wch:16},{wch:28},{wch:8},{wch:8},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8}];
+                wsRP['!cols'] = [{wch:22},{wch:20},{wch:16},{wch:12},{wch:16},{wch:28},{wch:8},{wch:8},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8}];
                 applyTableStyle(wsRP, [0,1,2,3,4,5]);
                 XLSX.utils.book_append_sheet(wb, wsRP, 'RO Protol');
             }
 
-            // === Sheet: RO Box (no Kode Barang) ===
+            // === Sheet: RO Box (no Kode Barang, size = full assortment) ===
             if (roBoxItems.length > 0) {
                 var rbH = ['Asal','Tujuan','Kode Mix','Kode Kecil','Nama Barang','Size','Version','Gender','Series','Tipe','Tier','Qty'];
                 var rbRows = roBoxItems.map(function(r) {
                     var m = getMeta(r.kode_mix);
-                    return [r.dari||'RO', r.ke||'-', r.kode_mix, r.kode_kecil||'', r.artikel, r.ukuran||'Mixed', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty];
+                    return ['Warehouse Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', r.artikel, getAssortmentStr(r), r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty];
                 });
                 var wsRB = XLSX.utils.aoa_to_sheet([rbH, ...rbRows]);
                 wsRB['!cols'] = [{wch:12},{wch:20},{wch:16},{wch:12},{wch:28},{wch:8},{wch:8},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8}];
@@ -13356,15 +13363,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             roProtolItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
-                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Protol', r.dari||'-', r.ke||'-', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, r.qty + ' pairs']);
+                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Protol', 'Warehouse Pusat Protol', r.ke||'-', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'pairs']);
             });
             roBoxItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
-                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', r.dari||'RO', r.ke||'-', r.kode_mix, r.kode_kecil||'', '', r.artikel, r.ukuran||'Mixed', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, r.qty + ' box']);
+                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', 'Warehouse Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', '', r.artikel, getAssortmentStr(r), r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box']);
             });
             mutasiItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
-                addStore(r.dari, [r.dari, r.store_grade||'', 'Mutasi ke WH', r.dari||'-', r.ke||'Warehouse Pusat', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, r.qty + ' pairs']);
+                addStore(r.dari, [r.dari, r.store_grade||'', 'Mutasi ke WH', r.dari||'-', 'Warehouse Pusat', r.kode_mix, r.kode_kecil||'', getKodeBarang(r.kode_kecil, r.ukuran), r.artikel, r.ukuran, r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'pairs']);
             });
             Object.keys(storeGroups).sort().forEach(function(store) {
                 var ws = XLSX.utils.aoa_to_sheet([storeHeaders, ...storeGroups[store]]);
