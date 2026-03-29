@@ -13171,43 +13171,52 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (fGender) detail = detail.filter(r => r.gender === fGender);
             if (fTier)   detail = detail.filter(r => r.tier   === fTier);
 
-            const headers = ['Store','Kode Mix','Kode Kecil','Kode Barang','Nama Barang','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status'];
-            // Build kode_barang lookup from allData stock (kode → size → kode_kecil)
-            var kodeBarangLookup = {};
-            ['DDD','MBB','LJBB','UBB'].forEach(function(ent) {
-                var items = allData[ent] && allData[ent].retail;
-                if (!items) return;
-                items.forEach(function(item) {
-                    var kode = (item.kode || '').toLowerCase();
-                    var sz = item.size || '';
-                    if (kode && sz) kodeBarangLookup[kode + '|' + sz] = (item.kode_kecil || '').toUpperCase();
-                });
-            });
+            const headers = ['Store','Kode Mix','Nama Barang','Size','Gender','Series','Tipe','Tier','Stok Ideal','On Hand','Gap','Status'];
             const toRow = r => {
-                var kodeKecil = (r.versions && r.versions.length > 0) ? r.versions[0].kode_kecil || '' : '';
-                var kodeBarang = kodeBarangLookup[(kodeKecil || '').toLowerCase() + '|' + (r.ukuran || '')] || '';
                 var statusLabel = r.status === 'deficit' ? 'Restock' : (r.status === 'ok' ? 'Aman' : (r.status === 'surplus' ? 'Surplus' : r.status));
-                return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, statusLabel];
+                return [r.store, r.kode_mix, r.artikel, r.ukuran, r.gender, r.series, r.tipe||'', r.tier||'', r.target, r.on_hand, r.gap, statusLabel];
             };
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             const wb = XLSX.utils.book_new();
-            var rdLeftCols = [0,1,2,3,4,5,6,7];
-            var rdColWidths = [{wch:22},{wch:16},{wch:12},{wch:16},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10}];
+            var rdLeftCols = [0,1,2,3,4,5,6];
+            var rdColWidths = [{wch:22},{wch:16},{wch:28},{wch:8},{wch:8},{wch:12},{wch:8},{wch:6},{wch:10},{wch:10},{wch:8},{wch:10}];
+
+            // Status color helper
+            var statusColors = { 'Restock': 'FECACA', 'Surplus': 'FEF3C7', 'Aman': 'D1FAE5' };
+            var statusTextColors = { 'Restock': 'DC2626', 'Surplus': 'D97706', 'Aman': '16A34A' };
+            function applyStatusColor(ws, dataRows) {
+                var statusColIdx = 11; // Status column index
+                dataRows.forEach(function(r, i) {
+                    var cellRef = XLSX.utils.encode_cell({ r: i + 1, c: statusColIdx });
+                    if (ws[cellRef]) {
+                        var label = ws[cellRef].v;
+                        var bg = statusColors[label];
+                        var fg = statusTextColors[label];
+                        if (bg) {
+                            ws[cellRef].s = { fill: { fgColor: { rgb: bg } }, font: { bold: true, color: { rgb: fg }, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top:{style:'thin',color:{rgb:'999999'}}, bottom:{style:'thin',color:{rgb:'999999'}}, left:{style:'thin',color:{rgb:'999999'}}, right:{style:'thin',color:{rgb:'999999'}} } };
+                        }
+                    }
+                });
+            }
 
             // Sheet 1: SUMMARY
-            var wsSummary = XLSX.utils.aoa_to_sheet([headers, ...detail.map(toRow)]);
+            var detailRows = detail.map(toRow);
+            var wsSummary = XLSX.utils.aoa_to_sheet([headers, ...detailRows]);
             wsSummary['!cols'] = rdColWidths.slice();
             applyTableStyle(wsSummary, rdLeftCols);
+            applyStatusColor(wsSummary, detailRows);
             XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
 
             // Per-store sheets
             const groups = {};
             detail.forEach(r => { if (!groups[r.store]) groups[r.store] = []; groups[r.store].push(r); });
             Object.keys(groups).sort().forEach(store => {
-                const ws = XLSX.utils.aoa_to_sheet([headers, ...groups[store].map(toRow)]);
+                var storeRows = groups[store].map(toRow);
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...storeRows]);
                 ws['!cols'] = rdColWidths.slice();
                 applyTableStyle(ws, rdLeftCols);
+                applyStatusColor(ws, storeRows);
                 XLSX.utils.book_append_sheet(wb, ws, store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31));
             });
 
