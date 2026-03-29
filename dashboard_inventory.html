@@ -2275,11 +2275,11 @@
                         <div style="font-size:1.3rem; font-weight:700; color:#f59e0b;" id="rdSurplusCount">-</div>
                     </div>
                     <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #ef4444;">
-                        <div style="font-size:0.75rem; color:#991b1b;">Deficit SKU</div>
+                        <div style="font-size:0.75rem; color:#991b1b;">Restock SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#ef4444;" id="rdDeficitCount">-</div>
                     </div>
                     <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #22c55e;">
-                        <div style="font-size:0.75rem; color:#166534;">OK SKU</div>
+                        <div style="font-size:0.75rem; color:#166534;">Aman SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#22c55e;" id="rdOkCount">-</div>
                     </div>
                     <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #1d4ed8;">
@@ -2300,8 +2300,8 @@
                     <select id="rdFilterStatus" onchange="renderRdTable()" style="font-size:0.85rem; padding:8px 12px; min-width:120px; border-radius:6px; border:1px solid #cbd5e1;">
                         <option value="">Semua Status</option>
                         <option value="surplus">🟡 Surplus</option>
-                        <option value="deficit">🔴 Deficit</option>
-                        <option value="ok">🟢 OK</option>
+                        <option value="deficit">🔴 Restock</option>
+                        <option value="ok">🟢 Aman</option>
                     </select>
                     <select id="rdFilterSeries" onchange="renderRdTable()" style="font-size:0.85rem; padding:8px 12px; min-width:120px; border-radius:6px; border:1px solid #cbd5e1;">
                         <option value="">Semua Series</option>
@@ -2327,7 +2327,7 @@
                         <button onclick="rdSetStatus('')"        id="rdStatusBtnAll"     style="padding:6px 14px;border-radius:20px;border:2px solid #db2777;background:#db2777;color:#fff;cursor:pointer;font-size:0.82rem;font-weight:600;">Semua</button>
                         <button onclick="rdSetStatus('surplus')" id="rdStatusBtnSurplus" style="padding:6px 14px;border-radius:20px;border:2px solid #f59e0b;background:#fff;color:#f59e0b;cursor:pointer;font-size:0.82rem;font-weight:600;">🟡 Surplus</button>
                         <button onclick="rdSetStatus('deficit')" id="rdStatusBtnRestock" style="padding:6px 14px;border-radius:20px;border:2px solid #ef4444;background:#fff;color:#ef4444;cursor:pointer;font-size:0.82rem;font-weight:600;">🔴 Restock</button>
-                        <button onclick="rdSetStatus('ok')"      id="rdStatusBtnOk"      style="padding:6px 14px;border-radius:20px;border:2px solid #22c55e;background:#fff;color:#22c55e;cursor:pointer;font-size:0.82rem;font-weight:600;">🟢 OK</button>
+                        <button onclick="rdSetStatus('ok')"      id="rdStatusBtnOk"      style="padding:6px 14px;border-radius:20px;border:2px solid #22c55e;background:#fff;color:#22c55e;cursor:pointer;font-size:0.82rem;font-weight:600;">🟢 Aman</button>
                     </div>
                     <div style="display:flex; gap:16px; align-items:flex-start;">
                     <div style="flex:0 0 auto;">
@@ -12970,8 +12970,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 display.forEach(function(r, i) {
                     const bgColor = r.status === 'surplus' ? '#FFF3CD' : r.status === 'deficit' ? '#FFE4E1' : '#F0FFF0';
                     const statusBadge = r.status === 'surplus' ? '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Surplus</span>'
-                        : r.status === 'deficit' ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Deficit</span>'
-                        : '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">OK</span>';
+                        : r.status === 'deficit' ? '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Restock</span>'
+                        : '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">Aman</span>';
                     const gapColor = r.gap > 0 ? '#f59e0b' : r.gap < 0 ? '#ef4444' : '#22c55e';
                     html += '<tr style="background:' + bgColor + ';">' +
                         '<td style="padding:8px 12px;border:1px solid #000;white-space:nowrap;">' + r.store + '</td>' +
@@ -13001,7 +13001,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     '<div style="font-size:0.72rem;font-weight:700;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">📊 Ringkasan</div>' +
                     '<div style="display:flex;flex-direction:column;gap:5px;">' +
                     '<div style="display:flex;justify-content:space-between;padding:5px 8px;background:#fee2e2;border-radius:6px;">' +
-                    '<span style="font-size:0.78rem;color:#ef4444;font-weight:600;">🔴 Deficit</span>' +
+                    '<span style="font-size:0.78rem;color:#ef4444;font-weight:600;">🔴 Restock</span>' +
                     '<span style="font-size:0.82rem;font-weight:700;color:#111827;">' + formatNum(dRows.length) + ' item</span></div>' +
                     '<div style="font-size:0.72rem;color:#6b7280;padding:0 8px 4px;">Gap total: <b style="color:#ef4444;">' + dGap + ' pcs</b></div>' +
                     '<div style="display:flex;justify-content:space-between;padding:5px 8px;background:#fef9c3;border-radius:6px;">' +
@@ -13021,7 +13021,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var topStores = Object.entries(stMap).sort(function(a,b){ return a[1].gap - b[1].gap; }).slice(0,5);
                 if (topStores.length) {
                     panelHtml += '<div style="background:white;border-radius:10px;padding:12px 14px;border-left:4px solid #ef4444;">' +
-                        '<div style="font-size:0.72rem;font-weight:700;color:#991b1b;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">🏪 Top Deficit Store</div>' +
+                        '<div style="font-size:0.72rem;font-weight:700;color:#991b1b;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">🏪 Top Restock Store</div>' +
                         '<div style="display:flex;flex-direction:column;gap:6px;">';
                     topStores.forEach(function(e, idx){
                         var nm = e[0].length > 17 ? e[0].slice(0,16) + '…' : e[0];
@@ -13242,7 +13242,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const toRow = r => {
                 var kodeKecil = (r.versions && r.versions.length > 0) ? r.versions[0].kode_kecil || '' : '';
                 var kodeBarang = kodeBarangLookup[(kodeKecil || '').toLowerCase() + '|' + (r.ukuran || '')] || '';
-                return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
+                var statusLabel = r.status === 'deficit' ? 'Restock' : (r.status === 'ok' ? 'Aman' : (r.status === 'surplus' ? 'Surplus' : r.status));
+                return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, statusLabel, r.utilization_pct != null ? r.utilization_pct : ''];
             };
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
