@@ -2571,9 +2571,16 @@
     </div>
 
     <!-- Loading overlay while fetching data from API -->
-    <div id="api-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-        <div style="width:48px;height:48px;border:5px solid #e2e8f0;border-top-color:#002A3A;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-        <p style="font-size:1rem;color:#002A3A;font-weight:600;">Memuat data inventori…</p>
+    <div id="api-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+        <div style="text-align:center;">
+            <div style="width:60px;height:60px;border:5px solid #e2e8f0;border-top-color:#002A3A;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+            <p style="font-size:1.1rem;color:#002A3A;font-weight:700;margin:0 0 8px;">Memuat Data Dashboard</p>
+            <p id="loadingStatus" style="font-size:0.85rem;color:#64748b;margin:0 0 16px;">Menghubungkan ke server...</p>
+        </div>
+        <div style="width:280px;background:#e2e8f0;border-radius:10px;overflow:hidden;height:14px;">
+            <div id="loadingProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#002A3A,#0284c7);border-radius:10px;transition:width 0.4s ease;"></div>
+        </div>
+        <p id="loadingPercent" style="font-size:1.2rem;color:#002A3A;font-weight:700;margin:0;">0%</p>
     </div>
     <div id="api-error-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;z-index:10000;text-align:center;font-weight:600;"></div>
     <div id="new-store-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:12px 20px;z-index:9998;text-align:center;font-weight:600;font-size:0.85rem;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;" onclick="this.style.display='none'">
@@ -2754,17 +2761,35 @@
         async function loadDashboardData() {
             const loadingEl = document.getElementById('api-loading-overlay');
             if (loadingEl) loadingEl.style.display = 'flex';
+
+            // Progress tracking
+            var _loadTotal = 9;
+            var _loadDone = 0;
+            function updateProgress(label) {
+                _loadDone++;
+                var pct = Math.round((_loadDone / _loadTotal) * 100);
+                var bar = document.getElementById('loadingProgressBar');
+                var pctEl = document.getElementById('loadingPercent');
+                var statusEl = document.getElementById('loadingStatus');
+                if (bar) bar.style.width = pct + '%';
+                if (pctEl) pctEl.textContent = pct + '%';
+                if (statusEl) statusEl.textContent = label;
+            }
+            function trackFetch(url, label, fallback) {
+                return fetchAPI(url).then(function(data) { updateProgress(label); return data; }).catch(function() { updateProgress(label); return fallback; });
+            }
+
             try {
                 const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData, consigStockData] = await Promise.all([
-                    fetchAPI('/api/stock'),
-                    fetchAPI('/api/stores'),
-                    fetchAPI('/api/store-areas'),
-                    fetchAPI('/api/max-stock'),
-                    fetchAPI('/api/sales/aggregate'),
-                    fetchAPI('/api/targets'),
-                    fetchAPI('/api/assortment'),
-                    fetchAPI('/api/sales/aggregate-online').catch(() => ({})),
-                    fetchAPI('/api/stock/consignment').catch(() => ({ data: [] })),
+                    trackFetch('/api/stock', 'Data stok dimuat...', {}),
+                    trackFetch('/api/stores', 'Data toko dimuat...', {}),
+                    trackFetch('/api/store-areas', 'Data area dimuat...', {}),
+                    trackFetch('/api/max-stock', 'Max stock dimuat...', {}),
+                    trackFetch('/api/sales/aggregate', 'Sales aggregate dimuat...', {}),
+                    trackFetch('/api/targets', 'Target dimuat...', {}),
+                    trackFetch('/api/assortment', 'Assortment dimuat...', {}),
+                    trackFetch('/api/sales/aggregate-online', 'Sales online dimuat...', {}),
+                    trackFetch('/api/stock/consignment', 'Stok konsinyasi dimuat...', { data: [] }),
                 ]);
                 allData = stockData;
                 // Update 'Data per' date from API metadata
