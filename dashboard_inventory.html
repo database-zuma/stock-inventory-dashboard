@@ -4808,21 +4808,11 @@
                 });
             }
 
-            // If consignment not loaded yet, load it first then re-search
+            // Load consignment in background if not ready, but don't block search
             if (!consignmentStockData) {
                 fetchAPI('/api/stock/consignment')
-                    .then(function(data) {
-                        consignmentStockData = data;
-                        searchSKUGlobal(); // re-run with consignment data
-                    })
-                    .catch(function(err) {
-                        console.error('Error loading consignment for SKU search:', err);
-                        renderSkuSearchResults(results, query);
-                    });
-                // Show loading state
-                var resultEl = document.getElementById('globalSkuSearchResults');
-                if (resultEl) resultEl.innerHTML = '<div style="text-align:center;padding:40px;color:#0284c7;"><div style="font-size:2rem;margin-bottom:8px;">⏳</div>Memuat data consignment...</div>';
-                return;
+                    .then(function(d) { consignmentStockData = d; })
+                    .catch(function() {});
             }
 
             console.log('[SKU Search] Found', Object.keys(results).length, 'results');
