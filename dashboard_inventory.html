@@ -13212,15 +13212,22 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             const wb = XLSX.utils.book_new();
+            var rdLeftCols = [0,1,2,3,4,5];
+            var rdColWidths = [{wch:22},{wch:16},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10},{wch:8}];
 
             // Sheet 1: SUMMARY
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...detail.map(toRow)]), 'SUMMARY');
+            var wsSummary = XLSX.utils.aoa_to_sheet([headers, ...detail.map(toRow)]);
+            wsSummary['!cols'] = rdColWidths.slice();
+            applyTableStyle(wsSummary, rdLeftCols);
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
 
             // Per-store sheets
             const groups = {};
             detail.forEach(r => { if (!groups[r.store]) groups[r.store] = []; groups[r.store].push(r); });
             Object.keys(groups).sort().forEach(store => {
                 const ws = XLSX.utils.aoa_to_sheet([headers, ...groups[store].map(toRow)]);
+                ws['!cols'] = rdColWidths.slice();
+                applyTableStyle(ws, rdLeftCols);
                 XLSX.utils.book_append_sheet(wb, ws, store.replace(/[\\\/?*\[\]:]/g, '').slice(0, 31));
             });
 
