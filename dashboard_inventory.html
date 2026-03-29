@@ -13211,9 +13211,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (fTier)   detail = detail.filter(r => r.tier   === fTier);
 
             const headers = ['Store','Kode Mix','Kode Kecil','Kode Barang','Nama Barang','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status','Util %'];
+            // Build kode_barang lookup from allData stock (kode → size → kode_kecil)
+            var kodeBarangLookup = {};
+            ['DDD','MBB','LJBB','UBB'].forEach(function(ent) {
+                var items = allData[ent] && allData[ent].retail;
+                if (!items) return;
+                items.forEach(function(item) {
+                    var kode = (item.kode || '').toLowerCase();
+                    var sz = item.size || '';
+                    if (kode && sz) kodeBarangLookup[kode + '|' + sz] = (item.kode_kecil || '').toUpperCase();
+                });
+            });
             const toRow = r => {
                 var kodeKecil = (r.versions && r.versions.length > 0) ? r.versions[0].kode_kecil || '' : '';
-                var kodeBarang = kodeKecil && r.ukuran ? kodeKecil + 'Z' + r.ukuran.replace('/','') : kodeKecil;
+                var kodeBarang = kodeBarangLookup[(kodeKecil || '').toLowerCase() + '|' + (r.ukuran || '')] || '';
                 return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
             };
 
