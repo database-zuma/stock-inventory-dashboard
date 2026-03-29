@@ -13124,7 +13124,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         var isMutasi = r.source_type === 'Store Surplus \u2192 WH';
                         var asal = isBox ? 'WHS Pusat' : (r.source_type === 'WH Protol \u2192 Store' ? 'WHS Protol' : r.dari);
                         var tujuan = isMutasi ? 'WHS Protol' : r.ke;
-                        var kodeBarang = isBox ? '' : getKB(r.kode_kecil, r.ukuran);
+                        var kodeBarang = isBox ? '-' : getKB(r.kode_kecil, r.ukuran);
                         var sizeDisplay = isBox ? 'Full Assortment' : (r.ukuran || '-');
                         var kuantitas = isBox ? 'box' : 'pairs';
                         var gradeColors = { 'A': '#16a34a', 'B': '#2563eb', 'C': '#d97706', 'D': '#9ca3af' };
@@ -13385,7 +13385,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             roBoxItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
-                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', 'WHS Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', '', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box']);
+                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', 'WHS Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', '-', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box']);
             });
             mutasiItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
