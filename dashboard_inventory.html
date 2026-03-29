@@ -2343,7 +2343,7 @@
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gender</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Series</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
-                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Target</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Stok Ideal</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">On Hand</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gap</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Status</th>
@@ -13207,7 +13207,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (fGender) detail = detail.filter(r => r.gender === fGender);
             if (fTier)   detail = detail.filter(r => r.tier   === fTier);
 
-            const headers = ['Store','Kode Mix','Artikel','Gender','Series','Tipe','Tier','Ukuran','Target','On Hand','Gap','Status','Util %'];
+            const headers = ['Store','Kode Mix','Artikel','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status','Util %'];
             const toRow = r => [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
