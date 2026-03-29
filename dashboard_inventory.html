@@ -13210,13 +13210,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (fGender) detail = detail.filter(r => r.gender === fGender);
             if (fTier)   detail = detail.filter(r => r.tier   === fTier);
 
-            const headers = ['Store','Kode Mix','Artikel','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status','Util %'];
-            const toRow = r => [r.store, r.kode_mix, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
+            const headers = ['Store','Kode Mix','Kode Barang','Artikel','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status','Util %'];
+            const toRow = r => {
+                var kodeBarang = (r.versions && r.versions.length > 0) ? r.versions[0].kode_kecil || '' : '';
+                return [r.store, r.kode_mix, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, r.status, r.utilization_pct != null ? r.utilization_pct : ''];
+            };
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             const wb = XLSX.utils.book_new();
-            var rdLeftCols = [0,1,2,3,4,5];
-            var rdColWidths = [{wch:22},{wch:16},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10},{wch:8}];
+            var rdLeftCols = [0,1,2,3,4,5,6];
+            var rdColWidths = [{wch:22},{wch:16},{wch:14},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10},{wch:8}];
 
             // Sheet 1: SUMMARY
             var wsSummary = XLSX.utils.aoa_to_sheet([headers, ...detail.map(toRow)]);
