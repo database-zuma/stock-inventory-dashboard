@@ -1407,14 +1407,7 @@
             <!-- Filters -->
             <div style="background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 50%,#e0f2fe 100%);border-radius:12px;padding:15px;margin-bottom:20px;">
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-                    <div style="min-width:100px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
-                        <select id="scoFilterArea" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
-                            <option value="">Semua</option>
-                            <option value="Bali">Bali</option>
-                            <option value="Jakarta">Jakarta</option>
-                        </select>
-                    </div>
+                    <!-- Area filter removed — online sales data has no area breakdown -->
                     <div style="min-width:100px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Gender:</label>
                         <select id="scoFilterGender" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -7306,19 +7299,9 @@
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const mLabels = months.map(m => m.toUpperCase());
             const hs = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
-            const areaVal = document.getElementById('scoFilterArea')?.value || '';
-
-            // Stock columns based on area filter
-            var stockCols = '';
-            if (areaVal === 'Bali') {
-                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>';
-            } else if (areaVal === 'Jakarta') {
-                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>';
-            } else {
-                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>';
-            }
+            var stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
+                '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
+                '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>';
 
             if (scoViewMode === 'sku') {
                 thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
@@ -7358,18 +7341,15 @@
             renderStockControlOnlineHeader();
 
             const gender = document.getElementById('scoFilterGender')?.value || '';
-            const area = document.getElementById('scoFilterArea')?.value || '';
             const tier = document.getElementById('scoFilterTier')?.value || '';
             const series = document.getElementById('scoFilterSeries')?.value || '';
             const twFilter = document.getElementById('scoFilterTW')?.value || '';
             const search = (document.getElementById('scoSearch')?.value || '').toLowerCase();
             const gapFilter = document.getElementById('scoFilterGAP')?.value || '';
 
-            // Helper: get stock basis for online (based on area filter)
+            // Helper: get stock basis for online
             function getScoStockBasis(item) {
-                if (area === 'Bali') return item.WHOB || 0;
-                if (area === 'Jakarta') return item.WHOJ || 0;
-                return item.whOnlineTotal || 0; // default: total
+                return item.whOnlineTotal || 0;
             }
 
             // Choose source data
@@ -7380,9 +7360,6 @@
                 if (gender && item.gender !== gender) return false;
                 if (tier && String(item.tier) !== tier) return false;
                 if (series && item.series !== series) return false;
-                // Area filter: only show items that have stock in selected area
-                if (area === 'Bali' && !(item.WHOB > 0)) return false;
-                if (area === 'Jakarta' && !(item.WHOJ > 0)) return false;
 
                 if (search) {
                     if (scoViewMode === 'kodeKecil') {
@@ -7527,17 +7504,9 @@
 
                 const cs = 'padding:8px;text-align:center;border-right:1px solid #000000;';
 
-                // Dynamic stock columns based on area
-                var stockCells = '';
-                if (area === 'Bali') {
-                    stockCells = '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + whob.toLocaleString() + '</td>';
-                } else if (area === 'Jakarta') {
-                    stockCells = '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + whoj.toLocaleString() + '</td>';
-                } else {
-                    stockCells = '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>';
-                }
+                var stockCells = '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
+                    '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
+                    '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>';
 
                 if (scoViewMode === 'kodeKecil') {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
@@ -7618,11 +7587,7 @@
                 scoSortAsc = true;
             }
 
-            const sortArea = document.getElementById('scoFilterArea')?.value || '';
-
             function getSortBasis(item) {
-                if (sortArea === 'Bali') return item.WHOB || 0;
-                if (sortArea === 'Jakarta') return item.WHOJ || 0;
                 return item.whOnlineTotal || 0;
             }
 
@@ -7681,7 +7646,7 @@
 
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const [eM1, eM2, eM3] = months;
-            const basisLabel = document.getElementById('scoFilterArea')?.value || 'Online Total';
+            const basisLabel = 'Online Total';
 
             function getExpSales(item) {
                 if (scoViewMode === 'kodeKecil') {
