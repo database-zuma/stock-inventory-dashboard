@@ -12974,18 +12974,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         : '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;">OK</span>';
                     const gapColor = r.gap > 0 ? '#f59e0b' : r.gap < 0 ? '#ef4444' : '#22c55e';
                     html += '<tr style="background:' + bgColor + ';">' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;white-space:nowrap;">' + r.store + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.kode_mix + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.artikel + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + r.ukuran + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.gender + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;">' + r.series + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + (r.tier || '-') + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + r.target + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + r.on_hand + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;font-weight:600;color:' + gapColor + ';">' + (r.gap > 0 ? '+' : '') + r.gap + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:center;">' + statusBadge + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #e5e7eb;text-align:right;">' + (r.utilization_pct != null ? r.utilization_pct + '%' : '-') + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;white-space:nowrap;">' + r.store + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;">' + r.kode_mix + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;">' + r.artikel + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.ukuran + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;">' + r.gender + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;">' + r.series + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + (r.tier || '-') + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.target + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.on_hand + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:600;color:' + gapColor + ';">' + (r.gap > 0 ? '+' : '') + r.gap + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + statusBadge + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:right;">' + (r.utilization_pct != null ? r.utilization_pct + '%' : '-') + '</td>' +
                         '</tr>';
                 });
                 if (rows.length > limit) html += '<tr><td colspan="12" style="text-align:center;padding:12px;color:#9ca3af;font-style:italic;">Showing ' + limit + ' of ' + rows.length + ' rows. Use filters to narrow.</td></tr>';
