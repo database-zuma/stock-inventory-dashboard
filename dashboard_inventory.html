@@ -13196,8 +13196,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             };
         }
 
-        function exportRdDetail() {
-            if (!rdData) { alert('Data belum loaded'); return; }
+        async function exportRdDetail() {
+            if (!rdData) {
+                try { rdData = await fetchAPI('/api/redistribution?t=' + Date.now()); }
+                catch(e) { alert('Gagal memuat data redistribusi: ' + e.message); return; }
+            }
             const { fStore, fStatus, fSeries, fGender, fTier } = _getRdFilters();
 
             let detail = rdData.detail;
@@ -13234,8 +13237,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             XLSX.writeFile(wb, 'rd_detail_' + (rdData.snapshot_date || 'export') + '.xlsx');
         }
 
-        function exportRdTransfer() {
-            if (!rdData) { alert('Data belum loaded'); return; }
+        async function exportRdTransfer() {
+            if (!rdData) {
+                try { rdData = await fetchAPI('/api/redistribution?t=' + Date.now()); }
+                catch(e) { alert('Gagal memuat data redistribusi: ' + e.message); return; }
+            }
             const { fStore } = _getRdFilters();
 
             let transfers = rdData.transfers;
