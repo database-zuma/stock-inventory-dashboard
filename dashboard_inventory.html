@@ -2368,38 +2368,19 @@
                         <button onclick="rdSetType('RO Box')" id="rdTypeBtnBox"    style="padding:6px 14px;border-radius:20px;border:2px solid #7c3aed;background:#fff;color:#7c3aed;cursor:pointer;font-size:0.82rem;font-weight:600;">RO Box</button>
                         <button onclick="rdSetType('Store Surplus \u2192 WH')" id="rdTypeBtnMutasi" style="padding:6px 14px;border-radius:20px;border:2px solid #d97706;background:#fff;color:#d97706;cursor:pointer;font-size:0.82rem;font-weight:600;">Mutasi ke WH</button>
                     </div>
-                    <div style="display:flex; gap:16px; align-items:flex-start;">
-                        <div style="flex:0 0 auto;">
+                    <!-- Summary panel — horizontal above table -->
+                    <div id="rdSummaryPanel" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;"></div>
+                    <!-- Transfer table — full width -->
                     <div style="background:white; border-radius:12px; overflow:hidden;">
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                            <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;border:1px solid #000;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.79rem;border:1px solid #000;">
                                 <thead>
-                                    <tr style="background:#1F2937; color:white; position:sticky; top:0; z-index:2;">
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Grade</th>
-                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Asal</th>
-                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tujuan</th>
-                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Mix</th>
-                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Kecil</th>
-                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Barang</th>
-                                        <th style="padding:4px 6px; text-align:left; min-width:90px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Nama Barang</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Size</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gender</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Series</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Satuan</th>
-                                    </tr>
+                                    <!-- Header rendered dynamically by JS -->
                                 </thead>
                                 <tbody id="rdTransferBody"></tbody>
                             </table>
                         </div>
-                        </div>
-                        </div>
-                        <div id="rdSummaryPanel" style="flex:1; min-width:170px; display:flex; flex-direction:column; gap:10px; padding-top:2px;"></div>
-                </div>
+                    </div>
             </div>
         </div>
         <!-- End redistribusiView -->
@@ -13159,7 +13140,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + r.kode_mix + '</td>' +
                             '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + r.kode_kecil + '</td>' +
                             (isBoxOnly ? '' : '<td style="' + cs + 'font-size:0.76rem;color:#374151;">' + kodeBarang + '</td>') +
-                            '<td style="' + cs + 'font-size:0.76rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + r.artikel + '">' + r.artikel + '</td>' +
+                            '<td style="' + cs + 'font-size:0.76rem;white-space:nowrap;">' + r.artikel + '</td>' +
                             '<td style="' + cs + 'text-align:center;max-width:100px;">' + sizeDisplay + '</td>' +
                             '<td style="' + cs + 'text-align:center;background:#ccfbf1;color:#0f766e;font-weight:600;font-size:0.76rem;">' + (r.version || '-') + '</td>' +
                             '<td style="' + cs + 'text-align:center;font-size:0.74rem;">' + meta.gender + '</td>' +
@@ -13175,34 +13156,34 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     }
                 });
                 tbody.innerHTML = html;
-                // Populate summary panel
+                // Populate summary panel — horizontal cards
                 var summaryHtml = '';
                 groups.forEach(function(g) {
                     if (!g.rows.length) return;
                     var totalQty = g.rows.reduce(function(s, r) { return s + (Number(r.qty) || 0); }, 0);
-                    summaryHtml += '<div style="background:white;border-radius:10px;padding:12px 14px;border-left:4px solid ' + g.color + ';margin-bottom:10px;">' +
-                        '<div style="font-size:0.72rem;font-weight:700;color:' + g.color + ';margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;">' + g.label + '</div>' +
-                        '<div style="font-size:1.3rem;font-weight:700;color:#111827;line-height:1.2;">' + formatNum(g.rows.length) + '<span style="font-size:0.72rem;font-weight:400;color:#6b7280;"> item</span></div>' +
-                        '<div style="font-size:0.79rem;color:#6b7280;margin-top:4px;">Total Qty: <b style="color:#111827;">' + formatNum(totalQty) + (g.key === 'RO Box' ? ' box' : ' pcs') + '</b></div>' +
+                    summaryHtml += '<div style="flex:1;min-width:140px;background:white;border-radius:10px;padding:10px 14px;border-left:4px solid ' + g.color + ';box-shadow:0 1px 3px rgba(0,0,0,0.08);">' +
+                        '<div style="font-size:0.7rem;font-weight:700;color:' + g.color + ';text-transform:uppercase;letter-spacing:0.04em;">' + g.label + '</div>' +
+                        '<div style="font-size:1.2rem;font-weight:700;color:#111827;">' + formatNum(g.rows.length) + ' <span style="font-size:0.7rem;font-weight:400;color:#6b7280;">item</span></div>' +
+                        '<div style="font-size:0.75rem;color:#6b7280;">Qty: <b style="color:#111827;">' + formatNum(totalQty) + (g.key === 'RO Box' ? ' box' : ' pcs') + '</b></div>' +
                         '</div>';
                 });
-                // Grade store legend
+                // Grade store legend — compact horizontal
                 if (rdData.store_grades && rdData.store_grades.length) {
                     var gradeColorsMap = { A:'#16a34a', B:'#2563eb', C:'#d97706', D:'#9ca3af' };
-                    summaryHtml += '<div style="background:white;border-radius:10px;padding:12px 14px;border-left:4px solid #6366f1;">' +
-                        '<div style="font-size:0.72rem;font-weight:700;color:#6366f1;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">🏆 Grade Toko</div>';
+                    var gradeHtml = '';
                     rdData.store_grades.forEach(function(sg) {
                         var gc = gradeColorsMap[sg.grade] || '#9ca3af';
                         var shortName = sg.store.replace(/^ZUMA /i,'').replace(/^Zuma /,'');
-                        summaryHtml += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.76rem;">' +
-                            '<span style="background:' + gc + ';color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.72rem;flex-shrink:0;">' + sg.grade + '</span>' +
-                            '<span style="color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + sg.store + '">' + shortName + '</span>' +
-                            '</div>';
+                        gradeHtml += '<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;font-size:0.72rem;">' +
+                            '<span style="background:' + gc + ';color:#fff;padding:1px 5px;border-radius:3px;font-weight:700;font-size:0.68rem;">' + sg.grade + '</span>' +
+                            '<span style="color:#374151;">' + shortName + '</span></span>';
                     });
-                    summaryHtml += '</div>';
+                    summaryHtml += '<div style="flex:1;min-width:200px;background:white;border-radius:10px;padding:10px 14px;border-left:4px solid #6366f1;box-shadow:0 1px 3px rgba(0,0,0,0.08);">' +
+                        '<div style="font-size:0.7rem;font-weight:700;color:#6366f1;margin-bottom:4px;text-transform:uppercase;">Grade Toko</div>' +
+                        '<div style="line-height:1.8;">' + gradeHtml + '</div></div>';
                 }
                 var sp = document.getElementById('rdSummaryPanel');
-                if (sp) sp.innerHTML = summaryHtml || '<div style="color:#9ca3af;font-size:0.8rem;padding:12px;">Tidak ada data</div>';
+                if (sp) sp.innerHTML = summaryHtml || '';
             }
         }
 
