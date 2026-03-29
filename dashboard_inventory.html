@@ -13099,7 +13099,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 function cleanLoc(n) {
                     if (!n || n === 'RO') return '\u2014';
                     if (n === 'Warehouse Pusat Protol') return 'WH Protol';
-                    if (n === 'Warehouse Pusat') return 'WH Pusat';
+                    if (n === 'Warehouse Pusat') return 'WHS Pusat';
                     return n;
                 }
 
@@ -13122,7 +13122,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         var meta = detailMeta[r.kode_mix] || { tier:'-', gender:'-', series:'-', tipe:'-' };
                         var isBox = r.source_type === 'RO Box';
                         var isMutasi = r.source_type === 'Store Surplus \u2192 WH';
-                        var asal = isBox ? 'WH Pusat' : (r.source_type === 'WH Protol \u2192 Store' ? 'WHS Protol' : r.dari);
+                        var asal = isBox ? 'WHS Pusat' : (r.source_type === 'WH Protol \u2192 Store' ? 'WHS Protol' : r.dari);
                         var tujuan = isMutasi ? 'WHS Protol' : r.ke;
                         var kodeBarang = isBox ? '' : getKB(r.kode_kecil, r.ukuran);
                         var sizeDisplay = isBox ? 'Full Assortment' : (r.ukuran || '-');
@@ -13353,7 +13353,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var rbH = ['Asal','Tujuan','Kode Mix','Kode Kecil','Nama Barang','Size','Version','Gender','Series','Tipe','Tier','Qty','Satuan'];
                 var rbRows = roBoxItems.map(function(r) {
                     var m = getMeta(r.kode_mix);
-                    return ['WH Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box'];
+                    return ['WHS Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box'];
                 });
                 var wsRB = XLSX.utils.aoa_to_sheet([rbH, ...rbRows]);
                 wsRB['!cols'] = [{wch:12},{wch:20},{wch:16},{wch:12},{wch:28},{wch:14},{wch:8},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:8}];
@@ -13385,7 +13385,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             roBoxItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
-                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', 'WH Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', '', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box']);
+                addStore(r.ke, [r.ke, r.store_grade||'', 'RO Box', 'WHS Pusat', r.ke||'-', r.kode_mix, r.kode_kecil||'', '', r.artikel, 'Full Assortment', r.version||'', m.gender, m.series, m.tipe, m.tier, r.qty, 'box']);
             });
             mutasiItems.forEach(function(r) {
                 var m = getMeta(r.kode_mix);
