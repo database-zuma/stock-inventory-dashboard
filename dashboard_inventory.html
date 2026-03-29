@@ -13245,8 +13245,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const roBoxItems    = transfers.filter(r => r.source_type === 'RO Box');
             const mutasiItems   = transfers.filter(r => r.source_type === 'Store Surplus \u2192 WH');
 
-            const roProtolHeaders = ['Asal', 'Grade', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
-            const roProtolRows = roProtolItems.map(r => [r.dari||'-', r.store_grade||'', r.ke||'-', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
+            const roProtolHeaders = ['Asal', 'Grade', 'Tujuan', 'Kode Mix', 'Kode Kecil', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
+            const roProtolRows = roProtolItems.map(r => [r.dari||'-', r.store_grade||'', r.ke||'-', r.kode_mix, r.kode_kecil||'', r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
 
             const roBoxHeaders = ['Toko Tujuan', 'Kode Mix', 'Kode Kecil', 'Artikel', 'Version', 'Qty (Box)', 'Est. Pairs', 'Assortment Detail', 'Priority'];
             const roBoxRows = roBoxItems.map(function(r) {
@@ -13258,8 +13258,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return [r.ke, r.kode_mix, r.kode_kecil, r.artikel, r.version||'', r.qty, r.qty_pairs_est || (r.qty * 12), assortStr, r.priority];
             });
 
-            const mutasiHeaders = ['Asal (Toko)', 'Tujuan', 'Kode Mix', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
-            const mutasiRows = mutasiItems.map(r => [r.dari||'-', r.ke||'WH Protol', r.kode_mix, r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
+            const mutasiHeaders = ['Asal (Toko)', 'Tujuan', 'Kode Mix', 'Kode Kecil', 'Artikel', 'Ukuran', 'Version', 'Qty', 'Priority'];
+            const mutasiRows = mutasiItems.map(r => [r.dari||'-', r.ke||'WH Protol', r.kode_mix, r.kode_kecil||'', r.artikel, r.ukuran, r.version||'', r.qty, r.priority]);
 
             if (roProtolRows.length === 0 && roBoxRows.length === 0 && mutasiRows.length === 0) {
                 alert('Tidak ada data transfer untuk di-export.'); return;
