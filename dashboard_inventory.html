@@ -1408,6 +1408,14 @@
             <div style="background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 50%,#e0f2fe 100%);border-radius:12px;padding:15px;margin-bottom:20px;">
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
+                        <select id="scoFilterArea" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="Bali">Bali</option>
+                            <option value="Jakarta">Jakarta</option>
+                        </select>
+                    </div>
+                    <div style="min-width:100px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Gender:</label>
                         <select id="scoFilterGender" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua</option>
@@ -1417,14 +1425,6 @@
                             <option value="JUNIOR">Junior</option>
                             <option value="LADIES">Ladies</option>
                             <option value="MEN">Men</option>
-                        </select>
-                    </div>
-                    <div style="min-width:100px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
-                        <select id="scoFilterArea" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
-                            <option value="">Semua</option>
-                            <option value="Bali">Bali</option>
-                            <option value="Jakarta">Jakarta</option>
                         </select>
                     </div>
                     <div style="min-width:80px;">
@@ -7306,6 +7306,19 @@
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const mLabels = months.map(m => m.toUpperCase());
             const hs = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
+            const areaVal = document.getElementById('scoFilterArea')?.value || '';
+
+            // Stock columns based on area filter
+            var stockCols = '';
+            if (areaVal === 'Bali') {
+                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>';
+            } else if (areaVal === 'Jakarta') {
+                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>';
+            } else {
+                stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>';
+            }
 
             if (scoViewMode === 'sku') {
                 thead.innerHTML = '<tr style="background:#0c4a6e;color:#ffffff;position:sticky;top:0;z-index:10;">' +
@@ -7319,9 +7332,7 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
+                    stockCols +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
                 '</tr>';
@@ -7336,9 +7347,7 @@
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>' +
+                    stockCols +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
                 '</tr>';
@@ -7496,7 +7505,7 @@
 
                 const basisStock = getScoStockBasis(item);
                 const gap = basisStock - (avgSales * 3);
-                const tw = avgSales > 0 ? (onlineTotal / avgSales).toFixed(1) : 0;
+                const tw = avgSales > 0 ? (basisStock / avgSales).toFixed(1) : 0;
                 const twVal = parseFloat(tw) || 0;
                 const isDeadStock = avgSales === 0 && basisStock > 0;
 
@@ -7518,6 +7527,18 @@
 
                 const cs = 'padding:8px;text-align:center;border-right:1px solid #000000;';
 
+                // Dynamic stock columns based on area
+                var stockCells = '';
+                if (area === 'Bali') {
+                    stockCells = '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + whob.toLocaleString() + '</td>';
+                } else if (area === 'Jakarta') {
+                    stockCells = '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + whoj.toLocaleString() + '</td>';
+                } else {
+                    stockCells = '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
+                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>';
+                }
+
                 if (scoViewMode === 'kodeKecil') {
                     return '<tr style="border-bottom:2px solid #000000;background:#ffffff;color:#1f2937;">' +
                         '<td style="' + cs + 'font-family:monospace;font-weight:600;color:#1f2937;text-transform:uppercase;text-align:left;">' + (item.kodeKecil||'-') + '</td>' +
@@ -7529,9 +7550,7 @@
                         '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
+                        stockCells +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
                     '</tr>';
@@ -7547,9 +7566,7 @@
                         '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + whob.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + whoj.toLocaleString() + '</td>' +
-                        '<td style="' + cs + 'font-weight:600;background:#ede9fe;color:#7c3aed;">' + onlineTotal.toLocaleString() + '</td>' +
+                        stockCells +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cs + 'font-weight:600;' + twStyle + '">' + tw + '</td>' +
                     '</tr>';
