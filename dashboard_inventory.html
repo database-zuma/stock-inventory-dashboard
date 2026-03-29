@@ -2280,14 +2280,6 @@
                         <div style="font-size:0.75rem; color:#166534;">Aman SKU</div>
                         <div style="font-size:1.3rem; font-weight:700; color:#22c55e;" id="rdOkCount">-</div>
                     </div>
-                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #1d4ed8;">
-                        <div style="font-size:0.75rem; color:#1e3a8a;">WH Protol → Store</div>
-                        <div style="font-size:1.3rem; font-weight:700; color:#1d4ed8;" id="rdProtolTransferCount">-</div>
-                    </div>
-                    <div style="flex:1; min-width:120px; background:#fff; border-radius:10px; padding:14px 18px; border-left:4px solid #7c3aed;">
-                        <div style="font-size:0.75rem; color:#5b21b6;">Perlu RO Box</div>
-                        <div style="font-size:1.3rem; font-weight:700; color:#7c3aed;" id="rdRoBoxCount">-</div>
-                    </div>
                 </div>
 
                 <!-- Filters + Tab Switch -->
@@ -2337,9 +2329,10 @@
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Store</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Kode Mix</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Nama Barang</th>
-                                        <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Ukuran</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Size</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Gender</th>
                                         <th style="padding:10px 12px; text-align:left; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Series</th>
+                                        <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Tipe</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Tier</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Stok Ideal</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">On Hand</th>
@@ -12881,7 +12874,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         async function initRedistribusi() {
             if (rdData) { renderRdTable(); return; }
             const body = document.getElementById('rdDetailBody');
-            body.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#9ca3af;"><div style="animation:spin 1s linear infinite;display:inline-block;width:24px;height:24px;border:3px solid #db2777;border-top-color:transparent;border-radius:50%;"></div><br>Loading Stock Redistribution data...</td></tr>';
+            body.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#9ca3af;"><div style="animation:spin 1s linear infinite;display:inline-block;width:24px;height:24px;border:3px solid #db2777;border-top-color:transparent;border-radius:50%;"></div><br>Loading Stock Redistribution data...</td></tr>';
             try {
                 rdData = await fetchAPI('/api/redistribution?t=' + Date.now());
                 document.getElementById('rdSnapshotLabel').textContent = 'Snapshot: ' + (rdData.snapshot_date || '-');
@@ -12894,7 +12887,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 renderRdTable();
             } catch(e) {
                 console.error('initRedistribusi error:', e);
-                body.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#ef4444;">\u274c Error: ' + e.message + '</td></tr>';
+                body.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#ef4444;">\u274c Error: ' + e.message + '</td></tr>';
             }
         }
 
@@ -12959,7 +12952,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 document.getElementById('rdRowCount').textContent = formatNum(rows.length) + ' rows';
                 const tbody = document.getElementById('rdDetailBody');
-                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada data</td></tr>'; return; }
+                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada data</td></tr>'; return; }
 
                 const limit = 500;
                 const display = rows.slice(0, limit);
@@ -12977,6 +12970,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.ukuran + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;">' + r.gender + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;">' + r.series + '</td>' +
+                        '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + (r.tipe || '-') + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + (r.tier || '-') + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.target + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.on_hand + '</td>' +
@@ -12984,7 +12978,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + statusBadge + '</td>' +
                         '</tr>';
                 });
-                if (rows.length > limit) html += '<tr><td colspan="12" style="text-align:center;padding:12px;color:#9ca3af;font-style:italic;">Showing ' + limit + ' of ' + rows.length + ' rows. Use filters to narrow.</td></tr>';
+                if (rows.length > limit) html += '<tr><td colspan="13" style="text-align:center;padding:12px;color:#9ca3af;font-style:italic;">Showing ' + limit + ' of ' + rows.length + ' rows. Use filters to narrow.</td></tr>';
                 tbody.innerHTML = html;
                 // Populate detail summary panel — Grade Store only
                 var panelHtml = '';
