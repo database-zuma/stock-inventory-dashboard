@@ -1419,6 +1419,14 @@
                             <option value="MEN">Men</option>
                         </select>
                     </div>
+                    <div style="min-width:100px;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
+                        <select id="scoFilterArea" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua</option>
+                            <option value="Bali">Bali</option>
+                            <option value="Jakarta">Jakarta</option>
+                        </select>
+                    </div>
                     <div style="min-width:80px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Tier:</label>
                         <select id="scoFilterTier" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -1446,14 +1454,7 @@
                             <option value="high">&gt;8 (High)</option>
                         </select>
                     </div>
-                    <div style="min-width:110px;">
-                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Basis Stok:</label>
-                        <select id="scoFilterBasis" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
-                            <option value="onlineTotal">Online Total</option>
-                            <option value="onlineBali">WH Online Bali</option>
-                            <option value="onlineJkt">WH Online Jakarta</option>
-                        </select>
-                    </div>
+                    <!-- Basis Stok filter removed -->
                     <div style="min-width:110px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">GAP Status:</label>
                         <select id="scoFilterGAP" onchange="renderStockControlOnlineTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
@@ -7348,18 +7349,18 @@
             renderStockControlOnlineHeader();
 
             const gender = document.getElementById('scoFilterGender')?.value || '';
+            const area = document.getElementById('scoFilterArea')?.value || '';
             const tier = document.getElementById('scoFilterTier')?.value || '';
             const series = document.getElementById('scoFilterSeries')?.value || '';
             const twFilter = document.getElementById('scoFilterTW')?.value || '';
             const search = (document.getElementById('scoSearch')?.value || '').toLowerCase();
-            const basisStok = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
             const gapFilter = document.getElementById('scoFilterGAP')?.value || '';
 
-            // Helper: get stock basis for online
+            // Helper: get stock basis for online (based on area filter)
             function getScoStockBasis(item) {
-                if (basisStok === 'onlineBali') return item.WHOB || 0;
-                if (basisStok === 'onlineJkt') return item.WHOJ || 0;
-                return item.whOnlineTotal || 0; // default: onlineTotal
+                if (area === 'Bali') return item.WHOB || 0;
+                if (area === 'Jakarta') return item.WHOJ || 0;
+                return item.whOnlineTotal || 0; // default: total
             }
 
             // Choose source data
@@ -7370,6 +7371,9 @@
                 if (gender && item.gender !== gender) return false;
                 if (tier && String(item.tier) !== tier) return false;
                 if (series && item.series !== series) return false;
+                // Area filter: only show items that have stock in selected area
+                if (area === 'Bali' && !(item.WHOB > 0)) return false;
+                if (area === 'Jakarta' && !(item.WHOJ > 0)) return false;
 
                 if (search) {
                     if (scoViewMode === 'kodeKecil') {
@@ -7597,11 +7601,11 @@
                 scoSortAsc = true;
             }
 
-            const sortBasis = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
+            const sortArea = document.getElementById('scoFilterArea')?.value || '';
 
             function getSortBasis(item) {
-                if (sortBasis === 'onlineBali') return item.WHOB || 0;
-                if (sortBasis === 'onlineJkt') return item.WHOJ || 0;
+                if (sortArea === 'Bali') return item.WHOB || 0;
+                if (sortArea === 'Jakarta') return item.WHOJ || 0;
                 return item.whOnlineTotal || 0;
             }
 
@@ -7660,7 +7664,7 @@
 
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const [eM1, eM2, eM3] = months;
-            const basisLabel = document.getElementById('scoFilterBasis')?.value || 'onlineTotal';
+            const basisLabel = document.getElementById('scoFilterArea')?.value || 'Online Total';
 
             function getExpSales(item) {
                 if (scoViewMode === 'kodeKecil') {
