@@ -2374,18 +2374,23 @@
                         <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
                             <table style="width:fit-content; border-collapse:collapse; font-size:0.79rem;border:1px solid #000;">
                                 <thead>
-                                    <tr style="background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%); color:white; position:sticky; top:0; z-index:2;">
+                                    <tr style="background:#1F2937; color:white; position:sticky; top:0; z-index:2;">
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Grade</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Asal</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tujuan</th>
+                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Mix</th>
                                         <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Kecil</th>
-                                        <th style="padding:4px 6px; text-align:left; min-width:90px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Artikel</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ukuran</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; background:rgba(253,230,138,0.3); border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; background:rgba(167,243,208,0.3); border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
+                                        <th style="padding:4px 6px; text-align:left; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Kode Barang</th>
+                                        <th style="padding:4px 6px; text-align:left; min-width:90px; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Nama Barang</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Size</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Ver</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Gender</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Series</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tipe</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Tier</th>
                                         <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.3); border-bottom:2px solid rgba(255,255,255,0.3);">Qty</th>
-                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Priority</th>
+                                        <th style="padding:4px 6px; text-align:center; white-space:nowrap; border-bottom:2px solid rgba(255,255,255,0.3);">Kuantitas</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rdTransferBody"></tbody>
@@ -13064,7 +13069,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 document.getElementById('rdRowCount').textContent = formatNum(rows.length) + ' transfers';
                 const tbody = document.getElementById('rdTransferBody');
-                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
+                if (!rows.length) { tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:30px;color:#9ca3af;">Tidak ada transfer</td></tr>'; return; }
 
                 // Group by source_type — urutan: WH Protol→Store, RO Box, Surplus→WH
                 var groups = [
@@ -13073,7 +13078,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     { key: 'Store Surplus \u2192 WH', label: 'Mutasi ke WH', sectionLabel: 'Mutasi ke WH \u2014 Toko \u2192 WH Protol', color: '#d97706', bg: '#fef3c7' },
                 ];
                 groups.forEach(function(g) { g.rows = []; });
-                var tierMap = {}; rdData.detail.forEach(function(d) { if (d.kode_mix) tierMap[d.kode_mix] = d.tier || '-'; });
+                var detailMeta = {}; rdData.detail.forEach(function(d) { if (d.kode_mix) detailMeta[d.kode_mix] = { tier: d.tier||'-', gender: d.gender||'-', series: d.series||'-', tipe: d.tipe||'-' }; });
+                // Build kode_barang lookup from allData
+                var kbMap = {};
+                ['DDD','MBB','LJBB','UBB'].forEach(function(ent) {
+                    ['warehouse','retail'].forEach(function(st) {
+                        var items = allData[ent] && allData[ent][st]; if (!items) return;
+                        items.forEach(function(item) { var k = (item.kode||'').toLowerCase(), sz = item.size||''; if (k && sz) kbMap[k+'|'+sz] = (item.kode_kecil||'').toUpperCase(); });
+                    });
+                });
+                function getKB(kk, uk) { var found = kbMap[(kk||'').toLowerCase()+'|'+(uk||'')]; if (found) return found; if (kk && uk) { return (kk+'Z'+uk.split('/')[0]).toUpperCase(); } return ''; }
                 rows.forEach(function(r) {
                     var st = r.source_type || '';
                     var grp = groups.find(function(g) { return st === g.key; });
@@ -13095,7 +13109,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (!grp.rows.length) return;
                     // Section header
                     html += '<tr style="background:' + grp.bg + ';border-left:4px solid ' + grp.color + ';">' +
-                        '<td colspan="11" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
+                        '<td colspan="16" style="padding:10px 14px;font-weight:700;color:' + grp.color + ';font-size:0.9rem;">' +
                         grp.sectionLabel + ' <span style="font-weight:400;color:#6b7280;font-size:0.82rem;">(' + formatNum(grp.rows.length) + ' item)</span>' +
                         '</td></tr>';
                     var display = (grp.key === 'Store Surplus \u2192 WH') ? grp.rows.slice(0, surplusLimit) : grp.rows;
@@ -13105,37 +13119,49 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             ? '<span style="background:#ef4444;color:#fff;padding:1px 5px;border-radius:4px;font-weight:600;font-size:0.72rem;">High</span>'
                             : '<span style="background:#6b7280;color:#fff;padding:1px 5px;border-radius:4px;font-size:0.72rem;">Normal</span>';
                         var typeBadge = '<span style="background:' + grp.color + ';color:#fff;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;white-space:nowrap;display:inline-block;">' + grp.label + '</span>';
-                        // Ukuran / Assortment
-                        var ukuranDisplay = r.ukuran || '-';
-                        if (r.source_type === 'RO Box' && r.assortment && typeof r.assortment === 'object') {
-                            var parts = [];
-                            Object.keys(r.assortment).forEach(function(k) { parts.push('<b>' + k + '</b>\u202f' + r.assortment[k] + 'pcs'); });
-                            ukuranDisplay = '<span style="font-size:0.72rem;color:#6b21a8;line-height:1.5;">' + parts.join('<br>') + '</span>';
+                        var meta = detailMeta[r.kode_mix] || { tier:'-', gender:'-', series:'-', tipe:'-' };
+                        var isBox = r.source_type === 'RO Box';
+                        var isMutasi = r.source_type === 'Store Surplus \u2192 WH';
+                        // Asal
+                        var asal = isBox ? 'WH Pusat' : (r.source_type === 'WH Protol \u2192 Store' ? 'WH Protol' : r.dari);
+                        var tujuan = isMutasi ? 'Warehouse Pusat' : r.ke;
+                        // Kode Barang (empty for RO Box)
+                        var kodeBarang = isBox ? '' : getKB(r.kode_kecil, r.ukuran);
+                        // Size: full assortment for RO Box
+                        var sizeDisplay = r.ukuran || '-';
+                        if (isBox && r.assortment && typeof r.assortment === 'object') {
+                            var sortedA = Object.entries(r.assortment).sort(function(a,b) { return (parseInt(a[0])||0) - (parseInt(b[0])||0); });
+                            sizeDisplay = '<span style="font-size:0.72rem;color:#6b21a8;line-height:1.4;">' + sortedA.map(function(e) { return '<b>'+e[0]+'</b>:'+e[1]; }).join(', ') + '</span>';
                         }
-                        // Qty
-                        var qtyDisplay = '' + r.qty;
-                        if (r.source_type === 'RO Box') { qtyDisplay = r.qty + ' box'; }
+                        // Kuantitas
+                        var kuantitas = isBox ? 'box' : 'pairs';
                         var gradeColors = { 'A': '#16a34a', 'B': '#2563eb', 'C': '#d97706', 'D': '#9ca3af' };
                         var grade = r.store_grade || '';
                         var gradeBadge = grade
                             ? '<span style="background:' + (gradeColors[grade]||'#9ca3af') + ';color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.72rem;">' + grade + '</span>'
                             : '<span style="color:#9ca3af;">—</span>';
+                        var cs = 'padding:4px 6px;border:1px solid #e5e7eb;';
                         html += '<tr style="background:#fff;border-left:3px solid ' + grp.color + ';' + (isHigh ? 'font-weight:500;' : '') + '">' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + typeBadge + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + gradeBadge + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#111827;font-size:0.79rem;">' + (r.source_type === 'RO Box' ? 'WH Pusat' : cleanLoc(r.dari)) + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;white-space:nowrap;color:#111827;font-size:0.79rem;">' + (r.source_type === 'Store Surplus \u2192 WH' ? 'WH Protol' : cleanLoc(r.ke)) + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;font-family:monospace;font-size:0.76rem;color:#374151;">' + r.kode_kecil + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;color:#111827;">' + r.artikel + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;max-width:70px;">' + ukuranDisplay + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;background:#fef9c3;color:#92400e;font-weight:600;font-size:0.76rem;">' + (tierMap[r.kode_mix] || '-') + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;background:#ccfbf1;color:#0f766e;font-weight:600;font-size:0.76rem;">' + (r.version || '-') + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:' + grp.color + ';">' + qtyDisplay + '</td>' +
-                            '<td style="padding:4px 6px;border:1px solid #e5e7eb;text-align:center;">' + priBadge + '</td>' +
+                            '<td style="' + cs + 'text-align:center;">' + typeBadge + '</td>' +
+                            '<td style="' + cs + 'text-align:center;">' + gradeBadge + '</td>' +
+                            '<td style="' + cs + 'white-space:nowrap;font-size:0.76rem;">' + asal + '</td>' +
+                            '<td style="' + cs + 'white-space:nowrap;font-size:0.76rem;">' + tujuan + '</td>' +
+                            '<td style="' + cs + 'font-family:monospace;font-size:0.74rem;color:#374151;">' + r.kode_mix + '</td>' +
+                            '<td style="' + cs + 'font-family:monospace;font-size:0.74rem;color:#374151;">' + r.kode_kecil + '</td>' +
+                            '<td style="' + cs + 'font-family:monospace;font-size:0.74rem;color:#374151;">' + kodeBarang + '</td>' +
+                            '<td style="' + cs + 'font-size:0.76rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + r.artikel + '">' + r.artikel + '</td>' +
+                            '<td style="' + cs + 'text-align:center;max-width:100px;">' + sizeDisplay + '</td>' +
+                            '<td style="' + cs + 'text-align:center;background:#ccfbf1;color:#0f766e;font-weight:600;font-size:0.76rem;">' + (r.version || '-') + '</td>' +
+                            '<td style="' + cs + 'text-align:center;font-size:0.74rem;">' + meta.gender + '</td>' +
+                            '<td style="' + cs + 'text-align:center;font-size:0.74rem;">' + meta.series + '</td>' +
+                            '<td style="' + cs + 'text-align:center;font-size:0.74rem;">' + meta.tipe + '</td>' +
+                            '<td style="' + cs + 'text-align:center;background:#fef9c3;color:#92400e;font-weight:600;font-size:0.76rem;">' + meta.tier + '</td>' +
+                            '<td style="' + cs + 'text-align:center;font-weight:700;color:' + grp.color + ';">' + r.qty + '</td>' +
+                            '<td style="' + cs + 'text-align:center;font-size:0.74rem;color:#6b7280;">' + kuantitas + '</td>' +
                             '</tr>';
                     });
                     if (grp.key === 'Store Surplus \u2192 WH' && grp.rows.length > surplusLimit) {
-                        html += '<tr><td colspan="11" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
+                        html += '<tr><td colspan="16" style="text-align:center;padding:10px;color:#9ca3af;font-style:italic;">Menampilkan ' + surplusLimit + ' dari ' + formatNum(grp.rows.length) + ' baris surplus. Filter by store untuk lihat semua.</td></tr>';
                     }
                 });
                 tbody.innerHTML = html;
