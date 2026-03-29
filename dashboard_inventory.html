@@ -11462,7 +11462,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
             html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#e0f2fe;border-bottom:2px solid #93c5fd;"><th style="padding:6px 8px;text-align:left;font-weight:700;color:#1e3a5f;background:#e0f2fe;">NAMA BARANG</th><th style="padding:6px 8px;text-align:center;width:80px;font-weight:700;color:#1e3a5f;background:#e0f2fe;">PAIRS</th><th style="padding:6px 8px;text-align:right;width:100px;font-weight:700;color:#1e3a5f;background:#e0f2fe;">REVENUE</th></tr></thead><tbody>';
             item.articleList.forEach(function(a, i) {
-                html += '<tr style="border-bottom:1px solid #e2e8f0;' + (i % 2 ? 'background:#f0f9ff;' : 'background:#fff;') + '">';
+                html += '<tr style="border-bottom:1px solid #e2e8f0;background:#fff;">';
                 html += '<td style="padding:5px 8px;color:#1f2937;font-size:0.8rem;">' + a.name + '</td>';
                 html += '<td style="padding:5px 8px;text-align:center;font-weight:600;color:#1f2937;">' + a.pairs.toLocaleString('id-ID') + '</td>';
                 html += '<td style="padding:5px 8px;text-align:right;font-weight:600;color:#002A3A;">' + fmtK(a.revenue) + '</td>';
