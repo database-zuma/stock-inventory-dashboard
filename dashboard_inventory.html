@@ -13284,7 +13284,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             function getKodeBarang(kodeKecil, ukuran) {
-                return kbLookup[(kodeKecil||'').toLowerCase() + '|' + (ukuran||'')] || '';
+                var found = kbLookup[(kodeKecil||'').toLowerCase() + '|' + (ukuran||'')];
+                if (found) return found;
+                // Fallback: construct from kode_kecil + Z + first number of size
+                if (kodeKecil && ukuran) {
+                    var firstNum = (ukuran||'').split('/')[0];
+                    return (kodeKecil + 'Z' + firstNum).toUpperCase();
+                }
+                return '';
             }
             function getMeta(kodeMix) { return metaLookup[kodeMix] || { gender:'', series:'', tipe:'', tier:'' }; }
 
