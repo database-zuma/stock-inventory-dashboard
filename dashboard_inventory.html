@@ -2347,7 +2347,6 @@
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">On Hand</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Gap</th>
                                         <th style="padding:10px 12px; text-align:center; white-space:nowrap; border-right:1px solid #000; border-bottom:2px solid #000;">Status</th>
-                                        <th style="padding:10px 12px; text-align:right; white-space:nowrap; border-bottom:2px solid #000;">Util %</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rdDetailBody"></tbody>
@@ -12985,7 +12984,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + r.on_hand + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:600;color:' + gapColor + ';">' + (r.gap > 0 ? '+' : '') + r.gap + '</td>' +
                         '<td style="padding:8px 12px;border:1px solid #000;text-align:center;">' + statusBadge + '</td>' +
-                        '<td style="padding:8px 12px;border:1px solid #000;text-align:right;">' + (r.utilization_pct != null ? r.utilization_pct + '%' : '-') + '</td>' +
                         '</tr>';
                 });
                 if (rows.length > limit) html += '<tr><td colspan="12" style="text-align:center;padding:12px;color:#9ca3af;font-style:italic;">Showing ' + limit + ' of ' + rows.length + ' rows. Use filters to narrow.</td></tr>';
@@ -13227,7 +13225,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (fGender) detail = detail.filter(r => r.gender === fGender);
             if (fTier)   detail = detail.filter(r => r.tier   === fTier);
 
-            const headers = ['Store','Kode Mix','Kode Kecil','Kode Barang','Nama Barang','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status','Util %'];
+            const headers = ['Store','Kode Mix','Kode Kecil','Kode Barang','Nama Barang','Gender','Series','Tipe','Tier','Ukuran','Stok Ideal','On Hand','Gap','Status'];
             // Build kode_barang lookup from allData stock (kode → size → kode_kecil)
             var kodeBarangLookup = {};
             ['DDD','MBB','LJBB','UBB'].forEach(function(ent) {
@@ -13243,13 +13241,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var kodeKecil = (r.versions && r.versions.length > 0) ? r.versions[0].kode_kecil || '' : '';
                 var kodeBarang = kodeBarangLookup[(kodeKecil || '').toLowerCase() + '|' + (r.ukuran || '')] || '';
                 var statusLabel = r.status === 'deficit' ? 'Restock' : (r.status === 'ok' ? 'Aman' : (r.status === 'surplus' ? 'Surplus' : r.status));
-                return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, statusLabel, r.utilization_pct != null ? r.utilization_pct : ''];
+                return [r.store, r.kode_mix, kodeKecil, kodeBarang, r.artikel, r.gender, r.series, r.tipe||'', r.tier||'', r.ukuran, r.target, r.on_hand, r.gap, statusLabel];
             };
 
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             const wb = XLSX.utils.book_new();
             var rdLeftCols = [0,1,2,3,4,5,6,7];
-            var rdColWidths = [{wch:22},{wch:16},{wch:12},{wch:16},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10},{wch:8}];
+            var rdColWidths = [{wch:22},{wch:16},{wch:12},{wch:16},{wch:28},{wch:8},{wch:12},{wch:8},{wch:6},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10}];
 
             // Sheet 1: SUMMARY
             var wsSummary = XLSX.utils.aoa_to_sheet([headers, ...detail.map(toRow)]);
