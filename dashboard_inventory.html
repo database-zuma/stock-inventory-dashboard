@@ -1188,7 +1188,7 @@
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="min-width:100px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Area:</label>
-                        <select id="scFilterArea" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                        <select id="scFilterArea" onchange="onScAreaChange()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua Area</option>
                             <option value="Bali">Bali</option>
                             <option value="Jakarta">Jakarta</option>
@@ -1197,6 +1197,12 @@
                             <option value="Sulawesi">Sulawesi</option>
                             <option value="Sumatera">Sumatera</option>
                             <option value="Lombok">Lombok</option>
+                        </select>
+                    </div>
+                    <div id="scFilterStoreWrap" style="min-width:140px;display:none;">
+                        <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Toko:</label>
+                        <select id="scFilterStore" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
+                            <option value="">Semua Toko</option>
                         </select>
                     </div>
                     <div style="min-width:100px;">
@@ -6274,6 +6280,7 @@
         let scCurrentPage = 1;
         const scItemsPerPage = 50;
         let scViewMode = 'sku'; // 'sku' or 'kodeKecil'
+        let scStoresByArea = {}; // { 'Bali': ['Zuma Galeria', ...], ... }
 
         // Build aggregated items by Kode Kecil (sum all sizes)
         function buildKodeKecilItems() {
@@ -6297,6 +6304,15 @@
                         globalStock: 0,
                         whTotal: 0,
                         whOnlineTotal: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoLombok: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0,
+                        storeStockMap: {},
                         skuList: []
                     };
                 }
@@ -6309,6 +6325,18 @@
                 kodeKecilMap[kk].WHOJ += item.WHOJ || 0;
                 kodeKecilMap[kk].stokRetail += item.stokRetail || 0;
                 kodeKecilMap[kk].stokConsignment += item.stokConsignment || 0;
+                kodeKecilMap[kk].stokTokoBali += item.stokTokoBali || 0;
+                kodeKecilMap[kk].stokTokoJakarta += item.stokTokoJakarta || 0;
+                kodeKecilMap[kk].stokTokoJatim += item.stokTokoJatim || 0;
+                kodeKecilMap[kk].stokTokoBatam += item.stokTokoBatam || 0;
+                kodeKecilMap[kk].stokTokoLombok += item.stokTokoLombok || 0;
+                kodeKecilMap[kk].stokTokoSulawesi += item.stokTokoSulawesi || 0;
+                kodeKecilMap[kk].stokTokoSumatera += item.stokTokoSumatera || 0;
+                if (item.storeStockMap) {
+                    Object.entries(item.storeStockMap).forEach(([store, stock]) => {
+                        kodeKecilMap[kk].storeStockMap[store] = (kodeKecilMap[kk].storeStockMap[store] || 0) + stock;
+                    });
+                }
                 kodeKecilMap[kk].skuList.push(item.kodeKecil || item.sku);
             });
 
@@ -6465,12 +6493,14 @@
                         stokTokoBatam: 0,
                         stokTokoLombok: 0,
                         stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0
+                        stokTokoSumatera: 0,
+                        storeStockMap: {}
                     };
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         skuMap[sku].stokRetail += stock;
+                        skuMap[sku].storeStockMap[store] = (skuMap[sku].storeStockMap[store] || 0) + stock;
                         const s = store.toLowerCase();
                         if (s.includes('batam') || s.includes('nagoya')) skuMap[sku].stokTokoBatam += stock;
                         else if (s.includes('lombok') || s.includes('mataram')) skuMap[sku].stokTokoLombok += stock;
@@ -6511,7 +6541,8 @@
                         stokTokoBatam: 0,
                         stokTokoLombok: 0,
                         stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0
+                        stokTokoSumatera: 0,
+                        storeStockMap: {}
                     };
                 }
                 skuMap[sku].stokConsignment += (item.total || 0);
@@ -6548,7 +6579,8 @@
                         stokTokoBatam: 0,
                         stokTokoLombok: 0,
                         stokTokoSulawesi: 0,
-                        stokTokoSumatera: 0
+                        stokTokoSumatera: 0,
+                        storeStockMap: {}
                     };
                 }
                 // Sum warehouse stock
@@ -6579,6 +6611,31 @@
         function initStockControl() {
             scItems = buildSkuItems();
             scKodeKecilItems = buildKodeKecilItems();
+
+            // Build scStoresByArea from storeStockMap
+            const areaStoreSet = {};
+            const getRetailArea = (s) => {
+                if (s.includes('batam') || s.includes('nagoya')) return 'Batam';
+                if (s.includes('lombok') || s.includes('mataram')) return 'Lombok';
+                if (s.includes('manado') || s.includes('sulawesi')) return 'Sulawesi';
+                if (s.includes('pekanbaru') || s.includes('sumatera') || s.includes('sumatra') || s.includes('ska mall')) return 'Sumatera';
+                if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') || s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) return 'Jakarta';
+                if (s.includes('surabaya') || s.includes('malang') || s.includes('sidoarjo') || s.includes('gresik') || s.includes('mojokerto') || s.includes('matos') || s.includes('batu') || s.includes('jatim') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('ptc') || s.includes('cito')) return 'Jawa Timur';
+                return 'Bali';
+            };
+            scItems.forEach(item => {
+                if (!item.storeStockMap) return;
+                Object.keys(item.storeStockMap).forEach(store => {
+                    const area = getRetailArea(store.toLowerCase());
+                    if (!areaStoreSet[area]) areaStoreSet[area] = new Set();
+                    areaStoreSet[area].add(store);
+                });
+            });
+            scStoresByArea = {};
+            Object.keys(areaStoreSet).forEach(area => {
+                scStoresByArea[area] = [...areaStoreSet[area]].sort();
+            });
+
             // Populate series filter
             const seriesSet = new Set();
             scItems.forEach(item => { if (item.series) seriesSet.add(item.series); });
@@ -6593,11 +6650,28 @@
             renderStockControlTable();
         }
 
+        function onScAreaChange() {
+            const area = document.getElementById('scFilterArea')?.value || '';
+            const storeSelect = document.getElementById('scFilterStore');
+            const storeWrap = document.getElementById('scFilterStoreWrap');
+            if (storeSelect) {
+                storeSelect.innerHTML = '<option value="">Semua Toko</option>';
+                if (area && scStoresByArea[area]) {
+                    scStoresByArea[area].forEach(store => {
+                        storeSelect.innerHTML += '<option value="' + store + '">' + store + '</option>';
+                    });
+                }
+            }
+            if (storeWrap) storeWrap.style.display = area ? 'block' : 'none';
+            renderStockControlTable();
+        }
+
         function renderStockControlTable() {
             // Render header based on view mode
             renderStockControlHeader();
 
             const area = document.getElementById('scFilterArea')?.value || '';
+            const storeFilter = document.getElementById('scFilterStore')?.value || '';
             const gender = document.getElementById('scFilterGender')?.value || '';
             const tier = document.getElementById('scFilterTier')?.value || '';
             const series = document.getElementById('scFilterSeries')?.value || '';
@@ -6689,7 +6763,8 @@
                 // TO filter (store turnover)
                 if (toFilter) {
                     const sales = getItemSales(item);
-                    const storeStock = area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko));
+                    const storeStock = storeFilter ? (item.storeStockMap?.[storeFilter] || 0) :
+                        (area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko)));
                     const toVal = sales.avg > 0 ? (storeStock / sales.avg) : (storeStock > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toVal >= 1) return false;
                     if (toFilter === 'low' && (toVal < 1 || toVal >= 2)) return false;
@@ -6773,7 +6848,8 @@
                 }
                 if (toFilter) {
                     const s2 = getItemSales(item);
-                    const stS = area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko));
+                    const stS = storeFilter ? (item.storeStockMap?.[storeFilter] || 0) :
+                        (area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko)));
                     const toV = s2.avg > 0 ? (stS / s2.avg) : (stS > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toV >= 1) return false;
                     if (toFilter === 'low' && (toV < 1 || toV >= 2)) return false;
@@ -6819,7 +6895,11 @@
                 let s1 = sales.m1, s2 = sales.m2, s3 = sales.m3, avgSales = sales.avg;
                 let whStock, tokoStock, globalStock;
 
-                if (!area) {
+                if (storeFilter) {
+                    whStock = 0;
+                    tokoStock = item.storeStockMap?.[storeFilter] || 0;
+                    globalStock = tokoStock;
+                } else if (!area) {
                     whStock = item.whTotal || 0;
                     tokoStock = item.stokRetail || 0;
                     globalStock = item.globalStock || 0;
@@ -6886,7 +6966,9 @@
 
                 let whPusat = '-', whBali = '-', whJkt = '-';
                 let whOB = '-', whOJ = '-', whOnline = '-';
-                if (!area) {
+                if (storeFilter) {
+                    // Store selected: semua kolom WH dikosongkan
+                } else if (!area) {
                     whPusat = (item.WHS || 0).toLocaleString();
                     whBali = (item.WHB || 0).toLocaleString();
                     whJkt = (item.WHJ || 0).toLocaleString();
