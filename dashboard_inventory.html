@@ -6690,7 +6690,7 @@
                 if (toFilter) {
                     const sales = getItemSales(item);
                     const storeStock = area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko));
-                    const toVal = sales.avg > 0 ? (storeStock / sales.avg) : 999;
+                    const toVal = sales.avg > 0 ? (storeStock / sales.avg) : (storeStock > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toVal >= 1) return false;
                     if (toFilter === 'low' && (toVal < 1 || toVal >= 2)) return false;
                     if (toFilter === 'normal' && (toVal < 2 || toVal >= 4)) return false;
@@ -6774,7 +6774,7 @@
                 if (toFilter) {
                     const s2 = getItemSales(item);
                     const stS = area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko));
-                    const toV = s2.avg > 0 ? (stS / s2.avg) : 999;
+                    const toV = s2.avg > 0 ? (stS / s2.avg) : (stS > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toV >= 1) return false;
                     if (toFilter === 'low' && (toV < 1 || toV >= 2)) return false;
                     if (toFilter === 'normal' && (toV < 2 || toV >= 4)) return false;
