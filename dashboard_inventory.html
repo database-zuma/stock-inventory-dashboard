@@ -1199,7 +1199,7 @@
                             <option value="Lombok">Lombok</option>
                         </select>
                     </div>
-                    <div id="scFilterStoreWrap" style="min-width:140px;display:none;">
+                    <div id="scFilterStoreWrap" style="min-width:140px;">
                         <label style="display:block;font-size:0.75rem;color:#6b7280;margin-bottom:4px;">Toko:</label>
                         <select id="scFilterStore" onchange="renderStockControlTable()" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;">
                             <option value="">Semua Toko</option>
@@ -6281,6 +6281,7 @@
         const scItemsPerPage = 50;
         let scViewMode = 'sku'; // 'sku' or 'kodeKecil'
         let scStoresByArea = {}; // { 'Bali': ['Zuma Galeria', ...], ... }
+        let storeSalesMap = {};  // { storeName: { kodeKecil: { month: qty } } }
 
         // Build aggregated items by Kode Kecil (sum all sizes)
         function buildKodeKecilItems() {
@@ -6501,13 +6502,13 @@
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         skuMap[sku].stokRetail += stock;
                         skuMap[sku].storeStockMap[store] = (skuMap[sku].storeStockMap[store] || 0) + stock;
-                        const s = store.toLowerCase();
-                        if (s.includes('batam') || s.includes('nagoya')) skuMap[sku].stokTokoBatam += stock;
-                        else if (s.includes('lombok') || s.includes('mataram')) skuMap[sku].stokTokoLombok += stock;
-                        else if (s.includes('manado') || s.includes('sulawesi')) skuMap[sku].stokTokoSulawesi += stock;
-                        else if (s.includes('pekanbaru') || s.includes('sumatera') || s.includes('sumatra') || s.includes('ska mall')) skuMap[sku].stokTokoSumatera += stock;
-                        else if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') || s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) skuMap[sku].stokTokoJakarta += stock;
-                        else if (s.includes('surabaya') || s.includes('malang') || s.includes('sidoarjo') || s.includes('gresik') || s.includes('mojokerto') || s.includes('matos') || s.includes('batu') || s.includes('jatim') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('ptc') || s.includes('cito')) skuMap[sku].stokTokoJatim += stock;
+                        const storeArea = getAreaFromStore(store);
+                        if (storeArea === 'Batam') skuMap[sku].stokTokoBatam += stock;
+                        else if (storeArea === 'Lombok') skuMap[sku].stokTokoLombok += stock;
+                        else if (storeArea === 'Sulawesi') skuMap[sku].stokTokoSulawesi += stock;
+                        else if (storeArea === 'Sumatera') skuMap[sku].stokTokoSumatera += stock;
+                        else if (storeArea === 'Jakarta') skuMap[sku].stokTokoJakarta += stock;
+                        else if (storeArea === 'Jawa Timur') skuMap[sku].stokTokoJatim += stock;
                         else skuMap[sku].stokTokoBali += stock;
                     });
                 }
@@ -6612,21 +6613,12 @@
             scItems = buildSkuItems();
             scKodeKecilItems = buildKodeKecilItems();
 
-            // Build scStoresByArea from storeStockMap
+            // Build scStoresByArea using getAreaFromStore (uses storeAreaMap from API)
             const areaStoreSet = {};
-            const getRetailArea = (s) => {
-                if (s.includes('batam') || s.includes('nagoya')) return 'Batam';
-                if (s.includes('lombok') || s.includes('mataram')) return 'Lombok';
-                if (s.includes('manado') || s.includes('sulawesi')) return 'Sulawesi';
-                if (s.includes('pekanbaru') || s.includes('sumatera') || s.includes('sumatra') || s.includes('ska mall')) return 'Sumatera';
-                if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') || s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) return 'Jakarta';
-                if (s.includes('surabaya') || s.includes('malang') || s.includes('sidoarjo') || s.includes('gresik') || s.includes('mojokerto') || s.includes('matos') || s.includes('batu') || s.includes('jatim') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('ptc') || s.includes('cito')) return 'Jawa Timur';
-                return 'Bali';
-            };
             scItems.forEach(item => {
                 if (!item.storeStockMap) return;
                 Object.keys(item.storeStockMap).forEach(store => {
-                    const area = getRetailArea(store.toLowerCase());
+                    const area = getAreaFromStore(store);
                     if (!areaStoreSet[area]) areaStoreSet[area] = new Set();
                     areaStoreSet[area].add(store);
                 });
@@ -6635,6 +6627,39 @@
             Object.keys(areaStoreSet).forEach(area => {
                 scStoresByArea[area] = [...areaStoreSet[area]].sort();
             });
+
+            // Build storeSalesMap from salesDetailData (per store per kodeKecil per month)
+            storeSalesMap = {};
+            const ID_MONTHS_SC = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
+            salesDetailData.forEach(row => {
+                if (!row.store || !row.kode_kecil || !row.date) return;
+                if (row.category === 'EVENT') return;
+                const store = row.store;
+                const kk = (row.kode_kecil || '').toLowerCase();
+                const monthLabel = ID_MONTHS_SC[new Date(row.date).getMonth()];
+                if (!storeSalesMap[store]) storeSalesMap[store] = {};
+                if (!storeSalesMap[store][kk]) storeSalesMap[store][kk] = {};
+                storeSalesMap[store][kk][monthLabel] = (storeSalesMap[store][kk][monthLabel] || 0) + (row.qty || 0);
+            });
+
+            // Always populate store dropdown with all stores (sorted by area then name)
+            const storeSelect = document.getElementById('scFilterStore');
+            if (storeSelect) {
+                storeSelect.innerHTML = '<option value="">Semua Toko</option>';
+                const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Lombok','Sulawesi','Sumatera'];
+                allAreas.forEach(area => {
+                    if (!scStoresByArea[area] || scStoresByArea[area].length === 0) return;
+                    const group = document.createElement('optgroup');
+                    group.label = area;
+                    scStoresByArea[area].forEach(store => {
+                        const opt = document.createElement('option');
+                        opt.value = store;
+                        opt.textContent = store;
+                        group.appendChild(opt);
+                    });
+                    storeSelect.appendChild(group);
+                });
+            }
 
             // Populate series filter
             const seriesSet = new Set();
@@ -6653,16 +6678,35 @@
         function onScAreaChange() {
             const area = document.getElementById('scFilterArea')?.value || '';
             const storeSelect = document.getElementById('scFilterStore');
-            const storeWrap = document.getElementById('scFilterStoreWrap');
             if (storeSelect) {
                 storeSelect.innerHTML = '<option value="">Semua Toko</option>';
-                if (area && scStoresByArea[area]) {
-                    scStoresByArea[area].forEach(store => {
-                        storeSelect.innerHTML += '<option value="' + store + '">' + store + '</option>';
+                if (area) {
+                    // Filter to stores in selected area
+                    if (scStoresByArea[area]) {
+                        scStoresByArea[area].forEach(store => {
+                            const opt = document.createElement('option');
+                            opt.value = store;
+                            opt.textContent = store;
+                            storeSelect.appendChild(opt);
+                        });
+                    }
+                } else {
+                    // Show all stores grouped by area
+                    const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Lombok','Sulawesi','Sumatera'];
+                    allAreas.forEach(a => {
+                        if (!scStoresByArea[a] || scStoresByArea[a].length === 0) return;
+                        const group = document.createElement('optgroup');
+                        group.label = a;
+                        scStoresByArea[a].forEach(store => {
+                            const opt = document.createElement('option');
+                            opt.value = store;
+                            opt.textContent = store;
+                            group.appendChild(opt);
+                        });
+                        storeSelect.appendChild(group);
                     });
                 }
             }
-            if (storeWrap) storeWrap.style.display = area ? 'block' : 'none';
             renderStockControlTable();
         }
 
@@ -6703,7 +6747,12 @@
             function getSales(sku, kodeKecil) {
                 // salesMap is keyed by kode_besar (= item.kodeKecil), NOT kode_mix_size (= item.sku)
                 const key = (kodeKecil || sku || '').toLowerCase();
-                const s = salesMap[key] || {};
+                let s;
+                if (storeFilter && storeSalesMap[storeFilter]) {
+                    s = storeSalesMap[storeFilter][key] || {};
+                } else {
+                    s = salesMap[key] || {};
+                }
                 const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
                 const avg = (v1 + v2 + v3) / 3;
                 return { m1: v1, m2: v2, m3: v3, avg: avg };
@@ -6732,7 +6781,7 @@
                     if (scViewMode === 'kodeKecil') {
                         if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
                     } else {
-                        if (!item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                        if (!item.sku?.toLowerCase().includes(search) && !item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
                     }
                 }
 
@@ -6823,7 +6872,7 @@
                     if (scViewMode === 'kodeKecil') {
                         if (!item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
                     } else {
-                        if (!item.sku?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
+                        if (!item.sku?.toLowerCase().includes(search) && !item.kodeKecil?.toLowerCase().includes(search) && !item.name?.toLowerCase().includes(search)) return false;
                     }
                 }
                 if (area) {
@@ -6899,6 +6948,7 @@
                     whStock = 0;
                     tokoStock = item.storeStockMap?.[storeFilter] || 0;
                     globalStock = tokoStock;
+                    // stokConsignment shown as 0 for per-store view
                 } else if (!area) {
                     whStock = item.whTotal || 0;
                     tokoStock = item.stokRetail || 0;
@@ -6933,8 +6983,9 @@
                     globalStock = tokoStock;
                 }
 
+                const displayConsig = storeFilter ? 0 : (item.stokConsignment || 0);
                 // GAP & STR calculation
-                const basisStock = getStockBasis(item);
+                const basisStock = storeFilter ? tokoStock : getStockBasis(item);
                 const gap = basisStock - (avgSales * 3);
 
                 // GAP color — Dead Stock (avg=0 & stok>0) gets distinct dark blue/purple
@@ -7010,7 +7061,7 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + displayConsig.toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (isDead ? 'background:#7c3aed;color:white;' : (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;'))) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
@@ -7033,7 +7084,7 @@
                         '<td style="' + cellStyle + 'color:#374151;">' + whJkt + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#e9d5ff;color:#7c3aed;">' + (whStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#cffafe;color:#06b6d4;">' + (tokoStock || 0).toLocaleString() + '</td>' +
-                        '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + (item.stokConsignment || 0).toLocaleString() + '</td>' +
+                        '<td style="' + cellStyle + 'font-weight:600;background:#fce7f3;color:#db2777;">' + displayConsig.toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;background:#fef3c7;color:#92400e;">' + (globalStock || 0).toLocaleString() + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (isDead ? 'background:#7c3aed;color:white;' : (gap < 0 ? 'background:#dc2626;color:white;' : (gap < avgSales ? 'background:#eab308;color:black;' : 'background:#16a34a;color:white;'))) + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
                         '<td style="' + cellStyle + 'font-weight:600;' + (tw < 1 ? 'background:#dc2626;color:white;' : (tw <= 2 ? 'background:#eab308;color:black;' : (tw <= 4 ? 'background:#16a34a;color:white;' : 'background:#7c3aed;color:white;'))) + '">' + tw + '</td>' +
