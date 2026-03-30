@@ -6457,12 +6457,28 @@
                         stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0,
-                        whOnlineTotal: 0
+                        whOnlineTotal: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoLombok: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0
                     };
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
                         skuMap[sku].stokRetail += stock;
+                        const s = store.toLowerCase();
+                        if (s.includes('batam') || s.includes('nagoya')) skuMap[sku].stokTokoBatam += stock;
+                        else if (s.includes('lombok') || s.includes('mataram')) skuMap[sku].stokTokoLombok += stock;
+                        else if (s.includes('manado') || s.includes('sulawesi')) skuMap[sku].stokTokoSulawesi += stock;
+                        else if (s.includes('pekanbaru') || s.includes('sumatera') || s.includes('sumatra') || s.includes('ska mall')) skuMap[sku].stokTokoSumatera += stock;
+                        else if (s.includes('jakarta') || s.includes('moi') || s.includes('pluit') || s.includes('bintaro') || s.includes('puri') || s.includes('living world') || s.includes('epicentrum')) skuMap[sku].stokTokoJakarta += stock;
+                        else if (s.includes('surabaya') || s.includes('malang') || s.includes('sidoarjo') || s.includes('gresik') || s.includes('mojokerto') || s.includes('matos') || s.includes('batu') || s.includes('jatim') || s.includes('galaxy') || s.includes('tunjungan') || s.includes('ptc') || s.includes('cito')) skuMap[sku].stokTokoJatim += stock;
+                        else skuMap[sku].stokTokoBali += stock;
                     });
                 }
             });
@@ -6487,7 +6503,15 @@
                         stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0,
-                        whOnlineTotal: 0
+                        whOnlineTotal: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoLombok: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0
                     };
                 }
                 skuMap[sku].stokConsignment += (item.total || 0);
@@ -6516,7 +6540,15 @@
                         stokConsignment: 0,
                         globalStock: 0,
                         whTotal: 0,
-                        whOnlineTotal: 0
+                        whOnlineTotal: 0,
+                        stokToko: 0,
+                        stokTokoBali: 0,
+                        stokTokoJakarta: 0,
+                        stokTokoJatim: 0,
+                        stokTokoBatam: 0,
+                        stokTokoLombok: 0,
+                        stokTokoSulawesi: 0,
+                        stokTokoSumatera: 0
                     };
                 }
                 // Sum warehouse stock
@@ -6538,6 +6570,7 @@
                 item.whTotal = item.WHS + item.WHB + item.WHJ;
                 item.whOnlineTotal = item.WHOB + item.WHOJ;
                 item.globalStock = item.whTotal + item.whOnlineTotal + item.stokRetail + item.stokConsignment;
+                item.stokToko = item.stokRetail; // alias: stokToko = total retail toko stock
             });
 
             return Object.values(skuMap);
