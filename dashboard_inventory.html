@@ -1550,12 +1550,9 @@
             <div id="salesStickyHeader" class="sales-channel-sticky" style="background:#f1f5f9;padding-bottom:0;">
 
             <!-- Retail Banner Header (shown only for retail channel) -->
-            <div id="retailBannerHeader" style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:14px 24px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                <span style="font-size:1.3rem;">🏬</span>
-                <div>
-                    <h3 style="margin:0;color:white;font-size:1rem;font-weight:700;">Sales Retail & Event</h3>
-                    <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.75rem;">Data Penjualan Toko Retail & Event</p>
-                </div>
+            <div id="retailBannerHeader" style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:8px;padding:8px 20px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <span style="font-size:1rem;">🏬</span>
+                <h3 style="margin:0;color:white;font-size:0.85rem;font-weight:600;">Sales Retail & Event — <span style="font-weight:400;opacity:0.8;">Data Penjualan Toko Retail & Event</span></h3>
             </div>
 
             <!-- Filters -->
@@ -1608,6 +1605,10 @@
                 </div>
             </div>
 
+            <!-- Summary Cards (retail only, inside sticky) -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-bottom:6px;" id="salesSummaryCards">
+            </div>
+
             <!-- Tab Navigation Bar -->
             <div id="salesTabNavBar" style="background:white;border-radius:12px 12px 0 0;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                 <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:12px 12px 0 0;">
@@ -1622,10 +1623,6 @@
             </div>
 
             </div><!-- end salesStickyHeader -->
-
-            <!-- Summary Cards (scrolls with content) -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px;" id="salesSummaryCards">
-            </div>
 
             <!-- Tab Content Wrapper -->
             <div id="salesRetailTabWrapper" style="background:white;box-shadow:0 4px 8px rgba(0,0,0,0.08);">
