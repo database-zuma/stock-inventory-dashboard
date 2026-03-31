@@ -1596,7 +1596,7 @@
             </div>
 
             <!-- Tab Navigation Bar -->
-            <div style="background:white;border-radius:12px 12px 0 0;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div id="salesTabNavBar" style="background:white;border-radius:12px 12px 0 0;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                 <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:12px 12px 0 0;">
                     <button class="sales-tab-btn active" onclick="switchSalesTab('performance')" data-tab="performance">📊 Performance</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('storeAnalysis')" data-tab="storeAnalysis">📈 Analisa Toko</button>
@@ -12019,11 +12019,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var consignmentView = document.getElementById('consignmentView');
             var salesFilters = document.getElementById('salesFilterSection');
             var salesCards = document.getElementById('salesSummaryCards');
+            var salesTabNav = document.getElementById('salesTabNavBar');
 
             if (channel === 'global') {
-                // Global: hide Retail filters and summary cards
+                // Global: hide Retail filters, summary cards, tab nav
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
+                if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
                 // Hide all children - global shows summary only
                 Array.from(retailTabWrapper.children).forEach(function(child) {
@@ -12037,9 +12039,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesSubTab('global');
                 }, 50);
             } else if (channel === 'retail') {
-                // Retail: show filters, cards, retail tabs
+                // Retail: show filters, cards, tab nav, retail tabs
                 salesFilters.style.display = '';
                 salesCards.style.display = 'grid';
+                if (salesTabNav) salesTabNav.style.display = '';
                 retailTabWrapper.style.display = '';
                 // Restore all children, hide consignment
                 Array.from(retailTabWrapper.children).forEach(function(child) {
@@ -12050,9 +12053,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesSubTab(channel);
                 }, 50);
             } else if (channel === 'consig') {
-                // Consignment: hide filters+cards, show wrapper but hide tabs inside it
+                // Consignment: hide filters+cards+tab nav, show wrapper but hide tabs inside it
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
+                if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
                 // Hide all children except consignmentView
                 Array.from(retailTabWrapper.children).forEach(function(child) {
@@ -12064,9 +12068,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 loadConsignmentData();
             } else if (channel === 'wholesale') {
-                // Wholesale: hide filters+cards, show retail tabs with sub-tab
+                // Wholesale: hide filters+cards+tab nav, show retail tabs with sub-tab
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
+                if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
                 // Restore all children, hide consignment
                 Array.from(retailTabWrapper.children).forEach(function(child) {
@@ -12077,9 +12082,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesSubTab(channel);
                 }, 50);
             } else if (channel === 'online') {
-                // Online: hide filters+cards, show wrapper but HIDE tab buttons bar
+                // Online: hide filters+cards+tab nav, show wrapper but HIDE tab buttons bar
                 salesFilters.style.display = 'none';
                 salesCards.style.display = 'none';
+                if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
                 // Hide all children first (tab buttons bar, consignmentView, other tab contents)
                 Array.from(retailTabWrapper.children).forEach(function(child) {
