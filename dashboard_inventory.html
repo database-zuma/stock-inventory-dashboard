@@ -1635,14 +1635,16 @@
                     <!-- Retail Sub-tab -->
                     <div id="salesSubTabRetail" class="sales-sub-tab-content" style="display:block;">
 
-                        <!-- Retail Header Banner -->
-                        <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+                        <!-- Retail Header Banner (sticky) -->
+                        <div class="sales-channel-sticky" id="retailChannelStickyHeader" style="margin:-20px -20px 0 -20px;padding:0 20px 8px 20px;">
+                        <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:0;">
                             <span style="font-size:1.5rem;">🏬</span>
                             <div>
                                 <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Retail & Event</h3>
                                 <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data Penjualan Toko Retail & Event</p>
                             </div>
                         </div>
+                        </div><!-- /retailChannelStickyHeader -->
                         <!-- Row 1: By Store (full width, rapi) -->
                         <div style="margin-bottom:24px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
@@ -1762,8 +1764,8 @@
 
                     <!-- Wholesale Sub-tab -->
                     <div id="salesSubTabWholesale" class="sales-sub-tab-content" style="display:none;">
-                        <!-- Sticky wrapper for Wholesale header+cards -->
-                        <div class="sales-channel-sticky" id="wholesaleChannelStickyHeader">
+                        <!-- Sticky wrapper for Wholesale banner -->
+                        <div class="sales-channel-sticky" id="wholesaleChannelStickyHeader" style="margin:-20px -20px 0 -20px;padding:0 20px 8px 20px;">
                         <!-- Wholesale Header Banner -->
                         <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                             <span style="font-size:1.5rem;">🏭</span>
@@ -1798,7 +1800,7 @@
                     <!-- Online Sub-tab -->
                     <div id="salesSubTabOnline" class="sales-sub-tab-content" style="display:none;">
                         <!-- Sticky wrapper for Online/Global header+subtabs+filters -->
-                        <div class="sales-channel-sticky" id="onlineChannelStickyHeader">
+                        <div class="sales-channel-sticky" id="onlineChannelStickyHeader" style="margin:-20px -20px 0 -20px;padding:0 20px 8px 20px;">
                         <!-- Online Header Banner -->
                         <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:0;">
                             <span id="onlineHeaderIcon" style="font-size:1.5rem;">🛒</span>
