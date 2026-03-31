@@ -11475,12 +11475,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // ── Summary Cards ──
             const summaryEl = document.getElementById('onlineSummaryCards');
             if (summaryEl) {
-                const ls = 'font-size:0.75rem;margin-bottom:4px;';
-                const vs = 'font-size:1.25rem;font-weight:700;';
+                const ls = 'font-size:0.7rem;margin-bottom:2px;';
+                const vs = 'font-size:0.95rem;font-weight:700;';
                 summaryEl.innerHTML = `
-                    <div style="background:linear-gradient(135deg,#002A3A,#0e4a5e);border-radius:12px;padding:14px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.8);">💰 Total Revenue</div><div style="${vs}color:white;">${fmtK(totalRevenue)}</div></div>
-                    <div style="background:linear-gradient(135deg,#047857,#10b981);border-radius:12px;padding:14px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.85);">👟 Total Pairs</div><div style="${vs}color:white;">${totalPairs.toLocaleString('id-ID')}</div></div>
-                    <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:12px;padding:14px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.85);">🧾 Total Trx</div><div style="${vs}color:white;">${totalTrx.toLocaleString('id-ID')}</div></div>`;
+                    <div style="background:linear-gradient(135deg,#002A3A,#0e4a5e);border-radius:8px;padding:8px 12px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.8);">💰 Total Revenue</div><div style="${vs}color:white;">${fmtK(totalRevenue)}</div></div>
+                    <div style="background:linear-gradient(135deg,#047857,#10b981);border-radius:8px;padding:8px 12px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.85);">👟 Total Pairs</div><div style="${vs}color:white;">${totalPairs.toLocaleString('id-ID')}</div></div>
+                    <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:8px;padding:8px 12px;text-align:center;"><div style="${ls}color:rgba(255,255,255,0.85);">🧾 Total Trx</div><div style="${vs}color:white;">${totalTrx.toLocaleString('id-ID')}</div></div>`;
             }
 
             // ── Sales by Marketplace (or by Channel for Global) ──
