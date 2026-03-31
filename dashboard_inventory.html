@@ -410,6 +410,11 @@
             flex: 1;
             min-width: 0;
         }
+        .sales-channel-sticky {
+            position: sticky;
+            z-index: 50;
+            background: white;
+        }
         .view-btn {
             padding: 10px 14px;
             border: none;
@@ -1754,6 +1759,8 @@
 
                     <!-- Wholesale Sub-tab -->
                     <div id="salesSubTabWholesale" class="sales-sub-tab-content" style="display:none;">
+                        <!-- Sticky wrapper for Wholesale header+cards -->
+                        <div class="sales-channel-sticky" id="wholesaleChannelStickyHeader">
                         <!-- Wholesale Header Banner -->
                         <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                             <span style="font-size:1.5rem;">🏭</span>
@@ -1764,6 +1771,7 @@
                         </div>
                         <!-- Summary Cards -->
                         <div id="wholesaleSummaryCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;"></div>
+                        </div><!-- /wholesaleChannelStickyHeader -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
                             <!-- Top Products -->
                             <div>
@@ -1785,6 +1793,8 @@
 
                     <!-- Online Sub-tab -->
                     <div id="salesSubTabOnline" class="sales-sub-tab-content" style="display:none;">
+                        <!-- Sticky wrapper for Online/Global header+subtabs+filters -->
+                        <div class="sales-channel-sticky" id="onlineChannelStickyHeader">
                         <!-- Online Header Banner -->
                         <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:0;">
                             <span id="onlineHeaderIcon" style="font-size:1.5rem;">🛒</span>
@@ -1795,10 +1805,11 @@
                         </div>
 
                         <!-- Online Sub-Tabs: Dashboard vs Cari SKU -->
-                        <div style="display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:18px;background:#f8fafc;">
+                        <div style="display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:0;background:#f8fafc;">
                             <button id="onlineSubTabDashboard" onclick="switchOnlineView('dashboard')" style="padding:10px 22px;font-size:0.9rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:#3b82f6;border-bottom:2px solid #3b82f6;margin-bottom:-2px;">📊 Dashboard</button>
                             <button id="onlineSubTabSkuSearch" onclick="switchOnlineView('skusearch')" style="padding:10px 22px;font-size:0.9rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;">🔍 Cari SKU</button>
                         </div>
+                        </div><!-- /onlineChannelStickyHeader -->
 
                         <!-- === ONLINE DASHBOARD VIEW === -->
                         <div id="onlineViewDashboard">
@@ -2175,6 +2186,8 @@
             <!-- ==================== CONSIGNMENT DEDICATED VIEW ==================== -->
             <div id="consignmentView" style="display:none;">
                 <div style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+                    <!-- Sticky wrapper for Consignment header+filters -->
+                    <div class="sales-channel-sticky" id="consigChannelStickyHeader">
                     <!-- Consignment Header Banner -->
                     <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;">
                         <span style="font-size:1.5rem;">📦</span>
@@ -2228,6 +2241,7 @@
                             <button onclick="resetConsigFilters()" style="padding:8px 16px;border:1px solid #e2e8f0;border-radius:6px;background:white;color:#6b7280;cursor:pointer;font-size:0.9rem;font-weight:500;">Reset</button>
                         </div>
                     </div>
+                    </div><!-- /consigChannelStickyHeader -->
                     <div style="padding:20px;">
                         <!-- Grand Total Cards -->
                         <div id="consigGrandCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;"></div>
@@ -8161,6 +8175,12 @@
             if (mainHeader && stickyEl) {
                 stickyEl.style.top = mainHeader.offsetHeight + 'px';
             }
+            // Also update channel sticky headers
+            if (mainHeader) {
+                document.querySelectorAll('.sales-channel-sticky').forEach(function(el) {
+                    el.style.top = mainHeader.offsetHeight + 'px';
+                });
+            }
 
             if (!salesDetailData || salesDetailData.length === 0) {
                 document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
@@ -12106,6 +12126,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 // Load online data
                 loadOnlineChannel();
             }
+
+            // Set sticky top for all channel headers
+            setTimeout(function() {
+                var headerH = document.querySelector('.header')?.offsetHeight || 0;
+                document.querySelectorAll('.sales-channel-sticky').forEach(function(el) {
+                    el.style.top = headerH + 'px';
+                });
+            }, 100);
         }
 
         // ============ CONSIGNMENT DEDICATED VIEW ============
