@@ -181,6 +181,18 @@
             content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.85rem;
         }
         .table-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        /* Sticky thead fix: position:sticky on <thead> doesn't work, must be on <tr> */
+        div[style*="overflow-y:auto"] table thead tr,
+        div[style*="overflow-y: auto"] table thead tr {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .table-wrapper table thead tr {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
         table { width: 100%; border-collapse: collapse; border: 2px solid #000000; }
         th {
             color: white; padding: 12px 14px; text-align: left; font-size: 0.75rem;
@@ -1529,7 +1541,7 @@
             <!-- Header removed — each sub-tab now has its own banner -->
 
             <!-- Filters -->
-            <div id="salesFilterSection" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div id="salesFilterSection" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);position:sticky;top:0;z-index:50;">
                 <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
                     <div style="min-width:140px;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Mulai:</label>
@@ -1569,6 +1581,10 @@
                         <select id="salesFilterSeries" onchange="renderSalesDashboard()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
                             <option value="">Semua</option>
                         </select>
+                    </div>
+                    <div style="min-width:160px;">
+                        <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Cari SKU/Artikel:</label>
+                        <input type="text" id="salesFilterSKU" onkeyup="renderSalesDashboard()" placeholder="SKU atau Artikel..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
                     </div>
                     <button onclick="resetSalesFilters()" style="padding:6px 12px;background:#f3f4f6;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:0.8rem;">Reset</button>
                 </div>
@@ -8102,6 +8118,7 @@
             const store = document.getElementById('salesFilterStore').value;
             const gender = document.getElementById('salesFilterGender').value;
             const series = document.getElementById('salesFilterSeries').value;
+            const skuSearch = (document.getElementById('salesFilterSKU')?.value || '').toLowerCase().trim();
 
             return salesDetailData.filter(item => {
                 // Include ALL items (sandal + non-sandal) for sales calculation
@@ -8120,7 +8137,13 @@
                     const itemArea = getAreaFromStore(item.store);
                     if (itemArea.toLowerCase() !== area.toLowerCase()) return false;
                 }
-                
+                if (skuSearch) {
+                    const skuLower = (item.sku || '').toLowerCase();
+                    const namaLower = (item.nama_barang || item.product_name || '').toLowerCase();
+                    const kodeLower = (item.kode_kecil || '').toLowerCase();
+                    if (!skuLower.includes(skuSearch) && !namaLower.includes(skuSearch) && !kodeLower.includes(skuSearch)) return false;
+                }
+
                 return true;
             });
         }
@@ -12673,6 +12696,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             document.getElementById('salesFilterSeries').value = '';
             const cat = document.getElementById('salesFilterCategory'); if (cat) cat.value = '';
             const srch = document.getElementById('salesFilterSearch'); if (srch) srch.value = '';
+            const skuEl = document.getElementById('salesFilterSKU');
+            if (skuEl) skuEl.value = '';
             renderSalesDashboard();
         }
 
