@@ -1771,7 +1771,7 @@
                             </div>
                         </div>
                         <!-- Summary Cards -->
-                        <div id="wholesaleSummaryCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;"></div>
+                        <div id="wholesaleSummaryCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:8px 20px;"></div>
                         </div><!-- /wholesaleChannelStickyHeader -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
                             <!-- Top Products -->
@@ -10518,9 +10518,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // ── Summary Cards ──
             const summaryEl = document.getElementById(prefix + 'SummaryCards');
             if (summaryEl) {
-                const cardStyle = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;';
-                const labelStyle = 'font-size:0.78rem;color:#64748b;margin-bottom:4px;';
-                const valStyle = 'font-size:1.4rem;font-weight:700;color:#002A3A;';
+                const cardStyle = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;text-align:center;';
+                const labelStyle = 'font-size:0.7rem;color:#64748b;margin-bottom:2px;';
+                const valStyle = 'font-size:0.95rem;font-weight:700;color:#002A3A;';
                 summaryEl.innerHTML = `
                     <div style="${cardStyle}">
                         <div style="${labelStyle}">💰 Total Revenue</div>
