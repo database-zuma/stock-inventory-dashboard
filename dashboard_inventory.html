@@ -23,7 +23,6 @@
             background: #f8fafc;
             min-height: 100vh; color: #1e293b;
             padding-left: 220px;
-            overflow: hidden;
         }
         .header {
             background: #002A3A; padding: 22px 36px; color: white;
@@ -410,9 +409,6 @@
         .view-content-area {
             flex: 1;
             min-width: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
-            height: 100vh;
         }
         .view-btn {
             padding: 10px 14px;
@@ -1542,7 +1538,7 @@
         <!-- ==================== SALES VIEW ==================== -->
         <div class="view-container" id="salesView">
             <!-- Sticky header: filter + metric cards + tab nav -->
-            <div id="salesStickyHeader" style="position:sticky;top:0;z-index:50;background:#f1f5f9;padding-bottom:0;">
+            <div id="salesStickyHeader" style="position:sticky;top:0;z-index:50;background:#f1f5f9;padding-bottom:0;" class="sales-sticky-header">
 
             <!-- Filters -->
             <div id="salesFilterSection" style="background:white;border-radius:12px;padding:12px 15px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
@@ -8159,6 +8155,13 @@
         }
 
         function renderSalesDashboard() {
+            // Set sticky header top offset to match main header height
+            const mainHeader = document.querySelector('.header');
+            const stickyEl = document.getElementById('salesStickyHeader');
+            if (mainHeader && stickyEl) {
+                stickyEl.style.top = mainHeader.offsetHeight + 'px';
+            }
+
             if (!salesDetailData || salesDetailData.length === 0) {
                 document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
                 return;
