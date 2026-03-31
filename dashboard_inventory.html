@@ -1549,6 +1549,15 @@
             <!-- Sticky header: filter + metric cards + tab nav -->
             <div id="salesStickyHeader" class="sales-channel-sticky" style="background:#f1f5f9;padding-bottom:0;">
 
+            <!-- Retail Banner Header (shown only for retail channel) -->
+            <div id="retailBannerHeader" style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:14px 24px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                <span style="font-size:1.3rem;">🏬</span>
+                <div>
+                    <h3 style="margin:0;color:white;font-size:1rem;font-weight:700;">Sales Retail & Event</h3>
+                    <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.75rem;">Data Penjualan Toko Retail & Event</p>
+                </div>
+            </div>
+
             <!-- Filters -->
             <div id="salesFilterSection" style="background:white;border-radius:12px;padding:12px 15px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                 <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
@@ -1636,15 +1645,6 @@
                     <div id="salesSubTabRetail" class="sales-sub-tab-content" style="display:block;">
 
                         <!-- Retail Header Banner (sticky) -->
-                        <div class="sales-channel-sticky" id="retailChannelStickyHeader" style="margin:-20px -20px 0 -20px;padding:0 20px 8px 20px;">
-                        <div style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:12px 12px 0 0;padding:18px 24px;display:flex;align-items:center;gap:12px;margin-bottom:0;">
-                            <span style="font-size:1.5rem;">🏬</span>
-                            <div>
-                                <h3 style="margin:0;color:white;font-size:1.1rem;font-weight:700;">Sales Retail & Event</h3>
-                                <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.8rem;">Data Penjualan Toko Retail & Event</p>
-                            </div>
-                        </div>
-                        </div><!-- /retailChannelStickyHeader -->
                         <!-- Row 1: By Store (full width, rapi) -->
                         <div style="margin-bottom:24px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
@@ -12044,6 +12044,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var salesFilters = document.getElementById('salesFilterSection');
             var salesCards = document.getElementById('salesSummaryCards');
             var salesTabNav = document.getElementById('salesTabNavBar');
+            var retailBanner = document.getElementById('retailBannerHeader');
+
+            // Hide retail banner for non-retail channels, show for retail
+            if (retailBanner) retailBanner.style.display = (channel === 'retail') ? '' : 'none';
 
             if (channel === 'global') {
                 // Global: hide Retail filters, summary cards, tab nav
