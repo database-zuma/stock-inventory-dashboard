@@ -21,8 +21,9 @@
         body {
             font-family: 'Poppins', sans-serif;
             background: #f8fafc;
-            min-height: 100vh; color: #1e293b;
+            height: 100vh; color: #1e293b;
             padding-left: 220px;
+            overflow: hidden;
         }
         .header {
             background: #002A3A; padding: 22px 36px; color: white;
@@ -409,10 +410,12 @@
         .view-content-area {
             flex: 1;
             min-width: 0;
+            overflow-y: auto;
+            height: calc(100vh - var(--header-h, 135px) - 50px);
         }
         .sales-channel-sticky {
             position: sticky;
-            top: var(--header-h, 135px);
+            top: 0;
             z-index: 50;
             background: white;
         }
@@ -1544,7 +1547,7 @@
         <!-- ==================== SALES VIEW ==================== -->
         <div class="view-container" id="salesView">
             <!-- Sticky header: filter + metric cards + tab nav -->
-            <div id="salesStickyHeader" style="position:sticky;top:var(--header-h,135px);z-index:50;background:#f1f5f9;padding-bottom:0;" class="sales-channel-sticky">
+            <div id="salesStickyHeader" class="sales-channel-sticky" style="background:#f1f5f9;padding-bottom:0;">
 
             <!-- Filters -->
             <div id="salesFilterSection" style="background:white;border-radius:12px;padding:12px 15px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
