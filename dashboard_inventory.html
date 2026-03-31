@@ -1538,10 +1538,11 @@
 
         <!-- ==================== SALES VIEW ==================== -->
         <div class="view-container" id="salesView">
-            <!-- Header removed — each sub-tab now has its own banner -->
+            <!-- Sticky header: filter + metric cards + tab nav -->
+            <div id="salesStickyHeader" style="position:sticky;top:0;z-index:50;background:#f1f5f9;padding-bottom:0;">
 
             <!-- Filters -->
-            <div id="salesFilterSection" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);position:sticky;top:0;z-index:50;">
+            <div id="salesFilterSection" style="background:white;border-radius:12px;padding:12px 15px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                 <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
                     <div style="min-width:140px;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Mulai:</label>
@@ -1591,22 +1592,28 @@
             </div>
 
             <!-- Summary Cards -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;" id="salesSummaryCards">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px;" id="salesSummaryCards">
                 <!-- Cards will be rendered by JS -->
             </div>
 
-            <!-- Tab Navigation for Sales Sections -->
-            <div id="salesRetailTabWrapper" style="background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
-                <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+            <!-- Tab Navigation Bar -->
+            <div style="background:white;border-radius:12px 12px 0 0;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:12px 12px 0 0;">
                     <button class="sales-tab-btn active" onclick="switchSalesTab('performance')" data-tab="performance">📊 Performance</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('storeAnalysis')" data-tab="storeAnalysis">📈 Analisa Toko</button>
-                    <!-- Trend tab merged into Performance — hidden -->
                     <button class="sales-tab-btn" onclick="switchSalesTab('product')" data-tab="product">🩴 Produk</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('spg')" data-tab="spg">👥 SPG</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('transaction')" data-tab="transaction">💳 Transaksi</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('refund')" data-tab="refund">🔄 Refund</button>
                     <button class="sales-tab-btn" onclick="switchSalesTab('skusearch')" data-tab="skusearch">🔍 Cari SKU</button>
                 </div>
+            </div>
+
+            </div><!-- end salesStickyHeader -->
+
+            <!-- Tab Content Wrapper -->
+            <div id="salesRetailTabWrapper" style="background:white;border-radius:0 0 12px 12px;box-shadow:0 4px 8px rgba(0,0,0,0.08);">
+                <div style="display:none;"><!-- placeholder --></div>
 
                 <!-- Sales Performance Tab -->
                 <div class="sales-tab-content active" id="salesTabPerformance" style="padding:20px;">
@@ -8237,11 +8244,11 @@
 
             let html = '';
             cards.forEach(card => {
-                html += '<div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid ' + card.color + ';">';
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-                html += '<div><div style="font-size:0.75rem;color:#6b7280;">' + card.label + '</div>';
-                html += '<div style="font-size:1.1rem;font-weight:700;color:#1f2937;white-space:nowrap;">' + card.value + '</div></div>';
-                html += '<div style="font-size:1.5rem;">' + card.icon + '</div>';
+                html += '<div style="background:white;border-radius:8px;padding:8px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid ' + card.color + ';">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">';
+                html += '<div><div style="font-size:0.7rem;color:#6b7280;">' + card.label + '</div>';
+                html += '<div style="font-size:0.95rem;font-weight:700;color:#1f2937;white-space:nowrap;">' + card.value + '</div></div>';
+                html += '<div style="font-size:1.2rem;">' + card.icon + '</div>';
                 html += '</div></div>';
             });
 
