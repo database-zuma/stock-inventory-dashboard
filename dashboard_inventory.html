@@ -8058,6 +8058,10 @@
         }
 
         function initSalesFilters() {
+            // Ensure using retail cache
+            if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+                salesDetailData = salesChannelCache['retail'];
+            }
             if (!salesDetailData || salesDetailData.length === 0) return;
 
             // Get unique values
@@ -8181,6 +8185,11 @@
             const mainHeader = document.querySelector('.header');
             if (mainHeader) {
                 document.documentElement.style.setProperty('--header-h', mainHeader.offsetHeight + 'px');
+            }
+
+            // Ensure salesDetailData uses retail cache (may get overwritten by other channels)
+            if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+                salesDetailData = salesChannelCache['retail'];
             }
 
             if (!salesDetailData || salesDetailData.length === 0) {
@@ -12073,6 +12082,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 Array.from(retailTabWrapper.children).forEach(function(child) {
                     child.style.display = (child.id === 'consignmentView') ? 'none' : '';
                 });
+                // Ensure retail data & repopulate filters
+                if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+                    salesDetailData = salesChannelCache['retail'];
+                }
+                initSalesFilters();
                 setTimeout(function() {
                     switchSalesTab('performance');
                     switchSalesSubTab(channel);
