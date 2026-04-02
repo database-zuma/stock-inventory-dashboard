@@ -2102,7 +2102,10 @@
                 <!-- SPG Tab -->
                 <div class="sales-tab-content" id="salesTabSpg" style="padding:20px;display:none;">
                     <!-- SPG Leaderboard -->
-                    <h4 style="margin:0 0 12px 0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h4 style="margin:0;color:#1f2937;font-size:0.95rem;">🏆 SPG Leaderboard</h4>
+                        <button onclick="exportSPGExcel()" style="padding:8px 16px;background:linear-gradient(135deg,#059669 0%,#10b981 100%);color:white;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">📥 Export Excel</button>
+                    </div>
                     <div id="salesSPGLeaderboard" style="max-height:600px;overflow-y:auto;"></div>
 
                     <!-- Area Metrics: ATV / ATU / ARP — COMPACT CARDS -->
@@ -9287,6 +9290,143 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             document.getElementById('salesSizeDistribution').innerHTML = sizeHtml;
         }
 
+        // SPG Master Data — mapping SPG name to home store & area
+        // Source: Google Sheets SPG Master (updated 2026-03-06)
+        const SPG_MASTER = {};
+        (function() {
+            const data = [
+                // BALI
+                ['Ni Luh Putu Windayani','Zuma Tabanan','Bali'],
+                ['Ni Kadek Vira Nari Antini','Zuma Tabanan','Bali'],
+                ['Ni Made Ida Lestari','Zuma Tabanan','Bali'],
+                ['Ni Made Ayu Damayanti','Zuma BatuBulan','Bali'],
+                ['Intan Maharani','Zuma BatuBulan','Bali'],
+                ['Dewa Ayu Putu Manik Krisnauli','Zuma Kapal','Bali'],
+                ['Ni Kadek Ayu Winda Yulianti','Zuma Kapal','Bali'],
+                ['Ida Bagus Adi Purwa Jaya','Zuma Jembrana','Bali'],
+                ['Ida Ayu Putu Purnami Asih','Zuma Jembrana','Bali'],
+                ['Ni Luh Ayu Tantri','Zuma Level 21','Bali'],
+                ['Ni Kadek Jelita','Zuma Level 21','Bali'],
+                ['Ni Kadek Iin Intan Sari','Zuma Bajra','Bali'],
+                ['Ni Putu Ratna Dewi','Zuma Bajra','Bali'],
+                ['Kadek Dina Novia','Zuma Peguyangan','Bali'],
+                ['Ni Made Yuni Asari Rahayu','Zuma Peguyangan','Bali'],
+                ['Ni Komang Puja Astrini','Zuma Penatih','Bali'],
+                ['Ni Wayan Ika Okta Rini Adnyani P','Zuma Penatih','Bali'],
+                ['Anak Agung Istri Ratu Candrakanti','Zuma Monang Maning','Bali'],
+                ['Ni Made Dea Paramita Sari','Zuma Monang Maning','Bali'],
+                ['Ni Putu Diah Lestari','Zuma Gianyar','Bali'],
+                ['Luh Sri Paramita','Zuma Gianyar','Bali'],
+                ['Ni Made Dwiyanti','Zuma Gianyar','Bali'],
+                ['Ayu Imelda Wijayanti','ZUMA Dalung','Bali'],
+                ['Ni Komang Ayu Tri Widiantari','ZUMA Dalung','Bali'],
+                ['Ni Luh Novita Florri','ZUMA Dalung','Bali'],
+                ['Ni Kadek Sintya Okta Viani','Zuma Klungkung','Bali'],
+                ['Ni Komang Ayu Oktaviani','Zuma Klungkung','Bali'],
+                ['Ni Nyoman Asaka Putri','Zuma Klungkung','Bali'],
+                ['Ni Made Sintya Prana Dewi','Zuma Living World','Bali'],
+                ['Ni Made Lia Wulandari','Zuma Living World','Bali'],
+                ['Ni Putu Alia Putri Pradnyani','Zuma Living World','Bali'],
+                ['Viona Septiani','Zuma Living World','Bali'],
+                ['Ni Putu Niadinayani','Zuma KarangAsem','Bali'],
+                ['Ni Kadek Pebriani','Zuma KarangAsem','Bali'],
+                ['Bernadeta Yuliana Intan Putri Andayani','Zuma Mall Bali Icon','Bali'],
+                ['Ni Luh Putu Eka Yuliantini','Zuma Bangli','Bali'],
+                ['Ni Luh Desiani','Zuma Bangli','Bali'],
+                ['Ni Komang Ratih Widi Wahyuni','Zuma Pemogan','Bali'],
+                ['Yulisa Yan Azalia','Zuma Pemogan','Bali'],
+                ['Erik Dwi Pangestu','Zuma Lippo Bali','Bali'],
+                ['Elby Margareta','Zuma Lippo Bali','Bali'],
+                ['Ni Made Dean Junianthini Putri','ZUMA Peliatan','Bali'],
+                ['Ni Made Dwi Kasari','ZUMA Peliatan','Bali'],
+                ['Ni Putu Henny Mahayoni','ZUMA Panjer','Bali'],
+                ['Dwi Yuliani Irianti','ZUMA Panjer','Bali'],
+                ['Putu Martayani','ZUMA Singaraja','Bali'],
+                ['Made Dinda Amelia Sari','ZUMA Singaraja','Bali'],
+                ['Kadek Yuni Novianty','ZUMA Mall Bali Galeria','Bali'],
+                ['Denada Fitri Kartika','ZUMA Mall Bali Galeria','Bali'],
+                ['Maria Enita Eren','ZUMA Kesiman','Bali'],
+                ['Ni Kadek Ayu Sanjiwani','ZUMA Kesiman','Bali'],
+                ['Ni Kadek Dwi Ana Defi','Zuma Uluwatu','Bali'],
+                ['Yuvantika Happy Maylia','Zuma Uluwatu','Bali'],
+                ['Komang Astri','Zuma Seririt','Bali'],
+                ['Ni Putu Purnama Yanti','Zuma Seririt','Bali'],
+                ['Maxsdalena Aura Budianta','ZUMA Kedonganan','Bali'],
+                ['Ni Kadek Nopriyanti','ZUMA Kedonganan','Bali'],
+                ['Ni Komang Aprilia','Zuma Monkey Forest Ubud','Bali'],
+                ['Ni Nyoman Sintiya Maharani','Zuma Monkey Forest Ubud','Bali'],
+                ['Ni Luh Made Setiawati','Zuma Lebah Peliatan','Bali'],
+                ['Ni Luh Vira Agustini','Zuma Lebah Peliatan','Bali'],
+                ['Kadek Susi Susanti','SOGO DSM','Bali'],
+                ['Genoveva Woga','SOGO NUSA DUA','Bali'],
+                ['Sunarmi','BINTANG SEMINYAK','Bali'],
+                // JAWA TIMUR
+                ['Fahriyatul Auliyah','Zuma Tunjungan Plaza 3','Jawa Timur'],
+                ['Diah Dwipriliawati','Zuma Tunjungan Plaza 3','Jawa Timur'],
+                ['Naura Yumna Devani','Zuma Tunjungan Plaza 3','Jawa Timur'],
+                ['Nana Nurdiana','ZUMA GALAXY MALL','Jawa Timur'],
+                ['Pricillia Alexandri','ZUMA GALAXY MALL','Jawa Timur'],
+                ['Ratna Yunita','Zuma PTC','Jawa Timur'],
+                ['Luvita Chatharina Sihombing','Zuma PTC','Jawa Timur'],
+                ['Neng Massila','Zuma Icon Mall Gresik','Jawa Timur'],
+                ['Siti Nuryunidha Marsha','Zuma Icon Mall Gresik','Jawa Timur'],
+                ['Vinda Kurnia Rahmawati','Zuma Sunrise Mall Mojokerto','Jawa Timur'],
+                ['Gaby Aprillia Grazeila','Zuma Sunrise Mall Mojokerto','Jawa Timur'],
+                ['Herlinata Sholikhati','Zuma MATOS','Jawa Timur'],
+                ['Vela Rodhiana','Zuma MATOS','Jawa Timur'],
+                ['Yayuk Kritianingsih','Zuma Mall Olympic Garden','Jawa Timur'],
+                ['Dilla Rahma Safira','Zuma Mall Olympic Garden','Jawa Timur'],
+                ['Tarina Rahman','Zuma Lippo Batu','Jawa Timur'],
+                ["Muhammad Dhiya'ul Hak Al Badar",'Zuma Lippo Batu','Jawa Timur'],
+                ['Bella Aprilia','Zuma Lippo Sidoarjo','Jawa Timur'],
+                ['Laily Wahyu Annisa','Zuma Lippo Sidoarjo','Jawa Timur'],
+                ['Reghyta Orlin','Zuma Lippo Sidoarjo','Jawa Timur'],
+                ['Sarah Amelia','Zuma Royal Plaza','Jawa Timur'],
+                ['Putri Aida Permatasari','Zuma Royal Plaza','Jawa Timur'],
+                ['Raditya Fian Fathur Rahman','Zuma City Of Tomorrow Mall','Jawa Timur'],
+                ['Fariansyah Satrio Pangestu','Zuma City Of Tomorrow Mall','Jawa Timur'],
+                // LOMBOK
+                ['Baiq Alya Puteri','ZUMA Epicentrum','Lombok'],
+                ['Utari Rizki','ZUMA Epicentrum','Lombok'],
+                ['Rifki Aldika Aprilyas','Zuma Mataram Lombok','Lombok'],
+                ['Aziratul Qudusiah','Zuma Mataram Lombok','Lombok'],
+                ['Ni Kadek Rika Dwi Payanti','Zuma Mataram Lombok','Lombok'],
+                // JAKARTA
+                ['Tatianisastri Purba','Zuma Pluit Village Mall','Jakarta'],
+                ['Gerry Syefvin Meyfio','Zuma Pluit Village Mall','Jakarta'],
+                ['Endin','AEON BSD','Jakarta'],
+                ['Dini','AEON SENTUL','Jakarta'],
+                ['Noni Ayu Murdiyanti','AEON CAKUNG','Jakarta'],
+                ['Effendi Cen','Zuma Lippo Mall Puri','Jakarta'],
+                ['Elsa Salsabilah Sakinah','Zuma Lippo Mall Puri','Jakarta'],
+                ['Asakha Nandhitta Sami','Zuma Bintaro Xchange','Jakarta'],
+                ['Via Amanda','Zuma Bintaro Xchange','Jakarta'],
+                ['Nur Isnaini','CENTRAL GRAND INDONESIA','Jakarta'],
+                ['Valerian Christoper Libby','ZUMA MALL OF INDONESIA (MOI)','Jakarta'],
+                // SUMATERA
+                ['Chofifah Indah Sri Rahayu','Zuma SKA MALL','Sumatera'],
+                ['Putri Miftahul Jannah','Zuma SKA MALL','Sumatera'],
+                ['Gita Kurnia Salsabilla','Zuma SKA MALL','Sumatera'],
+                // BATAM
+                ['Rahmadani','Zuma Nagoya Hill Batam','Batam'],
+                ['Ivena Sacqueline','Zuma Nagoya Hill Batam','Batam'],
+                ['Vetty Lasdiana Nasution','Zuma K Square Mall Batam','Batam'],
+                ['Auliazahra Shellamtiha','Zuma K Square Mall Batam','Batam'],
+                // SULAWESI
+                ['Kleymen Megawati Tutu','Zuma Mega Mall Manado','Sulawesi'],
+                ['Frains Waluyo','Zuma Mega Mall Manado','Sulawesi'],
+            ];
+            data.forEach(function(r) {
+                var key = r[0].replace(/\s+/g, ' ').trim().toLowerCase();
+                SPG_MASTER[key] = { store: r[1], area: r[2] };
+            });
+        })();
+
+        function getSPGHomeStore(spgName) {
+            var key = (spgName || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            return SPG_MASTER[key] || null;
+        }
+
         function renderSalesSPG() {
             const data = filteredSalesData;
 
@@ -9314,10 +9454,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             const spgArr = Object.entries(bySPG).map(([spg, val]) => {
-                // Home store = store with most transactions
-                const homeStore = Object.entries(val.storeCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+                // Use master mapping for home store, fallback to most-transacted store
+                const master = getSPGHomeStore(spg);
+                const homeStore = master ? master.store : (Object.entries(val.storeCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '-');
+                const homeArea = master ? master.area : getAreaFromStore(homeStore);
                 return {
-                    spg, sales: val.sales, qty: val.qty, trx: val.trx.size, stores: homeStore,
+                    spg, sales: val.sales, qty: val.qty, trx: val.trx.size,
+                    stores: homeStore, area: homeArea,
                     atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
                     atu: val.trx.size > 0 ? val.qty / val.trx.size : 0,
                     arp: val.qty > 0 ? val.sales / val.qty : 0,
@@ -9348,6 +9491,100 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             html += '</tbody></table>';
             document.getElementById('salesSPGLeaderboard').innerHTML = html;
+        }
+
+        function exportSPGExcel() {
+            const data = filteredSalesData;
+
+            // Get filtered date range for working days calculation
+            const startDate = document.getElementById('salesFilterStartDate')?.value || '';
+            const endDate = document.getElementById('salesFilterEndDate')?.value || '';
+
+            // Count working days (Mon-Sat) in the period
+            let workingDays = 26; // default
+            if (startDate && endDate) {
+                workingDays = 0;
+                let d = new Date(startDate);
+                const end = new Date(endDate);
+                while (d <= end) {
+                    const dow = d.getDay();
+                    if (dow >= 1 && dow <= 6) workingDays++; // Mon-Sat
+                    d.setDate(d.getDate() + 1);
+                }
+            }
+
+            // Build SPG sales by person
+            const bySPG = {};
+            data.forEach(item => {
+                const spg = item.spg || item.kasir || 'Unknown';
+                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set() };
+                bySPG[spg].sales += item.total || 0;
+                bySPG[spg].qty += item.qty || 0;
+                bySPG[spg].trx.add(item.order_no);
+            });
+
+            // Count SPG per store (from master data)
+            const spgPerStore = {};
+            Object.keys(SPG_MASTER).forEach(key => {
+                const m = SPG_MASTER[key];
+                spgPerStore[m.store] = (spgPerStore[m.store] || 0) + 1;
+            });
+
+            // Get target per store from targetData
+            function getStoreTarget(storeName) {
+                if (!targetData) return 0;
+                // Try exact match first, then fuzzy
+                for (const [key, t] of Object.entries(targetData)) {
+                    if (key.toLowerCase() === storeName.toLowerCase()) {
+                        const months = getTargetMonthKeys();
+                        return months.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
+                    }
+                }
+                // Fuzzy: check if store name contains key or vice versa
+                const sLower = storeName.toLowerCase();
+                for (const [key, t] of Object.entries(targetData)) {
+                    if (sLower.includes(key.toLowerCase()) || key.toLowerCase().includes(sLower)) {
+                        const months = getTargetMonthKeys();
+                        return months.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
+                    }
+                }
+                return 0;
+            }
+
+            // Build rows
+            const rows = Object.entries(bySPG).map(([spg, val]) => {
+                const master = getSPGHomeStore(spg);
+                const store = master ? master.store : '-';
+                const area = master ? master.area : '-';
+                const capaianSales = val.sales;
+                const targetToko = getStoreTarget(store);
+                const jmlSpg = spgPerStore[store] || 1;
+                const jmlHariKerja = workingDays;
+                const targetDaily = jmlSpg > 0 && jmlHariKerja > 0 ? targetToko / jmlHariKerja / jmlSpg : 0;
+                const targetSpg = jmlSpg > 0 ? targetToko / jmlSpg : 0;
+                const achiev = targetSpg > 0 ? (capaianSales / targetSpg * 100) : 0;
+
+                return {
+                    'Nama SPG': spg,
+                    'Toko': store,
+                    'Area': area,
+                    'Capaian Sales': Math.round(capaianSales),
+                    'Target Toko': Math.round(targetToko),
+                    'Jumlah SPG': jmlSpg,
+                    'Jumlah Hari Kerja': jmlHariKerja,
+                    'Target Daily': Math.round(targetDaily),
+                    'Target SPG': Math.round(targetSpg),
+                    'Achievement (%)': Math.round(achiev * 100) / 100
+                };
+            }).sort((a, b) => b['Capaian Sales'] - a['Capaian Sales']);
+
+            // Export using XLSX
+            if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'SPG Leaderboard');
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, 'SPG_Leaderboard_' + dateStr + '.xlsx');
         }
 
         var spgAreaATVChartInstance = null;
