@@ -9944,9 +9944,24 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         // If the month is not yet loaded, triggers lazy-load then re-renders
         function getChartData(selectedMonth, selectedWeek) {
             let data = salesDetailData || [];
+
+            // Apply main filter bar's area & store filters
+            const chartArea = document.getElementById('salesFilterArea')?.value || '';
+            const chartStore = document.getElementById('salesFilterStore')?.value || '';
+            if (chartArea || chartStore) {
+                data = data.filter(item => {
+                    if (chartStore && item.store !== chartStore) return false;
+                    if (chartArea) {
+                        const itemArea = getAreaFromStore(item.store);
+                        if (itemArea.toLowerCase() !== chartArea.toLowerCase()) return false;
+                    }
+                    return true;
+                });
+            }
+
             if (selectedMonth) {
-                // Use per-month cache if available
-                if (salesDetailByMonth[selectedMonth]) {
+                // Use per-month cache if available (but must re-filter for area/store)
+                if (salesDetailByMonth[selectedMonth] && !chartArea && !chartStore) {
                     data = salesDetailByMonth[selectedMonth];
                 } else {
                     data = data.filter(item => {
