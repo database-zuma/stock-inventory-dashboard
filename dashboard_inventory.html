@@ -9511,11 +9511,49 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     'Jumlah Hari Kerja': jmlHariKerja,
                     'Target Daily': Math.round(targetDaily),
                     'Target SPG': Math.round(targetSpg),
-                    'Achievement (%)': Math.round(achiev * 100) / 100
+                    'Achievement (%)': Math.round(achiev) + '%'
                 };
             }).sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || b['Capaian Sales'] - a['Capaian Sales']);
 
-            // Export — one sheet per month + combined
+            // Build "SPG Double Store" sheet — SPG yang jualan di lebih dari 1 toko
+            const spgStoreDetail = {};
+            data.forEach(item => {
+                const spg = item.spg || item.kasir || '';
+                if (!spg) return;
+                const store = item.store || '';
+                const monthKey = (item.date || '').substring(0, 7);
+                if (!monthKey || !store) return;
+                const key = spg + '|' + store + '|' + monthKey;
+                if (!spgStoreDetail[key]) spgStoreDetail[key] = { spg, store, month: monthKey, sales: 0, qty: 0, trx: new Set() };
+                spgStoreDetail[key].sales += item.total || 0;
+                spgStoreDetail[key].qty += item.qty || 0;
+                spgStoreDetail[key].trx.add(item.order_no);
+            });
+            // Find SPG with >1 unique store
+            const spgStores = {};
+            Object.values(spgStoreDetail).forEach(v => {
+                if (!spgStores[v.spg]) spgStores[v.spg] = new Set();
+                spgStores[v.spg].add(v.store);
+            });
+            const doubleRows = Object.values(spgStoreDetail)
+                .filter(v => spgStores[v.spg] && spgStores[v.spg].size > 1)
+                .map(v => {
+                    const master = getSPGHomeStore(v.spg);
+                    const monthNum = parseInt(v.month.split('-')[1]);
+                    return {
+                        'Bulan': ID_BULAN[monthNum - 1] + ' ' + v.month.split('-')[0],
+                        'Nama SPG': v.spg,
+                        'Toko Asal': master ? master.store : '-',
+                        'Toko Jualan': v.store,
+                        'Perbantuan': (master && v.store.toLowerCase() !== master.store.toLowerCase()) ? 'Ya' : '-',
+                        'Sales': Math.round(v.sales),
+                        'Qty': v.qty,
+                        'Trx': v.trx.size
+                    };
+                })
+                .sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || a['Nama SPG'].localeCompare(b['Nama SPG']) || b['Sales'] - a['Sales']);
+
+            // Export — one sheet per month + combined + double store
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
             const wb = XLSX.utils.book_new();
             const months = [...new Set(rows.map(r => r['Bulan']))].sort();
@@ -9526,6 +9564,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
             const wsAll = XLSX.utils.json_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, wsAll, 'Semua Bulan');
+            if (doubleRows.length > 0) {
+                const wsDouble = XLSX.utils.json_to_sheet(doubleRows);
+                XLSX.utils.book_append_sheet(wb, wsDouble, 'SPG Double Store');
+            }
             XLSX.writeFile(wb, 'SPG_Leaderboard_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
