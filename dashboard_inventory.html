@@ -9495,77 +9495,76 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         function exportSPGExcel() {
             const data = filteredSalesData;
+            if (!data || data.length === 0) { alert('Tidak ada data sales'); return; }
 
-            // Get filtered date range for working days calculation
-            const startDate = document.getElementById('salesFilterStartDate')?.value || '';
-            const endDate = document.getElementById('salesFilterEndDate')?.value || '';
+            const ID_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            const MONTH_KEYS = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
 
-            // Count working days (Mon-Sat) in the period
-            let workingDays = 26; // default
-            if (startDate && endDate) {
-                workingDays = 0;
-                let d = new Date(startDate);
-                const end = new Date(endDate);
-                while (d <= end) {
-                    const dow = d.getDay();
-                    if (dow >= 1 && dow <= 6) workingDays++; // Mon-Sat
-                    d.setDate(d.getDate() + 1);
-                }
-            }
-
-            // Build SPG sales by person
-            const bySPG = {};
+            // Group sales by SPG + month (YYYY-MM)
+            const bySPGMonth = {};
             data.forEach(item => {
-                const spg = item.spg || item.kasir || 'Unknown';
-                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set() };
-                bySPG[spg].sales += item.total || 0;
-                bySPG[spg].qty += item.qty || 0;
-                bySPG[spg].trx.add(item.order_no);
+                const spg = item.spg || item.kasir || '';
+                if (!spg) return;
+                const monthKey = (item.date || '').substring(0, 7);
+                if (!monthKey) return;
+                const key = spg + '|' + monthKey;
+                if (!bySPGMonth[key]) bySPGMonth[key] = { spg, month: monthKey, sales: 0, qty: 0, trx: new Set() };
+                bySPGMonth[key].sales += item.total || 0;
+                bySPGMonth[key].qty += item.qty || 0;
+                bySPGMonth[key].trx.add(item.order_no);
             });
 
-            // Count SPG per store (from master data)
+            // Count SPG per store (from master)
             const spgPerStore = {};
             Object.keys(SPG_MASTER).forEach(key => {
                 const m = SPG_MASTER[key];
                 spgPerStore[m.store] = (spgPerStore[m.store] || 0) + 1;
             });
 
-            // Get target per store from targetData
-            function getStoreTarget(storeName) {
+            // Get monthly target for a store
+            function getStoreMonthTarget(storeName, monthKey) {
                 if (!targetData) return 0;
-                // Try exact match first, then fuzzy
-                for (const [key, t] of Object.entries(targetData)) {
-                    if (key.toLowerCase() === storeName.toLowerCase()) {
-                        const months = getTargetMonthKeys();
-                        return months.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
-                    }
-                }
-                // Fuzzy: check if store name contains key or vice versa
+                const monthNum = parseInt(monthKey.split('-')[1]);
+                const mName = MONTH_KEYS[monthNum - 1] || '';
                 const sLower = storeName.toLowerCase();
                 for (const [key, t] of Object.entries(targetData)) {
-                    if (sLower.includes(key.toLowerCase()) || key.toLowerCase().includes(sLower)) {
-                        const months = getTargetMonthKeys();
-                        return months.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
+                    if (key.toLowerCase() === sLower || sLower.includes(key.toLowerCase()) || key.toLowerCase().includes(sLower)) {
+                        return Number(t[mName]) || 0;
                     }
                 }
                 return 0;
             }
 
-            // Build rows
-            const rows = Object.entries(bySPG).map(([spg, val]) => {
-                const master = getSPGHomeStore(spg);
+            // Count working days (Mon-Sat) in a month
+            function getWorkingDays(monthKey) {
+                const [yr, mo] = monthKey.split('-').map(Number);
+                const lastDay = new Date(yr, mo, 0).getDate();
+                let count = 0;
+                for (let d = 1; d <= lastDay; d++) {
+                    const dow = new Date(yr, mo - 1, d).getDay();
+                    if (dow >= 1 && dow <= 6) count++;
+                }
+                return count;
+            }
+
+            // Build rows — per SPG per month
+            const rows = Object.values(bySPGMonth).map(v => {
+                const master = getSPGHomeStore(v.spg);
                 const store = master ? master.store : '-';
                 const area = master ? master.area : '-';
-                const capaianSales = val.sales;
-                const targetToko = getStoreTarget(store);
+                const monthNum = parseInt(v.month.split('-')[1]);
+                const bulanLabel = ID_BULAN[monthNum - 1] + ' ' + v.month.split('-')[0];
+                const capaianSales = v.sales;
+                const targetToko = getStoreMonthTarget(store, v.month);
                 const jmlSpg = spgPerStore[store] || 1;
-                const jmlHariKerja = workingDays;
+                const jmlHariKerja = getWorkingDays(v.month);
                 const targetDaily = jmlSpg > 0 && jmlHariKerja > 0 ? targetToko / jmlHariKerja / jmlSpg : 0;
                 const targetSpg = jmlSpg > 0 ? targetToko / jmlSpg : 0;
                 const achiev = targetSpg > 0 ? (capaianSales / targetSpg * 100) : 0;
 
                 return {
-                    'Nama SPG': spg,
+                    'Bulan': bulanLabel,
+                    'Nama SPG': v.spg,
                     'Toko': store,
                     'Area': area,
                     'Capaian Sales': Math.round(capaianSales),
@@ -9576,15 +9575,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     'Target SPG': Math.round(targetSpg),
                     'Achievement (%)': Math.round(achiev * 100) / 100
                 };
-            }).sort((a, b) => b['Capaian Sales'] - a['Capaian Sales']);
+            }).sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || b['Capaian Sales'] - a['Capaian Sales']);
 
-            // Export using XLSX
+            // Export — one sheet per month + combined
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
-            const ws = XLSX.utils.json_to_sheet(rows);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'SPG Leaderboard');
-            const dateStr = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, 'SPG_Leaderboard_' + dateStr + '.xlsx');
+            const months = [...new Set(rows.map(r => r['Bulan']))].sort();
+            months.forEach(bulan => {
+                const monthRows = rows.filter(r => r['Bulan'] === bulan);
+                const ws = XLSX.utils.json_to_sheet(monthRows);
+                XLSX.utils.book_append_sheet(wb, ws, bulan.substring(0, 31));
+            });
+            const wsAll = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, wsAll, 'Semua Bulan');
+            XLSX.writeFile(wb, 'SPG_Leaderboard_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         var spgAreaATVChartInstance = null;
