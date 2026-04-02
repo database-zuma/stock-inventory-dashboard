@@ -2954,7 +2954,10 @@
                 _salesDetailLoaded = true;
                 console.log('[LAZY] Sales detail loaded:', salesDetailData.length, 'rows,', salesAvailableMonths.length, 'months');
                 // Re-render sales if currently on sales view
-                if (currentView === 'sales') { try { renderSalesDashboard(); } catch(e) {} }
+                if (currentView === 'sales') {
+                    try { initSalesFilters(); } catch(e) {}
+                    try { renderSalesDashboard(); } catch(e) {}
+                }
                 // Channel pre-fetch already started in Phase 1 (_channelPreFetchPromise)
             } catch(e) {
                 console.error('[LAZY] Sales detail load failed:', e);
@@ -8058,11 +8061,10 @@
         }
 
         function initSalesFilters() {
-            // Ensure using retail cache
-            if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
-                salesDetailData = salesChannelCache['retail'];
-            }
-            if (!salesDetailData || salesDetailData.length === 0) return;
+            // Use retail cache if salesDetailData is empty
+            const srcData = (salesDetailData && salesDetailData.length > 0) ? salesDetailData :
+                (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) ? salesChannelCache['retail'] : null;
+            if (!srcData || srcData.length === 0) return;
 
             // Get unique values
             const stores = new Set();
@@ -8071,7 +8073,7 @@
             const series = new Set();
             const dates = new Set();
 
-            salesDetailData.forEach(item => {
+            srcData.forEach(item => {
                 // Skip non-sandal items
                 if (!isSandalSKU(item.sku)) return;
 
@@ -8187,13 +8189,17 @@
                 document.documentElement.style.setProperty('--header-h', mainHeader.offsetHeight + 'px');
             }
 
-            // Ensure salesDetailData uses retail cache (may get overwritten by other channels)
-            if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+            // Restore retail data if overwritten by other channel
+            if ((!salesDetailData || salesDetailData.length === 0) && salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
                 salesDetailData = salesChannelCache['retail'];
             }
 
             if (!salesDetailData || salesDetailData.length === 0) {
-                document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales. Pastikan file sales_2026.csv tersedia.</div>';
+                if (_salesDetailLoading) {
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">⏳ Memuat data sales...</div>';
+                } else {
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales.</div>';
+                }
                 return;
             }
 
@@ -10390,14 +10396,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (subTab === 'retail') {
                 // Retail: show existing charts (legacy behavior)
                 document.getElementById('salesSubTabRetail').style.display = 'block';
-                if (!salesChannelCache['retail'] || salesChannelCache['retail'].length === 0) {
-                    try {
-                        salesChannelCache['retail'] = await fetchAPI('/api/sales/detail?channel=retail&months=2');
-                    } catch(e) {
-                        salesChannelCache['retail'] = [];
-                    }
+                // Use lazy-loaded data from salesChannelCache, trigger lazy load if not done
+                if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+                    salesDetailData = salesChannelCache['retail'];
+                } else if (!_salesDetailLoaded && !_salesDetailLoading) {
+                    loadSalesDetailLazy();
+                    return; // will re-render when lazy load completes
                 }
-                salesDetailData = salesChannelCache['retail'];
                 filteredSalesData = getFilteredSalesData();
                 renderSalesSummaryCards();
                 renderSalesPerformance();
@@ -12082,9 +12087,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 Array.from(retailTabWrapper.children).forEach(function(child) {
                     child.style.display = (child.id === 'consignmentView') ? 'none' : '';
                 });
-                // Ensure retail data & repopulate filters
+                // Restore retail data if needed & repopulate filters
                 if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
                     salesDetailData = salesChannelCache['retail'];
+                } else if (!_salesDetailLoaded) {
+                    loadSalesDetailLazy(); // trigger lazy load if not done
                 }
                 initSalesFilters();
                 setTimeout(function() {
