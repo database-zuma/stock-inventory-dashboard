@@ -8218,17 +8218,19 @@
             }
 
             // Restore retail data if overwritten by other channel
-            if ((!salesDetailData || salesDetailData.length === 0) && salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
-                salesDetailData = salesChannelCache['retail'];
-            }
-
             if (!salesDetailData || salesDetailData.length === 0) {
-                if (_salesDetailLoading) {
+                if (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) {
+                    salesDetailData = salesChannelCache['retail'];
+                } else if (_salesDetailLoading) {
                     document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">⏳ Memuat data sales...</div>';
+                    return;
                 } else {
-                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">Tidak ada data sales.</div>';
+                    // Force re-load if data was lost
+                    _salesDetailLoaded = false;
+                    loadSalesDetailLazy();
+                    document.getElementById('salesSummaryCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280;">⏳ Memuat data sales...</div>';
+                    return;
                 }
-                return;
             }
 
             filteredSalesData = getFilteredSalesData();
