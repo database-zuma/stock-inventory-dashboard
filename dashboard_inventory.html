@@ -9291,15 +9291,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const data = filteredSalesData;
 
             // SPG Leaderboard with detailed metrics
+            // Track per-SPG per-store transaction count to determine home store
             const bySPG = {};
             data.forEach(item => {
                 const spg = item.spg || item.kasir || 'Unknown';
                 const store = item.store || '';
-                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set(), stores: new Set(), refund_qty: 0 };
+                if (!bySPG[spg]) bySPG[spg] = { sales: 0, qty: 0, trx: new Set(), storeCount: {}, refund_qty: 0 };
                 bySPG[spg].sales += item.total || 0;
                 bySPG[spg].qty += item.qty || 0;
                 bySPG[spg].trx.add(item.order_no);
-                bySPG[spg].stores.add(store);
+                bySPG[spg].storeCount[store] = (bySPG[spg].storeCount[store] || 0) + 1;
             });
 
             // Merge refund data into SPG
@@ -9312,13 +9313,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             }
 
-            const spgArr = Object.entries(bySPG).map(([spg, val]) => ({
-                spg, sales: val.sales, qty: val.qty, trx: val.trx.size, stores: Array.from(val.stores).join(', '),
-                atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
-                atu: val.trx.size > 0 ? val.qty / val.trx.size : 0,
-                arp: val.qty > 0 ? val.sales / val.qty : 0,
-                refund_qty: val.refund_qty || 0
-            })).sort((a, b) => b.sales - a.sales);
+            const spgArr = Object.entries(bySPG).map(([spg, val]) => {
+                // Home store = store with most transactions
+                const homeStore = Object.entries(val.storeCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+                return {
+                    spg, sales: val.sales, qty: val.qty, trx: val.trx.size, stores: homeStore,
+                    atv: val.trx.size > 0 ? val.sales / val.trx.size : 0,
+                    atu: val.trx.size > 0 ? val.qty / val.trx.size : 0,
+                    arp: val.qty > 0 ? val.sales / val.qty : 0,
+                    refund_qty: val.refund_qty || 0
+                };
+            }).sort((a, b) => b.sales - a.sales);
 
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e2e8f0;">';
