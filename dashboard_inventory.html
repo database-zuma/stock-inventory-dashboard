@@ -9562,12 +9562,22 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!targetData) return 0;
                 const monthNum = parseInt(monthKey.split('-')[1]);
                 const mName = MONTH_KEYS[monthNum - 1] || '';
-                const sLower = storeName.toLowerCase();
+                const sLower = storeName.toLowerCase().trim();
+                // 1. Exact match
                 for (const [key, t] of Object.entries(targetData)) {
-                    if (key.toLowerCase() === sLower || sLower.includes(key.toLowerCase()) || key.toLowerCase().includes(sLower)) {
-                        return Number(t[mName]) || 0;
+                    if (key.toLowerCase() === sLower) return Number(t[mName]) || 0;
+                }
+                // 2. Fuzzy: only if key is long enough (>10 chars) to avoid false matches like 'bali' → 'zuma lippo bali'
+                let bestKey = null, bestLen = 0;
+                for (const [key, t] of Object.entries(targetData)) {
+                    const kl = key.toLowerCase();
+                    if (kl.length < 10) continue; // skip short keys
+                    if (sLower.includes(kl) || kl.includes(sLower)) {
+                        // Prefer longest matching key (more specific)
+                        if (kl.length > bestLen) { bestKey = key; bestLen = kl.length; }
                     }
                 }
+                if (bestKey) return Number(targetData[bestKey][mName]) || 0;
                 return 0;
             }
 
