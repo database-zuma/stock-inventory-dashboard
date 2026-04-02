@@ -2248,7 +2248,7 @@
                     </div><!-- /consigChannelStickyHeader -->
                     <div style="padding:20px;">
                         <!-- Grand Total Cards -->
-                        <div id="consigGrandCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;"></div>
+                        <div id="consigGrandCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;"></div>
 
                         <!-- Sales per Area + Bar Chart -->
                         <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px;margin-bottom:24px;">
@@ -12351,18 +12351,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const ID_MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
             const gt = data.grand_total || {};
 
-            // Grand Total Cards (no Trx)
+            // Grand Total Cards (compact + gradient like Online)
             var cardsHtml = '';
             var cards = [
-                { label: 'Total Sales', value: fmtM(gt.total_sales), color: '#002A3A' },
-                { label: 'Total Qty', value: fmtK(gt.total_qty), color: '#2563eb' },
-                { label: 'Total Toko', value: fmtK(gt.total_stores || (data.stores||[]).length), color: '#059669' },
-                { label: 'Partners', value: (data.partners||[]).length, color: '#d97706' },
+                { label: '💰 Total Sales', value: fmtM(gt.total_sales), bg: 'linear-gradient(135deg,#002A3A,#0e4a5e)' },
+                { label: '👟 Total Qty', value: fmtK(gt.total_qty), bg: 'linear-gradient(135deg,#047857,#10b981)' },
+                { label: '🏪 Total Toko', value: fmtK(gt.total_stores || (data.stores||[]).length), bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)' },
+                { label: '🤝 Partners', value: (data.partners||[]).length, bg: 'linear-gradient(135deg,#b45309,#f59e0b)' },
             ];
             cards.forEach(function(c) {
-                cardsHtml += '<div style="background:#faf5ff;border-radius:10px;padding:14px 18px;border-left:4px solid ' + c.color + ';">';
-                cardsHtml += '<div style="font-size:0.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;">' + c.label + '</div>';
-                cardsHtml += '<div style="font-size:1.4rem;font-weight:700;color:#1f2937;margin-top:4px;">' + c.value + '</div>';
+                cardsHtml += '<div style="background:' + c.bg + ';border-radius:8px;padding:8px 12px;text-align:center;">';
+                cardsHtml += '<div style="font-size:0.7rem;color:rgba(255,255,255,0.85);margin-bottom:2px;">' + c.label + '</div>';
+                cardsHtml += '<div style="font-size:0.95rem;font-weight:700;color:white;">' + c.value + '</div>';
                 cardsHtml += '</div>';
             });
             document.getElementById('consigGrandCards').innerHTML = cardsHtml;
