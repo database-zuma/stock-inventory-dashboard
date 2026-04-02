@@ -9422,9 +9422,45 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
         })();
 
+        // Aliases for iSeller names that differ from master
+        const SPG_ALIASES = {
+            'yuni novianty': 'kadek yuni novianty',
+            'yunidha marsha': 'siti nuryunidha marsha',
+            'kleymen tutu': 'kleymen megawati tutu',
+            'herlinata sholihati nur wulandari': 'herlinata sholikhati',
+            "m. dhiya'ul hak al badar": "muhammad dhiya'ul hak al badar",
+            'ni komang astri': 'komang astri',
+            'alia putri pradnyani': 'ni putu alia putri pradnyani',
+            'pricilia alexandri': 'pricillia alexandri',
+            'ni wayan ika': 'ni wayan ika okta rini adnyani p',
+            'putri miftahuljannah': 'putri miftahul jannah',
+            'auliazahra shellamitha': 'auliazahra shellamtiha',
+            'elsa salsabila sakinah': 'elsa salsabilah sakinah',
+            'vetty lasdiana nst': 'vetty lasdiana nasution',
+            'rahmadani rahmadani': 'rahmadani',
+            'raditya fian': 'raditya fian fathur rahman',
+            'bella aprilia': 'bella aprilia',
+            'tarina  rahman': 'tarina rahman',
+            'dilla rahma safira': 'dilla rahma safira',
+        };
+
+        let _spgMatchCache = {};
         function getSPGHomeStore(spgName) {
             var key = (spgName || '').replace(/\s+/g, ' ').trim().toLowerCase();
-            return SPG_MASTER[key] || null;
+            if (!key) return null;
+            // Cache hit
+            if (_spgMatchCache[key] !== undefined) return _spgMatchCache[key];
+            // 1. Exact match
+            if (SPG_MASTER[key]) { _spgMatchCache[key] = SPG_MASTER[key]; return SPG_MASTER[key]; }
+            // 2. Alias match
+            if (SPG_ALIASES[key] && SPG_MASTER[SPG_ALIASES[key]]) { _spgMatchCache[key] = SPG_MASTER[SPG_ALIASES[key]]; return _spgMatchCache[key]; }
+            // 3. Fuzzy: iSeller name contains master name or vice versa
+            for (var mk in SPG_MASTER) {
+                if (key.includes(mk) || mk.includes(key)) { _spgMatchCache[key] = SPG_MASTER[mk]; return SPG_MASTER[mk]; }
+            }
+            // 4. Not found
+            _spgMatchCache[key] = null;
+            return null;
         }
 
         function renderSalesSPG() {
