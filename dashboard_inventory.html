@@ -2495,6 +2495,14 @@
                 </div>
             </div>
 
+            <!-- SPG LEADERBOARD -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">👥 SPG Leaderboard</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="loadSPGMaster().then(()=>exportSPGExcel())" style="padding:10px 20px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 SPG Leaderboard (per Bulan + Double Store)</button>
+                </div>
+            </div>
+
             <!-- MAX STOCK -->
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📈 Max Stock Analysis</h3>
@@ -9398,7 +9406,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Leaderboard Table
             let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e2e8f0;">';
-            html += '<thead style="position:sticky;top:0;z-index:1;"><tr style="background:#002A3A;"><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Rank</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">SPG</th><th style="text-align:left;padding:8px;color:white;background:#002A3A;">Toko</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Qty</th><th style="text-align:center;padding:8px;color:white;background:#002A3A;">Trx</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">Sales</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATV</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ATU</th><th style="text-align:right;padding:8px;color:white;background:#002A3A;">ARP</th></tr></thead><tbody>';
+            const thSPG = 'padding:12px 14px;color:white;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);';
+            html += '<thead><tr style="position:sticky;top:0;z-index:2;"><th style="text-align:left;' + thSPG + '">Rank</th><th style="text-align:left;' + thSPG + '">SPG</th><th style="text-align:left;' + thSPG + '">Toko</th><th style="text-align:center;' + thSPG + '">Qty</th><th style="text-align:center;' + thSPG + '">Trx</th><th style="text-align:right;' + thSPG + '">Sales</th><th style="text-align:right;' + thSPG + '">ATV</th><th style="text-align:right;' + thSPG + '">ATU</th><th style="text-align:right;' + thSPG + '">ARP</th></tr></thead><tbody>';
 
             if (spgArr.length === 0) {
                 html += '<tr><td colspan="9" style="padding:40px;text-align:center;color:#6b7280;">Tidak ada data SPG tersedia</td></tr>';
