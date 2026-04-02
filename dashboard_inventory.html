@@ -1597,9 +1597,10 @@
                             <option value="">Semua</option>
                         </select>
                     </div>
-                    <div style="min-width:160px;">
+                    <div style="min-width:200px;position:relative;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Cari SKU/Artikel:</label>
-                        <input type="text" id="salesFilterSKU" onkeyup="renderSalesDashboard()" placeholder="SKU atau Artikel..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                        <input type="text" id="salesFilterSKU" oninput="onSalesSkuInput(this.value)" onkeydown="onSalesSkuKeydown(event)" placeholder="SKU atau Artikel..." autocomplete="off" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.9rem;">
+                        <div id="salesSkuSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #d1d5db;border-radius:0 0 8px 8px;max-height:250px;overflow-y:auto;z-index:999;box-shadow:0 8px 20px rgba(0,0,0,0.15);"></div>
                     </div>
                     <button onclick="resetSalesFilters()" style="padding:6px 12px;background:#f3f4f6;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:0.8rem;">Reset</button>
                 </div>
@@ -12767,8 +12768,119 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const srch = document.getElementById('salesFilterSearch'); if (srch) srch.value = '';
             const skuEl = document.getElementById('salesFilterSKU');
             if (skuEl) skuEl.value = '';
+            hideSalesSkuSuggestions();
             renderSalesDashboard();
         }
+
+        // === Sales SKU Autocomplete ===
+        let _salesSkuIndex = null; // { kodeKecil: { name, sku } }
+        let _salesSkuDebounce = null;
+        let _salesSkuHighlight = -1;
+
+        function buildSalesSkuIndex() {
+            if (_salesSkuIndex) return _salesSkuIndex;
+            _salesSkuIndex = {};
+            const src = (salesDetailData && salesDetailData.length > 0) ? salesDetailData :
+                (salesChannelCache['retail'] && salesChannelCache['retail'].length > 0) ? salesChannelCache['retail'] : [];
+            src.forEach(item => {
+                if (!item.sku) return;
+                const kk = (item.kode_kecil || '').toUpperCase();
+                const sku = item.sku.toUpperCase();
+                const name = item.nama_barang || item.product_name || '';
+                if (kk && !_salesSkuIndex[kk]) {
+                    _salesSkuIndex[kk] = { name: name, sku: sku };
+                }
+                if (!_salesSkuIndex[sku]) {
+                    _salesSkuIndex[sku] = { name: name, sku: sku };
+                }
+            });
+            return _salesSkuIndex;
+        }
+
+        function onSalesSkuInput(val) {
+            clearTimeout(_salesSkuDebounce);
+            const q = (val || '').trim();
+            if (q.length < 3) {
+                hideSalesSkuSuggestions();
+                _salesSkuDebounce = setTimeout(function() { renderSalesDashboard(); }, 500);
+                return;
+            }
+            _salesSkuDebounce = setTimeout(function() {
+                showSalesSkuSuggestions(q);
+                renderSalesDashboard();
+            }, 300);
+        }
+
+        function showSalesSkuSuggestions(query) {
+            const idx = buildSalesSkuIndex();
+            const q = query.toLowerCase();
+            const matches = [];
+            const seen = new Set();
+            for (const [key, val] of Object.entries(idx)) {
+                if (matches.length >= 15) break;
+                const keyL = key.toLowerCase();
+                const nameL = (val.name || '').toLowerCase();
+                if (keyL.includes(q) || nameL.includes(q)) {
+                    const label = key + (val.name ? ' — ' + val.name : '');
+                    if (seen.has(label)) continue;
+                    seen.add(label);
+                    matches.push({ key: key, label: label });
+                }
+            }
+            const el = document.getElementById('salesSkuSuggestions');
+            if (!el) return;
+            if (matches.length === 0) { el.style.display = 'none'; return; }
+            _salesSkuHighlight = -1;
+            el.innerHTML = matches.map((m, i) =>
+                '<div data-idx="' + i + '" style="padding:8px 12px;cursor:pointer;font-size:0.82rem;border-bottom:1px solid #f1f5f9;color:#374151;" ' +
+                'onmouseenter="this.style.background=\'#eff6ff\'" onmouseleave="this.style.background=\'white\'" ' +
+                'onmousedown="selectSalesSkuSuggestion(\'' + m.key.replace(/'/g, "\\'") + '\')">' +
+                m.label + '</div>'
+            ).join('');
+            el.style.display = 'block';
+        }
+
+        function selectSalesSkuSuggestion(key) {
+            const inp = document.getElementById('salesFilterSKU');
+            if (inp) inp.value = key;
+            hideSalesSkuSuggestions();
+            renderSalesDashboard();
+        }
+
+        function hideSalesSkuSuggestions() {
+            const el = document.getElementById('salesSkuSuggestions');
+            if (el) el.style.display = 'none';
+            _salesSkuHighlight = -1;
+        }
+
+        function onSalesSkuKeydown(e) {
+            const el = document.getElementById('salesSkuSuggestions');
+            if (!el || el.style.display === 'none') return;
+            const items = el.querySelectorAll('[data-idx]');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                _salesSkuHighlight = Math.min(_salesSkuHighlight + 1, items.length - 1);
+                items.forEach((it, i) => it.style.background = i === _salesSkuHighlight ? '#eff6ff' : 'white');
+                if (items[_salesSkuHighlight]) items[_salesSkuHighlight].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                _salesSkuHighlight = Math.max(_salesSkuHighlight - 1, 0);
+                items.forEach((it, i) => it.style.background = i === _salesSkuHighlight ? '#eff6ff' : 'white');
+            } else if (e.key === 'Enter' && _salesSkuHighlight >= 0 && items[_salesSkuHighlight]) {
+                e.preventDefault();
+                const key = items[_salesSkuHighlight].getAttribute('onmousedown').match(/'([^']+)'/)?.[1];
+                if (key) selectSalesSkuSuggestion(key);
+            } else if (e.key === 'Escape') {
+                hideSalesSkuSuggestions();
+            }
+        }
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#salesFilterSKU') && !e.target.closest('#salesSkuSuggestions')) {
+                hideSalesSkuSuggestions();
+            }
+        });
 
         // SKU Search Functions
         let skuSalesCache = null;  // Cache for SKU sales data
