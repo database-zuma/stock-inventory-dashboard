@@ -1709,14 +1709,30 @@
                         <!-- Row 4: Sales by Day -->
                         <div style="margin-bottom:24px;">
                             <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📊 Sales by Day</h4>
-                            <div id="perfDayFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"></div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                                <div id="perfDayFilter" style="display:flex;align-items:center;gap:8px;"></div>
+                                <select id="perfDayArea" onchange="onPerfDayAreaChange()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.82rem;">
+                                    <option value="">Semua Area</option>
+                                </select>
+                                <select id="perfDayStore" onchange="renderSalesTrend()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.82rem;">
+                                    <option value="">Semua Toko</option>
+                                </select>
+                            </div>
                             <div id="salesWeeklySummary"></div>
                         </div>
 
                         <!-- Row 5: Sales by Week -->
                         <div style="margin-bottom:24px;">
                             <h4 style="margin:0 0 6px 0;color:#1f2937;font-size:0.95rem;">📅 Sales by Week</h4>
-                            <div id="perfWkFilter" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"></div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                                <div id="perfWkFilter" style="display:flex;align-items:center;gap:8px;"></div>
+                                <select id="perfWkArea" onchange="onPerfWkAreaChange()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.82rem;">
+                                    <option value="">Semua Area</option>
+                                </select>
+                                <select id="perfWkStore" onchange="renderSalesTrend()" style="padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.82rem;">
+                                    <option value="">Semua Toko</option>
+                                </select>
+                            </div>
                             <div id="salesWeekByWeek"></div>
                         </div>
 
@@ -8649,10 +8665,11 @@
         }
 
         function renderSalesTrend() {
+            populatePerfAreaStoreFilters();
             const data = filteredSalesData;   // Daily trend + Hour chart still use main filter
             // Per-chart data (from salesDetailData, independent of main date filter)
-            const dayData = getChartData(perfDayMonth, perfDayWeek);
-            const wkData  = getChartData(perfWkMonth, null);
+            const dayData = getChartData(perfDayMonth, perfDayWeek, 'perfDayArea', 'perfDayStore');
+            const wkData  = getChartData(perfWkMonth, null, 'perfWkArea', 'perfWkStore');
 
             // Daily trend
             const byDate = {};
@@ -9942,12 +9959,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // Filter salesDetailData by month + optional week
         // If the month is not yet loaded, triggers lazy-load then re-renders
-        function getChartData(selectedMonth, selectedWeek) {
+        function getChartData(selectedMonth, selectedWeek, areaElId, storeElId) {
             let data = salesDetailData || [];
 
-            // Apply main filter bar's area & store filters
-            const chartArea = document.getElementById('salesFilterArea')?.value || '';
-            const chartStore = document.getElementById('salesFilterStore')?.value || '';
+            // Apply per-section area & store filters
+            const chartArea = areaElId ? (document.getElementById(areaElId)?.value || '') : '';
+            const chartStore = storeElId ? (document.getElementById(storeElId)?.value || '') : '';
             if (chartArea || chartStore) {
                 data = data.filter(item => {
                     if (chartStore && item.store !== chartStore) return false;
@@ -9960,7 +9977,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             if (selectedMonth) {
-                // Use per-month cache if available (but must re-filter for area/store)
                 if (salesDetailByMonth[selectedMonth] && !chartArea && !chartStore) {
                     data = salesDetailByMonth[selectedMonth];
                 } else {
@@ -9981,6 +9997,44 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             }
             return data;
+        }
+
+        // Populate area/store dropdowns for Sales by Day & Week
+        function populatePerfAreaStoreFilters() {
+            const stores = window.allSalesStores || [];
+            ['perfDayArea','perfWkArea'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el.options.length > 1) return;
+                const areas = new Set();
+                stores.forEach(s => { const a = getAreaFromStore(s); if (a && a !== 'Unknown') areas.add(a); });
+                [...areas].sort().forEach(a => { el.innerHTML += '<option value="' + a + '">' + a + '</option>'; });
+            });
+        }
+
+        function onPerfDayAreaChange() {
+            const area = document.getElementById('perfDayArea')?.value || '';
+            const storeEl = document.getElementById('perfDayStore');
+            if (storeEl) {
+                storeEl.innerHTML = '<option value="">Semua Toko</option>';
+                if (area) {
+                    (window.allSalesStores || []).filter(s => getAreaFromStore(s).toLowerCase() === area.toLowerCase())
+                        .sort().forEach(s => { storeEl.innerHTML += '<option value="' + s + '">' + s + '</option>'; });
+                }
+            }
+            renderSalesTrend();
+        }
+
+        function onPerfWkAreaChange() {
+            const area = document.getElementById('perfWkArea')?.value || '';
+            const storeEl = document.getElementById('perfWkStore');
+            if (storeEl) {
+                storeEl.innerHTML = '<option value="">Semua Toko</option>';
+                if (area) {
+                    (window.allSalesStores || []).filter(s => getAreaFromStore(s).toLowerCase() === area.toLowerCase())
+                        .sort().forEach(s => { storeEl.innerHTML += '<option value="' + s + '">' + s + '</option>'; });
+                }
+            }
+            renderSalesTrend();
         }
 
         // Lazy-load a specific month and re-render all perf charts
