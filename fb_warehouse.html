@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuma - FB Warehouse Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --teal: #002A3A;
+            --green: #00E273;
+            --red: #E74C3C;
+            --yellow: #F39C12;
+            --bg: #0F1923;
+            --card: #1A2B38;
+            --border: #2A3B48;
+            --text: #E8EDF2;
+            --text-dim: #8899AA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .header {
+            background: var(--teal);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--green);
+        }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .header .meta { font-size: 12px; color: var(--text-dim); }
+        .header .refresh-btn {
+            background: var(--green);
+            color: var(--teal);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 0 8px 0 8px;
+        }
+        .badge.ok { background: var(--green); color: var(--teal); }
+        .badge.warn { background: var(--yellow); color: #000; }
+        .badge.danger { background: var(--red); color: #fff; }
+        .card h2 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+        .fb-value { font-size: 48px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+        .fb-value.ok { color: var(--green); }
+        .fb-value.warn { color: var(--yellow); }
+        .fb-value.danger { color: var(--red); }
+        .fb-detail { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+        .tier-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .tier-item {
+            background: var(--bg);
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .tier-item .tier-label { font-size: 11px; color: var(--text-dim); }
+        .tier-item .tier-pct { font-size: 18px; font-weight: 700; }
+        .tier-item .tier-count { font-size: 10px; color: var(--text-dim); }
+        .chart-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-card h3 { margin-bottom: 16px; font-size: 15px; }
+        .chart-container { height: 300px; }
+        .capacity-bar {
+            background: var(--bg);
+            border-radius: 4px;
+            height: 8px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .capacity-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .loading { text-align: center; padding: 60px; color: var(--text-dim); }
+        .error { color: var(--red); text-align: center; padding: 40px; }
+        .target-line { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+        .footer { text-align: center; padding: 20px; color: var(--text-dim); font-size: 11px; }
+        .no-data { text-align: center; padding: 40px; color: var(--text-dim); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>FB Warehouse Dashboard</h1>
+            <div class="meta">Full Box Aktif | Target: 80% | Auto-refresh: 5 min</div>
+        </div>
+        <div>
+            <span class="meta" id="lastUpdate"></span>
+            <button class="refresh-btn" onclick="loadData()">Refresh</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="cards" id="warehouseCards">
+            <div class="loading">Loading data...</div>
+        </div>
+
+        <div class="chart-card">
+            <h3>FB Aktif Trend (30 Hari)</h3>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Zuma Indonesia | FB WH Control System | Data synced from Google Sheets
+    </div>
+
+    <script>
+        const API_BASE = 'https://srv1346756.hstgr.cloud';
+        const API_KEY = '97d25067-a2ca-44ba-ac5b-61539b627271';
+        const FB_TARGET = 80;
+        let trendChart = null;
+
+        function getStatus(pct) {
+            if (pct >= FB_TARGET) return 'ok';
+            if (pct >= 60) return 'warn';
+            return 'danger';
+        }
+
+        function getStatusLabel(pct) {
+            if (pct >= FB_TARGET) return 'ON TARGET';
+            if (pct >= 60) return 'NEEDS ATTENTION';
+            return 'CRITICAL';
+        }
+
+        function formatDate(isoStr) {
+            const d = new Date(isoStr);
+            return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        async function fetchAPI(endpoint) {
+            const resp = await fetch(`${API_BASE}${endpoint}`, {
+                headers: { 'X-API-Key': API_KEY }
+            });
+            if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+            return resp.json();
+        }
+
+        function renderCards(data) {
+            const container = document.getElementById('warehouseCards');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="no-data">No warehouse data available</div>';
+                return;
+            }
+
+            container.innerHTML = data.map(wh => {
+                const status = getStatus(wh.fb_aktif_pct);
+                const tb = wh.tier_breakdown || {};
+                const tiers = [1, 2, 3, 8];
+                const capacityPct = Math.round((wh.total_box / wh.warehouse_capacity) * 100);
+
+                return `
+                    <div class="card">
+                        <div class="badge ${status}">${getStatusLabel(wh.fb_aktif_pct)}</div>
+                        <h2>${wh.warehouse}</h2>
+                        <div class="fb-value ${status}">${wh.fb_aktif_pct}%</div>
+                        <div class="fb-detail">
+                            ${wh.artikel_with_stock} / ${wh.total_artikel_t1238} artikel T1238 punya stok box
+                        </div>
+                        <div class="target-line">Target: ${FB_TARGET}% | Tanggal: ${formatDate(wh.tanggal)}</div>
+
+                        <div style="margin-top: 16px;">
+                            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px;">
+                                Warehouse Utilization: ${wh.total_box.toLocaleString()} / ${wh.warehouse_capacity.toLocaleString()} box (${capacityPct}%)
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: ${Math.min(capacityPct, 100)}%; background: ${capacityPct > 90 ? 'var(--red)' : 'var(--green)'}"></div>
+                            </div>
+                        </div>
+
+                        <div class="tier-grid" style="margin-top: 16px;">
+                            ${tiers.map(t => {
+                                const td = tb[t] || { total: 0, with_stock: 0, pct: 0 };
+                                const ts = getStatus(td.pct);
+                                return `
+                                    <div class="tier-item">
+                                        <div class="tier-label">Tier ${t}</div>
+                                        <div class="tier-pct ${ts}">${td.pct}%</div>
+                                        <div class="tier-count">${td.with_stock}/${td.total}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTrend(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+
+            // Group by warehouse
+            const warehouses = {};
+            data.forEach(d => {
+                if (!warehouses[d.warehouse]) warehouses[d.warehouse] = [];
+                warehouses[d.warehouse].push(d);
+            });
+
+            const colors = { WHS: '#00E273', WHB: '#3498DB', WHJ: '#F39C12' };
+            const datasets = Object.entries(warehouses).map(([wh, points]) => ({
+                label: wh,
+                data: points.map(p => ({ x: p.tanggal, y: p.fb_aktif_pct })),
+                borderColor: colors[wh] || '#999',
+                backgroundColor: (colors[wh] || '#999') + '20',
+                tension: 0.3,
+                fill: false,
+                pointRadius: 2,
+                borderWidth: 2,
+            }));
+
+            // Target line
+            if (data.length > 0) {
+                const dates = data.map(d => d.tanggal);
+                datasets.push({
+                    label: `Target (${FB_TARGET}%)`,
+                    data: [{ x: dates[0], y: FB_TARGET }, { x: dates[dates.length - 1], y: FB_TARGET }],
+                    borderColor: '#E74C3C',
+                    borderDash: [5, 5],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false,
+                });
+            }
+
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            ticks: { color: '#8899AA', maxTicksLimit: 15, font: { size: 10 } },
+                            grid: { color: '#2A3B48' },
+                        },
+                        y: {
+                            min: 0, max: 100,
+                            ticks: { color: '#8899AA', callback: v => v + '%' },
+                            grid: { color: '#2A3B48' },
+                        },
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#E8EDF2', font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+                            }
+                        }
+                    },
+                },
+            });
+        }
+
+        async function loadData() {
+            try {
+                const [current, trend] = await Promise.all([
+                    fetchAPI('/api/fb-warehouse/current'),
+                    fetchAPI('/api/fb-warehouse/trend?days=30'),
+                ]);
+                renderCards(current);
+                renderTrend(trend);
+                document.getElementById('lastUpdate').textContent =
+                    'Updated: ' + new Date().toLocaleTimeString('id-ID');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('warehouseCards').innerHTML =
+                    `<div class="error">Failed to load data: ${err.message}</div>`;
+            }
+        }
+
+        // Initial load + auto-refresh every 5 min
+        loadData();
+        setInterval(loadData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
