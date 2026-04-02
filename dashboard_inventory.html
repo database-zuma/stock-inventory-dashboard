@@ -10001,7 +10001,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         // Populate area/store dropdowns for Sales by Day & Week
         function populatePerfAreaStoreFilters() {
+            // Build store list from salesDetailData if allSalesStores not ready
+            if (!window.allSalesStores || window.allSalesStores.length === 0) {
+                const src = salesDetailData || salesChannelCache['retail'] || [];
+                const storeSet = new Set();
+                src.forEach(item => { if (item.store) storeSet.add(item.store); });
+                if (storeSet.size > 0) window.allSalesStores = [...storeSet].sort();
+            }
             const stores = window.allSalesStores || [];
+            if (stores.length === 0) return;
             ['perfDayArea','perfWkArea'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el || el.options.length > 1) return;
