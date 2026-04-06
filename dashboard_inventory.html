@@ -14683,7 +14683,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var mixTotal = totalPerMix[r.kodeMix] || 0;
                     var pct = mixTotal > 0 ? Math.round(grandTotal / mixTotal * 1000) / 10 : 0;
                     var isTerbaru = (parseInt(r.version) || 0) === (maxVersion[r.kodeMix] || 0) ? 'Y' : 'N';
-                    var status = (isTerbaru === 'N' && pct > 30) ? '\u26A0\uFE0F Perlu Tindakan' : '';
+                    var status = (isTerbaru === 'N' && pct > 30) ? 'PERLU TINDAKAN' : '';
                     return {
                         'Kode Mix': r.kodeMix,
                         'Kode Kecil': r.kodeKecil,
@@ -14722,11 +14722,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         {wch:12},{wch:12},{wch:12},{wch:16},{wch:18}
                     ];
                     applyTableStyle(ws5, [0,1,2,3,4,5,6,7,8]);
-                    // Highlight Tier(col 6), Version(col 7), and Status(col 24)
+                    // Highlight Tier(col 6), Version(col 7), and Status(col 23)
                     for (var ai = 1; ai <= analisaData.length; ai++) {
                         var atAddr = XLSX.utils.encode_cell({r:ai, c:6});
                         var avAddr = XLSX.utils.encode_cell({r:ai, c:7});
-                        var asAddr = XLSX.utils.encode_cell({r:ai, c:24});
+                        var asAddr = XLSX.utils.encode_cell({r:ai, c:23});
                         if (ws5[atAddr]) ws5[atAddr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:hlBorder,fill:{fgColor:{rgb:'DBEAFE'}}};
                         if (ws5[avAddr]) ws5[avAddr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:hlBorder,fill:{fgColor:{rgb:'E8D5F5'}}};
                         if (ws5[asAddr] && ws5[asAddr].v && ws5[asAddr].v.indexOf('Perlu Tindakan') >= 0) {
