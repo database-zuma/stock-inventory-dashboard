@@ -9573,13 +9573,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!spgStores[v.spg]) spgStores[v.spg] = new Set();
                 spgStores[v.spg].add(v.store);
             });
+            // Helper: check if two store names are the same (fuzzy)
+            function isSameStore(a, b) {
+                if (!a || !b) return false;
+                const x = a.toLowerCase().replace(/\s+/g,' ').trim();
+                const y = b.toLowerCase().replace(/\s+/g,' ').trim();
+                if (x === y) return true;
+                if (x.includes(y) || y.includes(x)) return true;
+                return false;
+            }
             const doubleRows = Object.values(spgStoreDetail)
                 .filter(v => {
                     if (!spgStores[v.spg] || spgStores[v.spg].size <= 1) return false;
-                    // Only show rows where Toko Jualan ≠ Toko Asal (actual perbantuan)
                     const master = getSPGHomeStore(v.spg);
-                    if (!master) return true; // no master = show anyway
-                    return v.store.toLowerCase() !== master.store.toLowerCase();
+                    if (!master) return true;
+                    return !isSameStore(v.store, master.store);
                 })
                 .map(v => {
                     const master = getSPGHomeStore(v.spg);
