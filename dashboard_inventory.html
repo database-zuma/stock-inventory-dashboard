@@ -2483,6 +2483,14 @@
                 </div>
             </div>
 
+            <!-- ALL STOCK SUMMARY -->
+            <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+                <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">📊 All Stock Summary</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button onclick="exportAllStockSummary()" style="padding:10px 20px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 All Stock + Pivot</button>
+                </div>
+            </div>
+
 <!-- SALES -->
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">💰 Sales</h3>
@@ -14386,6 +14394,163 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             ws['!cols'][startCol] = {wch:10};
             ws['!cols'][startCol+1] = {wch:12};
             ws['!cols'][startCol+2] = {wch:8};
+        }
+
+        function exportAllStockSummary() {
+            if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
+            if (!allData || !allData.DDD) { alert('Data stock belum dimuat'); return; }
+
+            // Collect ALL stock from all entities, all types
+            // Key: kode_kecil + size → aggregate stock
+            const stockMap = {}; // key = kode_kecil|size
+
+            function addStock(items, source) {
+                if (!items) return;
+                items.forEach(function(item) {
+                    if (!item.store_stock) return;
+                    var kk = (item.kode_kecil || item.kode || '').toUpperCase();
+                    var sz = item.size || '';
+                    if (!kk) return;
+                    var key = kk + '|' + sz;
+                    if (!stockMap[key]) {
+                        stockMap[key] = {
+                            kodeMix: (item.kode_mix || '').toUpperCase(),
+                            kodeKecil: kk,
+                            nama: item.name || '',
+                            size: sz,
+                            gender: item.gender || '',
+                            series: item.series || '',
+                            tipe: item.tipe || '',
+                            tier: item.tier || '',
+                            version: item.version || '',
+                            whStock: 0, retailStock: 0, onlineStock: 0, consigStock: 0
+                        };
+                    }
+                    var total = 0;
+                    Object.entries(item.store_stock).forEach(function(e) {
+                        total += e[1];
+                    });
+                    if (source === 'wh') stockMap[key].whStock += total;
+                    else if (source === 'retail') stockMap[key].retailStock += total;
+                    else if (source === 'online') stockMap[key].onlineStock += total;
+                    else if (source === 'consig') stockMap[key].consigStock += total;
+                });
+            }
+
+            // Process all entities
+            ['DDD','MBB','LJBB','UBB'].forEach(function(entity) {
+                var ed = allData[entity];
+                if (!ed) return;
+                // Warehouse — exclude online warehouses
+                (ed.warehouse || []).forEach(function(item) {
+                    if (!item.store_stock) return;
+                    var whItems = {}, onItems = {};
+                    Object.entries(item.store_stock).forEach(function(e) {
+                        var wl = e[0].toLowerCase();
+                        if (wl.includes('online')) onItems[e[0]] = e[1];
+                        else whItems[e[0]] = e[1];
+                    });
+                    if (Object.keys(whItems).length > 0) addStock([Object.assign({}, item, {store_stock: whItems})], 'wh');
+                    if (Object.keys(onItems).length > 0) addStock([Object.assign({}, item, {store_stock: onItems})], 'online');
+                });
+                // Retail
+                addStock(ed.retail || [], 'retail');
+            });
+            // Consignment
+            addStock(consignmentStockItems || [], 'consig');
+
+            // Build rows sorted by kode kecil
+            var rows = Object.values(stockMap).map(function(r) {
+                return {
+                    'Kode Mix': r.kodeMix,
+                    'Kode Kecil': r.kodeKecil,
+                    'Nama Barang': r.nama,
+                    'Size': r.size,
+                    'Gender': r.gender,
+                    'Series': r.series,
+                    'Tipe': r.tipe,
+                    'Tier': r.tier,
+                    'Version': r.version,
+                    'Stok WH': r.whStock,
+                    'Stok Retail': r.retailStock,
+                    'Stok Online': r.onlineStock,
+                    'Stok Consig': r.consigStock,
+                    'Total Stock': r.whStock + r.retailStock + r.onlineStock + r.consigStock
+                };
+            }).filter(function(r) { return r['Total Stock'] !== 0; })
+              .sort(function(a, b) { return a['Kode Kecil'].localeCompare(b['Kode Kecil']) || (parseInt(a['Size'])||0) - (parseInt(b['Size'])||0); });
+
+            // === PIVOT: per Tier ===
+            var tierPivot = {};
+            rows.forEach(function(r) {
+                var t = r['Tier'] || '-';
+                if (!tierPivot[t]) tierPivot[t] = { wh: 0, retail: 0, online: 0, consig: 0, total: 0, skuCount: 0 };
+                tierPivot[t].wh += r['Stok WH'];
+                tierPivot[t].retail += r['Stok Retail'];
+                tierPivot[t].online += r['Stok Online'];
+                tierPivot[t].consig += r['Stok Consig'];
+                tierPivot[t].total += r['Total Stock'];
+                tierPivot[t].skuCount++;
+            });
+            var tierRows = Object.entries(tierPivot).sort(function(a,b) { return a[0].localeCompare(b[0]); }).map(function(e) {
+                return { 'Tier': e[0], 'Jumlah SKU': e[1].skuCount, 'Stok WH': e[1].wh, 'Stok Retail': e[1].retail, 'Stok Online': e[1].online, 'Stok Consig': e[1].consig, 'Total Stock': e[1].total };
+            });
+
+            // === PIVOT: per Kode Kecil → Version ===
+            var kkPivot = {};
+            rows.forEach(function(r) {
+                var kk = r['Kode Kecil'];
+                var ver = r['Version'] || '-';
+                var pKey = kk + '|' + ver;
+                if (!kkPivot[pKey]) kkPivot[pKey] = {
+                    kodeMix: r['Kode Mix'], kodeKecil: kk, nama: r['Nama Barang'],
+                    gender: r['Gender'], series: r['Series'], tipe: r['Tipe'],
+                    tier: r['Tier'], version: ver, total: 0, sizeCount: 0
+                };
+                kkPivot[pKey].total += r['Total Stock'];
+                kkPivot[pKey].sizeCount++;
+            });
+            var kkRows = Object.values(kkPivot)
+                .sort(function(a, b) { return a.kodeKecil.localeCompare(b.kodeKecil) || a.version.localeCompare(b.version); })
+                .map(function(r) {
+                    return {
+                        'Kode Mix': r.kodeMix, 'Kode Kecil': r.kodeKecil, 'Nama Barang': r.nama,
+                        'Gender': r.gender, 'Series': r.series, 'Tipe': r.tipe,
+                        'Tier': r.tier, 'Version': r.version, 'Jumlah Size': r.sizeCount, 'Total Stock': r.total
+                    };
+                });
+
+            // === EXPORT ===
+            var wb = XLSX.utils.book_new();
+            var leftCols = [0,1,2,3,4,5,6,7,8];
+
+            // Sheet 1: All Stock
+            var ws1 = XLSX.utils.json_to_sheet(rows);
+            ws1['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+            applyTableStyle(ws1, leftCols);
+            // SUM row
+            var r1 = rows.length + 1;
+            ['I','J','K','L','M','N'].forEach(function(col, i) {
+                var addr = col + (r1 + 1);
+                ws1[addr] = {f: 'SUM(' + col + '2:' + col + r1 + ')', t:'n'};
+            });
+            ws1['A' + (r1+1)] = {v: 'TOTAL', t:'s'};
+            var range1 = XLSX.utils.decode_range(ws1['!ref']); range1.e.r = r1; ws1['!ref'] = XLSX.utils.encode_range(range1);
+            XLSX.utils.book_append_sheet(wb, ws1, 'All Stock');
+
+            // Sheet 2: Pivot Tier
+            var ws2 = XLSX.utils.json_to_sheet(tierRows);
+            ws2['!cols'] = [{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+            applyTableStyle(ws2, [0]);
+            XLSX.utils.book_append_sheet(wb, ws2, 'Pivot Tier');
+
+            // Sheet 3: Pivot Kode Kecil
+            var ws3 = XLSX.utils.json_to_sheet(kkRows);
+            ws3['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:10},{wch:14}];
+            applyTableStyle(ws3, [0,1,2,3,4,5,6,7]);
+            XLSX.utils.book_append_sheet(wb, ws3, 'Pivot Kode Kecil');
+
+            XLSX.writeFile(wb, 'All_Stock_Summary_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function exportSummaryStockOnHand(type, entity) {
