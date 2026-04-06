@@ -14408,16 +14408,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!items) return;
                 items.forEach(function(item) {
                     if (!item.store_stock) return;
-                    var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode barang (with size)
-                    var kodeKecil = (item.kode || '').toUpperCase();        // kode kecil (artikel tanpa size)
+                    var kodeMix = (item.kode_mix || '').toUpperCase();      // artikel+version (tanpa size) = KEY
+                    var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode accurate (per size)
                     var sz = item.size || '';
-                    if (!kodeBarang && !kodeKecil) return;
-                    var key = (kodeBarang || kodeKecil + '|' + sz);
+                    if (!kodeMix && !kodeBarang) return;
+                    var key = kodeMix + '|' + sz; // group by kode_mix + size
                     if (!stockMap[key]) {
                         stockMap[key] = {
-                            kodeMix: (item.kode_mix || '').toUpperCase(),
+                            kodeMix: kodeMix,
                             kodeBarang: kodeBarang,
-                            kodeKecil: kodeKecil,
                             nama: item.name || '',
                             size: sz,
                             gender: item.gender || '',
@@ -14466,7 +14465,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return {
                     'Kode Mix': r.kodeMix,
                     'Kode Barang': r.kodeBarang,
-                    'Kode Kecil': r.kodeKecil,
                     'Nama Barang': r.nama,
                     'Size': r.size,
                     'Gender': r.gender,
@@ -14481,7 +14479,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     'Total Stock': r.whStock + r.retailStock + r.onlineStock + r.consigStock
                 };
             }).filter(function(r) { return r['Total Stock'] !== 0; })
-              .sort(function(a, b) { return a['Kode Kecil'].localeCompare(b['Kode Kecil']) || (parseInt(a['Size'])||0) - (parseInt(b['Size'])||0); });
+              .sort(function(a, b) { return a['Kode Mix'].localeCompare(b['Kode Mix']) || (parseInt(a['Size'])||0) - (parseInt(b['Size'])||0); });
 
             // === PIVOT: per Tier ===
             var tierPivot = {};
@@ -14499,25 +14497,24 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return { 'Tier': e[0], 'Jumlah SKU': e[1].skuCount, 'Stok WH': e[1].wh, 'Stok Retail': e[1].retail, 'Stok Online': e[1].online, 'Stok Consig': e[1].consig, 'Total Stock': e[1].total };
             });
 
-            // === PIVOT: per Kode Kecil → Version ===
+            // === PIVOT: per Kode Mix (artikel+version) — aggregate all sizes ===
             var kkPivot = {};
             rows.forEach(function(r) {
-                var kk = r['Kode Kecil'];
-                var ver = r['Version'] || '-';
-                var pKey = kk + '|' + ver;
-                if (!kkPivot[pKey]) kkPivot[pKey] = {
-                    kodeMix: r['Kode Mix'], kodeKecil: kk, nama: r['Nama Barang'],
+                var km = r['Kode Mix'];
+                if (!km) return;
+                if (!kkPivot[km]) kkPivot[km] = {
+                    kodeMix: km, nama: r['Nama Barang'],
                     gender: r['Gender'], series: r['Series'], tipe: r['Tipe'],
-                    tier: r['Tier'], version: ver, total: 0, sizeCount: 0
+                    tier: r['Tier'], version: r['Version'], total: 0, sizeCount: 0
                 };
-                kkPivot[pKey].total += r['Total Stock'];
-                kkPivot[pKey].sizeCount++;
+                kkPivot[km].total += r['Total Stock'];
+                kkPivot[km].sizeCount++;
             });
             var kkRows = Object.values(kkPivot)
-                .sort(function(a, b) { return a.kodeKecil.localeCompare(b.kodeKecil) || a.version.localeCompare(b.version); })
+                .sort(function(a, b) { return a.kodeMix.localeCompare(b.kodeMix); })
                 .map(function(r) {
                     return {
-                        'Kode Mix': r.kodeMix, 'Kode Kecil': r.kodeKecil, 'Nama Barang': r.nama,
+                        'Kode Mix': r.kodeMix, 'Nama Barang': r.nama,
                         'Gender': r.gender, 'Series': r.series, 'Tipe': r.tipe,
                         'Tier': r.tier, 'Version': r.version, 'Jumlah Size': r.sizeCount, 'Total Stock': r.total
                     };
@@ -14525,16 +14522,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // === EXPORT ===
             var wb = XLSX.utils.book_new();
-            // Cols: KodeMix(0) KodeBarang(1) KodeKecil(2) Nama(3) Size(4) Gender(5) Series(6) Tipe(7) Tier(8) Version(9) StokWH(10) StokRetail(11) StokOnline(12) StokConsig(13) Total(14)
-            var leftCols = [0,1,2,3,4,5,6,7,8,9];
+            // Cols: KodeMix(0) KodeBarang(1) Nama(2) Size(3) Gender(4) Series(5) Tipe(6) Tier(7) Version(8) StokWH(9) StokRetail(10) StokOnline(11) StokConsig(12) Total(13)
+            var leftCols = [0,1,2,3,4,5,6,7,8];
 
             // Sheet 1: All Stock
+            // Sheet 1: All Stock — KodeMix(A) KodeBarang(B) Nama(C) Size(D) Gender(E) Series(F) Tipe(G) Tier(H) Version(I) StokWH(J) StokRetail(K) StokOnline(L) StokConsig(M) Total(N)
             var ws1 = XLSX.utils.json_to_sheet(rows);
-            ws1['!cols'] = [{wch:16},{wch:16},{wch:14},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+            ws1['!cols'] = [{wch:16},{wch:16},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
             applyTableStyle(ws1, leftCols);
-            // SUM row — numeric cols K(10) to O(14)
             var r1 = rows.length + 1;
-            ['K','L','M','N','O'].forEach(function(col) {
+            ['J','K','L','M','N'].forEach(function(col) {
                 var addr = col + (r1 + 1);
                 ws1[addr] = {f: 'SUM(' + col + '2:' + col + r1 + ')', t:'n'};
             });
@@ -14548,25 +14545,26 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             applyTableStyle(ws2, [0]);
             XLSX.utils.book_append_sheet(wb, ws2, 'Pivot Tier');
 
-            // Sheet 3: Pivot Kode Kecil
+            // Sheet 3: Pivot Kode Mix (aggregate per artikel)
             var ws3 = XLSX.utils.json_to_sheet(kkRows);
-            ws3['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:10},{wch:14}];
-            applyTableStyle(ws3, [0,1,2,3,4,5,6,7]);
-            XLSX.utils.book_append_sheet(wb, ws3, 'Pivot Kode Kecil');
+            ws3['!cols'] = [{wch:16},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:10},{wch:14}];
+            applyTableStyle(ws3, [0,1,2,3,4,5,6]);
+            XLSX.utils.book_append_sheet(wb, ws3, 'Pivot Artikel');
 
-            // Sheet 4: Multi Version — artikel dengan >1 version
-            var versionCount = {};
+            // Sheet 4: Multi Version — artikel dengan >1 kode mix (= >1 version)
+            // Group by Nama Barang to find articles with multiple versions
+            var artikelVersions = {};
             kkRows.forEach(function(r) {
-                var kk = r['Kode Kecil'];
-                if (!versionCount[kk]) versionCount[kk] = 0;
-                versionCount[kk]++;
+                var artKey = (r['Nama Barang'] || '-') + '|' + (r['Gender'] || '') + '|' + (r['Series'] || '');
+                if (!artikelVersions[artKey]) artikelVersions[artKey] = [];
+                artikelVersions[artKey].push(r);
             });
-            var multiVerRows = kkRows
-                .filter(function(r) { return versionCount[r['Kode Kecil']] > 1; })
-                .map(function(r) {
-                    return {
+            var multiVerRows = [];
+            Object.values(artikelVersions).forEach(function(versions) {
+                if (versions.length <= 1) return; // skip single version
+                versions.forEach(function(r) {
+                    multiVerRows.push({
                         'Kode Mix': r['Kode Mix'],
-                        'Kode Kecil': r['Kode Kecil'],
                         'Nama Barang': r['Nama Barang'],
                         'Gender': r['Gender'],
                         'Series': r['Series'],
@@ -14574,12 +14572,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         'Tier': r['Tier'],
                         'Version': r['Version'],
                         'Total Stock': r['Total Stock']
-                    };
+                    });
                 });
+            });
+            multiVerRows.sort(function(a, b) { return a['Nama Barang'].localeCompare(b['Nama Barang']) || String(a['Version']).localeCompare(String(b['Version'])); });
             if (multiVerRows.length > 0) {
                 var ws4 = XLSX.utils.json_to_sheet(multiVerRows);
-                ws4['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14}];
-                applyTableStyle(ws4, [0,1,2,3,4,5,6,7]);
+                ws4['!cols'] = [{wch:16},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14}];
+                applyTableStyle(ws4, [0,1,2,3,4,5,6]);
                 XLSX.utils.book_append_sheet(wb, ws4, 'Multi Version');
             }
 
