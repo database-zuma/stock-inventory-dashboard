@@ -14403,6 +14403,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Collect ALL stock from all entities, all types
             // Key: kode_kecil + size → aggregate stock
             const stockMap = {}; // key = kode_kecil|size
+            const locationMap = {}; // key = kodeBarang → { storeName: qty } for per-location breakdown
 
             function addStock(items, source) {
                 if (!items) return;
@@ -14431,6 +14432,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var total = 0;
                     Object.entries(item.store_stock).forEach(function(e) {
                         total += e[1];
+                        // Build per-location map for Analisa Version
+                        if (!locationMap[key]) locationMap[key] = { source: {}, kodeMix: kodeMix };
+                        var storeKey = e[0] + '||' + source;
+                        if (!locationMap[key].source[storeKey]) locationMap[key].source[storeKey] = { store: e[0], source: source, qty: 0 };
+                        locationMap[key].source[storeKey].qty += e[1];
                     });
                     if (source === 'wh') stockMap[key].whStock += total;
                     else if (source === 'retail') stockMap[key].retailStock += total;
@@ -14584,6 +14590,152 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }
                 XLSX.utils.book_append_sheet(wb, ws4, 'Multi Version');
             }
+
+            // === Sheet 5: Analisa Version — per-location breakdown for multi-version articles ===
+            (function buildAnalisaVersion() {
+                // Identify multi-version kode_mix (from kodeMixCount already computed)
+                var multiMixSet = {};
+                Object.keys(kodeMixCount).forEach(function(km) {
+                    if (kodeMixCount[km] > 1) multiMixSet[km] = true;
+                });
+                if (Object.keys(multiMixSet).length === 0) return;
+
+                // Find highest version per kode_mix
+                var maxVersion = {};
+                kkRows.forEach(function(r) {
+                    var km = r['Kode Mix'];
+                    if (!multiMixSet[km]) return;
+                    var ver = parseInt(r['Version']) || 0;
+                    if (!maxVersion[km] || ver > maxVersion[km]) maxVersion[km] = ver;
+                });
+
+                // Total stock per kode_mix (all versions combined)
+                var totalPerMix = {};
+                kkRows.forEach(function(r) {
+                    var km = r['Kode Mix'];
+                    if (!multiMixSet[km]) return;
+                    if (!totalPerMix[km]) totalPerMix[km] = 0;
+                    totalPerMix[km] += r['Total Stock'];
+                });
+
+                // Categorize a store into WH bucket
+                function categorizeStore(storeName, source) {
+                    var sl = storeName.toLowerCase();
+                    if (source === 'retail') return 'retail';
+                    if (source === 'consig') return 'consig';
+                    if (source === 'online') {
+                        if (sl.includes('bali')) return 'wh_online_bali';
+                        if (sl.includes('jakarta') || sl.includes('pluit')) return 'wh_online_jakarta';
+                        return 'wh_online_bali'; // default online
+                    }
+                    // source === 'wh'
+                    if (sl.includes('pusat') && sl.includes('protol')) return 'wh_pusat_protol';
+                    if (sl.includes('pusat') && sl.includes('reject')) return 'wh_pusat_reject';
+                    if (sl.includes('pusat')) return 'wh_pusat';
+                    if (sl.includes('bali') && sl.includes('gatsu') && sl.includes('reject')) return 'wh_bali_reject';
+                    if (sl.includes('bali') && sl.includes('gatsu')) return 'wh_bali_gatsu';
+                    if (sl.includes('bali') && sl.includes('reject')) return 'wh_bali_reject';
+                    if (sl.includes('bali')) return 'wh_bali';
+                    if (sl.includes('pluit') && sl.includes('reject')) return 'wh_pluit_reject';
+                    if (sl.includes('pluit') || sl.includes('jakarta')) return 'wh_jakarta_pluit';
+                    if (sl.includes('palembang')) return 'wh_jakarta_pluit';
+                    return 'wh_pusat'; // fallback
+                }
+
+                // Aggregate location data per kode_mix + version
+                // We need to go through all stockMap keys, filter multi-version, aggregate per kodeMix+version
+                var avPivot = {}; // key = kodeMix|version
+                Object.keys(stockMap).forEach(function(smKey) {
+                    var sm = stockMap[smKey];
+                    if (!multiMixSet[sm.kodeMix]) return;
+                    var pvKey = sm.kodeMix + '|' + (sm.version || '-');
+                    if (!avPivot[pvKey]) {
+                        avPivot[pvKey] = {
+                            kodeMix: sm.kodeMix, kodeKecil: sm.kodeKecil, nama: sm.nama,
+                            gender: sm.gender, series: sm.series, tipe: sm.tipe,
+                            tier: sm.tier, version: sm.version || '-',
+                            wh_pusat: 0, wh_pusat_protol: 0, wh_pusat_reject: 0,
+                            wh_bali: 0, wh_bali_gatsu: 0, wh_bali_reject: 0,
+                            wh_jakarta_pluit: 0, wh_pluit_reject: 0,
+                            wh_online_bali: 0, wh_online_jakarta: 0,
+                            retail: 0, consig: 0
+                        };
+                    }
+                    // Aggregate from locationMap
+                    var locData = locationMap[smKey];
+                    if (locData && locData.source) {
+                        Object.values(locData.source).forEach(function(entry) {
+                            var cat = categorizeStore(entry.store, entry.source);
+                            avPivot[pvKey][cat] = (avPivot[pvKey][cat] || 0) + entry.qty;
+                        });
+                    }
+                });
+
+                var avRows = Object.values(avPivot).sort(function(a, b) {
+                    return a.kodeMix.localeCompare(b.kodeMix) || String(a.version).localeCompare(String(b.version));
+                });
+
+                var analisaData = avRows.map(function(r) {
+                    var grandTotal = r.wh_pusat + r.wh_pusat_protol + r.wh_pusat_reject +
+                        r.wh_bali + r.wh_bali_gatsu + r.wh_bali_reject +
+                        r.wh_jakarta_pluit + r.wh_pluit_reject +
+                        r.wh_online_bali + r.wh_online_jakarta + r.retail + r.consig;
+                    var mixTotal = totalPerMix[r.kodeMix] || 0;
+                    var pct = mixTotal > 0 ? Math.round(grandTotal / mixTotal * 1000) / 10 : 0;
+                    var isTerbaru = (parseInt(r.version) || 0) === (maxVersion[r.kodeMix] || 0) ? 'Y' : 'N';
+                    var status = (isTerbaru === 'N' && pct > 30) ? '\u26A0\uFE0F Perlu Tindakan' : '';
+                    return {
+                        'Kode Mix': r.kodeMix,
+                        'Kode Kecil': r.kodeKecil,
+                        'Nama Barang': r.nama,
+                        'Gender': r.gender,
+                        'Series': r.series,
+                        'Tipe': r.tipe,
+                        'Tier': r.tier,
+                        'Version': r.version,
+                        'Version Terbaru': isTerbaru,
+                        'WH Pusat': r.wh_pusat,
+                        'WH Pusat Protol': r.wh_pusat_protol,
+                        'WH Pusat Reject': r.wh_pusat_reject,
+                        'WH Bali': r.wh_bali,
+                        'WH Bali Gatsu': r.wh_bali_gatsu,
+                        'WH Bali Reject': r.wh_bali_reject,
+                        'WH Jakarta/Pluit': r.wh_jakarta_pluit,
+                        'WH Pluit Reject': r.wh_pluit_reject,
+                        'WH Online Bali': r.wh_online_bali,
+                        'WH Online Jakarta': r.wh_online_jakarta,
+                        'Total Retail': r.retail,
+                        'Total Consig': r.consig,
+                        'Grand Total': grandTotal,
+                        '% dari Total Artikel': pct + '%',
+                        'Status': status
+                    };
+                });
+
+                if (analisaData.length > 0) {
+                    var ws5 = XLSX.utils.json_to_sheet(analisaData);
+                    // 25 columns: 0-24
+                    ws5['!cols'] = [
+                        {wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14},
+                        {wch:10},{wch:14},{wch:14},{wch:10},{wch:13},{wch:13},
+                        {wch:15},{wch:14},{wch:14},{wch:14},
+                        {wch:12},{wch:12},{wch:12},{wch:16},{wch:18}
+                    ];
+                    applyTableStyle(ws5, [0,1,2,3,4,5,6,7,8]);
+                    // Highlight Tier(col 6), Version(col 7), and Status(col 24)
+                    for (var ai = 1; ai <= analisaData.length; ai++) {
+                        var atAddr = XLSX.utils.encode_cell({r:ai, c:6});
+                        var avAddr = XLSX.utils.encode_cell({r:ai, c:7});
+                        var asAddr = XLSX.utils.encode_cell({r:ai, c:24});
+                        if (ws5[atAddr]) ws5[atAddr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:hlBorder,fill:{fgColor:{rgb:'DBEAFE'}}};
+                        if (ws5[avAddr]) ws5[avAddr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10},border:hlBorder,fill:{fgColor:{rgb:'E8D5F5'}}};
+                        if (ws5[asAddr] && ws5[asAddr].v && ws5[asAddr].v.indexOf('Perlu Tindakan') >= 0) {
+                            ws5[asAddr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10,bold:true,color:{rgb:'991B1B'}},border:hlBorder,fill:{fgColor:{rgb:'FEF2F2'}}};
+                        }
+                    }
+                    XLSX.utils.book_append_sheet(wb, ws5, 'Analisa Version');
+                }
+            })();
 
             XLSX.writeFile(wb, 'All_Stock_Summary_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
