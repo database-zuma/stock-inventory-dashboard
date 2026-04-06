@@ -9678,36 +9678,51 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const spgLeftCols = [0,1,2,3,4];
             const doubleLeftCols = [0,1,2,3,4,5];
 
-            // SPG sheet columns: Tahun(0) Bulan(1) Area(2) Toko(3) NamaSPG(4) CapaianSales(5) TargetToko(6) JmlSPG(7) HariKerja(8) TargetDaily(9) TargetSPG(10) Achievement(11)
-            // Cols 9,10,11 will be formulas
+            // SPG columns: Tahun(0) Bulan(1) Area(2) Toko(3) NamaSPG(4) CapaianSales(5) TargetToko(6) JmlSPG(7) HariKerja(8) TargetDaily(9) TargetSPG(10) Achievement(11)
             const spgSumCols = { 'Capaian Sales': 5, 'Target Toko': 6 };
+            const spgColWidths = [{wch:6},{wch:12},{wch:12},{wch:28},{wch:32},{wch:16},{wch:16},{wch:10},{wch:12},{wch:14},{wch:14},{wch:12}];
+            const border = {top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}};
 
-            // Sheet per month — with formulas for Target Daily, Target SPG, Achievement
+            // Sheet per month
             const months = [...new Set(rows.map(r => r._monthKey))].sort();
             months.forEach(mk => {
                 const monthNum = parseInt(mk.split('-')[1]);
                 const sheetName = (ID_BULAN[monthNum - 1] + ' ' + mk.split('-')[0]).substring(0, 31);
                 const monthRows = cleanRows(rows.filter(r => r._monthKey === mk));
                 const ws = XLSX.utils.json_to_sheet(monthRows);
-                // Replace static values with formulas for Target Daily, Target SPG, Achievement
+                ws['!cols'] = spgColWidths.slice();
+
+                // Overwrite cols 9,10,11 with formulas + style Achievement with color
                 for (let ri = 0; ri < monthRows.length; ri++) {
-                    const r = ri + 1; // Excel row (0=header)
-                    const G = 'G' + (r+1); // Target Toko
-                    const H = 'H' + (r+1); // Jumlah SPG
-                    const I = 'I' + (r+1); // Hari Kerja
-                    const F = 'F' + (r+1); // Capaian Sales
-                    // Target Daily (col J=9) = Target Toko / Hari Kerja / Jumlah SPG
-                    ws[XLSX.utils.encode_cell({r:r,c:9})] = {f: 'IF(AND(' + H + '>0,' + I + '>0),' + G + '/' + I + '/' + H + ',0)', t:'n'};
-                    // Target SPG (col K=10) = Target Toko / Jumlah SPG
-                    ws[XLSX.utils.encode_cell({r:r,c:10})] = {f: 'IF(' + H + '>0,' + G + '/' + H + ',0)', t:'n'};
-                    // Achievement (col L=11) = Capaian Sales / Target SPG
-                    ws[XLSX.utils.encode_cell({r:r,c:11})] = {f: 'IF(K' + (r+1) + '>0,' + F + '/K' + (r+1) + ',0)', t:'n', z:'0%'};
+                    const exR = ri + 2; // Excel row number (1-indexed, row 1 = header)
+                    const G = 'G' + exR, H = 'H' + exR, I = 'I' + exR, F = 'F' + exR, K = 'K' + exR;
+                    // Target Daily (J)
+                    ws[XLSX.utils.encode_cell({r:ri+1,c:9})] = {f:'IF(AND('+H+'>0,'+I+'>0),'+G+'/'+I+'/'+H+',0)', t:'n', s:{alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'}};
+                    // Target SPG (K)
+                    ws[XLSX.utils.encode_cell({r:ri+1,c:10})] = {f:'IF('+H+'>0,'+G+'/'+H+',0)', t:'n', s:{alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'}};
+                    // Achievement (L) — percentage with conditional color
+                    const achVal = monthRows[ri]['Achievement (%)'];
+                    const achNum = parseFloat(String(achVal).replace('%','')) || 0;
+                    const achColor = achNum >= 100 ? '16A34A' : achNum >= 80 ? 'D97706' : 'DC2626';
+                    const achFontColor = achNum >= 100 ? '16A34A' : achNum >= 80 ? '92400E' : 'DC2626';
+                    const achBg = achNum >= 100 ? 'F0FDF4' : achNum >= 80 ? 'FFFBEB' : 'FEF2F2';
+                    ws[XLSX.utils.encode_cell({r:ri+1,c:11})] = {f:'IF('+K+'>0,'+F+'/'+K+',0)', t:'n', s:{alignment:{horizontal:'center',vertical:'center'},font:{sz:10,bold:true,color:{rgb:achFontColor}},border:border,fill:{fgColor:{rgb:achBg}},numFmt:'0%'}};
                 }
                 styleSheet(ws, spgLeftCols);
-                // Format Achievement column as percentage
-                for (let ri = 1; ri <= monthRows.length; ri++) {
-                    const addr = XLSX.utils.encode_cell({r:ri,c:11});
-                    if (ws[addr]) ws[addr].z = '0%';
+                // Re-apply Achievement styling (styleSheet may have overwritten it)
+                for (let ri = 0; ri < monthRows.length; ri++) {
+                    const addr = XLSX.utils.encode_cell({r:ri+1,c:11});
+                    if (!ws[addr]) continue;
+                    const achVal = monthRows[ri]['Achievement (%)'];
+                    const achNum = parseFloat(String(achVal).replace('%','')) || 0;
+                    const achFontColor = achNum >= 100 ? '16A34A' : achNum >= 80 ? '92400E' : 'DC2626';
+                    const achBg = achNum >= 100 ? 'F0FDF4' : achNum >= 80 ? 'FFFBEB' : 'FEF2F2';
+                    ws[addr].s = {alignment:{horizontal:'center',vertical:'center'},font:{sz:10,bold:true,color:{rgb:achFontColor}},border:border,fill:{fgColor:{rgb:achBg}},numFmt:'0%'};
+                    // Also fix formula cells for Target Daily and Target SPG
+                    const addrJ = XLSX.utils.encode_cell({r:ri+1,c:9});
+                    const addrK = XLSX.utils.encode_cell({r:ri+1,c:10});
+                    if (ws[addrJ]) ws[addrJ].s = {alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
+                    if (ws[addrK]) ws[addrK].s = {alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
                 }
                 addSummaryRow(ws, monthRows, spgSumCols);
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -9717,6 +9732,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const doubleSumCols = { 'Sales': 6, 'Qty': 7, 'Trx': 8 };
             if (doubleRows.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(cleanRows(doubleRows));
+                ws['!cols'] = [{wch:6},{wch:12},{wch:32},{wch:28},{wch:28},{wch:10},{wch:16},{wch:8},{wch:8}];
                 styleSheet(ws, doubleLeftCols);
                 addSummaryRow(ws, doubleRows, doubleSumCols);
                 XLSX.utils.book_append_sheet(wb, ws, 'SPG Double Store');
@@ -9739,6 +9755,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             targetSimple.sort((a, b) => a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']));
             if (targetSimple.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(targetSimple);
+                const tgtCols = [{wch:12},{wch:30}];
+                allMonthKeys.forEach(() => tgtCols.push({wch:18}));
+                ws['!cols'] = tgtCols;
                 styleSheet(ws, [0,1]);
                 const tgtSumCols = {};
                 allMonthKeys.forEach((mk, i) => { tgtSumCols['m' + i] = i + 2; });
