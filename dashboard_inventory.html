@@ -14555,19 +14555,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             applyTableStyle(ws3, [0,1,2,3,4,5,6,7]);
             XLSX.utils.book_append_sheet(wb, ws3, 'Pivot Artikel');
 
-            // Sheet 4: Multi Version — artikel dengan >1 kode mix (= >1 version)
-            // Group by Nama Barang to find articles with multiple versions
-            var artikelVersions = {};
+            // Sheet 4: Multi Version — kode_mix yang punya >1 version (>1 entry di kkRows)
+            var kodeMixCount = {};
             kkRows.forEach(function(r) {
-                var artKey = (r['Nama Barang'] || '-') + '|' + (r['Gender'] || '') + '|' + (r['Series'] || '');
-                if (!artikelVersions[artKey]) artikelVersions[artKey] = [];
-                artikelVersions[artKey].push(r);
+                var km = r['Kode Mix'];
+                if (!kodeMixCount[km]) kodeMixCount[km] = 0;
+                kodeMixCount[km]++;
             });
-            var multiVerRows = [];
-            Object.values(artikelVersions).forEach(function(versions) {
-                if (versions.length <= 1) return; // skip single version
-                versions.forEach(function(r) {
-                    multiVerRows.push({
+            var multiVerRows = kkRows
+                .filter(function(r) { return kodeMixCount[r['Kode Mix']] > 1; })
+                .map(function(r) {
+                    return {
                         'Kode Mix': r['Kode Mix'],
                         'Kode Kecil': r['Kode Kecil'],
                         'Nama Barang': r['Nama Barang'],
@@ -14577,10 +14575,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         'Tier': r['Tier'],
                         'Version': r['Version'],
                         'Total Stock': r['Total Stock']
-                    });
+                    };
                 });
-            });
-            multiVerRows.sort(function(a, b) { return a['Kode Kecil'].localeCompare(b['Kode Kecil']) || String(a['Version']).localeCompare(String(b['Version'])); });
+            multiVerRows.sort(function(a, b) { return a['Kode Mix'].localeCompare(b['Kode Mix']) || String(a['Version']).localeCompare(String(b['Version'])); });
             if (multiVerRows.length > 0) {
                 var ws4 = XLSX.utils.json_to_sheet(multiVerRows);
                 ws4['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14}];
