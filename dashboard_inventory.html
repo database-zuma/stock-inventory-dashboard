@@ -14499,18 +14499,20 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return { 'Tier': e[0], 'Jumlah SKU': e[1].skuCount, 'Stok WH': e[1].wh, 'Stok Retail': e[1].retail, 'Stok Online': e[1].online, 'Stok Consig': e[1].consig, 'Total Stock': e[1].total };
             });
 
-            // === PIVOT: per Kode Mix (artikel+version) — aggregate all sizes ===
+            // === PIVOT: per Kode Mix + Version — aggregate all sizes ===
             var kkPivot = {};
             rows.forEach(function(r) {
                 var km = r['Kode Mix'];
+                var ver = r['Version'] || '-';
                 if (!km) return;
-                if (!kkPivot[km]) kkPivot[km] = {
+                var pKey = km + '|' + ver;
+                if (!kkPivot[pKey]) kkPivot[pKey] = {
                     kodeMix: km, kodeKecil: r['Kode Kecil'], nama: r['Nama Barang'],
                     gender: r['Gender'], series: r['Series'], tipe: r['Tipe'],
-                    tier: r['Tier'], version: r['Version'], total: 0, sizeCount: 0
+                    tier: r['Tier'], version: ver, total: 0, sizeCount: 0
                 };
-                kkPivot[km].total += r['Total Stock'];
-                kkPivot[km].sizeCount++;
+                kkPivot[pKey].total += r['Total Stock'];
+                kkPivot[pKey].sizeCount++;
             });
             var kkRows = Object.values(kkPivot)
                 .sort(function(a, b) { return a.kodeMix.localeCompare(b.kodeMix); })
