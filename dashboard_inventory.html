@@ -9602,7 +9602,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const doubleRows = Object.values(spgStoreDetail)
                 .filter(v => {
                     if (!spgStores[v.spg] || spgStores[v.spg].size <= 1) return false;
+                    // Exclude Central Grand
                     const master = getSPGHomeStore(v.spg);
+                    if (v.store.toLowerCase().includes('central grand')) return false;
+                    if (master && master.store.toLowerCase().includes('central grand')) return false;
                     if (!master) return true;
                     return !isSameStore(v.store, master.store);
                 })
@@ -9758,7 +9761,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 // Add perbantuan data to the RIGHT (1 column gap after col 11 = col 13 start)
                 const dStartCol = 13; // col N (after 1 gap col M)
-                const monthDoubles = doubleRows.filter(d => d._monthKey === mk && !(d['Toko Perbantuan']||'').toLowerCase().includes('central grand'))
+                const monthDoubles = doubleRows.filter(d => d._monthKey === mk && !(d['Toko Perbantuan']||'').toLowerCase().includes('central grand') && !(d['Toko Asal']||'').toLowerCase().includes('central grand'))
                     .sort((a, b) => {
                         // iSeller/Support first, then "-", then by Toko Asal, then Nama SPG
                         function sg(r) {
