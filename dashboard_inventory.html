@@ -9552,12 +9552,22 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     'Achievement (%)': Math.round(achiev) + '%',
                     _monthKey: v.month, // for sorting, stripped before export
                 };
+            }).filter(r => {
+                // Exclude non-retail stores
+                const toko = (r['Toko'] || '').toLowerCase();
+                if (toko.includes('central grand')) return false;
+                return true;
             }).sort((a, b) => {
                 if (a._monthKey !== b._monthKey) return a._monthKey.localeCompare(b._monthKey);
-                // "-" (no master) first, then by Area, Toko, Nama SPG
-                const aUnk = a['Area'] === '-' ? 0 : 1;
-                const bUnk = b['Area'] === '-' ? 0 : 1;
-                if (aUnk !== bUnk) return aUnk - bUnk;
+                // Priority: 1=iSeller/Support names, 2=unknown (-), 3=normal
+                function sortGroup(r) {
+                    const spg = (r['Nama SPG'] || '').toLowerCase();
+                    if (spg.includes('iseller') || spg.includes('support')) return 0;
+                    if (r['Area'] === '-') return 1;
+                    return 2;
+                }
+                const aG = sortGroup(a), bG = sortGroup(b);
+                if (aG !== bG) return aG - bG;
                 return a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']) || a['Nama SPG'].localeCompare(b['Nama SPG']);
             });
 
@@ -9748,9 +9758,17 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 // Add perbantuan data to the RIGHT (1 column gap after col 11 = col 13 start)
                 const dStartCol = 13; // col N (after 1 gap col M)
-                const monthDoubles = doubleRows.filter(d => d._monthKey === mk)
+                const monthDoubles = doubleRows.filter(d => d._monthKey === mk && !(d['Toko Perbantuan']||'').toLowerCase().includes('central grand'))
                     .sort((a, b) => {
-                        // "-" (no master) first, then by Toko Asal, then Nama SPG
+                        // iSeller/Support first, then "-", then by Toko Asal, then Nama SPG
+                        function sg(r) {
+                            const spg = (r['Nama SPG']||'').toLowerCase();
+                            if (spg.includes('iseller') || spg.includes('support')) return 0;
+                            if (r['Toko Asal'] === '-') return 1;
+                            return 2;
+                        }
+                        const aG = sg(a), bG = sg(b);
+                        if (aG !== bG) return aG - bG;
                         const aIsUnknown = a['Toko Asal'] === '-' ? 0 : 1;
                         const bIsUnknown = b['Toko Asal'] === '-' ? 0 : 1;
                         if (aIsUnknown !== bIsUnknown) return aIsUnknown - bIsUnknown;
@@ -9791,7 +9809,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             // Target Toko sheet — Area, Toko, monthly targets — sorted by Area then Toko
             const targetSimple = [];
             const targetStoresArr = [...targetStores].sort();
-            targetStoresArr.forEach(store => {
+            targetStoresArr.filter(s => !s.toLowerCase().includes('central grand')).forEach(store => {
                 const area = rows.find(r => r['Toko'] === store)?.['Area'] || '-';
                 const row = { 'Area': area, 'Toko': store };
                 allMonthKeys.forEach(mk => {
