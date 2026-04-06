@@ -14416,6 +14416,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (!stockMap[key]) {
                         stockMap[key] = {
                             kodeMix: kodeMix,
+                            kodeKecil: (item.kode || '').toUpperCase(),
                             kodeBarang: kodeBarang,
                             nama: item.name || '',
                             size: sz,
@@ -14464,6 +14465,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var rows = Object.values(stockMap).map(function(r) {
                 return {
                     'Kode Mix': r.kodeMix,
+                    'Kode Kecil': r.kodeKecil,
                     'Kode Barang': r.kodeBarang,
                     'Nama Barang': r.nama,
                     'Size': r.size,
@@ -14503,7 +14505,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 var km = r['Kode Mix'];
                 if (!km) return;
                 if (!kkPivot[km]) kkPivot[km] = {
-                    kodeMix: km, nama: r['Nama Barang'],
+                    kodeMix: km, kodeKecil: r['Kode Kecil'], nama: r['Nama Barang'],
                     gender: r['Gender'], series: r['Series'], tipe: r['Tipe'],
                     tier: r['Tier'], version: r['Version'], total: 0, sizeCount: 0
                 };
@@ -14514,7 +14516,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 .sort(function(a, b) { return a.kodeMix.localeCompare(b.kodeMix); })
                 .map(function(r) {
                     return {
-                        'Kode Mix': r.kodeMix, 'Nama Barang': r.nama,
+                        'Kode Mix': r.kodeMix, 'Kode Kecil': r.kodeKecil, 'Nama Barang': r.nama,
                         'Gender': r.gender, 'Series': r.series, 'Tipe': r.tipe,
                         'Tier': r.tier, 'Version': r.version, 'Jumlah Size': r.sizeCount, 'Total Stock': r.total
                     };
@@ -14522,16 +14524,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // === EXPORT ===
             var wb = XLSX.utils.book_new();
-            // Cols: KodeMix(0) KodeBarang(1) Nama(2) Size(3) Gender(4) Series(5) Tipe(6) Tier(7) Version(8) StokWH(9) StokRetail(10) StokOnline(11) StokConsig(12) Total(13)
-            var leftCols = [0,1,2,3,4,5,6,7,8];
+            // Cols: KodeMix(0) KodeKecil(1) KodeBarang(2) Nama(3) Size(4) Gender(5) Series(6) Tipe(7) Tier(8) Version(9) StokWH(10) StokRetail(11) StokOnline(12) StokConsig(13) Total(14)
+            var leftCols = [0,1,2,3,4,5,6,7,8,9];
 
             // Sheet 1: All Stock
             // Sheet 1: All Stock — KodeMix(A) KodeBarang(B) Nama(C) Size(D) Gender(E) Series(F) Tipe(G) Tier(H) Version(I) StokWH(J) StokRetail(K) StokOnline(L) StokConsig(M) Total(N)
             var ws1 = XLSX.utils.json_to_sheet(rows);
-            ws1['!cols'] = [{wch:16},{wch:16},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+            ws1['!cols'] = [{wch:16},{wch:14},{wch:16},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
             applyTableStyle(ws1, leftCols);
             var r1 = rows.length + 1;
-            ['J','K','L','M','N'].forEach(function(col) {
+            ['K','L','M','N','O'].forEach(function(col) {
                 var addr = col + (r1 + 1);
                 ws1[addr] = {f: 'SUM(' + col + '2:' + col + r1 + ')', t:'n'};
             });
@@ -14547,8 +14549,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Sheet 3: Pivot Kode Mix (aggregate per artikel)
             var ws3 = XLSX.utils.json_to_sheet(kkRows);
-            ws3['!cols'] = [{wch:16},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:10},{wch:14}];
-            applyTableStyle(ws3, [0,1,2,3,4,5,6]);
+            ws3['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:10},{wch:14}];
+            applyTableStyle(ws3, [0,1,2,3,4,5,6,7]);
             XLSX.utils.book_append_sheet(wb, ws3, 'Pivot Artikel');
 
             // Sheet 4: Multi Version — artikel dengan >1 kode mix (= >1 version)
