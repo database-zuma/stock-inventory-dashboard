@@ -9738,18 +9738,41 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     if (ws[addrK]) ws[addrK].s = {alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
                 }
                 addSummaryRow(ws, monthRows, spgSumCols);
+
+                // Add perbantuan data to the RIGHT (1 column gap after col 11 = col 13 start)
+                const dStartCol = 13; // col N (after 1 gap col M)
+                const monthDoubles = doubleRows.filter(d => d._monthKey === mk);
+                if (monthDoubles.length > 0) {
+                    const dHeaders = ['Nama SPG', 'Toko Asal', 'Toko Perbantuan', 'Sales'];
+                    const headerS = {alignment:{horizontal:'center',vertical:'center',wrapText:true},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
+                    const cellL = {alignment:{horizontal:'left',vertical:'center'},font:{sz:10},border:border};
+                    const numS = {alignment:{horizontal:'right',vertical:'center'},font:{sz:10},border:border,numFmt:'#,##0'};
+                    // Headers
+                    dHeaders.forEach((h, ci) => {
+                        ws[XLSX.utils.encode_cell({r:0,c:dStartCol+ci})] = {v:h, t:'s', s:headerS};
+                    });
+                    // Data rows
+                    monthDoubles.forEach((d, ri) => {
+                        ws[XLSX.utils.encode_cell({r:ri+1,c:dStartCol})] = {v:d['Nama SPG'], t:'s', s:cellL};
+                        ws[XLSX.utils.encode_cell({r:ri+1,c:dStartCol+1})] = {v:d['Toko Asal'], t:'s', s:cellL};
+                        ws[XLSX.utils.encode_cell({r:ri+1,c:dStartCol+2})] = {v:d['Toko Perbantuan'], t:'s', s:cellL};
+                        ws[XLSX.utils.encode_cell({r:ri+1,c:dStartCol+3})] = {v:d['Sales'], t:'n', s:numS};
+                    });
+                    // Update range
+                    const range = XLSX.utils.decode_range(ws['!ref']);
+                    if (dStartCol + 3 > range.e.c) range.e.c = dStartCol + 3;
+                    if (monthDoubles.length > range.e.r) range.e.r = monthDoubles.length;
+                    ws['!ref'] = XLSX.utils.encode_range(range);
+                    // Column widths for perbantuan
+                    while (ws['!cols'].length <= dStartCol + 3) ws['!cols'].push({wch:3});
+                    ws['!cols'][dStartCol] = {wch:32};
+                    ws['!cols'][dStartCol+1] = {wch:28};
+                    ws['!cols'][dStartCol+2] = {wch:28};
+                    ws['!cols'][dStartCol+3] = {wch:16};
+                }
+
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
             });
-
-            // SPG Double Store sheet
-            const doubleSumCols = { 'Sales': 5, 'Qty': 6, 'Trx': 7 };
-            if (doubleRows.length > 0) {
-                const ws = XLSX.utils.json_to_sheet(cleanRows(doubleRows));
-                ws['!cols'] = [{wch:6},{wch:12},{wch:32},{wch:28},{wch:28},{wch:16},{wch:8},{wch:8}];
-                styleSheet(ws, doubleLeftCols);
-                addSummaryRow(ws, doubleRows, doubleSumCols);
-                XLSX.utils.book_append_sheet(wb, ws, 'SPG Double Store');
-            }
 
             // Target Toko sheet — Area, Toko, monthly targets — sorted by Area then Toko
             const targetSimple = [];
