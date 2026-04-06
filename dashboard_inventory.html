@@ -9574,7 +9574,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 spgStores[v.spg].add(v.store);
             });
             const doubleRows = Object.values(spgStoreDetail)
-                .filter(v => spgStores[v.spg] && spgStores[v.spg].size > 1)
+                .filter(v => {
+                    if (!spgStores[v.spg] || spgStores[v.spg].size <= 1) return false;
+                    // Only show rows where Toko Jualan ≠ Toko Asal (actual perbantuan)
+                    const master = getSPGHomeStore(v.spg);
+                    if (!master) return true; // no master = show anyway
+                    return v.store.toLowerCase() !== master.store.toLowerCase();
+                })
                 .map(v => {
                     const master = getSPGHomeStore(v.spg);
                     const monthNum = parseInt(v.month.split('-')[1]);
@@ -9583,8 +9589,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                         'Bulan': ID_BULAN[monthNum - 1] || '',
                         'Nama SPG': v.spg,
                         'Toko Asal': master ? master.store : '-',
-                        'Toko Jualan': v.store,
-                        'Perbantuan': (master && v.store.toLowerCase() !== master.store.toLowerCase()) ? 'Ya' : '-',
+                        'Toko Perbantuan': v.store,
                         'Sales': Math.round(v.sales),
                         'Qty': v.qty,
                         'Trx': v.trx.size,
@@ -9729,10 +9734,10 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             });
 
             // SPG Double Store sheet
-            const doubleSumCols = { 'Sales': 6, 'Qty': 7, 'Trx': 8 };
+            const doubleSumCols = { 'Sales': 5, 'Qty': 6, 'Trx': 7 };
             if (doubleRows.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(cleanRows(doubleRows));
-                ws['!cols'] = [{wch:6},{wch:12},{wch:32},{wch:28},{wch:28},{wch:10},{wch:16},{wch:8},{wch:8}];
+                ws['!cols'] = [{wch:6},{wch:12},{wch:32},{wch:28},{wch:28},{wch:16},{wch:8},{wch:8}];
                 styleSheet(ws, doubleLeftCols);
                 addSummaryRow(ws, doubleRows, doubleSumCols);
                 XLSX.utils.book_append_sheet(wb, ws, 'SPG Double Store');
