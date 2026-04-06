@@ -14683,7 +14683,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var mixTotal = totalPerMix[r.kodeMix] || 0;
                     var pct = mixTotal > 0 ? Math.round(grandTotal / mixTotal * 1000) / 10 : 0;
                     var isTerbaru = (parseInt(r.version) || 0) === (maxVersion[r.kodeMix] || 0);
-                    var status = (!isTerbaru && pct > 25) ? 'Perlu Action Plan' : '';
+                    var status = (!isTerbaru && pct > 15) ? 'Perlu Action Plan' : '';
                     return {
                         'Kode Mix': r.kodeMix,
                         'Kode Kecil': r.kodeKecil,
