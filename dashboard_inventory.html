@@ -14408,11 +14408,11 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!items) return;
                 items.forEach(function(item) {
                     if (!item.store_stock) return;
-                    var kodeMix = (item.kode_mix || '').toUpperCase();      // artikel+version (tanpa size) = KEY
-                    var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode accurate (per size)
+                    var kodeMix = (item.kode_mix || '').toUpperCase();      // artikel (tanpa size)
+                    var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode accurate (per version+size) = UNIQUE KEY
                     var sz = item.size || '';
-                    if (!kodeMix && !kodeBarang) return;
-                    var key = kodeMix + '|' + sz; // group by kode_mix + size
+                    if (!kodeBarang && !kodeMix) return;
+                    var key = kodeBarang || (kodeMix + '|' + sz + '|' + (item.version || '')); // unique per version+size
                     if (!stockMap[key]) {
                         stockMap[key] = {
                             kodeMix: kodeMix,
