@@ -2499,7 +2499,7 @@
             <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #e5e7eb;">
                 <h3 style="margin:0 0 15px 0;color:#1f2937;font-size:1.1rem;">👥 SPG Leaderboard</h3>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="exportSPGExcel()" style="padding:10px 20px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 SPG Leaderboard (per Bulan + Double Store)</button>
+                    <button onclick="exportSPGExcel()" style="padding:10px 20px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">📥 SPG Leaderboard</button>
                 </div>
             </div>
 
@@ -9594,19 +9594,35 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 })
                 .sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || a['Nama SPG'].localeCompare(b['Nama SPG']) || b['Sales'] - a['Sales']);
 
-            // Export — one sheet per month + combined + double store
+            // Export — one sheet per month + double store (styled header)
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
             const wb = XLSX.utils.book_new();
+
+            // Header style — blue gradient like Stock On-Hand
+            function styleSheetHeader(ws, colCount) {
+                if (!ws['!ref']) return;
+                for (let c = 0; c < colCount; c++) {
+                    const addr = XLSX.utils.encode_cell({r:0, c:c});
+                    if (!ws[addr]) continue;
+                    ws[addr].s = {
+                        fill: { fgColor: { rgb: '1D4ED8' } },
+                        font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },
+                        alignment: { horizontal: 'center' }
+                    };
+                }
+            }
+
             const months = [...new Set(rows.map(r => r['Bulan']))].sort();
+            const colCount = rows.length > 0 ? Object.keys(rows[0]).length : 0;
             months.forEach(bulan => {
                 const monthRows = rows.filter(r => r['Bulan'] === bulan);
                 const ws = XLSX.utils.json_to_sheet(monthRows);
+                styleSheetHeader(ws, colCount);
                 XLSX.utils.book_append_sheet(wb, ws, bulan.substring(0, 31));
             });
-            const wsAll = XLSX.utils.json_to_sheet(rows);
-            XLSX.utils.book_append_sheet(wb, wsAll, 'Semua Bulan');
             if (doubleRows.length > 0) {
                 const wsDouble = XLSX.utils.json_to_sheet(doubleRows);
+                styleSheetHeader(wsDouble, doubleRows.length > 0 ? Object.keys(doubleRows[0]).length : 0);
                 XLSX.utils.book_append_sheet(wb, wsDouble, 'SPG Double Store');
             }
             XLSX.writeFile(wb, 'SPG_Leaderboard_' + new Date().toISOString().split('T')[0] + '.xlsx');
