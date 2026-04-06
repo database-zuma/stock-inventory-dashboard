@@ -14565,6 +14565,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 .filter(function(r) { return versionCount[r['Kode Kecil']] > 1; })
                 .map(function(r) {
                     return {
+                        'Kode Mix': r['Kode Mix'],
                         'Kode Kecil': r['Kode Kecil'],
                         'Nama Barang': r['Nama Barang'],
                         'Gender': r['Gender'],
@@ -14577,8 +14578,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             if (multiVerRows.length > 0) {
                 var ws4 = XLSX.utils.json_to_sheet(multiVerRows);
-                ws4['!cols'] = [{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14}];
-                applyTableStyle(ws4, [0,1,2,3,4,5,6]);
+                ws4['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:14}];
+                applyTableStyle(ws4, [0,1,2,3,4,5,6,7]);
                 XLSX.utils.book_append_sheet(wb, ws4, 'Multi Version');
             }
 
