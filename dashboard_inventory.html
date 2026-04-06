@@ -14396,9 +14396,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             ws['!cols'][startCol+2] = {wch:8};
         }
 
-        function exportAllStockSummary() {
+        async function exportAllStockSummary() {
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
             if (!allData || !allData.DDD) { alert('Data stock belum dimuat'); return; }
+
+            // Fetch kodemix lookup: {"KODE_MIX|VERSION": "kode_kecil", ...}
+            var kodemixLookup = {};
+            try {
+                kodemixLookup = await fetchAPI('/api/kodemix-lookup');
+            } catch(e) { console.error('kodemix-lookup failed:', e); }
 
             // Collect ALL stock from all entities, all types
             // Key: kode_kecil + size → aggregate stock
@@ -14413,11 +14419,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode accurate (per version+size) = UNIQUE KEY
                     var sz = item.size || '';
                     if (!kodeBarang && !kodeMix) return;
+                    var ver = String(item.version || '0');
+                    var lookupKey = kodeMix + '|' + ver;
+                    var kodeKecil = (kodemixLookup[lookupKey] || (item.kode || '')).toUpperCase();
                     var key = kodeBarang || (kodeMix + '|' + sz + '|' + (item.version || '')); // unique per version+size
                     if (!stockMap[key]) {
                         stockMap[key] = {
                             kodeMix: kodeMix,
-                            kodeKecil: (item.kode || '').toUpperCase(),
+                            kodeKecil: kodeKecil,
                             kodeBarang: kodeBarang,
                             nama: item.name || '',
                             size: sz,
@@ -14426,6 +14435,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                             tipe: item.tipe || '',
                             tier: item.tier || '',
                             version: item.version || '',
+                            ver: ver,
                             whStock: 0, retailStock: 0, onlineStock: 0, consigStock: 0
                         };
                     }
