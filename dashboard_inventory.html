@@ -9435,17 +9435,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         async function exportSPGExcel() {
             // Ensure SPG master is loaded
             if (!_spgMasterLoaded) await loadSPGMaster();
-            // Ensure sales data is available (might be called from Summary Report)
+            // Ensure sales data is available
             let data = filteredSalesData;
             if (!data || data.length === 0) data = salesDetailData;
             if (!data || data.length === 0) data = salesChannelCache['retail'];
             if (!data || data.length === 0) {
-                // Fetch directly from API
                 try {
-                    const today = new Date().toISOString().split('T')[0];
+                    const now = new Date();
                     const months = [];
                     let m = new Date(2026, 0, 1);
-                    const now = new Date();
                     while (m <= now) {
                         months.push(m.getFullYear() + '-' + String(m.getMonth()+1).padStart(2,'0'));
                         m.setMonth(m.getMonth() + 1);
@@ -9469,7 +9467,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const ID_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
             const MONTH_KEYS = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
 
-            // Group sales by SPG + month (YYYY-MM)
+            // Group sales by SPG + month
             const bySPGMonth = {};
             data.forEach(item => {
                 const spg = item.spg || item.kasir || '';
@@ -9483,30 +9481,27 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 bySPGMonth[key].trx.add(item.order_no);
             });
 
-            // Count SPG per store (from master)
+            // SPG per store count
             const spgPerStore = {};
             Object.keys(SPG_MASTER).forEach(key => {
                 const m = SPG_MASTER[key];
                 spgPerStore[m.store] = (spgPerStore[m.store] || 0) + 1;
             });
 
-            // Get monthly target for a store
+            // Monthly target for a store
             function getStoreMonthTarget(storeName, monthKey) {
                 if (!targetData) return 0;
                 const monthNum = parseInt(monthKey.split('-')[1]);
                 const mName = MONTH_KEYS[monthNum - 1] || '';
                 const sLower = storeName.toLowerCase().trim();
-                // 1. Exact match
                 for (const [key, t] of Object.entries(targetData)) {
                     if (key.toLowerCase() === sLower) return Number(t[mName]) || 0;
                 }
-                // 2. Fuzzy: only if key is long enough (>10 chars) to avoid false matches like 'bali' → 'zuma lippo bali'
                 let bestKey = null, bestLen = 0;
                 for (const [key, t] of Object.entries(targetData)) {
                     const kl = key.toLowerCase();
-                    if (kl.length < 10) continue; // skip short keys
+                    if (kl.length < 10) continue;
                     if (sLower.includes(kl) || kl.includes(sLower)) {
-                        // Prefer longest matching key (more specific)
                         if (kl.length > bestLen) { bestKey = key; bestLen = kl.length; }
                     }
                 }
@@ -9514,7 +9509,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return 0;
             }
 
-            // Count working days (Mon-Sat) in a month
+            // Working days per month
             function getWorkingDays(monthKey) {
                 const [yr, mo] = monthKey.split('-').map(Number);
                 const lastDay = new Date(yr, mo, 0).getDate();
@@ -9526,13 +9521,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return count;
             }
 
-            // Build rows — per SPG per month
+            // Build rows — sorted by Area, Toko, SPG name
             const rows = Object.values(bySPGMonth).map(v => {
                 const master = getSPGHomeStore(v.spg);
                 const store = master ? master.store : '-';
                 const area = master ? master.area : '-';
                 const monthNum = parseInt(v.month.split('-')[1]);
-                const bulanLabel = ID_BULAN[monthNum - 1] + ' ' + v.month.split('-')[0];
+                const year = v.month.split('-')[0];
+                const bulanLabel = ID_BULAN[monthNum - 1] || '';
                 const capaianSales = v.sales;
                 const targetToko = getStoreMonthTarget(store, v.month);
                 const jmlSpg = spgPerStore[store] || 1;
@@ -9542,21 +9538,23 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 const achiev = targetSpg > 0 ? (capaianSales / targetSpg * 100) : 0;
 
                 return {
+                    'Tahun': year,
                     'Bulan': bulanLabel,
-                    'Nama SPG': v.spg,
-                    'Toko': store,
                     'Area': area,
+                    'Toko': store,
+                    'Nama SPG': v.spg,
                     'Capaian Sales': Math.round(capaianSales),
                     'Target Toko': Math.round(targetToko),
                     'Jumlah SPG': jmlSpg,
                     'Jumlah Hari Kerja': jmlHariKerja,
                     'Target Daily': Math.round(targetDaily),
                     'Target SPG': Math.round(targetSpg),
-                    'Achievement (%)': Math.round(achiev) + '%'
+                    'Achievement (%)': Math.round(achiev) + '%',
+                    _monthKey: v.month, // for sorting, stripped before export
                 };
-            }).sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || b['Capaian Sales'] - a['Capaian Sales']);
+            }).sort((a, b) => a._monthKey.localeCompare(b._monthKey) || a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']) || a['Nama SPG'].localeCompare(b['Nama SPG']));
 
-            // Build "SPG Double Store" sheet — SPG yang jualan di lebih dari 1 toko
+            // Build Double Store rows
             const spgStoreDetail = {};
             data.forEach(item => {
                 const spg = item.spg || item.kasir || '';
@@ -9570,7 +9568,6 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 spgStoreDetail[key].qty += item.qty || 0;
                 spgStoreDetail[key].trx.add(item.order_no);
             });
-            // Find SPG with >1 unique store
             const spgStores = {};
             Object.values(spgStoreDetail).forEach(v => {
                 if (!spgStores[v.spg]) spgStores[v.spg] = new Set();
@@ -9582,49 +9579,128 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     const master = getSPGHomeStore(v.spg);
                     const monthNum = parseInt(v.month.split('-')[1]);
                     return {
-                        'Bulan': ID_BULAN[monthNum - 1] + ' ' + v.month.split('-')[0],
+                        'Tahun': v.month.split('-')[0],
+                        'Bulan': ID_BULAN[monthNum - 1] || '',
                         'Nama SPG': v.spg,
                         'Toko Asal': master ? master.store : '-',
                         'Toko Jualan': v.store,
                         'Perbantuan': (master && v.store.toLowerCase() !== master.store.toLowerCase()) ? 'Ya' : '-',
                         'Sales': Math.round(v.sales),
                         'Qty': v.qty,
-                        'Trx': v.trx.size
+                        'Trx': v.trx.size,
+                        _monthKey: v.month,
                     };
                 })
-                .sort((a, b) => a['Bulan'].localeCompare(b['Bulan']) || a['Nama SPG'].localeCompare(b['Nama SPG']) || b['Sales'] - a['Sales']);
+                .sort((a, b) => a._monthKey.localeCompare(b._monthKey) || a['Nama SPG'].localeCompare(b['Nama SPG']) || b['Sales'] - a['Sales']);
 
-            // Export — one sheet per month + double store (styled header)
+            // Build Target Toko sheet
+            const allMonthKeys = [...new Set(rows.map(r => r._monthKey))].sort();
+            const targetRows = [];
+            const targetStores = new Set(rows.map(r => r['Toko']).filter(t => t !== '-'));
+            [...targetStores].sort().forEach(store => {
+                const area = rows.find(r => r['Toko'] === store)?.['Area'] || '-';
+                allMonthKeys.forEach(mk => {
+                    const monthNum = parseInt(mk.split('-')[1]);
+                    const target = getStoreMonthTarget(store, mk);
+                    const jmlSpg = spgPerStore[store] || 1;
+                    const jmlHari = getWorkingDays(mk);
+                    targetRows.push({
+                        'Tahun': mk.split('-')[0],
+                        'Bulan': ID_BULAN[monthNum - 1] || '',
+                        'Area': area,
+                        'Toko': store,
+                        'Target Toko': Math.round(target),
+                        'Jumlah SPG': jmlSpg,
+                        'Jumlah Hari Kerja': jmlHari,
+                        'Target Daily': jmlSpg > 0 && jmlHari > 0 ? Math.round(target / jmlHari / jmlSpg) : 0,
+                        'Target per SPG': jmlSpg > 0 ? Math.round(target / jmlSpg) : 0,
+                    });
+                });
+            });
+
+            // === EXPORT ===
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
             const wb = XLSX.utils.book_new();
 
-            // Header style — blue gradient like Stock On-Hand
-            function styleSheetHeader(ws, colCount) {
+            // Style helper — blue header like Stock On-Hand
+            function applyHeaderStyle(ws) {
                 if (!ws['!ref']) return;
-                for (let c = 0; c < colCount; c++) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let c = range.s.c; c <= range.e.c; c++) {
                     const addr = XLSX.utils.encode_cell({r:0, c:c});
                     if (!ws[addr]) continue;
                     ws[addr].s = {
                         fill: { fgColor: { rgb: '1D4ED8' } },
                         font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },
-                        alignment: { horizontal: 'center' }
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: { bottom: { style: 'thin', color: { rgb: '000000' } } }
                     };
                 }
             }
 
-            const months = [...new Set(rows.map(r => r['Bulan']))].sort();
-            const colCount = rows.length > 0 ? Object.keys(rows[0]).length : 0;
-            months.forEach(bulan => {
-                const monthRows = rows.filter(r => r['Bulan'] === bulan);
-                const ws = XLSX.utils.json_to_sheet(monthRows);
-                styleSheetHeader(ws, colCount);
-                XLSX.utils.book_append_sheet(wb, ws, bulan.substring(0, 31));
-            });
-            if (doubleRows.length > 0) {
-                const wsDouble = XLSX.utils.json_to_sheet(doubleRows);
-                styleSheetHeader(wsDouble, doubleRows.length > 0 ? Object.keys(doubleRows[0]).length : 0);
-                XLSX.utils.book_append_sheet(wb, wsDouble, 'SPG Double Store');
+            // Add summary row with formulas
+            function addSummaryRow(ws, dataRows, colMap) {
+                if (!ws['!ref'] || dataRows.length === 0) return;
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                const sumRow = range.e.r + 1; // next row after data
+                // "TOTAL" label in first column
+                const firstAddr = XLSX.utils.encode_cell({r: sumRow, c: 0});
+                ws[firstAddr] = { v: 'TOTAL', t: 's', s: { font: { bold: true }, fill: { fgColor: { rgb: 'F3F4F6' } } } };
+                // Add SUM formulas for numeric columns
+                const sumCols = colMap || {};
+                Object.entries(sumCols).forEach(([colName, colIdx]) => {
+                    const startCell = XLSX.utils.encode_cell({r: 1, c: colIdx});
+                    const endCell = XLSX.utils.encode_cell({r: sumRow - 1, c: colIdx});
+                    const addr = XLSX.utils.encode_cell({r: sumRow, c: colIdx});
+                    ws[addr] = { f: 'SUM(' + startCell + ':' + endCell + ')', t: 'n', s: { font: { bold: true }, fill: { fgColor: { rgb: 'F3F4F6' } }, numFmt: '#,##0' } };
+                });
+                // Update range
+                range.e.r = sumRow;
+                ws['!ref'] = XLSX.utils.encode_range(range);
             }
+
+            // Strip internal _monthKey before export
+            function cleanRows(arr) {
+                return arr.map(r => {
+                    const o = {};
+                    Object.keys(r).forEach(k => { if (k !== '_monthKey') o[k] = r[k]; });
+                    return o;
+                });
+            }
+
+            // Column index map for SUM formulas (0-indexed, matching cleaned rows)
+            const spgSumCols = { 'Capaian Sales': 5, 'Target Toko': 6 };
+            const doubleSumCols = { 'Sales': 6, 'Qty': 7, 'Trx': 8 };
+            const targetSumCols = { 'Target Toko': 4 };
+
+            // Sheet per month
+            const months = [...new Set(rows.map(r => r._monthKey))].sort();
+            months.forEach(mk => {
+                const monthNum = parseInt(mk.split('-')[1]);
+                const sheetName = (ID_BULAN[monthNum - 1] + ' ' + mk.split('-')[0]).substring(0, 31);
+                const monthRows = cleanRows(rows.filter(r => r._monthKey === mk));
+                const ws = XLSX.utils.json_to_sheet(monthRows);
+                applyHeaderStyle(ws);
+                addSummaryRow(ws, monthRows, spgSumCols);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+
+            // SPG Double Store sheet
+            if (doubleRows.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(cleanRows(doubleRows));
+                applyHeaderStyle(ws);
+                addSummaryRow(ws, doubleRows, doubleSumCols);
+                XLSX.utils.book_append_sheet(wb, ws, 'SPG Double Store');
+            }
+
+            // Target Toko sheet
+            if (targetRows.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(targetRows);
+                applyHeaderStyle(ws);
+                addSummaryRow(ws, targetRows, targetSumCols);
+                XLSX.utils.book_append_sheet(wb, ws, 'Target Toko');
+            }
+
             XLSX.writeFile(wb, 'SPG_Leaderboard_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
