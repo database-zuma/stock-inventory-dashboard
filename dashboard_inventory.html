@@ -9674,28 +9674,47 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
             }
 
-            // Column index map for SUM formulas (0-indexed, matching cleaned rows)
-            const spgSumCols = { 'Capaian Sales': 5, 'Target Toko': 6 };
-            const doubleSumCols = { 'Sales': 6, 'Qty': 7, 'Trx': 8 };
-            const targetSumCols = { 'Target Toko': 4 };
-
-            // Left-aligned columns: Tahun(0), Bulan(1), Area(2), Toko(3), Nama SPG(4)
+            // Left-aligned columns
             const spgLeftCols = [0,1,2,3,4];
             const doubleLeftCols = [0,1,2,3,4,5];
 
-            // Sheet per month
+            // SPG sheet columns: Tahun(0) Bulan(1) Area(2) Toko(3) NamaSPG(4) CapaianSales(5) TargetToko(6) JmlSPG(7) HariKerja(8) TargetDaily(9) TargetSPG(10) Achievement(11)
+            // Cols 9,10,11 will be formulas
+            const spgSumCols = { 'Capaian Sales': 5, 'Target Toko': 6 };
+
+            // Sheet per month — with formulas for Target Daily, Target SPG, Achievement
             const months = [...new Set(rows.map(r => r._monthKey))].sort();
             months.forEach(mk => {
                 const monthNum = parseInt(mk.split('-')[1]);
                 const sheetName = (ID_BULAN[monthNum - 1] + ' ' + mk.split('-')[0]).substring(0, 31);
                 const monthRows = cleanRows(rows.filter(r => r._monthKey === mk));
                 const ws = XLSX.utils.json_to_sheet(monthRows);
+                // Replace static values with formulas for Target Daily, Target SPG, Achievement
+                for (let ri = 0; ri < monthRows.length; ri++) {
+                    const r = ri + 1; // Excel row (0=header)
+                    const G = 'G' + (r+1); // Target Toko
+                    const H = 'H' + (r+1); // Jumlah SPG
+                    const I = 'I' + (r+1); // Hari Kerja
+                    const F = 'F' + (r+1); // Capaian Sales
+                    // Target Daily (col J=9) = Target Toko / Hari Kerja / Jumlah SPG
+                    ws[XLSX.utils.encode_cell({r:r,c:9})] = {f: 'IF(AND(' + H + '>0,' + I + '>0),' + G + '/' + I + '/' + H + ',0)', t:'n'};
+                    // Target SPG (col K=10) = Target Toko / Jumlah SPG
+                    ws[XLSX.utils.encode_cell({r:r,c:10})] = {f: 'IF(' + H + '>0,' + G + '/' + H + ',0)', t:'n'};
+                    // Achievement (col L=11) = Capaian Sales / Target SPG
+                    ws[XLSX.utils.encode_cell({r:r,c:11})] = {f: 'IF(K' + (r+1) + '>0,' + F + '/K' + (r+1) + ',0)', t:'n', z:'0%'};
+                }
                 styleSheet(ws, spgLeftCols);
+                // Format Achievement column as percentage
+                for (let ri = 1; ri <= monthRows.length; ri++) {
+                    const addr = XLSX.utils.encode_cell({r:ri,c:11});
+                    if (ws[addr]) ws[addr].z = '0%';
+                }
                 addSummaryRow(ws, monthRows, spgSumCols);
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
             });
 
             // SPG Double Store sheet
+            const doubleSumCols = { 'Sales': 6, 'Qty': 7, 'Trx': 8 };
             if (doubleRows.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(cleanRows(doubleRows));
                 styleSheet(ws, doubleLeftCols);
@@ -9703,7 +9722,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 XLSX.utils.book_append_sheet(wb, ws, 'SPG Double Store');
             }
 
-            // Target Toko sheet — simple: Area, Toko, then monthly targets
+            // Target Toko sheet — Area, Toko, monthly targets — sorted by Area then Toko
             const targetSimple = [];
             const targetStoresArr = [...targetStores].sort();
             targetStoresArr.forEach(store => {
@@ -9716,12 +9735,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 targetSimple.push(row);
             });
+            // Sort by Area then Toko
+            targetSimple.sort((a, b) => a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']));
             if (targetSimple.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(targetSimple);
-                styleSheet(ws, [0,1]); // Area, Toko left-aligned
-                // SUM row for each month column
+                styleSheet(ws, [0,1]);
                 const tgtSumCols = {};
-                allMonthKeys.forEach((mk, i) => { tgtSumCols['m' + i] = i + 2; }); // cols start at index 2
+                allMonthKeys.forEach((mk, i) => { tgtSumCols['m' + i] = i + 2; });
                 addSummaryRow(ws, targetSimple, tgtSumCols);
                 XLSX.utils.book_append_sheet(wb, ws, 'Target Toko');
             }
