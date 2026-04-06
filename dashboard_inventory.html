@@ -9552,7 +9552,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     'Achievement (%)': Math.round(achiev) + '%',
                     _monthKey: v.month, // for sorting, stripped before export
                 };
-            }).sort((a, b) => a._monthKey.localeCompare(b._monthKey) || a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']) || a['Nama SPG'].localeCompare(b['Nama SPG']));
+            }).sort((a, b) => {
+                if (a._monthKey !== b._monthKey) return a._monthKey.localeCompare(b._monthKey);
+                // "-" (no master) first, then by Area, Toko, Nama SPG
+                const aUnk = a['Area'] === '-' ? 0 : 1;
+                const bUnk = b['Area'] === '-' ? 0 : 1;
+                if (aUnk !== bUnk) return aUnk - bUnk;
+                return a['Area'].localeCompare(b['Area']) || a['Toko'].localeCompare(b['Toko']) || a['Nama SPG'].localeCompare(b['Nama SPG']);
+            });
 
             // Build Double Store rows
             const spgStoreDetail = {};
@@ -9741,7 +9748,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
                 // Add perbantuan data to the RIGHT (1 column gap after col 11 = col 13 start)
                 const dStartCol = 13; // col N (after 1 gap col M)
-                const monthDoubles = doubleRows.filter(d => d._monthKey === mk);
+                const monthDoubles = doubleRows.filter(d => d._monthKey === mk)
+                    .sort((a, b) => {
+                        // "-" (no master) first, then by Toko Asal, then Nama SPG
+                        const aIsUnknown = a['Toko Asal'] === '-' ? 0 : 1;
+                        const bIsUnknown = b['Toko Asal'] === '-' ? 0 : 1;
+                        if (aIsUnknown !== bIsUnknown) return aIsUnknown - bIsUnknown;
+                        return a['Toko Asal'].localeCompare(b['Toko Asal']) || a['Nama SPG'].localeCompare(b['Nama SPG']);
+                    });
                 if (monthDoubles.length > 0) {
                     const dHeaders = ['Nama SPG', 'Toko Asal', 'Toko Perbantuan', 'Sales'];
                     const headerS = {alignment:{horizontal:'center',vertical:'center',wrapText:true},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'1F2937'}},border:border};
