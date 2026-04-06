@@ -6551,11 +6551,11 @@
             
             // DDD = Retail stores
             retailDDD.forEach(item => {
-                const sku = item.sku;
-                if (!sku) return;
-                if (!skuMap[sku]) {
-                    skuMap[sku] = {
-                        sku: sku,
+                const key = item.kode_kecil || item.sku;
+                if (!key) return;
+                if (!skuMap[key]) {
+                    skuMap[key] = {
+                        sku: item.sku,
                         kodeKecil: item.kode_kecil,
                         kode: item.kode,
                         name: item.name,
@@ -6563,6 +6563,7 @@
                         series: item.series,
                         gender: item.gender,
                         tier: item.tier,
+                        version: item.version || '',
                         WHS: 0, WHB: 0, WHJ: 0,
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
@@ -6583,27 +6584,27 @@
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, stock]) => {
-                        skuMap[sku].stokRetail += stock;
-                        skuMap[sku].storeStockMap[store] = (skuMap[sku].storeStockMap[store] || 0) + stock;
+                        skuMap[key].stokRetail += stock;
+                        skuMap[key].storeStockMap[store] = (skuMap[key].storeStockMap[store] || 0) + stock;
                         const storeArea = getAreaFromStore(store);
-                        if (storeArea === 'Batam') skuMap[sku].stokTokoBatam += stock;
-                        else if (storeArea === 'Lombok') skuMap[sku].stokTokoLombok += stock;
-                        else if (storeArea === 'Sulawesi') skuMap[sku].stokTokoSulawesi += stock;
-                        else if (storeArea === 'Sumatera') skuMap[sku].stokTokoSumatera += stock;
-                        else if (storeArea === 'Jakarta') skuMap[sku].stokTokoJakarta += stock;
-                        else if (storeArea === 'Jawa Timur') skuMap[sku].stokTokoJatim += stock;
-                        else skuMap[sku].stokTokoBali += stock;
+                        if (storeArea === 'Batam') skuMap[key].stokTokoBatam += stock;
+                        else if (storeArea === 'Lombok') skuMap[key].stokTokoLombok += stock;
+                        else if (storeArea === 'Sulawesi') skuMap[key].stokTokoSulawesi += stock;
+                        else if (storeArea === 'Sumatera') skuMap[key].stokTokoSumatera += stock;
+                        else if (storeArea === 'Jakarta') skuMap[key].stokTokoJakarta += stock;
+                        else if (storeArea === 'Jawa Timur') skuMap[key].stokTokoJatim += stock;
+                        else skuMap[key].stokTokoBali += stock;
                     });
                 }
             });
 
             // Consignment stock from /api/stock/consignment (NON-RETAIL stores: AEON, Grand Lucky, Pepito, etc.)
             consignmentStockItems.forEach(item => {
-                const sku = item.sku;
-                if (!sku) return;
-                if (!skuMap[sku]) {
-                    skuMap[sku] = {
-                        sku: sku,
+                const key = item.kode_kecil || item.sku;
+                if (!key) return;
+                if (!skuMap[key]) {
+                    skuMap[key] = {
+                        sku: item.sku,
                         kodeKecil: item.kode_kecil,
                         kode: item.kode,
                         name: item.name,
@@ -6611,6 +6612,7 @@
                         series: item.series,
                         gender: item.gender,
                         tier: item.tier,
+                        version: item.version || '',
                         WHS: 0, WHB: 0, WHJ: 0,
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
@@ -6629,7 +6631,7 @@
                         storeStockMap: {}
                     };
                 }
-                skuMap[sku].stokConsignment += (item.total || 0);
+                skuMap[key].stokConsignment += (item.total || 0);
             });
 
             // Process warehouse data - ALL entities (DDD, LJBB, MBB, UBB)
@@ -6637,11 +6639,11 @@
             // WH Bali = Warehouse Bali + Warehouse Bali Gatsu (semua entity)
             // WH Pusat = Warehouse Pusat (semua entity)
             whData.forEach(item => {
-                const sku = item.sku;
-                if (!sku) return;
-                if (!skuMap[sku]) {
-                    skuMap[sku] = {
-                        sku: sku,
+                const key = item.kode_kecil || item.sku;
+                if (!key) return;
+                if (!skuMap[key]) {
+                    skuMap[key] = {
+                        sku: item.sku,
                         kodeKecil: item.kode_kecil,
                         kode: item.kode,
                         name: item.name,
@@ -6649,6 +6651,7 @@
                         series: item.series,
                         gender: item.gender,
                         tier: item.tier,
+                        version: item.version || '',
                         WHS: 0, WHB: 0, WHJ: 0,
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
@@ -6672,11 +6675,11 @@
                     Object.entries(item.store_stock).forEach(([wh, stock]) => {
                         const w = wh.toLowerCase();
                         // Online warehouses FIRST (before bali/jakarta catch-all)
-                        if (w.includes('online') && w.includes('bali')) skuMap[sku].WHOB += stock;
-                        else if (w.includes('online') && (w.includes('jakarta') || w.includes('jkt'))) skuMap[sku].WHOJ += stock;
-                        else if (w.includes('pusat')) skuMap[sku].WHS += stock;
-                        else if (w.includes('bali') || w.includes('gatsu')) skuMap[sku].WHB += stock;
-                        else if (w.includes('jakarta') || w.includes('pluit') || w.includes('palembang')) skuMap[sku].WHJ += stock;
+                        if (w.includes('online') && w.includes('bali')) skuMap[key].WHOB += stock;
+                        else if (w.includes('online') && (w.includes('jakarta') || w.includes('jkt'))) skuMap[key].WHOJ += stock;
+                        else if (w.includes('pusat')) skuMap[key].WHS += stock;
+                        else if (w.includes('bali') || w.includes('gatsu')) skuMap[key].WHB += stock;
+                        else if (w.includes('jakarta') || w.includes('pluit') || w.includes('palembang')) skuMap[key].WHJ += stock;
                     });
                 }
             });
