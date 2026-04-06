@@ -14408,14 +14408,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 if (!items) return;
                 items.forEach(function(item) {
                     if (!item.store_stock) return;
-                    var kk = (item.kode_kecil || item.kode || '').toUpperCase();
+                    var kodeBarang = (item.kode_kecil || '').toUpperCase(); // kode barang (with size)
+                    var kodeKecil = (item.kode || '').toUpperCase();        // kode kecil (artikel tanpa size)
                     var sz = item.size || '';
-                    if (!kk) return;
-                    var key = kk + '|' + sz;
+                    if (!kodeBarang && !kodeKecil) return;
+                    var key = (kodeBarang || kodeKecil + '|' + sz);
                     if (!stockMap[key]) {
                         stockMap[key] = {
                             kodeMix: (item.kode_mix || '').toUpperCase(),
-                            kodeKecil: kk,
+                            kodeBarang: kodeBarang,
+                            kodeKecil: kodeKecil,
                             nama: item.name || '',
                             size: sz,
                             gender: item.gender || '',
@@ -14463,6 +14465,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var rows = Object.values(stockMap).map(function(r) {
                 return {
                     'Kode Mix': r.kodeMix,
+                    'Kode Barang': r.kodeBarang,
                     'Kode Kecil': r.kodeKecil,
                     'Nama Barang': r.nama,
                     'Size': r.size,
@@ -14522,15 +14525,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // === EXPORT ===
             var wb = XLSX.utils.book_new();
-            var leftCols = [0,1,2,3,4,5,6,7,8];
+            // Cols: KodeMix(0) KodeBarang(1) KodeKecil(2) Nama(3) Size(4) Gender(5) Series(6) Tipe(7) Tier(8) Version(9) StokWH(10) StokRetail(11) StokOnline(12) StokConsig(13) Total(14)
+            var leftCols = [0,1,2,3,4,5,6,7,8,9];
 
             // Sheet 1: All Stock
             var ws1 = XLSX.utils.json_to_sheet(rows);
-            ws1['!cols'] = [{wch:16},{wch:14},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+            ws1['!cols'] = [{wch:16},{wch:16},{wch:14},{wch:30},{wch:8},{wch:8},{wch:12},{wch:10},{wch:6},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
             applyTableStyle(ws1, leftCols);
-            // SUM row
+            // SUM row — numeric cols K(10) to O(14)
             var r1 = rows.length + 1;
-            ['I','J','K','L','M','N'].forEach(function(col, i) {
+            ['K','L','M','N','O'].forEach(function(col) {
                 var addr = col + (r1 + 1);
                 ws1[addr] = {f: 'SUM(' + col + '2:' + col + r1 + ')', t:'n'};
             });
