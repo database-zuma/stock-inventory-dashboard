@@ -9591,10 +9591,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 spgStores[v.spg].add(v.store);
             });
             // Helper: check if two store names are the same (fuzzy)
+            const STORE_ALIASES = {'zuma mataram 2':'zuma mataram lombok'};
             function isSameStore(a, b) {
                 if (!a || !b) return false;
-                const x = a.toLowerCase().replace(/\s+/g,' ').trim();
-                const y = b.toLowerCase().replace(/\s+/g,' ').trim();
+                let x = a.toLowerCase().replace(/\s+/g,' ').trim();
+                let y = b.toLowerCase().replace(/\s+/g,' ').trim();
+                if (STORE_ALIASES[x]) x = STORE_ALIASES[x];
+                if (STORE_ALIASES[y]) y = STORE_ALIASES[y];
                 if (x === y) return true;
                 if (x.includes(y) || y.includes(x)) return true;
                 return false;
@@ -9602,11 +9605,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             const doubleRows = Object.values(spgStoreDetail)
                 .filter(v => {
                     if (!spgStores[v.spg] || spgStores[v.spg].size <= 1) return false;
-                    // Exclude Central Grand
                     const master = getSPGHomeStore(v.spg);
+                    // No master = can't determine perbantuan, exclude
+                    if (!master) return false;
+                    // Exclude Central Grand
                     if (v.store.toLowerCase().includes('central grand')) return false;
-                    if (master && master.store.toLowerCase().includes('central grand')) return false;
-                    if (!master) return true;
+                    if (master.store.toLowerCase().includes('central grand')) return false;
                     return !isSameStore(v.store, master.store);
                 })
                 .map(v => {
