@@ -2685,6 +2685,7 @@
         let assortmentMap = {};
         let salesMap = {};
         let onlineSalesMap = {};  // Online-only sales from /api/sales/aggregate-online
+        let kodemixLookupGlobal = {};  // kode_mix|version → kode_kecil
         let consignmentStockItems = []; // Consignment stock from /api/stock/consignment
         let salesDetailData = [];
         let salesDetailByMonth = {};  // cache: 'YYYY-MM' -> records[]
@@ -2828,7 +2829,7 @@
             }
 
             try {
-                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData, consigStockData] = await Promise.all([
+                const [stockData, storesData, storeAreasData, maxStockData, salesAggData, targetsData, assortmentData, onlineSalesAggData, consigStockData, kodemixLookupData] = await Promise.all([
                     trackFetch('/api/stock', 'Data stok dimuat...', {}),
                     trackFetch('/api/stores', 'Data toko dimuat...', {}),
                     trackFetch('/api/store-areas', 'Data area dimuat...', {}),
@@ -2838,6 +2839,7 @@
                     trackFetch('/api/assortment', 'Assortment dimuat...', {}),
                     trackFetch('/api/sales/aggregate-online', 'Sales online dimuat...', {}),
                     trackFetch('/api/stock/consignment', 'Stok konsinyasi dimuat...', { data: [] }),
+                    trackFetch('/api/kodemix-lookup', 'Kodemix lookup dimuat...', {}),
                 ]);
                 allData = stockData;
                 // Update 'Data per' date from API metadata
@@ -2882,6 +2884,8 @@
                 assortmentMap = assortmentData;
                 // Online sales map (from /api/sales/aggregate-online)
                 onlineSalesMap = onlineSalesAggData || {};
+                // Kodemix lookup (kode_mix|version → kode_kecil)
+                kodemixLookupGlobal = kodemixLookupData || {};
                 // Consignment stock items (from /api/stock/consignment)
                 consignmentStockItems = (consigStockData && consigStockData.data) ? consigStockData.data : [];
                 // Also cache for Consignment tab (so it doesn't need to re-fetch)
@@ -6374,9 +6378,15 @@
                 const kk = (item.kodeMix || item.kode || item.kodeKecil || item.sku || '').toUpperCase();
                 if (!kk) return;
 
+                // Resolve display kode kecil from kodemix-lookup (prefer highest version)
+                const ver = String(item.version || '0');
+                const lookupKey = kk + '|' + ver;
+                const resolvedKK = (kodemixLookupGlobal[lookupKey] || '').toUpperCase();
+
                 if (!kodeKecilMap[kk]) {
                     kodeKecilMap[kk] = {
-                        kodeKecil: kk,
+                        kodeKecil: resolvedKK || (item.kode || kk).toUpperCase(),
+                        _bestVersion: ver,
                         name: item.name,
                         series: item.series,
                         gender: item.gender,
@@ -6399,6 +6409,11 @@
                         storeStockMap: {},
                         skuList: []
                     };
+                } else if (ver > (kodeKecilMap[kk]._bestVersion || '0')) {
+                    // Update display to highest version's kode kecil
+                    if (resolvedKK) kodeKecilMap[kk].kodeKecil = resolvedKK;
+                    kodeKecilMap[kk]._bestVersion = ver;
+                    kodeKecilMap[kk].name = item.name;
                 }
 
                 // Sum all stock values
@@ -7408,9 +7423,13 @@
             scoItems.forEach(item => {
                 const kk = (item.kodeMix || item.kode || item.kodeKecil || item.sku || '').toUpperCase();
                 if (!kk) return;
+                const ver = String(item.version || '0');
+                const lookupKey = kk + '|' + ver;
+                const resolvedKK = (kodemixLookupGlobal[lookupKey] || '').toUpperCase();
                 if (!kodeKecilMap[kk]) {
                     kodeKecilMap[kk] = {
-                        kodeKecil: kk,
+                        kodeKecil: resolvedKK || (item.kode || kk).toUpperCase(),
+                        _bestVersion: ver,
                         name: item.name,
                         series: item.series,
                         gender: item.gender,
@@ -7418,6 +7437,10 @@
                         WHOB: 0, WHOJ: 0, whOnlineTotal: 0,
                         skuList: []
                     };
+                } else if (ver > (kodeKecilMap[kk]._bestVersion || '0')) {
+                    if (resolvedKK) kodeKecilMap[kk].kodeKecil = resolvedKK;
+                    kodeKecilMap[kk]._bestVersion = ver;
+                    kodeKecilMap[kk].name = item.name;
                 }
                 kodeKecilMap[kk].WHOB += item.WHOB || 0;
                 kodeKecilMap[kk].WHOJ += item.WHOJ || 0;
@@ -14406,11 +14429,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof XLSX === 'undefined') { alert('XLSX library not loaded'); return; }
             if (!allData || !allData.DDD) { alert('Data stock belum dimuat'); return; }
 
-            // Fetch kodemix lookup: {"KODE_MIX|VERSION": "kode_kecil", ...}
-            var kodemixLookup = {};
-            try {
-                kodemixLookup = await fetchAPI('/api/kodemix-lookup');
-            } catch(e) { console.error('kodemix-lookup failed:', e); }
+            // Use global kodemix lookup (loaded at init)
+            var kodemixLookup = kodemixLookupGlobal || {};
 
             // Collect ALL stock from all entities, all types
             // Key: kode_kecil + size → aggregate stock
