@@ -3567,13 +3567,16 @@
                 });
             }
 
-            // Group by kode_mix (article) — merge all versions + sizes
+            // Group by kode_kecil (per version, all sizes merged)
+            // Resolve kode_kecil from kodemix lookup: kode_mix|version → kode_kecil
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode_mix || item.sku || '').toUpperCase();
+                const km = (item.kode_mix || '').toUpperCase();
+                const ver = String(item.version || '0');
+                const kk = (kodemixLookupGlobal[km + '|' + ver] || item.kode || item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
-                    groupedMap[kk] = { ...item, total: 0, store_stock: {} };
+                    groupedMap[kk] = { ...item, _resolvedKK: kk, total: 0, store_stock: {} };
                 }
                 if (tableArea && item.store_stock) {
                     Object.entries(item.store_stock).forEach(([store, qty]) => {
@@ -3658,9 +3661,7 @@
                     if (tableStore && item.store_stock) {
                         displayStock = item.store_stock[tableStore] || 0;
                     }
-                    const km = (item.kode_mix || '').toUpperCase();
-                    let kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
-                    for (let v = 9; v >= 0; v--) { const lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
+                    const kodeKecil = item._resolvedKK || (item.kode || item.kode_kecil || '-').toUpperCase();
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'retail'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -3735,13 +3736,15 @@
                 });
             }
 
-            // Group by kode_mix (article) — merge all versions + sizes
+            // Group by kode_kecil (per version, all sizes merged)
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode_mix || item.sku || '').toUpperCase();
+                const km = (item.kode_mix || '').toUpperCase();
+                const ver = String(item.version || '0');
+                const kk = (kodemixLookupGlobal[km + '|' + ver] || item.kode || item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
-                    groupedMap[kk] = { ...item, total: 0, store_stock: {} };
+                    groupedMap[kk] = { ...item, _resolvedKK: kk, total: 0, store_stock: {} };
                 }
                 if (item.store_stock) {
                     Object.entries(item.store_stock).forEach(([wh, qty]) => {
@@ -3814,9 +3817,7 @@
                     if (whWarehouse && item.store_stock) {
                         displayStock = item.store_stock[whWarehouse] || 0;
                     }
-                    const km = (item.kode_mix || '').toUpperCase();
-                    let kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
-                    for (let v = 9; v >= 0; v--) { const lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
+                    const kodeKecil = item._resolvedKK || (item.kode || item.kode_kecil || '-').toUpperCase();
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'warehouse'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -4528,13 +4529,15 @@
                 items = items.filter(function(item) { return (item.series || '') === series; });
             }
 
-            // Group by kode_mix (article) — merge all versions + sizes
+            // Group by kode_kecil (per version, all sizes merged)
             var groupedMap = {};
             items.forEach(function(item) {
-                var kk = (item.kode_mix || item.sku || '').toUpperCase();
+                var km = (item.kode_mix || '').toUpperCase();
+                var ver = String(item.version || '0');
+                var kk = (kodemixLookupGlobal[km + '|' + ver] || item.kode || item.kode_kecil || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
-                    groupedMap[kk] = { sku: item.sku, kode_kecil: item.kode_kecil, kode: item.kode, name: item.name, gender: item.gender, series: item.series, tipe: item.tipe, tier: item.tier, color: item.color, partner: item.partner, entity: item.entity, total: 0, store_stock: {} };
+                    groupedMap[kk] = { sku: item.sku, kode_kecil: item.kode_kecil, kode: item.kode, kode_mix: item.kode_mix, name: item.name, gender: item.gender, series: item.series, tipe: item.tipe, tier: item.tier, color: item.color, partner: item.partner, entity: item.entity, _resolvedKK: kk, total: 0, store_stock: {} };
                 }
                 if (store && item.store_stock && item.store_stock[store] !== undefined) {
                     groupedMap[kk].total += item.store_stock[store] || 0;
@@ -4605,9 +4608,7 @@
                     if (store && item.store_stock) {
                         displayStock = item.store_stock[store] || 0;
                     }
-                    var km = (item.kode_mix || '').toUpperCase();
-                    var kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
-                    for (var v = 9; v >= 0; v--) { var lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
+                    var kodeKecil = item._resolvedKK || (item.kode || item.kode_kecil || '-').toUpperCase();
                     html += '<tr>' +
                         '<td><a href="#" onclick="showSkuDetail(\'' + kodeKecil + '\', \'consignment\'); return false;" style="color:#92400e; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">' + kodeKecil + '</a></td>' +
                         '<td>' + (item.gender || '-') + '</td>' +
