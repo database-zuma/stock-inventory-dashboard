@@ -7499,12 +7499,14 @@
             scoItems = scItems.map(item => ({
                 sku: item.sku,
                 kodeKecil: item.kodeKecil,
+                kodeMix: item.kodeMix || '',
                 kode: item.kode,
                 name: item.name,
                 size: item.size || '',
                 series: item.series,
                 gender: item.gender,
                 tier: item.tier,
+                version: item.version || '',
                 WHOB: item.WHOB || 0,
                 WHOJ: item.WHOJ || 0,
                 whOnlineTotal: item.whOnlineTotal || 0
