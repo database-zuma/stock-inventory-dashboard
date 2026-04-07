@@ -3567,10 +3567,10 @@
                 });
             }
 
-            // Group by kode (base article = kode kecil)
+            // Group by kode_mix (article) — merge all versions + sizes
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode || item.kode_kecil || '').toUpperCase();
+                const kk = (item.kode_mix || item.sku || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
@@ -3658,7 +3658,9 @@
                     if (tableStore && item.store_stock) {
                         displayStock = item.store_stock[tableStore] || 0;
                     }
-                    const kodeKecil = item.kode || item.kode_kecil || '-';
+                    const km = (item.kode_mix || '').toUpperCase();
+                    let kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
+                    for (let v = 9; v >= 0; v--) { const lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'retail'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -3733,10 +3735,10 @@
                 });
             }
 
-            // Group by kode (base article = kode kecil)
+            // Group by kode_mix (article) — merge all versions + sizes
             const groupedMap = {};
             data.forEach(item => {
-                const kk = (item.kode || item.kode_kecil || '').toUpperCase();
+                const kk = (item.kode_mix || item.sku || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { ...item, total: 0, store_stock: {} };
@@ -3812,7 +3814,9 @@
                     if (whWarehouse && item.store_stock) {
                         displayStock = item.store_stock[whWarehouse] || 0;
                     }
-                    const kodeKecil = item.kode || item.kode_kecil || '-';
+                    const km = (item.kode_mix || '').toUpperCase();
+                    let kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
+                    for (let v = 9; v >= 0; v--) { const lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
                     return `<tr>
                         <td><a href="#" onclick="showSkuDetail('${kodeKecil}', 'warehouse'); return false;" style="color:#1f2937; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">${kodeKecil}</a></td>
                         <td>${item.gender || '-'}</td>
@@ -4524,10 +4528,10 @@
                 items = items.filter(function(item) { return (item.series || '') === series; });
             }
 
-            // Group by kode (base article) like retail does
+            // Group by kode_mix (article) — merge all versions + sizes
             var groupedMap = {};
             items.forEach(function(item) {
-                var kk = (item.kode || item.kode_kecil || '').toUpperCase();
+                var kk = (item.kode_mix || item.sku || '').toUpperCase();
                 if (!kk) return;
                 if (!groupedMap[kk]) {
                     groupedMap[kk] = { sku: item.sku, kode_kecil: item.kode_kecil, kode: item.kode, name: item.name, gender: item.gender, series: item.series, tipe: item.tipe, tier: item.tier, color: item.color, partner: item.partner, entity: item.entity, total: 0, store_stock: {} };
@@ -4601,7 +4605,9 @@
                     if (store && item.store_stock) {
                         displayStock = item.store_stock[store] || 0;
                     }
-                    var kodeKecil = item.kode || item.kode_kecil || '-';
+                    var km = (item.kode_mix || '').toUpperCase();
+                    var kodeKecil = (item.kode || item.kode_kecil || '-').toUpperCase();
+                    for (var v = 9; v >= 0; v--) { var lk = kodemixLookupGlobal[km + '|' + v]; if (lk) { kodeKecil = lk.toUpperCase(); break; } }
                     html += '<tr>' +
                         '<td><a href="#" onclick="showSkuDetail(\'' + kodeKecil + '\', \'consignment\'); return false;" style="color:#92400e; text-decoration:underline; font-weight:600; cursor:pointer; text-transform:uppercase;">' + kodeKecil + '</a></td>' +
                         '<td>' + (item.gender || '-') + '</td>' +
