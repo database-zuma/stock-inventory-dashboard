@@ -7499,8 +7499,8 @@
             if (!thead) return;
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const mLabels = months.map(m => m.toUpperCase());
-            const monthHeadersOnline = mLabels.map((lbl, i) => '<th style="' + hs + '" onclick="sortStockControlOnline(\'m' + i + '\')">'+lbl+'</th>').join('');
             const hs = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
+            const monthHeadersOnline = mLabels.map((lbl, i) => '<th style="' + hs + '" onclick="sortStockControlOnline(\'m' + i + '\')">'+lbl+'</th>').join('');
             var stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
                 '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
                 '<th style="' + hs + '" onclick="sortStockControlOnline(\'onlineTotal\')">ONLINE TOTAL</th>';
