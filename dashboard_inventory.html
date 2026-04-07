@@ -2854,32 +2854,7 @@
                 storeAreaMap = storeAreasData;
                 maxStockMap = maxStockData;
                 salesMap = salesAggData;
-                // Extract dynamic month keys from salesMap for Control Stock
-                // salesMap keys per SKU are like {nov: N, des: N, jan: N}
-                const monthKeysSet = new Set();
-                Object.values(salesAggData).forEach(skuData => {
-                    if (typeof skuData === 'object' && !Array.isArray(skuData)) {
-                        Object.keys(skuData).forEach(k => monthKeysSet.add(k));
-                    }
-                });
-                // Indonesian month order for sorting
-                const ID_MONTH_ORDER = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
-                const allMonthKeys = [...monthKeysSet].filter(k => ID_MONTH_ORDER.includes(k));
-                // Handle year-crossing: if both early (jan-mar) and late (okt-des) months exist,
-                // late months are from previous year and should sort before early months
-                const hasEarly = allMonthKeys.some(k => ID_MONTH_ORDER.indexOf(k) < 6);
-                const hasLate = allMonthKeys.some(k => ID_MONTH_ORDER.indexOf(k) >= 9);
-                if (hasEarly && hasLate) {
-                    allMonthKeys.sort((a, b) => {
-                        const ai = ID_MONTH_ORDER.indexOf(a);
-                        const bi = ID_MONTH_ORDER.indexOf(b);
-                        return (ai >= 9 ? ai - 12 : ai) - (bi >= 9 ? bi - 12 : bi);
-                    });
-                } else {
-                    allMonthKeys.sort((a, b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
-                }
-                // Take last 3 months
-                salesMap['_months'] = allMonthKeys.length >= 3 ? allMonthKeys.slice(-3) : allMonthKeys;
+                // _months and _days are set by the API (rolling 90 days)
                 targetData = targetsData;
                 assortmentMap = assortmentData;
                 // Online sales map (from /api/sales/aggregate-online)
@@ -2909,28 +2884,7 @@
                     salesWholesaleData = Array.isArray(res[3]) ? res[3] : (res[3].data || res[3] || []);
                     console.log('[PRE-FETCH] Channels ready: retail=' + window._preFetchRetailData.length + ', online=' + salesOnlineData.length + ', consig=' + salesConsigData.length + ', wholesale=' + salesWholesaleData.length);
                 }).catch(function(e) { console.error('[PRE-FETCH] Failed:', e); });
-                // Extract dynamic month keys for online sales
-                if (onlineSalesMap['_months']) {
-                    // API already provides _months
-                } else {
-                    const onlineMonthSet = new Set();
-                    Object.values(onlineSalesMap).forEach(skuData => {
-                        if (typeof skuData === 'object' && !Array.isArray(skuData)) {
-                            Object.keys(skuData).forEach(k => onlineMonthSet.add(k));
-                        }
-                    });
-                    const onlineMonthKeys = [...onlineMonthSet].filter(k => ID_MONTH_ORDER.includes(k));
-                    if (hasEarly && hasLate) {
-                        onlineMonthKeys.sort((a, b) => {
-                            const ai = ID_MONTH_ORDER.indexOf(a);
-                            const bi = ID_MONTH_ORDER.indexOf(b);
-                            return (ai >= 9 ? ai - 12 : ai) - (bi >= 9 ? bi - 12 : bi);
-                        });
-                    } else {
-                        onlineMonthKeys.sort((a, b) => ID_MONTH_ORDER.indexOf(a) - ID_MONTH_ORDER.indexOf(b));
-                    }
-                    onlineSalesMap['_months'] = onlineMonthKeys.length >= 3 ? onlineMonthKeys.slice(-3) : onlineMonthKeys;
-                }
+                // _months and _days for onlineSalesMap are set by the API (rolling 90 days)
                 // Sales detail loading is DEFERRED until Sales tab is clicked (lazy load)
                 // This speeds up initial page load by ~15-20 seconds
                 // buildDerivedMaps uses stock data only at init; sales data added later
@@ -6451,18 +6405,17 @@
 
         // Get aggregated sales for Kode Kecil (sum all SKU sales)
         function getKodeKecilSales(skuList) {
-            const months = salesMap['_months'] || ['nov','des','jan'];
-            const [m1, m2, m3] = months;
-            let s1 = 0, s2 = 0, s3 = 0;
+            const months = salesMap['_months'] || ['jan','feb','mar'];
+            const days = salesMap['_days'] || 90;
+            const vals = months.map(() => 0);
             skuList.forEach(sku => {
                 const skuUpper = (sku || "").toLowerCase();
                 const s = salesMap[skuUpper] || {};
-                s1 += s[m1] || 0;
-                s2 += s[m2] || 0;
-                s3 += s[m3] || 0;
+                months.forEach((m, i) => { vals[i] += s[m] || 0; });
             });
-            const avg = (s1 + s2 + s3) / 3;
-            return { m1: s1, m2: s2, m3: s3, avg };
+            const total = vals.reduce((a, b) => a + b, 0);
+            const avg = total / days * 30;
+            return { vals, avg };
         }
 
         // Switch view mode
@@ -6494,9 +6447,10 @@
             const thead = document.getElementById('scTableHead');
             if (!thead) return;
 
-            const months = salesMap['_months'] || ['nov','des','jan'];
+            const months = salesMap['_months'] || ['jan','feb','mar'];
             const mLabels = months.map(m => m.toUpperCase());
             const headerStyle = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
+            const monthHeaders = mLabels.map((lbl, i) => '<th style="' + headerStyle + '" onclick="sortStockControl(\'m' + i + '\')">' + lbl + '</th>').join('');
 
             if (scViewMode === 'sku') {
                 thead.innerHTML = '<tr style="background:#1f2937;color:#ffffff;position:sticky;top:0;z-index:10;">' +
@@ -6506,10 +6460,8 @@
                     '<th style="' + headerStyle + '">SERIES</th>' +
                     '<th style="' + headerStyle + '">GENDER</th>' +
                     '<th style="' + headerStyle + '">TIER</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m1\')">' + mLabels[0] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m2\')">' + mLabels[1] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m3\')">' + mLabels[2] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
+                    monthHeaders +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'avg\')">AVG/BLN</th>' +
                     '<th style="' + headerStyle + '">WH PUSAT</th>' +
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
@@ -6529,10 +6481,8 @@
                     '<th style="' + headerStyle + '">SERIES</th>' +
                     '<th style="' + headerStyle + '">GENDER</th>' +
                     '<th style="' + headerStyle + '">TIER</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m1\')">' + mLabels[0] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m2\')">' + mLabels[1] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'m3\')">' + mLabels[2] + '</th>' +
-                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'avg\')">AVG 3M</th>' +
+                    monthHeaders +
+                    '<th style="' + headerStyle + '" onclick="sortStockControl(\'avg\')">AVG/BLN</th>' +
                     '<th style="' + headerStyle + '">WH PUSAT</th>' +
                     '<th style="' + headerStyle + '">WH BALI</th>' +
                     '<th style="' + headerStyle + '">WH JKT</th>' +
@@ -6827,9 +6777,9 @@
             const toFilter = document.getElementById('scFilterTO')?.value || '';
             const search = (document.getElementById('scSearch')?.value || '').toLowerCase();
 
-            // Dynamic months from salesMap
-            const scMonths = salesMap['_months'] || ['nov','des','jan'];
-            const [scM1, scM2, scM3] = scMonths;
+            // Dynamic months from salesMap (3-4 months rolling)
+            const scMonths = salesMap['_months'] || ['jan','feb','mar'];
+            const scDays = salesMap['_days'] || 90;
 
             // Stock Global dropdown
             const basisStok = document.getElementById('scFilterBasis')?.value || 'global';
@@ -6857,9 +6807,10 @@
                 } else {
                     s = salesMap[key] || {};
                 }
-                const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
-                const avg = (v1 + v2 + v3) / 3;
-                return { m1: v1, m2: v2, m3: v3, avg: avg };
+                const vals = scMonths.map(m => s[m] || 0);
+                const total = vals.reduce((a, b) => a + b, 0);
+                const avg = total / scDays * 30;
+                return { vals, avg };
             }
 
             // Helper function to get sales for item (handles both modes)
@@ -7045,7 +6996,8 @@
 
             tbody.innerHTML = pageData.map(item => {
                 const sales = getItemSales(item);
-                let s1 = sales.m1, s2 = sales.m2, s3 = sales.m3, avgSales = sales.avg;
+                const sVals = sales.vals || [];
+                let avgSales = sales.avg;
                 let whStock, tokoStock, globalStock;
 
                 if (storeFilter) {
@@ -7156,9 +7108,7 @@
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        sVals.map(v => '<td style="' + cellStyle + 'color:#374151;">' + v.toLocaleString('id-ID') + '</td>').join('') +
                         '<td style="' + cellStyle + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
@@ -7179,9 +7129,7 @@
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cellStyle + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cellStyle + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cellStyle + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        sVals.map(v => '<td style="' + cellStyle + 'color:#374151;">' + v.toLocaleString('id-ID') + '</td>').join('') +
                         '<td style="' + cellStyle + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whPusat + '</td>' +
                         '<td style="' + cellStyle + 'color:#374151;">' + whBali + '</td>' +
@@ -7247,8 +7195,8 @@
             }
 
             // Dynamic months and basis for sorting
-            const sortMonths = salesMap['_months'] || ['nov','des','jan'];
-            const [sM1, sM2, sM3] = sortMonths;
+            const sortMonths = salesMap['_months'] || ['jan','feb','mar'];
+            const sortDays = salesMap['_days'] || 90;
             const sortBasis = document.getElementById('scFilterBasis')?.value || 'global';
 
             function getSortBasis(item) {
@@ -7270,8 +7218,9 @@
                 } else {
                     const key = (item.kodeKecil || item.sku || '').toLowerCase();
                     const s = salesMap[key] || {};
-                    const v1 = s[sM1] || 0, v2 = s[sM2] || 0, v3 = s[sM3] || 0;
-                    return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
+                    const vals = sortMonths.map(m => s[m] || 0);
+                    const total = vals.reduce((a, b) => a + b, 0);
+                    return { vals, avg: total / sortDays * 30 };
                 }
             }
 
@@ -7286,9 +7235,6 @@
                     case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
                     case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
                     case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
-                    case 'm1': valA = salesA.m1; valB = salesB.m1; break;
-                    case 'm2': valA = salesA.m2; valB = salesB.m2; break;
-                    case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whTotal': valA = a.whTotal; valB = b.whTotal; break;
                     case 'stokRetail': valA = a.stokRetail || 0; valB = b.stokRetail || 0; break;
@@ -7300,16 +7246,21 @@
                         valB = getSortBasis(b) - (avgB * 3);
                         break;
                     case 'str':
-                        const denA = (avgA * 3) + getSortBasis(a);
-                        const denB = (avgB * 3) + getSortBasis(b);
+                        var denA = (avgA * 3) + getSortBasis(a);
+                        var denB = (avgB * 3) + getSortBasis(b);
                         valA = denA > 0 ? ((avgA * 3) / denA * 100) : 0;
                         valB = denB > 0 ? ((avgB * 3) / denB * 100) : 0;
                         break;
                     case 'tw': valA = avgA > 0 ? a.whTotal / avgA : 999; valB = avgB > 0 ? b.whTotal / avgB : 999; break;
                     case 'to': valA = avgA > 0 ? a.stokToko / avgA : 999; valB = avgB > 0 ? b.stokToko / avgB : 999; break;
                     default:
-                        valA = scViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
-                        valB = scViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
+                        if (column.startsWith('m') && !isNaN(column.slice(1))) {
+                            var mi = parseInt(column.slice(1));
+                            valA = (salesA.vals||[])[mi] || 0; valB = (salesB.vals||[])[mi] || 0;
+                        } else {
+                            valA = scViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
+                            valB = scViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
+                        }
                 }
 
                 if (typeof valA === 'string') {
@@ -7330,8 +7281,8 @@
             if (typeof XLSX === 'undefined') { alert('SheetJS library not loaded. Please refresh the page.'); return; }
             if (!scFilteredItems || scFilteredItems.length === 0) { alert('Tidak ada data untuk di-export.'); return; }
 
-            const scMonths = salesMap['_months'] || ['nov','des','jan'];
-            const [scM1, scM2, scM3] = scMonths;
+            const scMonths = salesMap['_months'] || ['jan','feb','mar'];
+            const scDays = salesMap['_days'] || 90;
             const basisLabel = document.getElementById('scFilterBasis')?.value || 'global';
 
             // Helper to get sales for export
@@ -7341,8 +7292,9 @@
                 } else {
                     const key = (item.kodeKecil || item.sku || '').toLowerCase();
                     const s = salesMap[key] || {};
-                    const v1 = s[scM1] || 0, v2 = s[scM2] || 0, v3 = s[scM3] || 0;
-                    return { m1: v1, m2: v2, m3: v3, avg: (v1 + v2 + v3) / 3 };
+                    const vals = scMonths.map(m => s[m] || 0);
+                    const total = vals.reduce((a, b) => a + b, 0);
+                    return { vals, avg: total / scDays * 30 };
                 }
             }
 
@@ -7358,9 +7310,7 @@
                 return item.globalStock || 0;
             }
 
-            const m1Label = scM1.charAt(0).toUpperCase() + scM1.slice(1);
-            const m2Label = scM2.charAt(0).toUpperCase() + scM2.slice(1);
-            const m3Label = scM3.charAt(0).toUpperCase() + scM3.slice(1);
+            const mLabelsExport = scMonths.map(m => m.charAt(0).toUpperCase() + m.slice(1));
 
             const rows = scFilteredItems.map(item => {
                 const sales = getExportSales(item);
@@ -7384,10 +7334,8 @@
                 row['ARTICLE'] = item.name || '';
                 row['GENDER'] = item.gender || '';
                 row['TIER'] = item.tier || '';
-                row[m1Label] = sales.m1;
-                row[m2Label] = sales.m2;
-                row[m3Label] = sales.m3;
-                row['AVG'] = Math.round(avgSales * 100) / 100;
+                (sales.vals || []).forEach((v, i) => { row[mLabelsExport[i] || ('M'+(i+1))] = v; });
+                row['AVG/BLN'] = Math.round(avgSales * 100) / 100;
                 row['WH TOTAL'] = item.whTotal || 0;
                 row['STOK RETAIL'] = item.stokRetail || 0;
                 row['STOK CONSIG'] = item.stokConsignment || 0;
@@ -7454,29 +7402,29 @@
 
         // Get online sales for a single SKU
         function getOnlineSales(sku, kodeKecil) {
-            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
-            const [m1, m2, m3] = months;
+            const months = onlineSalesMap['_months'] || ['jan','feb','mar'];
+            const days = onlineSalesMap['_days'] || 90;
             const key = (kodeKecil || sku || '').toLowerCase();
             const s = onlineSalesMap[key] || {};
-            const v1 = s[m1] || 0, v2 = s[m2] || 0, v3 = s[m3] || 0;
-            const avg = (v1 + v2 + v3) / 3;
-            return { m1: v1, m2: v2, m3: v3, avg: avg };
+            const vals = months.map(m => s[m] || 0);
+            const total = vals.reduce((a, b) => a + b, 0);
+            const avg = total / days * 30;
+            return { vals, avg };
         }
 
         // Get online sales for Kode Kecil (sum all SKU sales)
         function getKodeKecilOnlineSales(skuList) {
-            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
-            const [m1, m2, m3] = months;
-            let s1 = 0, s2 = 0, s3 = 0;
+            const months = onlineSalesMap['_months'] || ['jan','feb','mar'];
+            const days = onlineSalesMap['_days'] || 90;
+            const vals = months.map(() => 0);
             skuList.forEach(sku => {
                 const key = (sku || '').toLowerCase();
                 const s = onlineSalesMap[key] || {};
-                s1 += s[m1] || 0;
-                s2 += s[m2] || 0;
-                s3 += s[m3] || 0;
+                months.forEach((m, i) => { vals[i] += s[m] || 0; });
             });
-            const avg = (s1 + s2 + s3) / 3;
-            return { m1: s1, m2: s2, m3: s3, avg: avg };
+            const total = vals.reduce((a, b) => a + b, 0);
+            const avg = total / days * 30;
+            return { vals, avg };
         }
 
         // Get sales for current item (handles both modes)
@@ -7551,6 +7499,7 @@
             if (!thead) return;
             const months = onlineSalesMap['_months'] || ['nov','des','jan'];
             const mLabels = months.map(m => m.toUpperCase());
+            const monthHeadersOnline = mLabels.map((lbl, i) => '<th style="' + hs + '" onclick="sortStockControlOnline(\'m' + i + '\')">'+lbl+'</th>').join('');
             const hs = 'padding:8px 6px;color:white;font-size:0.7rem;cursor:pointer;text-align:center;width:70px;';
             var stockCols = '<th style="' + hs + '" onclick="sortStockControlOnline(\'whob\')">WH O.BALI</th>' +
                 '<th style="' + hs + '" onclick="sortStockControlOnline(\'whoj\')">WH O.JKT</th>' +
@@ -7564,10 +7513,8 @@
                     '<th style="' + hs + '">SERIES</th>' +
                     '<th style="' + hs + '">GENDER</th>' +
                     '<th style="' + hs + '">TIER</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m1\')">' + mLabels[0] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
+                    monthHeadersOnline +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG/BLN</th>' +
                     stockCols +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
@@ -7579,10 +7526,8 @@
                     '<th style="' + hs + '">SERIES</th>' +
                     '<th style="' + hs + '">GENDER</th>' +
                     '<th style="' + hs + '">TIER</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m1\')">' + mLabels[0] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m2\')">' + mLabels[1] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'m3\')">' + mLabels[2] + '</th>' +
-                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG 3M</th>' +
+                    monthHeadersOnline +
+                    '<th style="' + hs + '" onclick="sortStockControlOnline(\'avg\')">AVG/BLN</th>' +
                     stockCols +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'gap\')">GAP</th>' +
                     '<th style="' + hs + '" onclick="sortStockControlOnline(\'tw\')">TW</th>' +
@@ -7728,7 +7673,8 @@
 
             tbody.innerHTML = pageData.map(item => {
                 const sales = getScoItemSales(item);
-                const s1 = sales.m1, s2 = sales.m2, s3 = sales.m3, avgSales = sales.avg;
+                const sVals = sales.vals || [];
+                const avgSales = sales.avg;
                 const whob = item.WHOB || 0;
                 const whoj = item.WHOJ || 0;
                 const onlineTotal = item.whOnlineTotal || 0;
@@ -7768,9 +7714,7 @@
                         '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cs + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        sVals.map(v => '<td style="' + cs + 'color:#374151;">' + v.toLocaleString('id-ID') + '</td>').join('') +
                         '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
                         stockCells +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
@@ -7784,9 +7728,7 @@
                         '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.series||'-') + '</td>' +
                         '<td style="' + cs + 'font-size:0.75rem;color:#6b7280;">' + (item.gender||'-') + '</td>' +
                         '<td style="' + cs + 'color:#6b7280;">' + (item.tier||'-') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s1.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s2.toLocaleString('id-ID') + '</td>' +
-                        '<td style="' + cs + 'color:#374151;">' + s3.toLocaleString('id-ID') + '</td>' +
+                        sVals.map(v => '<td style="' + cs + 'color:#374151;">' + v.toLocaleString('id-ID') + '</td>').join('') +
                         '<td style="' + cs + 'font-weight:600;color:#f59e0b;background:#ffedd5;">' + avgSales.toFixed(1) + '</td>' +
                         stockCells +
                         '<td style="' + cs + 'font-weight:600;' + gapStyle + '">' + Math.round(gap).toLocaleString('id-ID') + '</td>' +
@@ -7863,9 +7805,6 @@
                     case 'sku': valA = a.sku || ''; valB = b.sku || ''; break;
                     case 'kodeKecil': valA = a.kodeKecil || ''; valB = b.kodeKecil || ''; break;
                     case 'size': valA = parseInt(a.size) || 0; valB = parseInt(b.size) || 0; break;
-                    case 'm1': valA = salesA.m1; valB = salesB.m1; break;
-                    case 'm2': valA = salesA.m2; valB = salesB.m2; break;
-                    case 'm3': valA = salesA.m3; valB = salesB.m3; break;
                     case 'avg': valA = avgA; valB = avgB; break;
                     case 'whob': valA = a.WHOB || 0; valB = b.WHOB || 0; break;
                     case 'whoj': valA = a.WHOJ || 0; valB = b.WHOJ || 0; break;
@@ -7879,8 +7818,13 @@
                         valB = avgB > 0 ? ((b.whOnlineTotal || 0) / avgB) : 999;
                         break;
                     default:
-                        valA = scoViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
-                        valB = scoViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
+                        if (column.startsWith('m') && !isNaN(column.slice(1))) {
+                            var mi = parseInt(column.slice(1));
+                            valA = (salesA.vals||[])[mi] || 0; valB = (salesB.vals||[])[mi] || 0;
+                        } else {
+                            valA = scoViewMode === 'kodeKecil' ? (a.kodeKecil || '') : (a.sku || '');
+                            valB = scoViewMode === 'kodeKecil' ? (b.kodeKecil || '') : (b.sku || '');
+                        }
                 }
 
                 if (typeof valA === 'string') {
@@ -7897,8 +7841,8 @@
             if (typeof XLSX === 'undefined') { alert('SheetJS library not loaded. Please refresh the page.'); return; }
             if (!scoFilteredItems || scoFilteredItems.length === 0) { alert('Tidak ada data untuk di-export.'); return; }
 
-            const months = onlineSalesMap['_months'] || ['nov','des','jan'];
-            const [eM1, eM2, eM3] = months;
+            const months = onlineSalesMap['_months'] || ['jan','feb','mar'];
+            const mLabelsOnExp = months.map(m => m.charAt(0).toUpperCase() + m.slice(1));
             const basisLabel = 'Online Total';
 
             function getExpSales(item) {
@@ -7914,10 +7858,6 @@
                 if (basisLabel === 'onlineJkt') return item.WHOJ || 0;
                 return item.whOnlineTotal || 0;
             }
-
-            const m1Label = eM1.charAt(0).toUpperCase() + eM1.slice(1);
-            const m2Label = eM2.charAt(0).toUpperCase() + eM2.slice(1);
-            const m3Label = eM3.charAt(0).toUpperCase() + eM3.slice(1);
 
             const rows = scoFilteredItems.map(item => {
                 const sales = getExpSales(item);
@@ -7942,10 +7882,8 @@
                 row['SERIES'] = item.series || '';
                 row['GENDER'] = item.gender || '';
                 row['TIER'] = item.tier || '';
-                row[m1Label] = sales.m1;
-                row[m2Label] = sales.m2;
-                row[m3Label] = sales.m3;
-                row['AVG 3M'] = Math.round(avgSales * 100) / 100;
+                (sales.vals || []).forEach((v, i) => { row[mLabelsOnExp[i] || ('M'+(i+1))] = v; });
+                row['AVG/BLN'] = Math.round(avgSales * 100) / 100;
                 row['WH O.BALI'] = item.WHOB || 0;
                 row['WH O.JKT'] = item.WHOJ || 0;
                 row['ONLINE TOTAL'] = item.whOnlineTotal || 0;
@@ -15021,15 +14959,14 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof scItems === 'undefined' || scItems.length === 0) initStockControl();
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var wb = XLSX.utils.book_new();
-            var scMonths = salesMap['_months'] || ['nov','des','jan'];
-            var m1L = scMonths[0].charAt(0).toUpperCase() + scMonths[0].slice(1);
-            var m2L = scMonths[1].charAt(0).toUpperCase() + scMonths[1].slice(1);
-            var m3L = scMonths[2].charAt(0).toUpperCase() + scMonths[2].slice(1);
+            var scMonths = salesMap['_months'] || ['jan','feb','mar'];
+            var scDays = salesMap['_days'] || 90;
+            var mLabelsExp = scMonths.map(function(m) { return m.charAt(0).toUpperCase() + m.slice(1); });
             function buildRows(items, mode) {
                 return items.map(function(item) {
                     var sales;
                     if (mode === 'kodeKecil') { sales = getKodeKecilSales(item.skuList || []); }
-                    else { var k = (item.kodeKecil || item.sku || '').toLowerCase(); var s = salesMap[k] || {}; var v1=s[scMonths[0]]||0,v2=s[scMonths[1]]||0,v3=s[scMonths[2]]||0; sales={m1:v1,m2:v2,m3:v3,avg:(v1+v2+v3)/3}; }
+                    else { var k = (item.kodeKecil || item.sku || '').toLowerCase(); var s = salesMap[k] || {}; var vals = scMonths.map(function(m){return s[m]||0;}); var total = vals.reduce(function(a,b){return a+b;},0); sales={vals:vals,avg:total/scDays*30}; }
                     var avg = sales.avg; var gap = (item.globalStock||0) - (avg*3);
                     var tw = avg > 0 ? (item.whTotal||0)/avg : 0;
                     var to = avg > 0 ? (item.stokRetail||0)/avg : 0;
@@ -15041,8 +14978,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     row['ARTICLE'] = item.name || '';
                     row['GENDER'] = item.gender || '';
                     row['TIER'] = item.tier || '';
-                    row[m1L] = sales.m1; row[m2L] = sales.m2; row[m3L] = sales.m3;
-                    row['AVG 3M'] = Math.round(avg*100)/100;
+                    (sales.vals||[]).forEach(function(v,i) { row[mLabelsExp[i]||('M'+(i+1))] = v; });
+                    row['AVG/BLN'] = Math.round(avg*100)/100;
                     row['WH TOTAL'] = item.whTotal||0;
                     row['STOK RETAIL'] = item.stokRetail||0;
                     row['STOK CONSIG'] = item.stokConsignment||0;
@@ -15088,16 +15025,15 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (typeof scoItems === 'undefined' || scoItems.length === 0) initStockControlOnline();
             if (typeof XLSX === 'undefined') { alert('SheetJS not loaded'); return; }
             var wb = XLSX.utils.book_new();
-            var oMonths = onlineSalesMap['_months'] || ['nov','des','jan'];
-            var m1L = oMonths[0].charAt(0).toUpperCase() + oMonths[0].slice(1);
-            var m2L = oMonths[1].charAt(0).toUpperCase() + oMonths[1].slice(1);
-            var m3L = oMonths[2].charAt(0).toUpperCase() + oMonths[2].slice(1);
+            var oMonths = onlineSalesMap['_months'] || ['jan','feb','mar'];
+            var oDays = onlineSalesMap['_days'] || 90;
+            var oLabels = oMonths.map(function(m) { return m.charAt(0).toUpperCase() + m.slice(1); });
             function buildRows(items, mode) {
                 return items.map(function(item) {
                     var sales;
                     if (mode === 'kodeKecil') { sales = getKodeKecilOnlineSales(item.skuList || []); }
                     else { sales = getOnlineSales(item.sku, item.kodeKecil); }
-                    var avg = (sales.m1+sales.m2+sales.m3)/3;
+                    var avg = sales.avg;
                     var onTotal = item.whOnlineTotal||0;
                     var gap = onTotal - (avg*3);
                     var tw = avg > 0 ? onTotal/avg : 0;
@@ -15109,8 +15045,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     row['ARTICLE'] = item.name || '';
                     row['GENDER'] = item.gender || '';
                     row['TIER'] = item.tier || '';
-                    row[m1L] = sales.m1; row[m2L] = sales.m2; row[m3L] = sales.m3;
-                    row['AVG 3M'] = Math.round(avg*100)/100;
+                    (sales.vals||[]).forEach(function(v,i) { row[oLabels[i]||('M'+(i+1))] = v; });
+                    row['AVG/BLN'] = Math.round(avg*100)/100;
                     row['WH O.BALI'] = item.WHOB||0; row['WH O.JKT'] = item.WHOJ||0;
                     row['ONLINE TOTAL'] = onTotal;
                     row['GAP'] = Math.round(gap); row['TW'] = Math.round(tw*100)/100;
