@@ -13808,12 +13808,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             body.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#9ca3af;"><div style="animation:spin 1s linear infinite;display:inline-block;width:24px;height:24px;border:3px solid #db2777;border-top-color:transparent;border-radius:50%;"></div><br>Loading Stock Redistribution data...</td></tr>';
             try {
                 rdData = await fetchAPI('/api/redistribution?t=' + Date.now());
-                document.getElementById('rdSnapshotLabel').textContent = 'Snapshot: ' + (rdData.snapshot_date || '-');
-                document.getElementById('rdSurplusCount').textContent = formatNum(rdData.summary.surplus_count);
-                document.getElementById('rdDeficitCount').textContent = formatNum(rdData.summary.deficit_count);
-                document.getElementById('rdOkCount').textContent = formatNum(rdData.summary.ok_count);
-                document.getElementById('rdProtolTransferCount').textContent = formatNum(rdData.summary.protol_transfer_count || 0);
-                document.getElementById('rdRoBoxCount').textContent = formatNum(rdData.summary.ro_box_count || 0);
+                var el;
+                if (el = document.getElementById('rdSnapshotLabel')) el.textContent = 'Snapshot: ' + (rdData.snapshot_date || '-');
+                if (el = document.getElementById('rdSurplusCount')) el.textContent = formatNum(rdData.summary.surplus_count);
+                if (el = document.getElementById('rdDeficitCount')) el.textContent = formatNum(rdData.summary.deficit_count);
+                if (el = document.getElementById('rdOkCount')) el.textContent = formatNum(rdData.summary.ok_count);
+                if (el = document.getElementById('rdProtolTransferCount')) el.textContent = formatNum(rdData.summary.protol_transfer_count || 0);
+                if (el = document.getElementById('rdRoBoxCount')) el.textContent = formatNum(rdData.summary.ro_box_count || 0);
                 populateRdFilters();
                 renderRdTable();
             } catch(e) {
