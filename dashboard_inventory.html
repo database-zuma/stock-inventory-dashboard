@@ -8980,17 +8980,14 @@
             data.forEach(item => {
                 const sku = item.sku || '';
                 const skuUpper = sku.toUpperCase();
-                // 3-step normalize: jangan pakai item.kode_kecil (API sudah salah potong untuk SKU embedded-size)
-                // Step 1: strip trailing size    M1SPVPV207Z42 → M1SPVPV207
-                // Step 2: strip embedded XY\d{2,3} L2AZ37ST1 → L2ST1, L2KZ30SP1 → L2SP1, E2AZ39EA7 → E2EA7
-                // Step 3: strip standalone AZ   M1AZSPV207   → M1SPV207
-                let article = skuUpper.replace(/Z\d{2,3}$/, '');
-                article = article.replace(/[A-Z]{2}\d{2,3}(?=[A-Z])/g, '');
-                article = article.replace(/AZ(?=[A-Z])/g, '');
-                if (!article) return;
                 const isNonSandal = nonSandalPrefixes.some(prefix => skuUpper.startsWith(prefix));
                 if (isNonSandal) return; // sandal only in top/slow tables
-                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, namaBarang: '', collection: item.collection || '', kode_kecil: item.kode_kecil || '' };
+                // Resolve kode kecil from kodemix lookup (kode_mix|version → kode_kecil)
+                const km = (item.kode_mix || '').toUpperCase();
+                const ver = String(item.version || '0');
+                const article = (kodemixLookupGlobal[km + '|' + ver] || item.kode_kecil || skuUpper.replace(/Z\d{2,3}$/, '')).toUpperCase();
+                if (!article) return;
+                if (!byArticle[article]) byArticle[article] = { sales: 0, qty: 0, category: item.category, namaBarang: '', collection: item.collection || '', kode_kecil: article };
                 // Fix: total_jumlah_pesanan (retail) bisa null → fallback ke price*qty
                 const itemTotal = (item.total && item.total > 0) ? item.total : ((item.price || 0) * (item.qty || 0));
                 byArticle[article].sales += itemTotal;
