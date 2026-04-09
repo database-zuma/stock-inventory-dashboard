@@ -8382,35 +8382,46 @@
 
             // Build target lookup map
             const targetMap = {};
+            // iSeller store name → target store key (store_name_norm)
             const storeAliases = {
                 'mall bali icon': 'icon bali',
                 'icon mall gresik': 'icon gresik',
                 'bintaro xchange': 'bintaro exchange',
-                'nagoya hill batam': 'nagoya hills'
+                'nagoya hill batam': 'nagoya hills',
+                'k square mall batam': 'k square batam',
+                'mataram lombok': 'mataram',
+                'mataram 2': 'mataram',
+                'mega mall manado': 'mega mall',
+                'ska mall': 'ska mall',
+                'pameran the park sawangan': '',
             };
             function normalizeStoreName(name) {
                 let normalized = name.toLowerCase().replace('zuma ', '').replace('zuma', '').trim();
-                if (storeAliases[normalized]) normalized = storeAliases[normalized];
+                if (storeAliases[normalized] !== undefined) normalized = storeAliases[normalized];
                 return normalized;
             }
 
             if (targetData && typeof targetData === 'object') {
-                Object.values(targetData).forEach(t => {
+                Object.entries(targetData).forEach(([key, t]) => {
                     if (t && t.store) {
+                        // Use store_name_norm (the key) directly — most reliable
                         const normalizedName = normalizeStoreName(t.store);
-                        // Sum target for active months only
                         targetMap[normalizedName] = activeMonths.reduce((sum, m) => sum + (Number(t[m]) || 0), 0);
+                        // Also index by key (store_name_norm from DB)
+                        targetMap[key] = targetMap[normalizedName];
                     }
                 });
             }
 
             const storeArr = Object.entries(byStore)
-                .filter(([store]) => byStore[store] !== undefined) // Already filtered in data.forEach above
+                .filter(([store]) => byStore[store] !== undefined)
                 .map(([store, val]) => {
                     const normalizedStore = normalizeStoreName(store);
                     let target = targetMap[normalizedStore] || 0;
                     if (!target) {
+                        // Fuzzy match — but require min 10 chars to avoid short matches like "batam"→wholesale
                         for (const [key, tgt] of Object.entries(targetMap)) {
+                            if (key.length < 10 || normalizedStore.length < 10) continue;
                             if (key.includes(normalizedStore) || normalizedStore.includes(key)) {
                                 target = tgt; break;
                             }
