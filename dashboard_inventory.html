@@ -574,10 +574,10 @@
         .summary-card .value { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-top: 8px; }
         .summary-card .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
         .entity-toggle-bar { display:flex; flex-direction:column; gap:2px; margin:0 0 4px 0; padding:4px 8px 6px 20px; background:rgba(0,0,0,0.15); border-radius:0 8px 8px 0; border-left:2px solid rgba(0,226,115,0.2); transition: all 0.3s ease; }
-        .entity-toggle-btn { padding:5px 10px; border:none; border-radius:6px; background:transparent; color:rgba(255,255,255,0.55); font-weight:500; font-size:0.8rem; cursor:pointer; text-align:left; width:100%; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+        .entity-toggle-btn { padding:5px 10px; border:none; border-radius:6px; background:transparent; color:rgba(255,255,255,0.8); font-weight:500; font-size:0.8rem; cursor:pointer; text-align:left; width:100%; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
         .entity-toggle-btn:hover { color:#fff; background:rgba(255,255,255,0.08); transform: translateX(3px); }
         .entity-toggle-btn.active { background: rgba(0,226,115,0.15); color: #00E273; font-weight: 700; box-shadow: none; border: none; }
-        .entity-toggle-bar.dimmed .entity-toggle-btn.active { background: transparent; color: rgba(255,255,255,0.55); font-weight: 500; box-shadow: none; }
+        .entity-toggle-bar.dimmed .entity-toggle-btn.active { background: transparent; color: rgba(255,255,255,0.8); font-weight: 500; box-shadow: none; }
     </style>
 </head>
 <body>
@@ -595,7 +595,7 @@
                 <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:5px;"><span class="live-dot"></span> <span id="data-snapshot-date" style="font-weight:500;">Memuat...</span></div>
             </div>
             <div style="padding:25px 10px 20px;display:flex;flex-direction:column;gap:4px;">
-            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-top:4px;">Inventory</div>
+            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:4px;">Inventory</div>
             <button class="view-btn active" data-view="inventory" onclick="switchView('inventory')">
                 📊 Stock Inventory
             </button>
@@ -616,7 +616,7 @@
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
             </button>
-            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Sales</div>
+            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Sales</div>
             <button class="view-btn" data-view="sales" onclick="switchView('sales');">
                 💰 Sales
             </button>
@@ -627,7 +627,7 @@
                 <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">› 📦 Consignment</button>
                 <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">› 🏭 Wholesale</button>
             </div>
-            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Operations</div>
+            <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Operations</div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
             </button>
