@@ -47,6 +47,13 @@
         .tab, .sales-tab-btn { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
         .tab:hover, .sales-tab-btn:hover { transform: translateY(-1px); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,42,58,0.15); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,42,58,0.3); }
+        .view-toggle::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        .view-toggle::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
         th { text-align: center !important; }
         table td, table th { border: 1px solid var(--border, #e5e7eb); }
         table td[style*="#374151"], table td[style*="#6b7280"], table td[style*="#9ca3af"], table td[style*="#1f2937"] { color: #000 !important; }
@@ -421,7 +428,7 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            background: #002A3A;
+            background: linear-gradient(180deg, #002A3A 0%, #001d2a 100%);
             padding: 0;
             border-radius: 0;
             box-shadow: 4px 0 24px rgba(0,42,58,0.3);
@@ -467,8 +474,9 @@
         }
         .view-btn:hover { background: rgba(255,255,255,0.06); color: #fff; border-left-color: rgba(0,226,115,0.4); transform: translateX(3px); }
         .view-btn.active { background: rgba(0,226,115,0.1); color: #00E273; font-weight: 700; border-left-color: #00E273; border-radius: 0 8px 8px 0; box-shadow: inset 0 0 20px rgba(0,226,115,0.05); }
-        .view-container { display: none; }
-        .view-container.active { display: block; }
+        .view-container { display: none; opacity: 0; }
+        .view-container.active { display: block; animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
         /* Sales Tab Styles */
         .sales-tab-btn {
