@@ -16187,6 +16187,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         function sbaWhToArea(whName) {
             if (!whName) return null;
             var n = String(whName).toLowerCase();
+            // Exclude Warehouse Online Jakarta (online fulfillment bucket, not per-area stock)
+            if (n.indexOf('warehouse online jakarta') !== -1) return null;
             if (n.indexOf('bali') !== -1) return 'Bali';
             if (n.indexOf('palembang') !== -1 || n.indexOf('sumatra') !== -1 || n.indexOf('medan') !== -1) return 'Sumatra';
             if (n.indexOf('pluit') !== -1 || n.indexOf('jakarta') !== -1) return 'Jakarta';
