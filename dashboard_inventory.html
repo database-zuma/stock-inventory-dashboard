@@ -16231,7 +16231,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         }
 
         function populateSbaFilters() {
-            var entData = (window.allData || {})[currentEntity] || {};
+            var entData = (allData || {})[currentEntity] || {};
             var all = [].concat(entData.warehouse || [], entData.retail || []);
             var tiers = {}, vers = {};
             all.forEach(function(it) {
@@ -16252,13 +16252,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
         function buildStockByAreaRows(area) {
             var entity = currentEntity;
-            var entData = (window.allData || {})[entity] || {};
+            var entData = (allData || {})[entity] || {};
             var whItems = entData.warehouse || [];
             var retItems = entData.retail || [];
-            var consigItems = (window.consignmentStockItems || []).filter(function(it) {
+            var consigItems = (consignmentStockItems || []).filter(function(it) {
                 return String(it.entity || '').toUpperCase() === String(entity).toUpperCase();
             });
-            var areaMap = window.storeAreaMap || {};
+            var areaMap = storeAreaMap || {};
 
             var byKK = {};
             function ensure(kk, it) {
