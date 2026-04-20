@@ -16181,34 +16181,43 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
         // currently-selected entity. No extra API calls; uses data
         // already loaded by loadDashboardData().
         // ============================================================
-        var SBA_AREAS = ['Bali','Jakarta','Jatim','Lombok','Sulawesi','Sumatra','Batam'];
+        // Consolidated into 3 logistics zones:
+        //   Bali   = Bali stores + Lombok stores (supplied from WH Bali)
+        //   Jakarta = Jakarta stores (WH Jakarta/Pluit)
+        //   Jatim  = Jatim + Sulawesi + Sumatra + Batam stores (supplied from WH Pusat Surabaya)
+        var SBA_AREAS = ['Bali','Jakarta','Jatim'];
         var sbaCurrentArea = 'Bali';
 
         function sbaWhToArea(whName) {
             if (!whName) return null;
             var n = String(whName).toLowerCase();
-            // Exclude all Warehouse Online (online fulfillment bucket, not per-area stock)
+            // Exclude online fulfillment buckets
             if (n.indexOf('warehouse online') !== -1) return null;
-            if (n.indexOf('bali') !== -1) return 'Bali';
-            if (n.indexOf('palembang') !== -1 || n.indexOf('sumatra') !== -1 || n.indexOf('medan') !== -1) return 'Sumatra';
+            // Exclude Palembang (data noise, not used)
+            if (n.indexOf('palembang') !== -1) return null;
+            if (n.indexOf('bali') !== -1 || n.indexOf('lombok') !== -1 || n.indexOf('mataram') !== -1) return 'Bali';
             if (n.indexOf('pluit') !== -1 || n.indexOf('jakarta') !== -1) return 'Jakarta';
-            if (n.indexOf('pusat') !== -1 || n.indexOf('surabaya') !== -1 || n.indexOf('jatim') !== -1 || n.indexOf('malang') !== -1) return 'Jatim';
-            if (n.indexOf('lombok') !== -1 || n.indexOf('mataram') !== -1) return 'Lombok';
-            if (n.indexOf('makassar') !== -1 || n.indexOf('manado') !== -1 || n.indexOf('sulawesi') !== -1) return 'Sulawesi';
-            if (n.indexOf('batam') !== -1) return 'Batam';
+            if (n.indexOf('pusat') !== -1 || n.indexOf('surabaya') !== -1 || n.indexOf('jatim') !== -1 || n.indexOf('malang') !== -1
+                || n.indexOf('makassar') !== -1 || n.indexOf('manado') !== -1 || n.indexOf('sulawesi') !== -1
+                || n.indexOf('sumatra') !== -1 || n.indexOf('medan') !== -1
+                || n.indexOf('batam') !== -1) return 'Jatim';
             return null;
         }
 
         function sbaStoreMapArea(mapArea) {
             if (!mapArea) return null;
             var a = String(mapArea).toLowerCase().trim();
-            if (a.indexOf('bali') === 0 || a === 'konsinyasi bali' || a === 'warehouse bali' || a === 'whb' || a === 'whb protol' || a === 'wholesale bali') return 'Bali';
+            // Bali zone: Bali retail/consig + Lombok retail/consig/wholesale
+            if (a.indexOf('bali') === 0
+                || a === 'konsinyasi bali' || a === 'warehouse bali' || a === 'whb' || a === 'whb protol' || a === 'wholesale bali'
+                || a === 'lombok' || a === 'konsinyasi lombok' || a === 'wholesale lombok') return 'Bali';
+            // Jakarta zone
             if (a === 'jakarta' || a === 'konsinyasi jakarta' || a === 'warehouse jakarta' || a === 'whj' || a === 'online jakarta' || a === 'online') return 'Jakarta';
-            if (a === 'jatim' || a === 'konsinyasi jatim' || a === 'wholesale jatim') return 'Jatim';
-            if (a === 'lombok' || a === 'konsinyasi lombok' || a === 'wholesale lombok') return 'Lombok';
-            if (a === 'sulawesi') return 'Sulawesi';
-            if (a === 'sumatra' || a === 'palembang' || a === 'whs' || a === 'whs protol') return 'Sumatra';
-            if (a === 'batam') return 'Batam';
+            // Jatim zone: Jatim + Sulawesi + Sumatra + Batam (all shipped from WH Pusat Surabaya)
+            if (a === 'jatim' || a === 'konsinyasi jatim' || a === 'wholesale jatim'
+                || a === 'sulawesi'
+                || a === 'sumatra' || a === 'palembang' || a === 'whs' || a === 'whs protol'
+                || a === 'batam') return 'Jatim';
             return null;
         }
 
