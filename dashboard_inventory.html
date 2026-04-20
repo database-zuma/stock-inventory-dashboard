@@ -2627,10 +2627,17 @@
                 <div id="sbaAreaTabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
 
                 <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-                    <input type="text" id="sbaSearchInput" placeholder="Cari kode / kode kecil / nama..." oninput="renderStockByArea()" style="flex:1;min-width:280px;padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;outline:none;">
+                    <input type="text" id="sbaSearchInput" placeholder="Cari kode / kode kecil / nama..." oninput="renderStockByArea()" style="flex:1;min-width:240px;padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;outline:none;">
                     <select id="sbaTierFilter" onchange="renderStockByArea()" style="padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;background:white;"><option value="">Semua Tier</option></select>
                     <select id="sbaVersionFilter" onchange="renderStockByArea()" style="padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;background:white;"><option value="">Semua Version</option></select>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#334155;font-weight:600;"><input type="checkbox" id="sbaHideEmpty" checked onchange="renderStockByArea()"> Sembunyikan total=0</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#334155;font-weight:600;"><input type="checkbox" id="sbaHideEmpty" onchange="renderStockByArea()"> Sembunyikan total=0</label>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #a7f3d0;">
+                    <span style="font-size:0.8rem;color:#065f46;font-weight:700;">Tampilkan kolom:</span>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#6d28d9;font-weight:700;background:#ede9fe;padding:6px 12px;border-radius:8px;cursor:pointer;"><input type="checkbox" id="sbaShowWH" checked onchange="renderStockByArea()"> 🏭 Warehouse</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#1d4ed8;font-weight:700;background:#dbeafe;padding:6px 12px;border-radius:8px;cursor:pointer;"><input type="checkbox" id="sbaShowToko" checked onchange="renderStockByArea()"> 🏪 Retail</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#b45309;font-weight:700;background:#fef3c7;padding:6px 12px;border-radius:8px;cursor:pointer;"><input type="checkbox" id="sbaShowConsig" checked onchange="renderStockByArea()"> 📦 Consignment</label>
+                    <span style="font-size:0.75rem;color:#64748b;margin-left:auto;">🔴 ≤0 · 🟡 1-5 · 🟢 ≥6</span>
                 </div>
             </div>
 
@@ -16387,6 +16394,13 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             };
         }
 
+        // Color a cell based on qty: <=0 red, 1-5 yellow, >=6 green
+        function _sbaCellColor(q) {
+            if (q <= 0) return { bg: '#fee2e2', fg: '#991b1b' };     // red
+            if (q <= 5) return { bg: '#fef3c7', fg: '#92400e' };     // yellow
+            return { bg: '#dcfce7', fg: '#166534' };                 // green
+        }
+
         function renderStockByArea() {
             var area = sbaCurrentArea;
             var rows = buildStockByAreaRows(area);
@@ -16395,13 +16409,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var tEl = document.getElementById('sbaTierFilter');
             var vEl = document.getElementById('sbaVersionFilter');
             var hEl = document.getElementById('sbaHideEmpty');
+            var showWH = (document.getElementById('sbaShowWH') || {}).checked !== false;
+            var showToko = (document.getElementById('sbaShowToko') || {}).checked !== false;
+            var showConsig = (document.getElementById('sbaShowConsig') || {}).checked !== false;
             var q = qEl ? (qEl.value || '').toLowerCase().trim() : '';
             var tierF = tEl ? tEl.value : '';
             var verF = vEl ? vEl.value : '';
-            var hideEmpty = hEl ? hEl.checked : true;
+            var hideEmpty = hEl ? hEl.checked : false;
+
+            // Row total considers only the groups currently shown
+            function rowVisibleTotal(r) {
+                return (showWH ? r.whQty : 0) + (showToko ? r.tokoQty : 0) + (showConsig ? r.consigQty : 0);
+            }
 
             var filtered = rows.filter(function(r) {
-                if (hideEmpty && r.total === 0) return false;
+                if (hideEmpty && rowVisibleTotal(r) === 0) return false;
                 if (tierF && String(r.tier) !== tierF) return false;
                 if (verF && String(r.version) !== verF) return false;
                 if (q) {
@@ -16410,20 +16432,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }
                 return true;
             });
-            filtered.sort(function(a, b) { return b.total - a.total; });
+            filtered.sort(function(a, b) { return rowVisibleTotal(b) - rowVisibleTotal(a); });
 
             var sumQty = 0, sumWh = 0, sumToko = 0, sumConsig = 0;
             filtered.forEach(function(r) {
-                sumQty += r.total; sumWh += r.whQty; sumToko += r.tokoQty; sumConsig += r.consigQty;
+                sumWh += r.whQty; sumToko += r.tokoQty; sumConsig += r.consigQty;
+                sumQty += rowVisibleTotal(r);
             });
             var sumEl = document.getElementById('sbaSummary');
             if (sumEl) {
                 var cards = [
                     { l: 'Total SKU', v: filtered.length.toLocaleString('id-ID'), c: '#0f766e' },
-                    { l: 'Total Qty', v: sumQty.toLocaleString('id-ID'), c: '#059669' },
-                    { l: 'WH ' + area, v: sumWh.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.wh.length + ' loc)</span>', c: '#7c3aed' },
-                    { l: 'Toko ' + area, v: sumToko.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.toko.length + ' toko)</span>', c: '#2563eb' },
-                    { l: 'Consig ' + area, v: sumConsig.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.consig.length + ' outlet)</span>', c: '#d97706' }
+                    { l: 'Total Qty (tampil)', v: sumQty.toLocaleString('id-ID'), c: '#059669' },
+                    { l: 'WH ' + area + (showWH ? '' : ' (off)'), v: sumWh.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.wh.length + ' loc)</span>', c: '#7c3aed' },
+                    { l: 'Toko ' + area + (showToko ? '' : ' (off)'), v: sumToko.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.toko.length + ' toko)</span>', c: '#2563eb' },
+                    { l: 'Consig ' + area + (showConsig ? '' : ' (off)'), v: sumConsig.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.consig.length + ' outlet)</span>', c: '#d97706' }
                 ];
                 sumEl.innerHTML = cards.map(function(k) {
                     return '<div style="background:white;border-left:4px solid ' + k.c + ';border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);"><div style="font-size:0.7rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:0.5px;">' + k.l + '</div><div style="font-size:1.1rem;font-weight:800;color:' + k.c + ';">' + k.v + '</div></div>';
@@ -16431,29 +16454,27 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
 
             // --- Build wide header with 2 rows: group banner + store-name row ---
-            // Fixed (sticky) columns: Kode, Kode Kecil, Nama, Size, Tier, Ver
-            // Then per-store columns: WH x N, Toko x N, Consig x N
-            // Sticky-right: Total
             var META_COLS = 6;
             var HEADER_GROUP_BG_WH = '#7c3aed', HEADER_GROUP_BG_TOKO = '#2563eb', HEADER_GROUP_BG_CONSIG = '#d97706', HEADER_GROUP_BG_TOTAL = '#059669';
             var META_STICKY_BG = 'linear-gradient(135deg,#065f46,#064e3b)';
 
             function vertHeader(label, bg) {
-                // Vertical-ish header (rotated slightly) for store cols to fit many columns
-                return '<th style="padding:8px 4px;background:' + bg + ';color:white;font-weight:700;font-size:0.68rem;white-space:nowrap;min-width:72px;max-width:120px;text-align:center;border-right:1px solid rgba(255,255,255,0.15);" title="' + _sbaEsc(label) + '"><div style="writing-mode:vertical-rl;transform:rotate(180deg);padding:4px 0;max-height:120px;overflow:hidden;text-overflow:ellipsis;">' + _sbaEsc(label) + '</div></th>';
+                return '<th style="padding:8px 4px;background:' + bg + ';color:white;font-weight:700;font-size:0.68rem;white-space:nowrap;min-width:62px;max-width:120px;text-align:center;border-right:1px solid rgba(255,255,255,0.15);height:130px;" title="' + _sbaEsc(label) + '"><div style="writing-mode:vertical-rl;transform:rotate(180deg);padding:4px 0;max-height:120px;overflow:hidden;text-overflow:ellipsis;">' + _sbaEsc(label) + '</div></th>';
             }
+
+            var showWhCols = showWH ? cols.wh : [];
+            var showTokoCols = showToko ? cols.toko : [];
+            var showConsigCols = showConsig ? cols.consig : [];
 
             var thead = document.getElementById('sbaThead');
             if (thead) {
-                // Row 1: group banner
                 var row1 = '<tr>' +
-                    '<th colspan="' + META_COLS + '" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px;position:sticky;left:0;z-index:3;text-align:left;font-size:0.8rem;font-weight:700;">Produk</th>' +
-                    (cols.wh.length ? '<th colspan="' + cols.wh.length + '" style="background:' + HEADER_GROUP_BG_WH + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">🏭 Warehouse ' + _sbaEsc(area) + ' (' + cols.wh.length + ')</th>' : '') +
-                    (cols.toko.length ? '<th colspan="' + cols.toko.length + '" style="background:' + HEADER_GROUP_BG_TOKO + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">🏪 Toko Retail ' + _sbaEsc(area) + ' (' + cols.toko.length + ')</th>' : '') +
-                    (cols.consig.length ? '<th colspan="' + cols.consig.length + '" style="background:' + HEADER_GROUP_BG_CONSIG + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">📦 Consignment ' + _sbaEsc(area) + ' (' + cols.consig.length + ')</th>' : '') +
-                    '<th rowspan="2" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px 10px;position:sticky;right:0;z-index:3;text-align:right;font-size:0.8rem;font-weight:700;border-left:2px solid #fff;">Total</th>' +
+                    '<th colspan="' + META_COLS + '" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px;position:sticky;left:0;top:0;z-index:6;text-align:left;font-size:0.8rem;font-weight:700;">Produk</th>' +
+                    (showWhCols.length ? '<th colspan="' + showWhCols.length + '" style="background:' + HEADER_GROUP_BG_WH + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;position:sticky;top:0;z-index:5;">🏭 Warehouse ' + _sbaEsc(area) + ' (' + showWhCols.length + ')</th>' : '') +
+                    (showTokoCols.length ? '<th colspan="' + showTokoCols.length + '" style="background:' + HEADER_GROUP_BG_TOKO + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;position:sticky;top:0;z-index:5;">🏪 Toko Retail ' + _sbaEsc(area) + ' (' + showTokoCols.length + ')</th>' : '') +
+                    (showConsigCols.length ? '<th colspan="' + showConsigCols.length + '" style="background:' + HEADER_GROUP_BG_CONSIG + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;position:sticky;top:0;z-index:5;">📦 Consignment ' + _sbaEsc(area) + ' (' + showConsigCols.length + ')</th>' : '') +
+                    '<th rowspan="2" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px 10px;position:sticky;right:0;top:0;z-index:7;text-align:right;font-size:0.8rem;font-weight:700;border-left:2px solid #fff;">Total</th>' +
                 '</tr>';
-                // Row 2: meta columns + per-store names
                 var metaTh = [
                     { l: 'Kode',       w: 95,  align: 'left' },
                     { l: 'Kode Kecil', w: 110, align: 'left' },
@@ -16462,23 +16483,23 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     { l: 'Tier',       w: 50,  align: 'center' },
                     { l: 'Ver',        w: 50,  align: 'center' }
                 ];
-                // Compute cumulative left offsets for each meta col so they stack sticky
                 var leftOffsets = [], cum = 0;
                 for (var mi = 0; mi < metaTh.length; mi++) { leftOffsets.push(cum); cum += metaTh[mi].w; }
                 var row2 = '<tr>';
                 metaTh.forEach(function(m, idx) {
-                    row2 += '<th style="background:' + META_STICKY_BG + ';color:white;padding:8px;text-align:' + m.align + ';font-size:0.72rem;font-weight:700;min-width:' + m.w + 'px;max-width:' + m.w + 'px;position:sticky;left:' + leftOffsets[idx] + 'px;z-index:2;border-right:1px solid rgba(255,255,255,0.15);">' + m.l + '</th>';
+                    row2 += '<th style="background:' + META_STICKY_BG + ';color:white;padding:8px;text-align:' + m.align + ';font-size:0.72rem;font-weight:700;min-width:' + m.w + 'px;max-width:' + m.w + 'px;position:sticky;left:' + leftOffsets[idx] + 'px;top:36px;z-index:6;border-right:1px solid rgba(255,255,255,0.15);">' + m.l + '</th>';
                 });
-                cols.wh.forEach(function(n) { row2 += vertHeader(_sbaShortWh(n), HEADER_GROUP_BG_WH); });
-                cols.toko.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_TOKO); });
-                cols.consig.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_CONSIG); });
+                showWhCols.forEach(function(n) { row2 += vertHeader(_sbaShortWh(n), HEADER_GROUP_BG_WH); });
+                showTokoCols.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_TOKO); });
+                showConsigCols.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_CONSIG); });
                 row2 += '</tr>';
                 thead.innerHTML = row1 + row2;
             }
 
-            var totalCols = META_COLS + cols.wh.length + cols.toko.length + cols.consig.length + 1;
+            var visibleStoreCount = showWhCols.length + showTokoCols.length + showConsigCols.length;
+            var totalCols = META_COLS + visibleStoreCount + 1;
             var countEl = document.getElementById('sbaCountInfo');
-            if (countEl) countEl.textContent = filtered.length.toLocaleString('id-ID') + ' SKU | Total qty: ' + sumQty.toLocaleString('id-ID') + ' | Area: ' + area + ' | Entity: ' + currentEntity + ' | Kolom: ' + (cols.wh.length + cols.toko.length + cols.consig.length) + ' lokasi';
+            if (countEl) countEl.textContent = filtered.length.toLocaleString('id-ID') + ' SKU | Total qty: ' + sumQty.toLocaleString('id-ID') + ' | Area: ' + area + ' | Entity: ' + currentEntity + ' | Kolom: ' + visibleStoreCount + ' lokasi';
 
             var tbody = document.getElementById('sbaTbody');
             if (!tbody) return;
@@ -16489,40 +16510,29 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var CAP = 500;
             var display = filtered.slice(0, CAP);
 
-            // Cell color helper: deeper color for larger qty
-            function cellQty(q, bg) {
-                if (!q) return '<td style="padding:4px 6px;text-align:center;color:#e2e8f0;font-size:0.75rem;background:#fafafa;border-right:1px solid #f1f5f9;">·</td>';
-                return '<td style="padding:4px 6px;text-align:center;font-weight:700;color:#0f172a;font-size:0.8rem;background:' + bg + ';border-right:1px solid #f1f5f9;">' + q.toLocaleString('id-ID') + '</td>';
-            }
-            function bgByQty(q, base) {
-                if (!q) return '#fafafa';
-                if (q >= 20) return base + 'CC'; // 80% alpha
-                if (q >= 10) return base + '80'; // 50%
-                if (q >= 5)  return base + '55'; // 33%
-                return base + '33'; // 20%
+            function cellQty(q) {
+                var c = _sbaCellColor(q);
+                return '<td style="padding:4px 6px;text-align:center;font-weight:700;color:' + c.fg + ';font-size:0.78rem;background:' + c.bg + ';border-right:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;">' + q.toLocaleString('id-ID') + '</td>';
             }
 
-            // Pre-compute left offsets for meta sticky cols (same as header)
             var metaWidths = [95, 110, 220, 50, 50, 50];
             var leftOff = [], cum2 = 0;
             metaWidths.forEach(function(w) { leftOff.push(cum2); cum2 += w; });
 
             var html = display.map(function(r, idx) {
                 var rowBg = idx % 2 === 0 ? 'white' : '#fafbfc';
-                var out = '<tr style="border-bottom:1px solid #f1f5f9;">';
-                // Meta sticky cells
-                out += '<td style="padding:6px 8px;font-weight:600;color:#0f766e;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[0] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.kode || '-') + '</td>';
-                out += '<td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:0.74rem;color:#334155;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[1] + 'px;z-index:1;border-right:1px solid #e2e8f0;">' + _sbaEsc(r.kode_kecil || '-') + '</td>';
-                out += '<td style="padding:6px 8px;color:#1f2937;background:' + rowBg + ';position:sticky;left:' + leftOff[2] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + _sbaEsc(r.name) + '">' + _sbaEsc(r.name) + '</td>';
-                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[3] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.size) + '</td>';
-                out += '<td style="padding:6px 8px;text-align:center;background:' + rowBg + ';position:sticky;left:' + leftOff[4] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.tier || '-') + '</td>';
-                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[5] + 'px;z-index:1;border-right:2px solid #cbd5e1;font-size:0.78rem;">' + _sbaEsc(r.version || '-') + '</td>';
-                // Store qty cells
-                for (var i = 0; i < cols.wh.length; i++) { var q = r.whStores[cols.wh[i]] || 0; out += cellQty(q, bgByQty(q, '#ddd6fe')); }
-                for (var j = 0; j < cols.toko.length; j++) { var q2 = r.tokoStores[cols.toko[j]] || 0; out += cellQty(q2, bgByQty(q2, '#bfdbfe')); }
-                for (var k = 0; k < cols.consig.length; k++) { var q3 = r.consigStores[cols.consig[k]] || 0; out += cellQty(q3, bgByQty(q3, '#fde68a')); }
-                // Sticky right Total
-                out += '<td style="padding:6px 10px;text-align:right;font-weight:800;color:#059669;background:' + rowBg + ';position:sticky;right:0;z-index:1;border-left:2px solid #cbd5e1;font-size:0.82rem;">' + r.total.toLocaleString('id-ID') + '</td>';
+                var rowTotal = rowVisibleTotal(r);
+                var out = '<tr>';
+                out += '<td style="padding:6px 8px;font-weight:600;color:#0f766e;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[0] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;">' + _sbaEsc(r.kode || '-') + '</td>';
+                out += '<td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:0.74rem;color:#334155;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[1] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;">' + _sbaEsc(r.kode_kecil || '-') + '</td>';
+                out += '<td style="padding:6px 8px;color:#1f2937;background:' + rowBg + ';position:sticky;left:' + leftOff[2] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + _sbaEsc(r.name) + '">' + _sbaEsc(r.name) + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[3] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;">' + _sbaEsc(r.size) + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;background:' + rowBg + ';position:sticky;left:' + leftOff[4] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;">' + _sbaEsc(r.tier || '-') + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[5] + 'px;z-index:1;border-right:2px solid #cbd5e1;border-bottom:1px solid #f1f5f9;font-size:0.78rem;">' + _sbaEsc(r.version || '-') + '</td>';
+                for (var i = 0; i < showWhCols.length; i++)    out += cellQty(r.whStores[showWhCols[i]] || 0);
+                for (var j = 0; j < showTokoCols.length; j++)  out += cellQty(r.tokoStores[showTokoCols[j]] || 0);
+                for (var k = 0; k < showConsigCols.length; k++) out += cellQty(r.consigStores[showConsigCols[k]] || 0);
+                out += '<td style="padding:6px 10px;text-align:right;font-weight:800;color:#059669;background:' + rowBg + ';position:sticky;right:0;z-index:1;border-left:2px solid #cbd5e1;border-bottom:1px solid #f1f5f9;font-size:0.82rem;">' + rowTotal.toLocaleString('id-ID') + '</td>';
                 out += '</tr>';
                 return out;
             }).join('');
@@ -16540,12 +16550,16 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var tEl = document.getElementById('sbaTierFilter');
             var vEl = document.getElementById('sbaVersionFilter');
             var hEl = document.getElementById('sbaHideEmpty');
+            var showWH = (document.getElementById('sbaShowWH') || {}).checked !== false;
+            var showToko = (document.getElementById('sbaShowToko') || {}).checked !== false;
+            var showConsig = (document.getElementById('sbaShowConsig') || {}).checked !== false;
             var q = qEl ? (qEl.value || '').toLowerCase().trim() : '';
             var tierF = tEl ? tEl.value : '';
             var verF = vEl ? vEl.value : '';
-            var hideEmpty = hEl ? hEl.checked : true;
+            var hideEmpty = hEl ? hEl.checked : false;
+            function rowVisTot(r) { return (showWH ? r.whQty : 0) + (showToko ? r.tokoQty : 0) + (showConsig ? r.consigQty : 0); }
             var filtered = rows.filter(function(r) {
-                if (hideEmpty && r.total === 0) return false;
+                if (hideEmpty && rowVisTot(r) === 0) return false;
                 if (tierF && String(r.tier) !== tierF) return false;
                 if (verF && String(r.version) !== verF) return false;
                 if (q) {
@@ -16554,21 +16568,24 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 }
                 return true;
             });
-            filtered.sort(function(a, b) { return b.total - a.total; });
+            filtered.sort(function(a, b) { return rowVisTot(b) - rowVisTot(a); });
             var cols = buildSbaColumns(area);
+            var whCols = showWH ? cols.wh : [];
+            var tokoCols = showToko ? cols.toko : [];
+            var consigCols = showConsig ? cols.consig : [];
             var headers = ['Kode','Kode Kecil','Nama','Size','Tier','Version']
-                .concat(cols.wh.map(function(n) { return 'WH: ' + n; }))
-                .concat(cols.toko.map(function(n) { return 'Toko: ' + n; }))
-                .concat(cols.consig.map(function(n) { return 'Consig: ' + n; }))
+                .concat(whCols.map(function(n) { return 'WH: ' + n; }))
+                .concat(tokoCols.map(function(n) { return 'Toko: ' + n; }))
+                .concat(consigCols.map(function(n) { return 'Consig: ' + n; }))
                 .concat(['Total']);
             function esc(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
             var out = [headers.map(esc).join(',')];
             filtered.forEach(function(r) {
                 var row = [r.kode, r.kode_kecil, r.name, r.size, r.tier, r.version];
-                cols.wh.forEach(function(n) { row.push(r.whStores[n] || 0); });
-                cols.toko.forEach(function(n) { row.push(r.tokoStores[n] || 0); });
-                cols.consig.forEach(function(n) { row.push(r.consigStores[n] || 0); });
-                row.push(r.total);
+                whCols.forEach(function(n) { row.push(r.whStores[n] || 0); });
+                tokoCols.forEach(function(n) { row.push(r.tokoStores[n] || 0); });
+                consigCols.forEach(function(n) { row.push(r.consigStores[n] || 0); });
+                row.push(rowVisTot(r));
                 out.push(row.map(esc).join(','));
             });
             var blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
