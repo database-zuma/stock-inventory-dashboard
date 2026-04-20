@@ -2641,9 +2641,9 @@
                     <div id="sbaCountInfo" style="font-size:0.85rem;color:#64748b;font-weight:600;">—</div>
                     <button onclick="exportStockByAreaCSV()" style="padding:8px 14px;background:#059669;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;">📥 Export CSV</button>
                 </div>
-                <div style="overflow-x:auto;max-height:72vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
-                    <table id="sbaTable" style="width:100%;border-collapse:collapse;font-size:0.82rem;">
-                        <thead id="sbaThead" style="position:sticky;top:0;background:linear-gradient(135deg,#059669,#047857);color:white;z-index:1;"></thead>
+                <div style="overflow:auto;max-height:78vh;border:1px solid #e2e8f0;border-radius:8px;">
+                    <table id="sbaTable" style="border-collapse:separate;border-spacing:0;font-size:0.82rem;width:max-content;min-width:100%;">
+                        <thead id="sbaThead" style="position:sticky;top:0;z-index:5;"></thead>
                         <tbody id="sbaTbody"></tbody>
                     </table>
                 </div>
@@ -16351,9 +16351,46 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
+        // Build sorted column lists of WH / retail / consig locations present in the area.
+        function buildSbaColumns(area) {
+            var entity = currentEntity;
+            var entData = (allData || {})[entity] || {};
+            var areaMap = storeAreaMap || {};
+            var whSet = {}, tokoSet = {}, consigSet = {};
+
+            (entData.warehouse || []).forEach(function(it) {
+                Object.keys(it.store_stock || {}).forEach(function(wh) {
+                    if (sbaWhToArea(wh) === area) whSet[wh] = true;
+                });
+            });
+            (entData.retail || []).forEach(function(it) {
+                Object.keys(it.store_stock || {}).forEach(function(st) {
+                    var ma = areaMap[String(st).toLowerCase()];
+                    if (!ma) return;
+                    if (sbaStoreMapArea(ma) !== area) return;
+                    if (sbaIsConsigArea(ma)) return;
+                    tokoSet[st] = true;
+                });
+            });
+            (consignmentStockItems || []).forEach(function(it) {
+                if (String(it.entity || '').toUpperCase() !== String(entity).toUpperCase()) return;
+                Object.keys(it.store_stock || {}).forEach(function(st) {
+                    var ma = areaMap[String(st).toLowerCase()];
+                    if (sbaStoreMapArea(ma) === area) consigSet[st] = true;
+                });
+            });
+            function sortCI(a, b) { return String(a).toLowerCase().localeCompare(String(b).toLowerCase()); }
+            return {
+                wh: Object.keys(whSet).sort(sortCI),
+                toko: Object.keys(tokoSet).sort(sortCI),
+                consig: Object.keys(consigSet).sort(sortCI)
+            };
+        }
+
         function renderStockByArea() {
             var area = sbaCurrentArea;
             var rows = buildStockByAreaRows(area);
+            var cols = buildSbaColumns(area);
             var qEl = document.getElementById('sbaSearchInput');
             var tEl = document.getElementById('sbaTierFilter');
             var vEl = document.getElementById('sbaVersionFilter');
@@ -16376,79 +16413,122 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             filtered.sort(function(a, b) { return b.total - a.total; });
 
             var sumQty = 0, sumWh = 0, sumToko = 0, sumConsig = 0;
-            var tokoSet = {}, consigSet = {};
             filtered.forEach(function(r) {
                 sumQty += r.total; sumWh += r.whQty; sumToko += r.tokoQty; sumConsig += r.consigQty;
-                Object.keys(r.tokoStores).forEach(function(k) { tokoSet[k] = true; });
-                Object.keys(r.consigStores).forEach(function(k) { consigSet[k] = true; });
             });
             var sumEl = document.getElementById('sbaSummary');
             if (sumEl) {
                 var cards = [
                     { l: 'Total SKU', v: filtered.length.toLocaleString('id-ID'), c: '#0f766e' },
                     { l: 'Total Qty', v: sumQty.toLocaleString('id-ID'), c: '#059669' },
-                    { l: 'WH ' + area, v: sumWh.toLocaleString('id-ID'), c: '#7c3aed' },
-                    { l: 'Toko ' + area, v: sumToko.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + Object.keys(tokoSet).length + ' toko)</span>', c: '#2563eb' },
-                    { l: 'Consig ' + area, v: sumConsig.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + Object.keys(consigSet).length + ' outlet)</span>', c: '#d97706' }
+                    { l: 'WH ' + area, v: sumWh.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.wh.length + ' loc)</span>', c: '#7c3aed' },
+                    { l: 'Toko ' + area, v: sumToko.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.toko.length + ' toko)</span>', c: '#2563eb' },
+                    { l: 'Consig ' + area, v: sumConsig.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + cols.consig.length + ' outlet)</span>', c: '#d97706' }
                 ];
                 sumEl.innerHTML = cards.map(function(k) {
                     return '<div style="background:white;border-left:4px solid ' + k.c + ';border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);"><div style="font-size:0.7rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:0.5px;">' + k.l + '</div><div style="font-size:1.1rem;font-weight:800;color:' + k.c + ';">' + k.v + '</div></div>';
                 }).join('');
             }
 
-            var thead = document.getElementById('sbaThead');
-            if (thead) {
-                thead.innerHTML = '<tr>' +
-                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Kode</th>' +
-                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Kode Kecil</th>' +
-                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Nama</th>' +
-                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Size</th>' +
-                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Tier</th>' +
-                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Ver</th>' +
-                    '<th style="padding:10px 8px;text-align:right;font-weight:700;font-size:0.78rem;">WH ' + _sbaEsc(area) + '</th>' +
-                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Toko ' + _sbaEsc(area) + '</th>' +
-                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Consig ' + _sbaEsc(area) + '</th>' +
-                    '<th style="padding:10px 8px;text-align:right;font-weight:700;font-size:0.78rem;">Total</th>' +
-                '</tr>';
+            // --- Build wide header with 2 rows: group banner + store-name row ---
+            // Fixed (sticky) columns: Kode, Kode Kecil, Nama, Size, Tier, Ver
+            // Then per-store columns: WH x N, Toko x N, Consig x N
+            // Sticky-right: Total
+            var META_COLS = 6;
+            var HEADER_GROUP_BG_WH = '#7c3aed', HEADER_GROUP_BG_TOKO = '#2563eb', HEADER_GROUP_BG_CONSIG = '#d97706', HEADER_GROUP_BG_TOTAL = '#059669';
+            var META_STICKY_BG = 'linear-gradient(135deg,#065f46,#064e3b)';
+
+            function vertHeader(label, bg) {
+                // Vertical-ish header (rotated slightly) for store cols to fit many columns
+                return '<th style="padding:8px 4px;background:' + bg + ';color:white;font-weight:700;font-size:0.68rem;white-space:nowrap;min-width:72px;max-width:120px;text-align:center;border-right:1px solid rgba(255,255,255,0.15);" title="' + _sbaEsc(label) + '"><div style="writing-mode:vertical-rl;transform:rotate(180deg);padding:4px 0;max-height:120px;overflow:hidden;text-overflow:ellipsis;">' + _sbaEsc(label) + '</div></th>';
             }
 
+            var thead = document.getElementById('sbaThead');
+            if (thead) {
+                // Row 1: group banner
+                var row1 = '<tr>' +
+                    '<th colspan="' + META_COLS + '" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px;position:sticky;left:0;z-index:3;text-align:left;font-size:0.8rem;font-weight:700;">Produk</th>' +
+                    (cols.wh.length ? '<th colspan="' + cols.wh.length + '" style="background:' + HEADER_GROUP_BG_WH + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">🏭 Warehouse ' + _sbaEsc(area) + ' (' + cols.wh.length + ')</th>' : '') +
+                    (cols.toko.length ? '<th colspan="' + cols.toko.length + '" style="background:' + HEADER_GROUP_BG_TOKO + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">🏪 Toko Retail ' + _sbaEsc(area) + ' (' + cols.toko.length + ')</th>' : '') +
+                    (cols.consig.length ? '<th colspan="' + cols.consig.length + '" style="background:' + HEADER_GROUP_BG_CONSIG + ';color:white;padding:8px;text-align:center;font-size:0.8rem;font-weight:700;">📦 Consignment ' + _sbaEsc(area) + ' (' + cols.consig.length + ')</th>' : '') +
+                    '<th rowspan="2" style="background:' + HEADER_GROUP_BG_TOTAL + ';color:white;padding:8px 10px;position:sticky;right:0;z-index:3;text-align:right;font-size:0.8rem;font-weight:700;border-left:2px solid #fff;">Total</th>' +
+                '</tr>';
+                // Row 2: meta columns + per-store names
+                var metaTh = [
+                    { l: 'Kode',       w: 95,  align: 'left' },
+                    { l: 'Kode Kecil', w: 110, align: 'left' },
+                    { l: 'Nama',       w: 220, align: 'left' },
+                    { l: 'Size',       w: 50,  align: 'center' },
+                    { l: 'Tier',       w: 50,  align: 'center' },
+                    { l: 'Ver',        w: 50,  align: 'center' }
+                ];
+                // Compute cumulative left offsets for each meta col so they stack sticky
+                var leftOffsets = [], cum = 0;
+                for (var mi = 0; mi < metaTh.length; mi++) { leftOffsets.push(cum); cum += metaTh[mi].w; }
+                var row2 = '<tr>';
+                metaTh.forEach(function(m, idx) {
+                    row2 += '<th style="background:' + META_STICKY_BG + ';color:white;padding:8px;text-align:' + m.align + ';font-size:0.72rem;font-weight:700;min-width:' + m.w + 'px;max-width:' + m.w + 'px;position:sticky;left:' + leftOffsets[idx] + 'px;z-index:2;border-right:1px solid rgba(255,255,255,0.15);">' + m.l + '</th>';
+                });
+                cols.wh.forEach(function(n) { row2 += vertHeader(_sbaShortWh(n), HEADER_GROUP_BG_WH); });
+                cols.toko.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_TOKO); });
+                cols.consig.forEach(function(n) { row2 += vertHeader(_sbaShortStore(n), HEADER_GROUP_BG_CONSIG); });
+                row2 += '</tr>';
+                thead.innerHTML = row1 + row2;
+            }
+
+            var totalCols = META_COLS + cols.wh.length + cols.toko.length + cols.consig.length + 1;
             var countEl = document.getElementById('sbaCountInfo');
-            if (countEl) countEl.textContent = filtered.length.toLocaleString('id-ID') + ' SKU | Total qty: ' + sumQty.toLocaleString('id-ID') + ' | Area: ' + area + ' | Entity: ' + currentEntity;
+            if (countEl) countEl.textContent = filtered.length.toLocaleString('id-ID') + ' SKU | Total qty: ' + sumQty.toLocaleString('id-ID') + ' | Area: ' + area + ' | Entity: ' + currentEntity + ' | Kolom: ' + (cols.wh.length + cols.toko.length + cols.consig.length) + ' lokasi';
 
             var tbody = document.getElementById('sbaTbody');
             if (!tbody) return;
             if (!filtered.length) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada stok di area ' + _sbaEsc(area) + ' untuk entity ' + _sbaEsc(currentEntity) + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="' + totalCols + '" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada stok di area ' + _sbaEsc(area) + ' untuk entity ' + _sbaEsc(currentEntity) + '</td></tr>';
                 return;
             }
             var CAP = 500;
             var display = filtered.slice(0, CAP);
-            var html = display.map(function(r) {
-                var tokoEntries = Object.keys(r.tokoStores).map(function(k) { return [k, r.tokoStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
-                var consigEntries = Object.keys(r.consigStores).map(function(k) { return [k, r.consigStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
-                var whEntries = Object.keys(r.whStores).map(function(k) { return [k, r.whStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
-                var tokoStr = tokoEntries.length ? tokoEntries.map(function(e) {
-                    return '<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;margin:1px 2px;font-size:0.72rem;white-space:nowrap;">' + _sbaEsc(_sbaShortStore(e[0])) + ' <strong>' + e[1] + '</strong></span>';
-                }).join('') : '<span style="color:#cbd5e1;">—</span>';
-                var consigStr = consigEntries.length ? consigEntries.map(function(e) {
-                    return '<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:6px;margin:1px 2px;font-size:0.72rem;white-space:nowrap;">' + _sbaEsc(_sbaShortStore(e[0])) + ' <strong>' + e[1] + '</strong></span>';
-                }).join('') : '<span style="color:#cbd5e1;">—</span>';
-                var whTooltip = whEntries.map(function(e) { return _sbaShortWh(e[0]) + ': ' + e[1]; }).join(' | ');
-                return '<tr style="border-bottom:1px solid #f1f5f9;">' +
-                    '<td style="padding:8px;font-weight:600;color:#0f766e;white-space:nowrap;">' + _sbaEsc(r.kode || '-') + '</td>' +
-                    '<td style="padding:8px;font-family:ui-monospace,monospace;font-size:0.78rem;color:#334155;white-space:nowrap;">' + _sbaEsc(r.kode_kecil || '-') + '</td>' +
-                    '<td style="padding:8px;color:#1f2937;">' + _sbaEsc(r.name) + '</td>' +
-                    '<td style="padding:8px;text-align:center;color:#64748b;">' + _sbaEsc(r.size) + '</td>' +
-                    '<td style="padding:8px;text-align:center;"><span style="background:#f1f5f9;padding:2px 8px;border-radius:6px;font-weight:700;color:#334155;">' + _sbaEsc(r.tier || '-') + '</span></td>' +
-                    '<td style="padding:8px;text-align:center;color:#64748b;">' + _sbaEsc(r.version || '-') + '</td>' +
-                    '<td style="padding:8px;text-align:right;font-weight:700;color:#7c3aed;white-space:nowrap;" title="' + _sbaEsc(whTooltip) + '">' + r.whQty.toLocaleString('id-ID') + '</td>' +
-                    '<td style="padding:8px;min-width:260px;">' + tokoStr + '</td>' +
-                    '<td style="padding:8px;min-width:240px;">' + consigStr + '</td>' +
-                    '<td style="padding:8px;text-align:right;font-weight:800;color:#059669;white-space:nowrap;">' + r.total.toLocaleString('id-ID') + '</td>' +
-                '</tr>';
+
+            // Cell color helper: deeper color for larger qty
+            function cellQty(q, bg) {
+                if (!q) return '<td style="padding:4px 6px;text-align:center;color:#e2e8f0;font-size:0.75rem;background:#fafafa;border-right:1px solid #f1f5f9;">·</td>';
+                return '<td style="padding:4px 6px;text-align:center;font-weight:700;color:#0f172a;font-size:0.8rem;background:' + bg + ';border-right:1px solid #f1f5f9;">' + q.toLocaleString('id-ID') + '</td>';
+            }
+            function bgByQty(q, base) {
+                if (!q) return '#fafafa';
+                if (q >= 20) return base + 'CC'; // 80% alpha
+                if (q >= 10) return base + '80'; // 50%
+                if (q >= 5)  return base + '55'; // 33%
+                return base + '33'; // 20%
+            }
+
+            // Pre-compute left offsets for meta sticky cols (same as header)
+            var metaWidths = [95, 110, 220, 50, 50, 50];
+            var leftOff = [], cum2 = 0;
+            metaWidths.forEach(function(w) { leftOff.push(cum2); cum2 += w; });
+
+            var html = display.map(function(r, idx) {
+                var rowBg = idx % 2 === 0 ? 'white' : '#fafbfc';
+                var out = '<tr style="border-bottom:1px solid #f1f5f9;">';
+                // Meta sticky cells
+                out += '<td style="padding:6px 8px;font-weight:600;color:#0f766e;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[0] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.kode || '-') + '</td>';
+                out += '<td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:0.74rem;color:#334155;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOff[1] + 'px;z-index:1;border-right:1px solid #e2e8f0;">' + _sbaEsc(r.kode_kecil || '-') + '</td>';
+                out += '<td style="padding:6px 8px;color:#1f2937;background:' + rowBg + ';position:sticky;left:' + leftOff[2] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + _sbaEsc(r.name) + '">' + _sbaEsc(r.name) + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[3] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.size) + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;background:' + rowBg + ';position:sticky;left:' + leftOff[4] + 'px;z-index:1;border-right:1px solid #e2e8f0;font-size:0.78rem;">' + _sbaEsc(r.tier || '-') + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOff[5] + 'px;z-index:1;border-right:2px solid #cbd5e1;font-size:0.78rem;">' + _sbaEsc(r.version || '-') + '</td>';
+                // Store qty cells
+                for (var i = 0; i < cols.wh.length; i++) { var q = r.whStores[cols.wh[i]] || 0; out += cellQty(q, bgByQty(q, '#ddd6fe')); }
+                for (var j = 0; j < cols.toko.length; j++) { var q2 = r.tokoStores[cols.toko[j]] || 0; out += cellQty(q2, bgByQty(q2, '#bfdbfe')); }
+                for (var k = 0; k < cols.consig.length; k++) { var q3 = r.consigStores[cols.consig[k]] || 0; out += cellQty(q3, bgByQty(q3, '#fde68a')); }
+                // Sticky right Total
+                out += '<td style="padding:6px 10px;text-align:right;font-weight:800;color:#059669;background:' + rowBg + ';position:sticky;right:0;z-index:1;border-left:2px solid #cbd5e1;font-size:0.82rem;">' + r.total.toLocaleString('id-ID') + '</td>';
+                out += '</tr>';
+                return out;
             }).join('');
+
             if (filtered.length > CAP) {
-                html += '<tr><td colspan="10" style="text-align:center;padding:15px;background:#fef3c7;color:#92400e;font-weight:600;">Menampilkan ' + CAP + ' dari ' + filtered.length.toLocaleString('id-ID') + ' baris. Gunakan search / filter untuk mempersempit, atau export CSV untuk semua data.</td></tr>';
+                html += '<tr><td colspan="' + totalCols + '" style="text-align:center;padding:15px;background:#fef3c7;color:#92400e;font-weight:600;">Menampilkan ' + CAP + ' dari ' + filtered.length.toLocaleString('id-ID') + ' baris. Gunakan search / filter untuk mempersempit, atau Export CSV untuk semua data.</td></tr>';
             }
             tbody.innerHTML = html;
         }
@@ -16475,14 +16555,21 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 return true;
             });
             filtered.sort(function(a, b) { return b.total - a.total; });
-            var headers = ['Kode','Kode Kecil','Nama','Size','Tier','Version','WH Qty','WH Detail','Toko Qty','Toko Detail','Consig Qty','Consig Detail','Total'];
+            var cols = buildSbaColumns(area);
+            var headers = ['Kode','Kode Kecil','Nama','Size','Tier','Version']
+                .concat(cols.wh.map(function(n) { return 'WH: ' + n; }))
+                .concat(cols.toko.map(function(n) { return 'Toko: ' + n; }))
+                .concat(cols.consig.map(function(n) { return 'Consig: ' + n; }))
+                .concat(['Total']);
             function esc(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
-            var out = [headers.join(',')];
+            var out = [headers.map(esc).join(',')];
             filtered.forEach(function(r) {
-                var whList = Object.keys(r.whStores).map(function(k) { return k + '=' + r.whStores[k]; }).join('; ');
-                var tokoList = Object.keys(r.tokoStores).map(function(k) { return k + '=' + r.tokoStores[k]; }).join('; ');
-                var consigList = Object.keys(r.consigStores).map(function(k) { return k + '=' + r.consigStores[k]; }).join('; ');
-                out.push([r.kode, r.kode_kecil, r.name, r.size, r.tier, r.version, r.whQty, whList, r.tokoQty, tokoList, r.consigQty, consigList, r.total].map(esc).join(','));
+                var row = [r.kode, r.kode_kecil, r.name, r.size, r.tier, r.version];
+                cols.wh.forEach(function(n) { row.push(r.whStores[n] || 0); });
+                cols.toko.forEach(function(n) { row.push(r.tokoStores[n] || 0); });
+                cols.consig.forEach(function(n) { row.push(r.consigStores[n] || 0); });
+                row.push(r.total);
+                out.push(row.map(esc).join(','));
             });
             var blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
             var a = document.createElement('a');
