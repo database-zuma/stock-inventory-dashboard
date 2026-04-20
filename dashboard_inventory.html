@@ -2752,6 +2752,10 @@
             if (summaryView && summaryView.parentElement !== contentArea) {
                 contentArea.appendChild(summaryView);
             }
+            var sbaView = document.getElementById('stockbyareaView');
+            if (sbaView && sbaView.parentElement !== contentArea) {
+                contentArea.appendChild(sbaView);
+            }
         })();
 
         // Data — populated by loadDashboardData() before dashboard initializes
