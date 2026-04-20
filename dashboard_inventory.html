@@ -618,6 +618,9 @@
             <button class="view-btn" data-view="maxstock" onclick="switchView('maxstock')">
                 📈 Max Stock Analysis
             </button>
+            <button class="view-btn" data-view="stockbyarea" onclick="switchView('stockbyarea')">
+                🗺️ Stok per Area
+            </button>
             <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Sales</div>
             <button class="view-btn" data-view="sales" onclick="switchView('sales');">
                 💰 Sales
@@ -2610,6 +2613,44 @@
             </div>
         </div>
         <!-- End skuSearchView -->
+
+        <!-- ==================== STOCK BY AREA VIEW ==================== -->
+        <div class="view-container" id="stockbyareaView">
+            <div style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border:2px solid #059669;border-radius:16px;padding:20px;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:12px;border-bottom:2px solid #059669;flex-wrap:wrap;">
+                    <div style="background:linear-gradient(135deg,#059669 0%,#047857 100%);color:white;padding:10px 20px;border-radius:10px;font-weight:700;font-size:1.1rem;">
+                        🗺️ STOK per AREA
+                    </div>
+                    <span style="color:#047857;font-size:0.85rem;">Stok gabungan Warehouse + Toko + Consignment per area (entity: <strong id="sbaEntityLabel">DDD</strong>)</span>
+                </div>
+
+                <div id="sbaAreaTabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                    <input type="text" id="sbaSearchInput" placeholder="Cari kode / kode kecil / nama..." oninput="renderStockByArea()" style="flex:1;min-width:280px;padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;outline:none;">
+                    <select id="sbaTierFilter" onchange="renderStockByArea()" style="padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;background:white;"><option value="">Semua Tier</option></select>
+                    <select id="sbaVersionFilter" onchange="renderStockByArea()" style="padding:10px 14px;border:2px solid #cbd5e1;border-radius:10px;font-size:0.9rem;background:white;"><option value="">Semua Version</option></select>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#334155;font-weight:600;"><input type="checkbox" id="sbaHideEmpty" checked onchange="renderStockByArea()"> Sembunyikan total=0</label>
+                </div>
+            </div>
+
+            <div id="sbaSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:15px;"></div>
+
+            <div style="background:white;border-radius:12px;padding:15px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+                    <div id="sbaCountInfo" style="font-size:0.85rem;color:#64748b;font-weight:600;">—</div>
+                    <button onclick="exportStockByAreaCSV()" style="padding:8px 14px;background:#059669;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem;">📥 Export CSV</button>
+                </div>
+                <div style="overflow-x:auto;max-height:72vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+                    <table id="sbaTable" style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                        <thead id="sbaThead" style="position:sticky;top:0;background:linear-gradient(135deg,#059669,#047857);color:white;z-index:1;"></thead>
+                        <tbody id="sbaTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- End stockbyareaView -->
+
         </div><!-- end view-content-area -->
         </div><!-- end dashboard-body -->
 
@@ -3033,8 +3074,8 @@
         }
 
         function selectEntity(entity) {
-            // Auto-switch to inventory view when clicking entity
-            if (currentView !== 'inventory') {
+            // Auto-switch to inventory view when clicking entity (preserve stockbyarea)
+            if (currentView !== 'inventory' && currentView !== 'stockbyarea') {
                 switchView('inventory');
             }
 
@@ -3042,6 +3083,18 @@
             document.querySelectorAll('.entity-toggle-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.entity === entity);
             });
+
+            // If on Stock per Area view, re-render with the new entity and skip inventory-specific logic
+            if (currentView === 'stockbyarea') {
+                try {
+                    var lbl = document.getElementById('sbaEntityLabel');
+                    if (lbl) lbl.textContent = entity;
+                    if (typeof populateSbaFilters === 'function') populateSbaFilters();
+                    if (typeof renderStockByArea === 'function') renderStockByArea();
+                } catch(e) { console.error('sba re-render failed:', e); }
+                return;
+            }
+
             rtCurrentPage = 1;
             whCurrentPage = 1;
             currentArea = '';
@@ -5356,6 +5409,15 @@
                         initStockControlOnline();
                     } catch(e) {
                         console.error('Error initStockControlOnline:', e);
+                        alert('Error: ' + e.message);
+                    }
+                }, 100);
+            } else if (view === 'stockbyarea') {
+                setTimeout(function() {
+                    try {
+                        initStockByArea();
+                    } catch(e) {
+                        console.error('Error initStockByArea:', e);
                         alert('Error: ' + e.message);
                     }
                 }, 100);
@@ -16102,6 +16164,330 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             item.addEventListener('click', () => { dashboardContextSent = false; });
         });
 
+        // ============================================================
+        // STOCK per AREA — view: #stockbyareaView
+        // Aggregates Warehouse + Toko + Consignment per area for the
+        // currently-selected entity. No extra API calls; uses data
+        // already loaded by loadDashboardData().
+        // ============================================================
+        var SBA_AREAS = ['Bali','Jakarta','Jatim','Lombok','Sulawesi','Sumatra','Batam'];
+        var sbaCurrentArea = 'Bali';
+
+        function sbaWhToArea(whName) {
+            if (!whName) return null;
+            var n = String(whName).toLowerCase();
+            if (n.indexOf('bali') !== -1) return 'Bali';
+            if (n.indexOf('palembang') !== -1 || n.indexOf('sumatra') !== -1 || n.indexOf('medan') !== -1) return 'Sumatra';
+            if (n.indexOf('pluit') !== -1 || n.indexOf('pusat') !== -1 || n.indexOf('jakarta') !== -1) return 'Jakarta';
+            if (n.indexOf('surabaya') !== -1 || n.indexOf('jatim') !== -1 || n.indexOf('malang') !== -1) return 'Jatim';
+            if (n.indexOf('lombok') !== -1 || n.indexOf('mataram') !== -1) return 'Lombok';
+            if (n.indexOf('makassar') !== -1 || n.indexOf('manado') !== -1 || n.indexOf('sulawesi') !== -1) return 'Sulawesi';
+            if (n.indexOf('batam') !== -1) return 'Batam';
+            return null;
+        }
+
+        function sbaStoreMapArea(mapArea) {
+            if (!mapArea) return null;
+            var a = String(mapArea).toLowerCase().trim();
+            if (a.indexOf('bali') === 0 || a === 'konsinyasi bali' || a === 'warehouse bali' || a === 'whb' || a === 'whb protol' || a === 'wholesale bali') return 'Bali';
+            if (a === 'jakarta' || a === 'konsinyasi jakarta' || a === 'warehouse jakarta' || a === 'whj' || a === 'online jakarta' || a === 'online') return 'Jakarta';
+            if (a === 'jatim' || a === 'konsinyasi jatim' || a === 'wholesale jatim') return 'Jatim';
+            if (a === 'lombok' || a === 'konsinyasi lombok' || a === 'wholesale lombok') return 'Lombok';
+            if (a === 'sulawesi') return 'Sulawesi';
+            if (a === 'sumatra' || a === 'palembang' || a === 'whs' || a === 'whs protol') return 'Sumatra';
+            if (a === 'batam') return 'Batam';
+            return null;
+        }
+
+        function sbaIsConsigArea(mapArea) {
+            if (!mapArea) return false;
+            return String(mapArea).toLowerCase().indexOf('konsinyasi') === 0;
+        }
+
+        function initStockByArea() {
+            var lbl = document.getElementById('sbaEntityLabel');
+            if (lbl) lbl.textContent = currentEntity;
+            var tabsEl = document.getElementById('sbaAreaTabs');
+            if (tabsEl) {
+                tabsEl.innerHTML = SBA_AREAS.map(function(a) {
+                    var active = (a === sbaCurrentArea);
+                    return '<button class="sba-area-btn" data-area="' + a + '" onclick="switchSbaArea(\'' + a + '\')" style="padding:8px 18px;border:2px solid #059669;background:' + (active ? '#059669' : 'white') + ';color:' + (active ? 'white' : '#059669') + ';border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;">' + a + '</button>';
+                }).join('');
+            }
+            populateSbaFilters();
+            renderStockByArea();
+        }
+
+        function switchSbaArea(area) {
+            sbaCurrentArea = area;
+            var btns = document.querySelectorAll('.sba-area-btn');
+            for (var i = 0; i < btns.length; i++) {
+                var b = btns[i];
+                var on = (b.dataset.area === area);
+                b.style.background = on ? '#059669' : 'white';
+                b.style.color = on ? 'white' : '#059669';
+            }
+            renderStockByArea();
+        }
+
+        function populateSbaFilters() {
+            var entData = (window.allData || {})[currentEntity] || {};
+            var all = [].concat(entData.warehouse || [], entData.retail || []);
+            var tiers = {}, vers = {};
+            all.forEach(function(it) {
+                if (it.tier !== undefined && it.tier !== null && it.tier !== '') tiers[String(it.tier)] = true;
+                if (it.version !== undefined && it.version !== null && it.version !== '') vers[String(it.version)] = true;
+            });
+            var tierEl = document.getElementById('sbaTierFilter');
+            var verEl = document.getElementById('sbaVersionFilter');
+            if (!tierEl || !verEl) return;
+            var tierCur = tierEl.value, verCur = verEl.value;
+            var tierKeys = Object.keys(tiers).sort(function(a,b){ return (parseInt(a)||0) - (parseInt(b)||0); });
+            var verKeys = Object.keys(vers).sort(function(a,b){ return (parseInt(a)||0) - (parseInt(b)||0); });
+            tierEl.innerHTML = '<option value="">Semua Tier</option>' + tierKeys.map(function(t){ return '<option value="' + t + '">Tier ' + t + '</option>'; }).join('');
+            verEl.innerHTML = '<option value="">Semua Version</option>' + verKeys.map(function(v){ return '<option value="' + v + '">Version ' + v + '</option>'; }).join('');
+            tierEl.value = tierCur;
+            verEl.value = verCur;
+        }
+
+        function buildStockByAreaRows(area) {
+            var entity = currentEntity;
+            var entData = (window.allData || {})[entity] || {};
+            var whItems = entData.warehouse || [];
+            var retItems = entData.retail || [];
+            var consigItems = (window.consignmentStockItems || []).filter(function(it) {
+                return String(it.entity || '').toUpperCase() === String(entity).toUpperCase();
+            });
+            var areaMap = window.storeAreaMap || {};
+
+            var byKK = {};
+            function ensure(kk, it) {
+                if (!byKK[kk]) {
+                    byKK[kk] = {
+                        kode: String(it.kode || '').toUpperCase(),
+                        kode_kecil: String(it.kode_kecil || '').toUpperCase(),
+                        kode_mix: it.kode_mix || '',
+                        name: it.name || '',
+                        size: it.size || '',
+                        tier: it.tier !== undefined && it.tier !== null ? String(it.tier) : '',
+                        version: (it.version !== undefined && it.version !== null) ? String(it.version) : '',
+                        whQty: 0, whStores: {},
+                        tokoQty: 0, tokoStores: {},
+                        consigQty: 0, consigStores: {}
+                    };
+                }
+                return byKK[kk];
+            }
+
+            whItems.forEach(function(it) {
+                var kk = String(it.kode_kecil || '').toLowerCase();
+                if (!kk) return;
+                var ss = it.store_stock || {};
+                Object.keys(ss).forEach(function(wh) {
+                    if (sbaWhToArea(wh) !== area) return;
+                    var qty = Number(ss[wh]) || 0;
+                    if (qty === 0) return;
+                    var row = ensure(kk, it);
+                    row.whStores[wh] = (row.whStores[wh] || 0) + qty;
+                    row.whQty += qty;
+                });
+            });
+
+            retItems.forEach(function(it) {
+                var kk = String(it.kode_kecil || '').toLowerCase();
+                if (!kk) return;
+                var ss = it.store_stock || {};
+                Object.keys(ss).forEach(function(st) {
+                    var ma = areaMap[String(st).toLowerCase()];
+                    if (!ma) return;
+                    if (sbaStoreMapArea(ma) !== area) return;
+                    if (sbaIsConsigArea(ma)) return;
+                    var qty = Number(ss[st]) || 0;
+                    if (qty === 0) return;
+                    var row = ensure(kk, it);
+                    row.tokoStores[st] = (row.tokoStores[st] || 0) + qty;
+                    row.tokoQty += qty;
+                });
+            });
+
+            consigItems.forEach(function(it) {
+                var kk = String(it.kode_kecil || '').toLowerCase();
+                if (!kk) return;
+                var ss = it.store_stock || {};
+                Object.keys(ss).forEach(function(st) {
+                    var ma = areaMap[String(st).toLowerCase()];
+                    var areaGroup = sbaStoreMapArea(ma);
+                    if (areaGroup !== area) return;
+                    var qty = Number(ss[st]) || 0;
+                    if (qty === 0) return;
+                    var row = ensure(kk, it);
+                    row.consigStores[st] = (row.consigStores[st] || 0) + qty;
+                    row.consigQty += qty;
+                });
+            });
+
+            var out = [];
+            Object.keys(byKK).forEach(function(kk) {
+                var r = byKK[kk];
+                r.total = r.whQty + r.tokoQty + r.consigQty;
+                out.push(r);
+            });
+            return out;
+        }
+
+        function _sbaShortStore(name) {
+            if (!name) return '';
+            return String(name).replace(/^Zuma\s+/i, '').replace(/^ZUMA\s+/i, '');
+        }
+        function _sbaShortWh(name) {
+            if (!name) return '';
+            return String(name).replace(/^Warehouse\s+/i, 'WH ');
+        }
+        function _sbaEsc(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function renderStockByArea() {
+            var area = sbaCurrentArea;
+            var rows = buildStockByAreaRows(area);
+            var qEl = document.getElementById('sbaSearchInput');
+            var tEl = document.getElementById('sbaTierFilter');
+            var vEl = document.getElementById('sbaVersionFilter');
+            var hEl = document.getElementById('sbaHideEmpty');
+            var q = qEl ? (qEl.value || '').toLowerCase().trim() : '';
+            var tierF = tEl ? tEl.value : '';
+            var verF = vEl ? vEl.value : '';
+            var hideEmpty = hEl ? hEl.checked : true;
+
+            var filtered = rows.filter(function(r) {
+                if (hideEmpty && r.total === 0) return false;
+                if (tierF && String(r.tier) !== tierF) return false;
+                if (verF && String(r.version) !== verF) return false;
+                if (q) {
+                    var hay = (r.kode + '|' + r.kode_kecil + '|' + r.name).toLowerCase();
+                    if (hay.indexOf(q) === -1) return false;
+                }
+                return true;
+            });
+            filtered.sort(function(a, b) { return b.total - a.total; });
+
+            var sumQty = 0, sumWh = 0, sumToko = 0, sumConsig = 0;
+            var tokoSet = {}, consigSet = {};
+            filtered.forEach(function(r) {
+                sumQty += r.total; sumWh += r.whQty; sumToko += r.tokoQty; sumConsig += r.consigQty;
+                Object.keys(r.tokoStores).forEach(function(k) { tokoSet[k] = true; });
+                Object.keys(r.consigStores).forEach(function(k) { consigSet[k] = true; });
+            });
+            var sumEl = document.getElementById('sbaSummary');
+            if (sumEl) {
+                var cards = [
+                    { l: 'Total SKU', v: filtered.length.toLocaleString('id-ID'), c: '#0f766e' },
+                    { l: 'Total Qty', v: sumQty.toLocaleString('id-ID'), c: '#059669' },
+                    { l: 'WH ' + area, v: sumWh.toLocaleString('id-ID'), c: '#7c3aed' },
+                    { l: 'Toko ' + area, v: sumToko.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + Object.keys(tokoSet).length + ' toko)</span>', c: '#2563eb' },
+                    { l: 'Consig ' + area, v: sumConsig.toLocaleString('id-ID') + ' <span style="font-size:0.75rem;color:#64748b;">(' + Object.keys(consigSet).length + ' outlet)</span>', c: '#d97706' }
+                ];
+                sumEl.innerHTML = cards.map(function(k) {
+                    return '<div style="background:white;border-left:4px solid ' + k.c + ';border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);"><div style="font-size:0.7rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:0.5px;">' + k.l + '</div><div style="font-size:1.1rem;font-weight:800;color:' + k.c + ';">' + k.v + '</div></div>';
+                }).join('');
+            }
+
+            var thead = document.getElementById('sbaThead');
+            if (thead) {
+                thead.innerHTML = '<tr>' +
+                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Kode</th>' +
+                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Kode Kecil</th>' +
+                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Nama</th>' +
+                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Size</th>' +
+                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Tier</th>' +
+                    '<th style="padding:10px 8px;text-align:center;font-weight:700;font-size:0.78rem;">Ver</th>' +
+                    '<th style="padding:10px 8px;text-align:right;font-weight:700;font-size:0.78rem;">WH ' + _sbaEsc(area) + '</th>' +
+                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Toko ' + _sbaEsc(area) + '</th>' +
+                    '<th style="padding:10px 8px;text-align:left;font-weight:700;font-size:0.78rem;">Consig ' + _sbaEsc(area) + '</th>' +
+                    '<th style="padding:10px 8px;text-align:right;font-weight:700;font-size:0.78rem;">Total</th>' +
+                '</tr>';
+            }
+
+            var countEl = document.getElementById('sbaCountInfo');
+            if (countEl) countEl.textContent = filtered.length.toLocaleString('id-ID') + ' SKU | Total qty: ' + sumQty.toLocaleString('id-ID') + ' | Area: ' + area + ' | Entity: ' + currentEntity;
+
+            var tbody = document.getElementById('sbaTbody');
+            if (!tbody) return;
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#9ca3af;">Tidak ada stok di area ' + _sbaEsc(area) + ' untuk entity ' + _sbaEsc(currentEntity) + '</td></tr>';
+                return;
+            }
+            var CAP = 500;
+            var display = filtered.slice(0, CAP);
+            var html = display.map(function(r) {
+                var tokoEntries = Object.keys(r.tokoStores).map(function(k) { return [k, r.tokoStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+                var consigEntries = Object.keys(r.consigStores).map(function(k) { return [k, r.consigStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+                var whEntries = Object.keys(r.whStores).map(function(k) { return [k, r.whStores[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+                var tokoStr = tokoEntries.length ? tokoEntries.map(function(e) {
+                    return '<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;margin:1px 2px;font-size:0.72rem;white-space:nowrap;">' + _sbaEsc(_sbaShortStore(e[0])) + ' <strong>' + e[1] + '</strong></span>';
+                }).join('') : '<span style="color:#cbd5e1;">—</span>';
+                var consigStr = consigEntries.length ? consigEntries.map(function(e) {
+                    return '<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:6px;margin:1px 2px;font-size:0.72rem;white-space:nowrap;">' + _sbaEsc(_sbaShortStore(e[0])) + ' <strong>' + e[1] + '</strong></span>';
+                }).join('') : '<span style="color:#cbd5e1;">—</span>';
+                var whTooltip = whEntries.map(function(e) { return _sbaShortWh(e[0]) + ': ' + e[1]; }).join(' | ');
+                return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+                    '<td style="padding:8px;font-weight:600;color:#0f766e;white-space:nowrap;">' + _sbaEsc(r.kode || '-') + '</td>' +
+                    '<td style="padding:8px;font-family:ui-monospace,monospace;font-size:0.78rem;color:#334155;white-space:nowrap;">' + _sbaEsc(r.kode_kecil || '-') + '</td>' +
+                    '<td style="padding:8px;color:#1f2937;">' + _sbaEsc(r.name) + '</td>' +
+                    '<td style="padding:8px;text-align:center;color:#64748b;">' + _sbaEsc(r.size) + '</td>' +
+                    '<td style="padding:8px;text-align:center;"><span style="background:#f1f5f9;padding:2px 8px;border-radius:6px;font-weight:700;color:#334155;">' + _sbaEsc(r.tier || '-') + '</span></td>' +
+                    '<td style="padding:8px;text-align:center;color:#64748b;">' + _sbaEsc(r.version || '-') + '</td>' +
+                    '<td style="padding:8px;text-align:right;font-weight:700;color:#7c3aed;white-space:nowrap;" title="' + _sbaEsc(whTooltip) + '">' + r.whQty.toLocaleString('id-ID') + '</td>' +
+                    '<td style="padding:8px;min-width:260px;">' + tokoStr + '</td>' +
+                    '<td style="padding:8px;min-width:240px;">' + consigStr + '</td>' +
+                    '<td style="padding:8px;text-align:right;font-weight:800;color:#059669;white-space:nowrap;">' + r.total.toLocaleString('id-ID') + '</td>' +
+                '</tr>';
+            }).join('');
+            if (filtered.length > CAP) {
+                html += '<tr><td colspan="10" style="text-align:center;padding:15px;background:#fef3c7;color:#92400e;font-weight:600;">Menampilkan ' + CAP + ' dari ' + filtered.length.toLocaleString('id-ID') + ' baris. Gunakan search / filter untuk mempersempit, atau export CSV untuk semua data.</td></tr>';
+            }
+            tbody.innerHTML = html;
+        }
+
+        function exportStockByAreaCSV() {
+            var area = sbaCurrentArea;
+            var rows = buildStockByAreaRows(area);
+            var qEl = document.getElementById('sbaSearchInput');
+            var tEl = document.getElementById('sbaTierFilter');
+            var vEl = document.getElementById('sbaVersionFilter');
+            var hEl = document.getElementById('sbaHideEmpty');
+            var q = qEl ? (qEl.value || '').toLowerCase().trim() : '';
+            var tierF = tEl ? tEl.value : '';
+            var verF = vEl ? vEl.value : '';
+            var hideEmpty = hEl ? hEl.checked : true;
+            var filtered = rows.filter(function(r) {
+                if (hideEmpty && r.total === 0) return false;
+                if (tierF && String(r.tier) !== tierF) return false;
+                if (verF && String(r.version) !== verF) return false;
+                if (q) {
+                    var hay = (r.kode + '|' + r.kode_kecil + '|' + r.name).toLowerCase();
+                    if (hay.indexOf(q) === -1) return false;
+                }
+                return true;
+            });
+            filtered.sort(function(a, b) { return b.total - a.total; });
+            var headers = ['Kode','Kode Kecil','Nama','Size','Tier','Version','WH Qty','WH Detail','Toko Qty','Toko Detail','Consig Qty','Consig Detail','Total'];
+            function esc(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+            var out = [headers.join(',')];
+            filtered.forEach(function(r) {
+                var whList = Object.keys(r.whStores).map(function(k) { return k + '=' + r.whStores[k]; }).join('; ');
+                var tokoList = Object.keys(r.tokoStores).map(function(k) { return k + '=' + r.tokoStores[k]; }).join('; ');
+                var consigList = Object.keys(r.consigStores).map(function(k) { return k + '=' + r.consigStores[k]; }).join('; ');
+                out.push([r.kode, r.kode_kecil, r.name, r.size, r.tier, r.version, r.whQty, whList, r.tokoQty, tokoList, r.consigQty, consigList, r.total].map(esc).join(','));
+            });
+            var blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'stok_' + String(area).toLowerCase() + '_' + currentEntity + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
 
     </script>
 </body>
