@@ -16480,7 +16480,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             var showConsigCols = showConsig ? cols.consig : [];
             var includeWhCol = showWH && cols.wh.length > 0;
 
-            // --- Sticky meta cols (only up to TIER). VER + WHB + store cols scroll freely. ---
+            // --- Sticky left: meta cols + VER + WHB. Middle (toko + consig) scrolls. TOTAL sticky right. ---
+            var VER_W = 50, WH_COL_W = 70;
             var stickyMetaTh = [
                 { l: 'KODE BARANG', w: 95,  align: 'left'   },
                 { l: 'KODE KECIL',  w: 110, align: 'left'   },
@@ -16490,18 +16491,18 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             ];
             var leftOffsets = [], cumL = 0;
             for (var mi = 0; mi < stickyMetaTh.length; mi++) { leftOffsets.push(cumL); cumL += stickyMetaTh[mi].w; }
-            var VER_W = 50, WH_COL_W = 70;
+            var VER_LEFT = cumL; cumL += VER_W;
+            var WHB_LEFT = cumL; // sticky offset for WHB column
 
             var thead = document.getElementById('sbaThead');
             if (thead) {
-                // Single 2-row header; sticky cols use rowspan=2 so top:0 is all we need
                 var row1 = '<tr>';
                 stickyMetaTh.forEach(function(m, idx) {
                     row1 += '<th rowspan="2" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px 6px;text-align:' + m.align + ';font-size:0.7rem;font-weight:700;min-width:' + m.w + 'px;max-width:' + m.w + 'px;width:' + m.w + 'px;position:sticky;left:' + leftOffsets[idx] + 'px;top:0;z-index:6;border-right:1px solid rgba(255,255,255,0.08);letter-spacing:0.3px;">' + m.l + '</th>';
                 });
-                row1 += '<th rowspan="2" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px 6px;text-align:center;font-size:0.7rem;font-weight:700;position:sticky;top:0;z-index:4;min-width:' + VER_W + 'px;max-width:' + VER_W + 'px;width:' + VER_W + 'px;border-right:2px solid #4b5563;letter-spacing:0.3px;">VER</th>';
+                row1 += '<th rowspan="2" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px 6px;text-align:center;font-size:0.7rem;font-weight:700;position:sticky;top:0;left:' + VER_LEFT + 'px;z-index:6;min-width:' + VER_W + 'px;max-width:' + VER_W + 'px;width:' + VER_W + 'px;border-right:1px solid rgba(255,255,255,0.08);letter-spacing:0.3px;">VER</th>';
                 if (includeWhCol) {
-                    row1 += '<th rowspan="2" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px 6px;text-align:center;font-size:0.75rem;font-weight:700;position:sticky;top:0;z-index:4;min-width:' + WH_COL_W + 'px;max-width:' + WH_COL_W + 'px;width:' + WH_COL_W + 'px;border-right:2px solid #4b5563;letter-spacing:0.5px;">' + _sbaEsc(whLabel) + '</th>';
+                    row1 += '<th rowspan="2" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px 6px;text-align:center;font-size:0.75rem;font-weight:700;position:sticky;top:0;left:' + WHB_LEFT + 'px;z-index:6;min-width:' + WH_COL_W + 'px;max-width:' + WH_COL_W + 'px;width:' + WH_COL_W + 'px;border-right:2px solid #4b5563;letter-spacing:0.5px;">' + _sbaEsc(whLabel) + '</th>';
                 }
                 if (showTokoCols.length) {
                     row1 += '<th colspan="' + showTokoCols.length + '" style="background:' + HEADER_BG + ';color:#ffffff;padding:8px;text-align:center;font-size:0.72rem;font-weight:700;position:sticky;top:0;z-index:4;letter-spacing:0.5px;border-bottom:1px solid #4b5563;">🏪 TOKO RETAIL ' + _sbaEsc(area.toUpperCase()) + ' (' + showTokoCols.length + ')</th>';
@@ -16539,7 +16540,7 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             }
             function cellWhAgg(q) {
                 var c = _sbaCellColor(q);
-                return '<td style="padding:4px 6px;text-align:center;font-weight:800;color:' + c.fg + ';font-size:0.82rem;background:' + c.bg + ';min-width:' + WH_COL_W + 'px;max-width:' + WH_COL_W + 'px;width:' + WH_COL_W + 'px;border-right:2px solid #475569;border-bottom:1px solid #f1f5f9;">' + q.toLocaleString('id-ID') + '</td>';
+                return '<td style="padding:4px 6px;text-align:center;font-weight:800;color:' + c.fg + ';font-size:0.82rem;background:' + c.bg + ';min-width:' + WH_COL_W + 'px;max-width:' + WH_COL_W + 'px;width:' + WH_COL_W + 'px;position:sticky;left:' + WHB_LEFT + 'px;z-index:2;border-right:2px solid #475569;border-bottom:1px solid #f1f5f9;">' + q.toLocaleString('id-ID') + '</td>';
             }
 
             var html = display.map(function(r, idx) {
@@ -16551,9 +16552,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 out += '<td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:0.74rem;color:#334155;white-space:nowrap;background:' + rowBg + ';position:sticky;left:' + leftOffsets[1] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;min-width:' + stickyMetaTh[1].w + 'px;max-width:' + stickyMetaTh[1].w + 'px;width:' + stickyMetaTh[1].w + 'px;">' + _sbaEsc(r.kode_kecil || '-') + '</td>';
                 out += '<td style="padding:6px 8px;color:#1f2937;background:' + rowBg + ';position:sticky;left:' + leftOffsets[2] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + stickyMetaTh[2].w + 'px;max-width:' + stickyMetaTh[2].w + 'px;width:' + stickyMetaTh[2].w + 'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + _sbaEsc(r.name) + '">' + _sbaEsc(r.name) + '</td>';
                 out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + leftOffsets[3] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + stickyMetaTh[3].w + 'px;max-width:' + stickyMetaTh[3].w + 'px;width:' + stickyMetaTh[3].w + 'px;">' + _sbaEsc(r.size) + '</td>';
-                out += '<td style="padding:6px 8px;text-align:center;background:' + rowBg + ';position:sticky;left:' + leftOffsets[4] + 'px;z-index:1;border-right:2px solid #cbd5e1;border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + stickyMetaTh[4].w + 'px;max-width:' + stickyMetaTh[4].w + 'px;width:' + stickyMetaTh[4].w + 'px;">' + _sbaEsc(r.tier || '-') + '</td>';
-                // Non-sticky: VER + WHB + store cols
-                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';border-right:2px solid #cbd5e1;border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + VER_W + 'px;max-width:' + VER_W + 'px;width:' + VER_W + 'px;">' + _sbaEsc(r.version || '-') + '</td>';
+                out += '<td style="padding:6px 8px;text-align:center;background:' + rowBg + ';position:sticky;left:' + leftOffsets[4] + 'px;z-index:1;border-right:1px solid #e2e8f0;border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + stickyMetaTh[4].w + 'px;max-width:' + stickyMetaTh[4].w + 'px;width:' + stickyMetaTh[4].w + 'px;">' + _sbaEsc(r.tier || '-') + '</td>';
+                // Sticky: VER + WHB (frozen with meta)
+                out += '<td style="padding:6px 8px;text-align:center;color:#64748b;background:' + rowBg + ';position:sticky;left:' + VER_LEFT + 'px;z-index:1;border-right:' + (includeWhCol ? '1px solid #e2e8f0' : '2px solid #cbd5e1') + ';border-bottom:1px solid #f1f5f9;font-size:0.78rem;min-width:' + VER_W + 'px;max-width:' + VER_W + 'px;width:' + VER_W + 'px;">' + _sbaEsc(r.version || '-') + '</td>';
                 if (includeWhCol) out += cellWhAgg(r.whQty);
                 for (var j = 0; j < showTokoCols.length; j++)  out += cellQty(r.tokoStores[showTokoCols[j]] || 0);
                 for (var k = 0; k < showConsigCols.length; k++) out += cellQty(r.consigStores[showConsigCols[k]] || 0);
