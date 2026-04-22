@@ -489,6 +489,28 @@
         .sales-tab-content { display: none; }
         .sales-tab-content.active { display: block; }
 
+        /* Sales Channel Segmented Nav (iseller-dashboard style) */
+        .sales-channel-seg-bar {
+            display: flex; gap: 0; background: white; border-bottom: 2px solid #e2e8f0;
+            padding: 0 4px; margin: 0 0 10px 0; border-radius: 10px 10px 0 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04); overflow-x: auto;
+            position: sticky; top: 0; z-index: 60;
+        }
+        .sales-channel-seg-btn {
+            padding: 11px 18px; border: none; background: transparent;
+            color: #64748b; font-size: 0.78rem; font-weight: 600;
+            letter-spacing: 0.06em; cursor: pointer; white-space: nowrap;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+            transition: all 0.2s ease; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .sales-channel-seg-btn:hover { color: #1e293b; background: #f8fafc; }
+        .sales-channel-seg-btn.active {
+            color: #002A3A; border-bottom-color: #00E273; background: white;
+            font-weight: 700;
+        }
+        .sales-channel-seg-btn .seg-emoji { font-size: 0.95rem; }
+
         /* Max Stock Analysis Styles */
         .analysis-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -625,13 +647,6 @@
             <button class="view-btn" data-view="sales" onclick="switchView('sales');">
                 💰 Sales
             </button>
-            <div class="entity-toggle-bar dimmed" id="salesChannelBar">
-                <button class="entity-toggle-btn active" data-schannel="global" onclick="switchSalesChannel('global')">› 🌍 Global</button>
-                <button class="entity-toggle-btn" data-schannel="retail" onclick="switchSalesChannel('retail')">› 🏪 Retail & Event</button>
-                <button class="entity-toggle-btn" data-schannel="online" onclick="switchSalesChannel('online')">› 🌐 Online</button>
-                <button class="entity-toggle-btn" data-schannel="consig" onclick="switchSalesChannel('consig')">› 📦 Consignment</button>
-                <button class="entity-toggle-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')">› 🏭 Wholesale</button>
-            </div>
             <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Operations</div>
             <button class="view-btn" data-view="redistribusi" onclick="switchView('redistribusi')">
                 📊 Stock Redistribution
@@ -1587,6 +1602,15 @@
         <div class="view-container" id="salesView">
             <!-- Sticky header: filter + metric cards + tab nav -->
             <div id="salesStickyHeader" class="sales-channel-sticky" style="background:#f1f5f9;padding-bottom:0;">
+
+            <!-- Sales Channel Segmented Nav (primary context selector) -->
+            <div class="sales-channel-seg-bar" id="salesChannelSegBar">
+                <button class="sales-channel-seg-btn active" data-schannel="global" onclick="switchSalesChannel('global')"><span class="seg-emoji">🌍</span> GLOBAL</button>
+                <button class="sales-channel-seg-btn" data-schannel="retail" onclick="switchSalesChannel('retail')"><span class="seg-emoji">🏪</span> RETAIL &amp; EVENT</button>
+                <button class="sales-channel-seg-btn" data-schannel="online" onclick="switchSalesChannel('online')"><span class="seg-emoji">🌐</span> ONLINE</button>
+                <button class="sales-channel-seg-btn" data-schannel="consig" onclick="switchSalesChannel('consig')"><span class="seg-emoji">📦</span> CONSIGNMENT</button>
+                <button class="sales-channel-seg-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')"><span class="seg-emoji">🏭</span> WHOLESALE</button>
+            </div>
 
             <!-- Retail Banner Header (shown only for retail channel) -->
             <div id="retailBannerHeader" style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:8px;padding:12px 24px;margin-bottom:6px;display:flex;align-items:center;gap:12px;">
@@ -5328,14 +5352,8 @@
 
             // Entity bar always active — clickable from any view
             var entityBar = document.getElementById('entityToggleBar');
-            var salesBar = document.getElementById('salesChannelBar');
             var csBar = document.getElementById('controlStockBar');
-            entityBar.classList.remove('dimmed');
-            if (view === 'sales') {
-                salesBar.classList.remove('dimmed');
-            } else {
-                salesBar.classList.add('dimmed');
-            }
+            if (entityBar) entityBar.classList.remove('dimmed');
             // Control Stock sub-menu: show when either stockcontrol or stockcontrolonline
             if (view === 'stockcontrol' || view === 'stockcontrolonline') {
                 csBar.classList.remove('dimmed');
