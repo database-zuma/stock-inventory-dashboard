@@ -489,28 +489,6 @@
         .sales-tab-content { display: none; }
         .sales-tab-content.active { display: block; }
 
-        /* Sales Channel Segmented Nav (iseller-dashboard style) */
-        .sales-channel-seg-bar {
-            display: flex; gap: 0; background: white; border-bottom: 2px solid #e2e8f0;
-            padding: 0 4px; margin: 0 0 10px 0; border-radius: 10px 10px 0 0;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04); overflow-x: auto;
-            position: sticky; top: 0; z-index: 60;
-        }
-        .sales-channel-seg-btn {
-            padding: 11px 18px; border: none; background: transparent;
-            color: #64748b; font-size: 0.78rem; font-weight: 600;
-            letter-spacing: 0.06em; cursor: pointer; white-space: nowrap;
-            border-bottom: 3px solid transparent; margin-bottom: -2px;
-            transition: all 0.2s ease; font-family: inherit;
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .sales-channel-seg-btn:hover { color: #1e293b; background: #f8fafc; }
-        .sales-channel-seg-btn.active {
-            color: #002A3A; border-bottom-color: #00E273; background: white;
-            font-weight: 700;
-        }
-        .sales-channel-seg-btn .seg-emoji { font-size: 0.95rem; }
-
         /* Sales Filter Bar — soft iseller-dashboard vibe (CSS only, no HTML changes) */
         #salesFilterSection {
             background: white !important;
@@ -693,7 +671,7 @@
                 🗺️ Stok per Area
             </button>
             <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Sales</div>
-            <button class="view-btn" data-view="sales" onclick="switchView('sales');">
+            <button class="view-btn" data-view="sales" onclick="switchSalesChannel('global');">
                 💰 Sales
             </button>
             <div style="padding:10px 16px 4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.5);margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Operations</div>
@@ -1652,15 +1630,6 @@
             <!-- Sticky header: filter + metric cards + tab nav -->
             <div id="salesStickyHeader" class="sales-channel-sticky" style="background:#f1f5f9;padding-bottom:0;">
 
-            <!-- Sales Channel Segmented Nav (primary context selector) -->
-            <div class="sales-channel-seg-bar" id="salesChannelSegBar">
-                <button class="sales-channel-seg-btn active" data-schannel="global" onclick="switchSalesChannel('global')"><span class="seg-emoji">🌍</span> GLOBAL</button>
-                <button class="sales-channel-seg-btn" data-schannel="retail" onclick="switchSalesChannel('retail')"><span class="seg-emoji">🏪</span> RETAIL &amp; EVENT</button>
-                <button class="sales-channel-seg-btn" data-schannel="online" onclick="switchSalesChannel('online')"><span class="seg-emoji">🌐</span> ONLINE</button>
-                <button class="sales-channel-seg-btn" data-schannel="consig" onclick="switchSalesChannel('consig')"><span class="seg-emoji">📦</span> CONSIGNMENT</button>
-                <button class="sales-channel-seg-btn" data-schannel="wholesale" onclick="switchSalesChannel('wholesale')"><span class="seg-emoji">🏭</span> WHOLESALE</button>
-            </div>
-
             <!-- Retail Banner Header (shown only for retail channel) -->
             <div id="retailBannerHeader" style="background:linear-gradient(135deg,#002A3A,#004a6b);border-radius:8px;padding:12px 24px;margin-bottom:6px;display:flex;align-items:center;gap:12px;">
                 <span style="font-size:1.5rem;">🏬</span>
@@ -1677,6 +1646,16 @@
                     <div style="min-width:140px;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Periode Akhir:</label>
                         <input type="date" id="salesFilterEndDate" onchange="renderSalesDashboard()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
+                    </div>
+                    <div style="min-width:160px;">
+                        <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Channel:</label>
+                        <select id="salesFilterChannel" onchange="switchSalesChannel(this.value)" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:1rem;">
+                            <option value="global" selected>🌍 Global</option>
+                            <option value="retail">🏪 Retail &amp; Event</option>
+                            <option value="online">🌐 Online</option>
+                            <option value="consig">📦 Consignment</option>
+                            <option value="wholesale">🏭 Wholesale</option>
+                        </select>
                     </div>
                     <div style="min-width:150px;">
                         <label style="display:block;font-size:0.85rem;color:#6b7280;margin-bottom:4px;">Area:</label>
@@ -12784,9 +12763,12 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             el.innerHTML = html;
         }
 
-        // Sidebar channel nav for Sales (Retail/Consig/Wholesale/Online)
+        // Sales channel selector — driven by filter dropdown
         function switchSalesChannel(channel) {
-            // Update sidebar active state
+            // Sync the channel filter dropdown
+            var chSel = document.getElementById('salesFilterChannel');
+            if (chSel && chSel.value !== channel) chSel.value = channel;
+            // Update any remaining sidebar toggle buttons (legacy)
             document.querySelectorAll('[data-schannel]').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.schannel === channel);
             });
@@ -12804,8 +12786,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
             if (retailBanner) retailBanner.style.display = (channel === 'retail') ? '' : 'none';
 
             if (channel === 'global') {
-                // Global: hide Retail filters, summary cards, tab nav
-                salesFilters.style.display = 'none';
+                // Global: show filter bar (filter is unified), hide summary cards, tab nav
+                salesFilters.style.display = '';
                 salesCards.style.display = 'none';
                 if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
@@ -12842,8 +12824,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesSubTab(channel);
                 }, 50);
             } else if (channel === 'consig') {
-                // Consignment: hide filters+cards+tab nav, show wrapper but hide tabs inside it
-                salesFilters.style.display = 'none';
+                // Consignment: show filter bar, hide cards+tab nav
+                salesFilters.style.display = '';
                 salesCards.style.display = 'none';
                 if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
@@ -12857,8 +12839,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                 });
                 loadConsignmentData();
             } else if (channel === 'wholesale') {
-                // Wholesale: hide filters+cards+tab nav, show retail tabs with sub-tab
-                salesFilters.style.display = 'none';
+                // Wholesale: show filter bar, hide cards+tab nav
+                salesFilters.style.display = '';
                 salesCards.style.display = 'none';
                 if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
@@ -12871,8 +12853,8 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
                     switchSalesSubTab(channel);
                 }, 50);
             } else if (channel === 'online') {
-                // Online: hide filters+cards+tab nav, show wrapper but HIDE tab buttons bar
-                salesFilters.style.display = 'none';
+                // Online: show filter bar, hide cards+tab nav
+                salesFilters.style.display = '';
                 salesCards.style.display = 'none';
                 if (salesTabNav) salesTabNav.style.display = 'none';
                 retailTabWrapper.style.display = '';
