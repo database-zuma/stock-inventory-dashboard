@@ -8286,6 +8286,78 @@
             window.allSalesStores = Array.from(stores).sort();
         }
 
+        // Repopulate Area + Toko dropdowns based on active channel
+        function populateSalesFiltersByChannel(channel) {
+            var srcData = null;
+            var getArea = function(r) { return r.area; };
+            var getStore = function(r) { return r.store; };
+
+            if (channel === 'retail') {
+                srcData = (salesDetailData && salesDetailData.length > 0) ? salesDetailData
+                        : (salesChannelCache && salesChannelCache['retail'] ? salesChannelCache['retail'] : []);
+                getArea = function(r) { return typeof getAreaFromStore === 'function' ? getAreaFromStore(r.store) : r.area; };
+                getStore = function(r) { return r.store; };
+            } else if (channel === 'online') {
+                srcData = (typeof salesOnlineData !== 'undefined' && salesOnlineData && salesOnlineData.length > 0) ? salesOnlineData
+                        : (typeof onlineRawData !== 'undefined' && onlineRawData ? onlineRawData : []);
+                getArea = function(r) { return r.area; };
+                getStore = function(r) { return r.marketplace; };
+            } else if (channel === 'consig') {
+                srcData = (typeof salesConsigData !== 'undefined' && salesConsigData) ? salesConsigData : [];
+                getArea = function(r) { return r.area; };
+                getStore = function(r) { return r.partner || r.store_name || r.store; };
+            } else if (channel === 'wholesale') {
+                srcData = (typeof salesWholesaleData !== 'undefined' && salesWholesaleData) ? salesWholesaleData : [];
+                getArea = function(r) { return r.area; };
+                getStore = function(r) { return r.customer; };
+            } else if (channel === 'global') {
+                srcData = (typeof globalRawData !== 'undefined' && globalRawData) ? globalRawData : [];
+                getArea = function(r) {
+                    var ch = r._ch || r.channel;
+                    if (ch === 'retail' || ch === 'Retail') {
+                        return typeof getAreaFromStore === 'function' ? getAreaFromStore(r.store) : r.area;
+                    }
+                    return r.area;
+                };
+                getStore = function(r) { return r.store || r.store_name || r.customer || r.marketplace; };
+            }
+
+            var areaSel = document.getElementById('salesFilterArea');
+            var storeSel = document.getElementById('salesFilterStore');
+            if (!areaSel || !storeSel) return;
+
+            var curArea = areaSel.value;
+            var curStore = storeSel.value;
+
+            if (!srcData || srcData.length === 0) {
+                // Keep existing options if no data yet (avoid blanking)
+                return;
+            }
+
+            var areas = new Set();
+            var stores = new Set();
+            srcData.forEach(function(r) {
+                var a = getArea(r);
+                var s = getStore(r);
+                if (a && a !== '-' && a !== 'Unknown' && String(a).trim() !== '') areas.add(String(a).trim());
+                if (s && s !== '-' && String(s).trim() !== '') stores.add(String(s).trim());
+            });
+
+            areaSel.innerHTML = '<option value="">Semua Area</option>'
+                + Array.from(areas).sort().map(function(a) { return '<option value="' + a + '">' + a + '</option>'; }).join('');
+            if (Array.from(areaSel.options).some(function(o) { return o.value === curArea; })) {
+                areaSel.value = curArea;
+            }
+
+            storeSel.innerHTML = '<option value="">Semua Toko</option>'
+                + Array.from(stores).sort().map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+            if (Array.from(storeSel.options).some(function(o) { return o.value === curStore; })) {
+                storeSel.value = curStore;
+            }
+
+            window.allSalesStores = Array.from(stores).sort();
+        }
+
         function updateStoresByArea() {
             const selectedArea = document.getElementById('salesFilterArea').value;
             const storeSelect = document.getElementById('salesFilterStore');
@@ -12784,6 +12856,9 @@ const sizeMatch = sku.match(/Z(\d{2,3})$/);
 
             // Hide retail banner for non-retail channels, show for retail
             if (retailBanner) retailBanner.style.display = (channel === 'retail') ? '' : 'none';
+
+            // Repopulate Area + Toko dropdowns to match channel's data shape
+            try { populateSalesFiltersByChannel(channel); } catch(e) { console.warn('populateSalesFiltersByChannel:', e); }
 
             if (channel === 'global') {
                 // Global: show filter bar (filter is unified), hide summary cards, tab nav
