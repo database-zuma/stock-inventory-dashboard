@@ -511,6 +511,55 @@
         }
         .sales-channel-seg-btn .seg-emoji { font-size: 0.95rem; }
 
+        /* Sales Filter Bar — soft iseller-dashboard vibe (CSS only, no HTML changes) */
+        #salesFilterSection {
+            background: white !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+            border: 1px solid #e5e7eb;
+        }
+        #salesFilterSection label {
+            font-size: 0.65rem !important;
+            color: #64748b !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            margin-bottom: 3px !important;
+        }
+        #salesFilterSection select,
+        #salesFilterSection input[type="date"],
+        #salesFilterSection input[type="text"] {
+            padding: 6px 9px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 5px !important;
+            font-size: 0.85rem !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        #salesFilterSection select:focus,
+        #salesFilterSection input:focus {
+            outline: none;
+            border-color: #00E273 !important;
+            box-shadow: 0 0 0 2px rgba(0, 226, 115, 0.15);
+        }
+        #salesFilterSection > div > button {
+            padding: 6px 12px !important;
+            background: transparent !important;
+            border: 1px solid #e5e7eb !important;
+            color: #64748b !important;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-radius: 5px !important;
+        }
+        #salesFilterSection > div > button:hover {
+            color: #002A3A !important;
+            border-color: #002A3A !important;
+        }
+
         /* Max Stock Analysis Styles */
         .analysis-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
