@@ -1297,6 +1297,7 @@
                             <option value="Batam">Batam</option>
                             <option value="Sulawesi">Sulawesi</option>
                             <option value="Sumatera">Sumatera</option>
+                            <option value="Lombok">Lombok</option>
                         </select>
                     </div>
                     <div id="scFilterStoreWrap" style="min-width:140px;">
@@ -6484,29 +6485,6 @@
         let scViewMode = 'sku'; // 'sku' or 'kodeKecil'
         let scStoresByArea = {}; // { 'Bali': ['Zuma Galeria', ...], ... }
         let storeSalesMap = {};  // { storeName: { kodeKecil: { month: qty } } }
-        let scAreaSalesMap = {}; // { area: { kodeKecil: { month: qty } } } — Lombok merged into Bali
-
-        // Stock Control: map consig store name to area. Lombok stores merge into Bali (Stock Control only).
-        function scConsigStoreToArea(storeName) {
-            if (!storeName) return null;
-            const s = storeName.toLowerCase();
-            // Bali (includes Lombok consig: Pepito Lombok/Mataram/Senggigi)
-            if (s.includes('pepito') || s.includes('royal surf') || s.includes('bintang') ||
-                s.includes('clandy') || s.includes('padma') || s.includes('bali united') ||
-                s.includes('sogo')) return 'Bali';
-            // Jakarta
-            if (s.includes('aeon') || s.includes('grand lucky') || s.includes('grandlucky') ||
-                s.includes('omosando') || s.includes('pavels') || s.includes('paveels') ||
-                s.includes('sonobebe')) return 'Jakarta';
-            // Jawa Timur
-            if (s.includes('cilubaa') || s.includes('cilukba')) return 'Jawa Timur';
-            return null;
-        }
-
-        // Stock Control: normalize area (Lombok → Bali for Stock Control purposes)
-        function scAreaNormalize(rawArea) {
-            return rawArea === 'Lombok' ? 'Bali' : rawArea;
-        }
 
         // Build aggregated items by Kode Kecil (sum all sizes)
         function buildKodeKecilItems() {
@@ -6533,7 +6511,6 @@
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
-                        stokConsignmentByArea: { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Batam': 0, 'Sulawesi': 0, 'Sumatera': 0 },
                         globalStock: 0,
                         whTotal: 0,
                         whOnlineTotal: 0,
@@ -6719,7 +6696,6 @@
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
-                        stokConsignmentByArea: { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Batam': 0, 'Sulawesi': 0, 'Sumatera': 0 },
                         globalStock: 0,
                         whTotal: 0,
                         whOnlineTotal: 0,
@@ -6770,7 +6746,6 @@
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
-                        stokConsignmentByArea: { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Batam': 0, 'Sulawesi': 0, 'Sumatera': 0 },
                         globalStock: 0,
                         whTotal: 0,
                         whOnlineTotal: 0,
@@ -6786,15 +6761,6 @@
                     };
                 }
                 skuMap[key].stokConsignment += (item.total || 0);
-                // Stock Control: split consig per area (Pepito Lombok merges to Bali)
-                if (!skuMap[key].stokConsignmentByArea) {
-                    skuMap[key].stokConsignmentByArea = { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Batam': 0, 'Sulawesi': 0, 'Sumatera': 0 };
-                }
-                const consigSS = item.store_stock || {};
-                Object.keys(consigSS).forEach(s => {
-                    const a = scConsigStoreToArea(s);
-                    if (a) skuMap[key].stokConsignmentByArea[a] = (skuMap[key].stokConsignmentByArea[a] || 0) + (consigSS[s] || 0);
-                });
             });
 
             // Process warehouse data - ALL entities (DDD, LJBB, MBB, UBB)
@@ -6820,7 +6786,6 @@
                         WHOB: 0, WHOJ: 0,
                         stokRetail: 0,
                         stokConsignment: 0,
-                        stokConsignmentByArea: { 'Bali': 0, 'Jakarta': 0, 'Jawa Timur': 0, 'Batam': 0, 'Sulawesi': 0, 'Sumatera': 0 },
                         globalStock: 0,
                         whTotal: 0,
                         whOnlineTotal: 0,
@@ -6878,11 +6843,6 @@
             Object.keys(areaStoreSet).forEach(area => {
                 scStoresByArea[area] = [...areaStoreSet[area]].sort();
             });
-            // Stock Control: merge Lombok stores into Bali (per user — Lombok ikut Bali, Stock Control only)
-            if (scStoresByArea['Lombok']) {
-                scStoresByArea['Bali'] = [...new Set([...(scStoresByArea['Bali'] || []), ...scStoresByArea['Lombok']])].sort();
-                delete scStoresByArea['Lombok'];
-            }
 
             // Build storeSalesMap from salesDetailData (per store per kodeKecil per month)
             storeSalesMap = {};
@@ -6898,24 +6858,11 @@
                 storeSalesMap[store][kk][monthLabel] = (storeSalesMap[store][kk][monthLabel] || 0) + (row.qty || 0);
             });
 
-            // Stock Control: build per-area sales aggregate (Lombok merged into Bali)
-            scAreaSalesMap = {};
-            Object.keys(storeSalesMap).forEach(store => {
-                let area = scAreaNormalize(getAreaFromStore(store));
-                if (!scAreaSalesMap[area]) scAreaSalesMap[area] = {};
-                Object.keys(storeSalesMap[store]).forEach(kk => {
-                    if (!scAreaSalesMap[area][kk]) scAreaSalesMap[area][kk] = {};
-                    Object.keys(storeSalesMap[store][kk]).forEach(m => {
-                        scAreaSalesMap[area][kk][m] = (scAreaSalesMap[area][kk][m] || 0) + (storeSalesMap[store][kk][m] || 0);
-                    });
-                });
-            });
-
             // Always populate store dropdown with all stores (sorted by area then name)
             const storeSelect = document.getElementById('scFilterStore');
             if (storeSelect) {
                 storeSelect.innerHTML = '<option value="">Semua Toko</option>';
-                const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Sulawesi','Sumatera'];
+                const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Lombok','Sulawesi','Sumatera'];
                 allAreas.forEach(area => {
                     if (!scStoresByArea[area] || scStoresByArea[area].length === 0) return;
                     const group = document.createElement('optgroup');
@@ -6961,7 +6908,7 @@
                     }
                 } else {
                     // Show all stores grouped by area
-                    const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Sulawesi','Sumatera'];
+                    const allAreas = ['Bali','Jakarta','Jawa Timur','Batam','Lombok','Sulawesi','Sumatera'];
                     allAreas.forEach(a => {
                         if (!scStoresByArea[a] || scStoresByArea[a].length === 0) return;
                         const group = document.createElement('optgroup');
@@ -7002,37 +6949,14 @@
             const gapFilter = document.getElementById('scFilterGAP')?.value || '';
 
             // Helper function to get stock basis for an item
-            // Area-scoped helpers (Stock Control). When area filter set, all stock/sales scaled to area.
-            // Lombok merged into Bali. Batam/Sulawesi/Sumatera have no warehouse → 0.
-            function scAreaToko(item, a) {
-                if (a === 'Bali') return (item.stokTokoBali || 0) + (item.stokTokoLombok || 0);
-                if (a === 'Jakarta') return item.stokTokoJakarta || 0;
-                if (a === 'Jawa Timur') return item.stokTokoJatim || 0;
-                if (a === 'Batam') return item.stokTokoBatam || 0;
-                if (a === 'Sulawesi') return item.stokTokoSulawesi || 0;
-                if (a === 'Sumatera') return item.stokTokoSumatera || 0;
-                return 0;
-            }
-            function scAreaWH(item, a) {
-                if (a === 'Bali') return item.WHB || 0;
-                if (a === 'Jakarta') return item.WHJ || 0;
-                if (a === 'Jawa Timur') return item.WHS || 0;
-                return 0;  // Batam, Sulawesi, Sumatera have no own warehouse
-            }
-            function scAreaConsig(item, a) {
-                return ((item.stokConsignmentByArea || {})[a]) || 0;
-            }
-
             function getStockBasis(item) {
-                if (basisStok === 'wh') return area ? scAreaWH(item, area) : (item.whTotal || 0);
-                if (basisStok === 'retail') return area ? scAreaToko(item, area) : (item.stokRetail || 0);
-                if (basisStok === 'consignment') return area ? scAreaConsig(item, area) : (item.stokConsignment || 0);
+                if (basisStok === 'wh') return item.whTotal || 0;
+                if (basisStok === 'retail') return item.stokRetail || 0;
+                if (basisStok === 'consignment') return item.stokConsignment || 0;
                 if (basisStok === 'pusat') return item.WHS || 0;
                 if (basisStok === 'bali') return item.WHB || 0;
                 if (basisStok === 'jkt') return item.WHJ || 0;
-                // default 'global'
-                if (area) return scAreaWH(item, area) + scAreaToko(item, area) + scAreaConsig(item, area);
-                return item.globalStock || 0;
+                return item.globalStock || 0; // default: global
             }
 
             // Helper function to get sales for SKU (dynamic months)
@@ -7042,8 +6966,6 @@
                 let s;
                 if (storeFilter && storeSalesMap[storeFilter]) {
                     s = storeSalesMap[storeFilter][key] || {};
-                } else if (area && scAreaSalesMap[area]) {
-                    s = scAreaSalesMap[area][key] || {};
                 } else {
                     s = salesMap[key] || {};
                 }
@@ -7080,16 +7002,23 @@
                     }
                 }
 
-                // Area filter for stock (Lombok merged into Bali, includes WH+Toko+Consig)
+                // Area filter for stock
                 if (area) {
-                    const hasStock = (scAreaWH(item, area) + scAreaToko(item, area) + scAreaConsig(item, area)) !== 0;
+                    let hasStock = false;
+                    if (area === 'Bali') hasStock = (item.WHB + item.stokTokoBali) !== 0;
+                    else if (area === 'Jakarta') hasStock = (item.WHJ + item.stokTokoJakarta) !== 0;
+                    else if (area === 'Jawa Timur') hasStock = (item.WHS + item.stokTokoJatim) !== 0;
+                    else if (area === 'Batam') hasStock = item.stokTokoBatam !== 0;
+                    else if (area === 'Sulawesi') hasStock = item.stokTokoSulawesi !== 0;
+                    else if (area === 'Sumatera') hasStock = item.stokTokoSumatera !== 0;
+                    else if (area === 'Lombok') hasStock = item.stokTokoLombok !== 0;
                     if (!hasStock) return false;
                 }
 
                 // TW filter (warehouse turnover)
                 if (twFilter) {
                     const sales = getItemSales(item);
-                    const whStock = area ? scAreaWH(item, area) : (item.whTotal || 0);
+                    const whStock = area === 'Bali' ? item.WHB : (area === 'Jakarta' ? item.WHJ : (area === 'Jawa Timur' ? item.WHS : item.whTotal));
                     const tw = sales.avg > 0 ? (whStock / sales.avg) : 999;
                     if (twFilter === 'critical' && tw >= 2) return false;
                     if (twFilter === 'low' && (tw < 2 || tw >= 4)) return false;
@@ -7100,8 +7029,8 @@
                 // TO filter (store turnover)
                 if (toFilter) {
                     const sales = getItemSales(item);
-                    const storeStock = storeFilter ? (item.storeStockMap?.[storeFilter] || 0)
-                        : (area ? scAreaToko(item, area) : (item.stokToko || 0));
+                    const storeStock = storeFilter ? (item.storeStockMap?.[storeFilter] || 0) :
+                        (area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko)));
                     const toVal = sales.avg > 0 ? (storeStock / sales.avg) : (storeStock > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toVal >= 1) return false;
                     if (toFilter === 'low' && (toVal < 1 || toVal >= 2)) return false;
@@ -7131,22 +7060,16 @@
             const start = (scCurrentPage - 1) * scItemsPerPage;
             const pageData = scFilteredItems.slice(start, start + scItemsPerPage);
 
-            // Update summary cards (area-scoped when filter set)
+            // Update summary cards
             let totalWHS = 0, totalWHB = 0, totalWHJ = 0;
             let totalRetail = 0, totalConsig = 0, totalGlobal = 0;
             scFilteredItems.forEach(item => {
                 if (!area || area === 'Jawa Timur') totalWHS += item.WHS;
                 if (!area || area === 'Bali') totalWHB += item.WHB;
                 if (!area || area === 'Jakarta') totalWHJ += item.WHJ;
-                if (area) {
-                    totalRetail += scAreaToko(item, area);
-                    totalConsig += scAreaConsig(item, area);
-                    totalGlobal += scAreaWH(item, area) + scAreaToko(item, area) + scAreaConsig(item, area);
-                } else {
-                    totalRetail += (item.stokRetail || 0);
-                    totalConsig += (item.stokConsignment || 0);
-                    totalGlobal += (item.globalStock || 0);
-                }
+                totalRetail += (item.stokRetail || 0);
+                totalConsig += (item.stokConsignment || 0);
+                totalGlobal += (item.globalStock || 0);
             });
             document.getElementById('scWhPusat').textContent = totalWHS.toLocaleString();
             document.getElementById('scWhBali').textContent = totalWHB.toLocaleString();
@@ -7170,13 +7093,19 @@
                     }
                 }
                 if (area) {
-                    // Has-stock check: any presence in WH/Toko/Consig of that area (Lombok merged into Bali)
-                    const hasStock = (scAreaWH(item, area) + scAreaToko(item, area) + scAreaConsig(item, area)) !== 0;
+                    let hasStock = false;
+                    if (area === 'Bali') hasStock = (item.WHB + item.stokTokoBali) !== 0;
+                    else if (area === 'Jakarta') hasStock = (item.WHJ + item.stokTokoJakarta) !== 0;
+                    else if (area === 'Jawa Timur') hasStock = (item.WHS + item.stokTokoJatim) !== 0;
+                    else if (area === 'Batam') hasStock = item.stokTokoBatam !== 0;
+                    else if (area === 'Sulawesi') hasStock = item.stokTokoSulawesi !== 0;
+                    else if (area === 'Sumatera') hasStock = item.stokTokoSumatera !== 0;
+                    else if (area === 'Lombok') hasStock = item.stokTokoLombok !== 0;
                     if (!hasStock) return false;
                 }
                 if (twFilter) {
                     const s = getItemSales(item);
-                    const whS = area ? scAreaWH(item, area) : (item.whTotal || 0);
+                    const whS = area === 'Bali' ? item.WHB : (area === 'Jakarta' ? item.WHJ : (area === 'Jawa Timur' ? item.WHS : item.whTotal));
                     const twV = s.avg > 0 ? (whS / s.avg) : 999;
                     if (twFilter === 'critical' && twV >= 2) return false;
                     if (twFilter === 'low' && (twV < 2 || twV >= 4)) return false;
@@ -7185,8 +7114,8 @@
                 }
                 if (toFilter) {
                     const s2 = getItemSales(item);
-                    const stS = storeFilter ? (item.storeStockMap?.[storeFilter] || 0)
-                        : (area ? scAreaToko(item, area) : (item.stokToko || 0));
+                    const stS = storeFilter ? (item.storeStockMap?.[storeFilter] || 0) :
+                        (area === 'Bali' ? item.stokTokoBali : (area === 'Jakarta' ? item.stokTokoJakarta : (area === 'Jawa Timur' ? item.stokTokoJatim : item.stokToko)));
                     const toV = s2.avg > 0 ? (stS / s2.avg) : (stS > 0 ? 999 : 0);
                     if (toFilter === 'critical' && toV >= 1) return false;
                     if (toFilter === 'low' && (toV < 1 || toV >= 2)) return false;
@@ -7242,14 +7171,37 @@
                     whStock = item.whTotal || 0;
                     tokoStock = item.stokRetail || 0;
                     globalStock = item.globalStock || 0;
-                } else {
-                    // Area-scoped (Lombok merged into Bali per scAreaToko)
-                    whStock = scAreaWH(item, area);
-                    tokoStock = scAreaToko(item, area);
-                    globalStock = whStock + tokoStock + scAreaConsig(item, area);
+                } else if (area === 'Bali') {
+                    whStock = item.WHB || 0;
+                    tokoStock = item.stokTokoBali || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'Jakarta') {
+                    whStock = item.WHJ || 0;
+                    tokoStock = item.stokTokoJakarta || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'Jawa Timur') {
+                    whStock = item.WHS || 0;
+                    tokoStock = item.stokTokoJatim || 0;
+                    globalStock = whStock + tokoStock;
+                } else if (area === 'Batam') {
+                    whStock = 0;
+                    tokoStock = item.stokTokoBatam || 0;
+                    globalStock = tokoStock;
+                } else if (area === 'Sulawesi') {
+                    whStock = 0;
+                    tokoStock = item.stokTokoSulawesi || 0;
+                    globalStock = tokoStock;
+                } else if (area === 'Sumatera') {
+                    whStock = 0;
+                    tokoStock = item.stokTokoSumatera || 0;
+                    globalStock = tokoStock;
+                } else if (area === 'Lombok') {
+                    whStock = 0;
+                    tokoStock = item.stokTokoLombok || 0;
+                    globalStock = tokoStock;
                 }
 
-                const displayConsig = storeFilter ? 0 : (area ? scAreaConsig(item, area) : (item.stokConsignment || 0));
+                const displayConsig = storeFilter ? 0 : (item.stokConsignment || 0);
                 // GAP & STR calculation
                 const basisStock = storeFilter ? tokoStock : getStockBasis(item);
                 const gap = basisStock - (avgSales * 3);
